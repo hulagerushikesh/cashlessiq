@@ -27,8 +27,10 @@ make test
 make lint
 ```
 
-Review the resource-monitor quota and every `VERIFY WITH COCO` marker before
-running account setup. Then run `make setup` twice to prove idempotency.
+Review the 10-credit warehouse resource-monitor quota and every
+`VERIFY WITH COCO` marker before running account setup. The trial's dollar
+balance is not a Snowflake credit quota, and Cortex/serverless usage needs a
+separate budget. Then run `make setup` twice to prove idempotency.
 
 ## Tests
 
@@ -40,4 +42,3 @@ Snowflake account is needed for either command.
 Phase 0 establishes infrastructure, domain types, the decision schema, and a
 container-runtime connectivity spike. Later phases are intentionally left as
 TODO stubs until the preceding phase exits green.
-

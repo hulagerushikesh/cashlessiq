@@ -15,10 +15,12 @@ GRANT ROLE CIQ_MEDICAL_OFFICER TO ROLE CIQ_ADMIN;
 GRANT ROLE CIQ_PROCESSOR TO ROLE CIQ_ADMIN;
 GRANT ROLE CIQ_AUDITOR TO ROLE CIQ_ADMIN;
 
--- 300 credits preserves roughly 100 USD of a 400 USD hackathon allowance.
--- Change this value before first execution if the account budget differs.
+-- Resource monitors use Snowflake credit units, not the trial's dollar balance.
+-- Ten X-Small warehouse credits provide a conservative development guardrail.
+-- This monitor does not cover serverless or Cortex AI consumption; inspect and
+-- configure an account budget with CoCo before bulk AI work in Phase 2.
 CREATE RESOURCE MONITOR IF NOT EXISTS CIQ_RM
-  WITH CREDIT_QUOTA = 300
+  WITH CREDIT_QUOTA = 10
   FREQUENCY = MONTHLY
   START_TIMESTAMP = IMMEDIATELY
   TRIGGERS
