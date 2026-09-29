@@ -19,9 +19,9 @@ templates:
       - {item: Medicines and diagnostics, claimed_inr: 20000}
     estimated_total_inr: 100000
     clinical_note: Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.
-    expected_outcome: APPROVE
-    expected_payable_inr: 100000
-    expected_clause_ids: [NIA-4.1-A]
+    expected_outcome: APPROVE_WITH_DEDUCTIONS
+    expected_payable_inr: 95000
+    expected_clause_ids: [NIA-4.1-A, NIA-9.5]
   room: &room
     tag: room_over_cap
     admission_date: 2026-10-02
@@ -39,8 +39,8 @@ templates:
     estimated_total_inr: 120000
     clinical_note: Symptomatic gallbladder inflammation; surgery planned after routine clearance.
     expected_outcome: APPROVE_WITH_DEDUCTIONS
-    expected_payable_inr: 84000
-    expected_clause_ids: [NIA-4.1-A, NIA-4.1-NOTE-B]
+    expected_payable_inr: 79800
+    expected_clause_ids: [NIA-4.1-A, NIA-4.1-NOTE-B, NIA-9.5]
   sublimit: &sublimit
     tag: sublimit
     admission_date: 2026-10-02
@@ -55,8 +55,8 @@ templates:
     estimated_total_inr: 60000
     clinical_note: Reduced visual acuity from unilateral age-related cataract; day-care surgery advised.
     expected_outcome: APPROVE_WITH_DEDUCTIONS
-    expected_payable_inr: 40000
-    expected_clause_ids: [NIA-4.3]
+    expected_payable_inr: 38000
+    expected_clause_ids: [NIA-4.3, NIA-9.5]
   initial: &initial
     tag: waiting_initial
     admission_date: 2026-10-02
@@ -86,9 +86,9 @@ templates:
     cost_breakup: [{item: Room and nursing, claimed_inr: 8000}, {item: Surgery and implant, claimed_inr: 92000}]
     estimated_total_inr: 100000
     clinical_note: Acute traumatic fracture following a documented road accident; urgent fixation advised.
-    expected_outcome: APPROVE
-    expected_payable_inr: 100000
-    expected_clause_ids: [NIA-6.3]
+    expected_outcome: APPROVE_WITH_DEDUCTIONS
+    expected_payable_inr: 95000
+    expected_clause_ids: [NIA-6.3, NIA-9.5]
   specific: &specific
     tag: waiting_specific
     admission_date: 2026-10-02
@@ -168,8 +168,8 @@ templates:
     si_remaining_inr: 45000
     clinical_note: Treatment is covered, but prior paid claims leave only INR 45,000 available.
     expected_outcome: APPROVE_WITH_DEDUCTIONS
-    expected_payable_inr: 45000
-    expected_clause_ids: [NIA-4.1-A]
+    expected_payable_inr: 42750
+    expected_clause_ids: [NIA-4.1-A, NIA-9.5]
   exclusion: &exclusion
     tag: exclusion
     admission_date: 2026-10-02

@@ -13,6 +13,9 @@ PRODUCT = {
     ),
 }
 
+VERIFIED_BY = "Rushikesh"
+VERIFIED_AT = "2026-09-29T23:30:00+05:30"
+
 CLAUSES = (
     ("NIA-4.1-A", "4.1", "Hospitalization - room rent", 7),
     ("NIA-4.1-B", "4.1", "Hospitalization - ICU/ICCU", 7),

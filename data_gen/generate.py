@@ -11,7 +11,7 @@ from pathlib import Path
 import yaml
 from faker import Faker
 
-from data_gen.policies import CLAUSES, PRODUCT, RULES
+from data_gen.policies import CLAUSES, PRODUCT, RULES, VERIFIED_AT, VERIFIED_BY
 from data_gen.preauth_pdfs import render_case
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -160,8 +160,8 @@ def generate_core(fake: Faker, rng: random.Random) -> tuple[list[dict], list[dic
             "rule_type": kind,
             "params": params,
             "clause_id": cid,
-            "verified_by": "",
-            "verified_at": "",
+            "verified_by": VERIFIED_BY,
+            "verified_at": VERIFIED_AT,
         }
         for rid, kind, params, cid in RULES
     ]
