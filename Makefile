@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 SNOW_CONNECTION ?= cashlessiq
 PYTHON ?= python3.11
-SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql sql/03_docs_tables.sql sql/04_app_eval_tables.sql
+SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql sql/03_docs_tables.sql sql/04_app_eval_tables.sql sql/05_spike_agent.sql
 
 .PHONY: install setup teardown test lint data deploy eval
 
@@ -31,4 +31,3 @@ deploy:
 
 eval:
 	@echo "Phase 5 TODO: run the golden-set evaluator."
-

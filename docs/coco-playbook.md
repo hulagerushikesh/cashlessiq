@@ -14,3 +14,25 @@ and reproducible. Append entries; do not rewrite successful history.
 - **SQL saved to:** Repository path, or `N/A` with reason
 - **Follow-up / verification:** Remaining check and owner
 
+## 2026-09-29 — Phase 0 account and runtime verification
+
+- **Date/time (IST):** 2026-09-29 23:00
+- **Phase:** 0
+- **Goal:** Verify account capabilities, foundation SQL, Cortex Agent syntax,
+  and container-runtime Streamlit deployment before mutation.
+- **CoCo prompt:** Read-only review of `sql/00_account.sql` through
+  `sql/04_app_eval_tables.sql`, `snowflake.yml`, and
+  `app/streamlit_app.py`; identify current Agent and container-runtime syntax
+  without editing files or executing SQL.
+- **Skill used:** CoCo CLI repository review; Agent and Streamlit guidance.
+- **Result:** CoCo correctly identified the missing container `compute_pool` and
+  `runtime_name`, future grants, and the need for native HTTP in the container.
+  It incorrectly claimed that `SNOWFLAKE.CORTEX_AGENT_USER` did not exist and
+  suggested `CREATE CORTEX AGENT`; both were rejected after live account and
+  official-documentation checks. The account contains the database role and
+  Snowflake 10.34 accepts `CREATE AGENT ... FROM SPECIFICATION`.
+- **SQL saved to:** `sql/00_account.sql`, `sql/01_database.sql`, and
+  `sql/05_spike_agent.sql`.
+- **Follow-up / verification:** Completed. `make setup` succeeded twice,
+  `DATA_AGENT_RUN` returned `CashlessIQ spike connected.`, and the deployed
+  container-runtime Streamlit app returned the same response through its UI.
