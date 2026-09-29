@@ -13,4 +13,5 @@ output/
 .vscode/
 data_gen/output/*
 !data_gen/output/.gitkeep
+tmp/
 .snowflake/

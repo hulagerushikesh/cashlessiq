@@ -1,4 +1,220 @@
-# Phase 1 TODO: single source of truth for 30 hand-calculated golden cases.
 seed: 42
-cases: []
+reference_date: 2026-09-29
+policy_product_id: AS_NIA_V02_2425
 
+templates:
+  clean: &clean
+    tag: clean
+    admission_date: 2026-10-02
+    diagnosis: Acute appendicitis
+    icd10_code: K35.8
+    procedure: Laparoscopic appendicectomy
+    is_emergency: false
+    room_category: Twin sharing
+    room_rent_per_day_inr: 4000
+    planned_los_days: 3
+    cost_breakup:
+      - {item: Room and nursing, claimed_inr: 12000}
+      - {item: Procedure and professional fees, claimed_inr: 68000}
+      - {item: Medicines and diagnostics, claimed_inr: 20000}
+    estimated_total_inr: 100000
+    clinical_note: Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.
+    expected_outcome: APPROVE
+    expected_payable_inr: 100000
+    expected_clause_ids: [NIA-4.1-A]
+  room: &room
+    tag: room_over_cap
+    admission_date: 2026-10-02
+    diagnosis: Acute cholecystitis
+    icd10_code: K81.0
+    procedure: Laparoscopic cholecystectomy
+    is_emergency: false
+    room_category: Private deluxe
+    room_rent_per_day_inr: 8000
+    planned_los_days: 3
+    cost_breakup:
+      - {item: Room and nursing, claimed_inr: 24000}
+      - {item: Procedure and professional fees, claimed_inr: 72000}
+      - {item: Medicines and diagnostics, claimed_inr: 24000}
+    estimated_total_inr: 120000
+    clinical_note: Symptomatic gallbladder inflammation; surgery planned after routine clearance.
+    expected_outcome: APPROVE_WITH_DEDUCTIONS
+    expected_payable_inr: 84000
+    expected_clause_ids: [NIA-4.1-A, NIA-4.1-NOTE-B]
+  sublimit: &sublimit
+    tag: sublimit
+    admission_date: 2026-10-02
+    diagnosis: Age-related cataract
+    icd10_code: H25.9
+    procedure: Phacoemulsification with lens implant - one eye
+    is_emergency: false
+    room_category: Day care
+    room_rent_per_day_inr: 0
+    planned_los_days: 1
+    cost_breakup: [{item: Cataract package, claimed_inr: 60000}]
+    estimated_total_inr: 60000
+    clinical_note: Reduced visual acuity from unilateral age-related cataract; day-care surgery advised.
+    expected_outcome: APPROVE_WITH_DEDUCTIONS
+    expected_payable_inr: 40000
+    expected_clause_ids: [NIA-4.3]
+  initial: &initial
+    tag: waiting_initial
+    admission_date: 2026-10-02
+    diagnosis: Viral pneumonia
+    icd10_code: J12.9
+    procedure: Inpatient medical management
+    is_emergency: false
+    room_category: Twin sharing
+    room_rent_per_day_inr: 3500
+    planned_los_days: 4
+    cost_breakup: [{item: Room and nursing, claimed_inr: 14000}, {item: Medical management, claimed_inr: 36000}]
+    estimated_total_inr: 50000
+    clinical_note: Fever and radiographic infiltrates; admission requested for monitored treatment.
+    expected_outcome: REFER
+    expected_payable_inr: null
+    expected_clause_ids: [NIA-6.3]
+  accident: &accident
+    tag: accident_exempt
+    admission_date: 2026-10-02
+    diagnosis: Closed fracture of forearm after road accident
+    icd10_code: S52.9
+    procedure: Open reduction and internal fixation
+    is_emergency: true
+    room_category: Twin sharing
+    room_rent_per_day_inr: 4000
+    planned_los_days: 2
+    cost_breakup: [{item: Room and nursing, claimed_inr: 8000}, {item: Surgery and implant, claimed_inr: 92000}]
+    estimated_total_inr: 100000
+    clinical_note: Acute traumatic fracture following a documented road accident; urgent fixation advised.
+    expected_outcome: APPROVE
+    expected_payable_inr: 100000
+    expected_clause_ids: [NIA-6.3]
+  specific: &specific
+    tag: waiting_specific
+    admission_date: 2026-10-02
+    diagnosis: Inguinal hernia
+    icd10_code: K40.9
+    procedure: Laparoscopic hernia repair
+    is_emergency: false
+    room_category: Twin sharing
+    room_rent_per_day_inr: 4000
+    planned_los_days: 2
+    cost_breakup: [{item: Room and nursing, claimed_inr: 8000}, {item: Hernia repair package, claimed_inr: 72000}]
+    estimated_total_inr: 80000
+    clinical_note: Reducible non-obstructed hernia; elective repair requested.
+    expected_outcome: REFER
+    expected_payable_inr: null
+    expected_clause_ids: [NIA-6.2-24]
+  ped: &ped
+    tag: waiting_ped
+    admission_date: 2026-10-02
+    diagnosis: Type 2 diabetes with foot complication
+    icd10_code: E11.6
+    procedure: Debridement and inpatient glycaemic management
+    is_emergency: false
+    room_category: Twin sharing
+    room_rent_per_day_inr: 3500
+    planned_los_days: 5
+    cost_breakup: [{item: Room and nursing, claimed_inr: 17500}, {item: Debridement and medical care, claimed_inr: 62500}]
+    estimated_total_inr: 80000
+    clinical_note: Declared diabetes predates policy inception; admission requested for infected foot wound.
+    expected_outcome: REFER
+    expected_payable_inr: null
+    expected_clause_ids: [NIA-6.1]
+  missing_cost: &missing_cost
+    tag: missing_info
+    admission_date: 2026-10-02
+    diagnosis: Acute appendicitis
+    icd10_code: K35.8
+    procedure: Laparoscopic appendicectomy
+    is_emergency: false
+    room_category: Twin sharing
+    room_rent_per_day_inr: 4000
+    planned_los_days: 3
+    cost_breakup: []
+    estimated_total_inr: 90000
+    clinical_note: Cost break-up has not been supplied by the hospital.
+    expected_outcome: QUERY
+    expected_payable_inr: null
+    expected_clause_ids: [NIA-4.1-A]
+  missing_diagnosis: &missing_diagnosis
+    tag: missing_info
+    admission_date: 2026-10-02
+    diagnosis: null
+    icd10_code: null
+    procedure: Diagnostic laparoscopy
+    is_emergency: false
+    room_category: Twin sharing
+    room_rent_per_day_inr: 4000
+    planned_los_days: 2
+    cost_breakup: [{item: Hospital package, claimed_inr: 70000}]
+    estimated_total_inr: 70000
+    clinical_note: Definitive diagnosis is absent from the submitted request.
+    expected_outcome: QUERY
+    expected_payable_inr: null
+    expected_clause_ids: [NIA-4.1-A]
+  si: &si
+    tag: si_exhaustion
+    admission_date: 2026-10-02
+    diagnosis: Acute appendicitis
+    icd10_code: K35.8
+    procedure: Laparoscopic appendicectomy
+    is_emergency: false
+    room_category: Twin sharing
+    room_rent_per_day_inr: 4000
+    planned_los_days: 3
+    cost_breakup: [{item: Hospital package, claimed_inr: 100000}]
+    estimated_total_inr: 100000
+    si_remaining_inr: 45000
+    clinical_note: Treatment is covered, but prior paid claims leave only INR 45,000 available.
+    expected_outcome: APPROVE_WITH_DEDUCTIONS
+    expected_payable_inr: 45000
+    expected_clause_ids: [NIA-4.1-A]
+  exclusion: &exclusion
+    tag: exclusion
+    admission_date: 2026-10-02
+    diagnosis: Refractive error of 3 dioptres
+    icd10_code: H52.1
+    procedure: Refractive eye surgery
+    is_emergency: false
+    room_category: Day care
+    room_rent_per_day_inr: 0
+    planned_los_days: 1
+    cost_breakup: [{item: Refractive surgery package, claimed_inr: 50000}]
+    estimated_total_inr: 50000
+    clinical_note: Elective correction requested for refractive error below 7.5 dioptres.
+    expected_outcome: REFER
+    expected_payable_inr: null
+    expected_clause_ids: [NIA-7.12]
+
+cases:
+  - {<<: *clean, request_id: GOL001, policy_id: POL0001}
+  - {<<: *clean, request_id: GOL002, policy_id: POL0002}
+  - {<<: *clean, request_id: GOL003, policy_id: POL0003}
+  - {<<: *clean, request_id: GOL004, policy_id: POL0004}
+  - {<<: *clean, request_id: GOL005, policy_id: POL0005}
+  - {<<: *clean, request_id: GOL006, policy_id: POL0006}
+  - {<<: *room, request_id: GOL007, policy_id: POL0007}
+  - {<<: *room, request_id: GOL008, policy_id: POL0008}
+  - {<<: *room, request_id: GOL009, policy_id: POL0009}
+  - {<<: *room, request_id: GOL010, policy_id: POL0010}
+  - {<<: *room, request_id: GOL011, policy_id: POL0011}
+  - {<<: *sublimit, request_id: GOL012, policy_id: POL0012}
+  - {<<: *sublimit, request_id: GOL013, policy_id: POL0013}
+  - {<<: *sublimit, request_id: GOL014, policy_id: POL0014}
+  - {<<: *sublimit, request_id: GOL015, policy_id: POL0015}
+  - {<<: *initial, request_id: GOL016, policy_id: POL0016}
+  - {<<: *initial, request_id: GOL017, policy_id: POL0017}
+  - {<<: *initial, request_id: GOL018, policy_id: POL0018}
+  - {<<: *accident, request_id: GOL019, policy_id: POL0019}
+  - {<<: *accident, request_id: GOL020, policy_id: POL0020}
+  - {<<: *specific, request_id: GOL021, policy_id: POL0021}
+  - {<<: *specific, request_id: GOL022, policy_id: POL0022}
+  - {<<: *specific, request_id: GOL023, policy_id: POL0023}
+  - {<<: *ped, request_id: GOL024, policy_id: POL0024}
+  - {<<: *ped, request_id: GOL025, policy_id: POL0025}
+  - {<<: *ped, request_id: GOL026, policy_id: POL0026}
+  - {<<: *missing_cost, request_id: GOL027, policy_id: POL0027}
+  - {<<: *missing_diagnosis, request_id: GOL028, policy_id: POL0028}
+  - {<<: *si, request_id: GOL029, policy_id: POL0029}
+  - {<<: *exclusion, request_id: GOL030, policy_id: POL0030}

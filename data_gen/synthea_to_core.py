@@ -1,6 +1,10 @@
-"""Optional Synthea import adapter (stretch only).
+"""Compatibility entry point for the seeded Faker generator.
 
-TODO: The MVP uses a fixed-seed Faker ``en_IN`` generator instead. This file
-is retained because it is part of the specified repository structure.
+Synthea is deliberately not used by the MVP; the filename remains because it is
+part of the agreed repository layout.
 """
 
+from data_gen.generate import main
+
+if __name__ == "__main__":
+    main()
