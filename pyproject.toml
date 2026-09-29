@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cashlessiq"
+version = "0.1.0"
+description = "Snowflake-native cashless pre-authorisation copilot"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = { file = "LICENSE" }
+dependencies = [
+  "snowflake-snowpark-python>=1.37,<2",
+  "streamlit>=1.50,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "faker>=37,<38",
+  "jsonschema>=4.25,<5",
+  "pytest>=8.4,<9",
+  "pyyaml>=6,<7",
+  "reportlab>=4.4,<5",
+  "ruff>=0.13,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cashlessiq"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+

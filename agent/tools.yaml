@@ -1,0 +1,4 @@
+# Phase 3b TODO: add schemas for TOOL_GET_CASE, TOOL_CHECK_WAITING_PERIODS,
+# TOOL_COMPUTE_PAYABLE, and TOOL_SLA_STATUS.
+tools: []
+
