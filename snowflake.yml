@@ -1,0 +1,19 @@
+# VERIFY WITH COCO: Confirm this manifest against the installed Snowflake CLI
+# version and the 2026 Streamlit container-runtime project schema before deploy.
+definition_version: 2
+entities:
+  cashlessiq_spike:
+    type: streamlit
+    identifier:
+      name: CIQ_SPIKE_APP
+      schema: APP
+      database: CASHLESSIQ
+    main_file: app/streamlit_app.py
+    query_warehouse: CIQ_WH
+    stage: CASHLESSIQ.APP.CIQ_APP_STAGE
+    artifacts:
+      - app/streamlit_app.py
+      - app/requirements.txt
+    pages_dir: app/pages
+    title: CashlessIQ Agent Connectivity Spike
+
