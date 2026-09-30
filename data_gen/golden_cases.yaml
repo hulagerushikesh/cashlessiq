@@ -191,7 +191,7 @@ templates:
     si_remaining_inr: 45000
     clinical_note: Treatment is covered, but prior paid claims leave only INR 45,000 available.
     expected_outcome: APPROVE_WITH_DEDUCTIONS
-    expected_payable_inr: 42750
+    expected_payable_inr: 45000
     expected_clause_ids: [NIA-4.1-A, NIA-9.5]
   exclusion: &exclusion
     tag: exclusion

@@ -164,12 +164,7 @@ def compute_payable(
     rules: tuple[Rule, ...],
     si_remaining_inr: int,
 ) -> PayableResult:
-    """Apply caps, proportions, sub-limits, SI availability, then co-payment.
-
-    The SI limit is applied to the admissible amount before member co-payment.
-    This matches the reviewed golden calculation: INR 45,000 available cover
-    with 5% co-pay produces an insurer payable of INR 42,750.
-    """
+    """Apply caps, proportions, sub-limits, co-payment, then SI availability."""
 
     product_rules = tuple(rule for rule in rules if rule.product_id == policy.product_id)
     states = [
@@ -199,8 +194,8 @@ def compute_payable(
     )
     _apply_proportion(states, room_ratio, _rule(product_rules, "PROPORTIONATE_DEDUCTION"))
     _apply_sublimit(states, policy, facts, _rule(product_rules, "PROCEDURE_SUBLIMIT"))
-    _apply_si_limit(states, si_remaining_inr)
     _apply_copay(states, _rule(product_rules, "COPAY"))
+    _apply_si_limit(states, si_remaining_inr)
 
     lines = tuple(
         DecisionLine(

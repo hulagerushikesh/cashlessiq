@@ -46,7 +46,9 @@ def test_hand_calculated_amounts_are_independent_constants() -> None:
     # mandatory 5% co-pay then gives 79,800.
     assert by_tag["room_over_cap"]["expected_payable_inr"] == 79_800
     assert by_tag["sublimit"]["expected_payable_inr"] == 38_000
-    assert by_tag["si_exhaustion"]["expected_payable_inr"] == 42_750
+    # Mandatory 5% co-pay is applied first (100,000 -> 95,000), then the
+    # build-plan's final remaining-SI cap limits the payable to 45,000.
+    assert by_tag["si_exhaustion"]["expected_payable_inr"] == 45_000
 
 
 def test_policy_identity_and_rules_have_human_signoff() -> None:
