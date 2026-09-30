@@ -52,7 +52,8 @@ agent: tools
 	snow sql --connection $(SNOW_CONNECTION) --filename sql/50_agent.sql
 
 deploy:
-	@echo "Phase 0 spike: verify snowflake.yml with CoCo, then run: snow streamlit deploy --connection $(SNOW_CONNECTION)"
+	snow streamlit deploy cashlessiq_app --replace --prune --connection $(SNOW_CONNECTION) --role CIQ_ADMIN
+	snow sql --connection $(SNOW_CONNECTION) --filename sql/62_app_caller_grants.sql
 
 eval:
 	@echo "Phase 5 TODO: run the golden-set evaluator."

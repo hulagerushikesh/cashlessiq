@@ -1,16 +1,31 @@
 definition_version: 2
 entities:
-  cashlessiq_spike:
+  cashlessiq_app:
     type: streamlit
     identifier:
-      name: CIQ_SPIKE_APP
+      name: CIQ_REVIEWER_APP
       schema: APP
       database: CASHLESSIQ
     main_file: app/streamlit_app.py
+    pages_dir: app/pages/
     query_warehouse: CIQ_WH
     compute_pool: SYSTEM_COMPUTE_POOL_CPU
     runtime_name: SYSTEM$ST_CONTAINER_RUNTIME_PY3_11
     artifacts:
       - app/streamlit_app.py
+      - app/__init__.py
+      - app/services.py
+      - app/ui.py
+      - src: app/pages/*.py
+        dest: app/pages/
+      - src: src/cashlessiq/__init__.py
+        dest: app/cashlessiq/__init__.py
+      - src: src/cashlessiq/decision_schema.py
+        dest: app/cashlessiq/decision_schema.py
+      - src: src/cashlessiq/rules/*.py
+        dest: app/cashlessiq/rules/
       - app/requirements.txt
-    title: CashlessIQ Agent Connectivity Spike
+    grants:
+      - privilege: USAGE
+        role: CIQ_APP_USER
+    title: CashlessIQ Reviewer Console
