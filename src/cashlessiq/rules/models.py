@@ -59,6 +59,16 @@ class Rule:
 
 
 @dataclass(frozen=True, slots=True)
+class MemberCondition:
+    """A member condition relevant to waiting-period evaluation."""
+
+    icd10_code: str
+    condition_name: str
+    first_diagnosed_on: date
+    declared_at_proposal: bool
+
+
+@dataclass(frozen=True, slots=True)
 class CostItem:
     """One extracted cost component in integer rupees."""
 
@@ -108,6 +118,42 @@ class DecisionLine:
 
 
 @dataclass(frozen=True, slots=True)
+class RuleCheck:
+    """Auditable result of evaluating one waiting-period or exclusion rule."""
+
+    rule_id: str
+    clause_id: str
+    rule_type: str
+    applies: bool
+    months_elapsed: int | None
+    months_required: int | None
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class PayableResult:
+    """Deterministic payable calculation returned by the pure rules core."""
+
+    lines: tuple[DecisionLine, ...]
+    total_claimed_inr: int
+    total_payable_inr: int
+    si_remaining_inr: int
+
+
+@dataclass(frozen=True, slots=True)
+class CaseResult:
+    """Outcome selected entirely by deterministic rule results."""
+
+    request_id: str
+    outcome: Outcome
+    payable: PayableResult | None
+    checks: tuple[RuleCheck, ...]
+    queries: tuple[str, ...]
+    refer_reasons: tuple[str, ...]
+    clause_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class SlaStatus:
     """Deterministic status of the one-hour pre-authorisation clock."""
 
@@ -131,4 +177,3 @@ class Decision:
     summary: str
     sla: SlaStatus
     metadata: dict[str, Any] = field(default_factory=dict)
-
