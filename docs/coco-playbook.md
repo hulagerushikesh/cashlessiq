@@ -36,3 +36,24 @@ and reproducible. Append entries; do not rewrite successful history.
 - **Follow-up / verification:** Completed. `make setup` succeeded twice,
   `DATA_AGENT_RUN` returned `CashlessIQ spike connected.`, and the deployed
   container-runtime Streamlit app returned the same response through its UI.
+
+## 2026-09-30 — Phase 2 document and retrieval review
+
+- **Date/time (IST):** 2026-09-30 08:50
+- **Phase:** 2
+- **Goal:** Review current syntax for document parsing, structured extraction,
+  Cortex Search, and the native semantic view before live deployment.
+- **CoCo prompt:** Read-only repository review of the proposed Phase 2 objects;
+  identify syntax and privilege risks without editing files or executing SQL.
+- **Skill used:** CoCo CLI repository review and agent-studio guidance.
+- **Result:** CoCo proposed legacy forms for `AI_PARSE_DOCUMENT`, `AI_EXTRACT`,
+  and YAML-backed semantic models. Those suggestions were rejected after
+  checking current Snowflake documentation and live compilation. The deployed
+  account-specific syntax uses object-returning `AI_PARSE_DOCUMENT`, JSON Schema
+  `AI_EXTRACT`, native `CREATE SEMANTIC VIEW`, and a minimum Cortex Search
+  `AUTO_SUSPEND` of 1,800 seconds.
+- **SQL saved to:** `sql/20_extract_preauth.sql`,
+  `sql/21_policy_clauses.sql`, `sql/22_search_service.sql`, and
+  `sql/30_semantic_view.sql`.
+- **Follow-up / verification:** Completed. Extraction accuracy 206/210 (98.1%);
+  search probes correct in top three 10/10; verified SQL queries 10/10.
