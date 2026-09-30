@@ -57,3 +57,24 @@ and reproducible. Append entries; do not rewrite successful history.
   `sql/30_semantic_view.sql`.
 - **Follow-up / verification:** Completed. Extraction accuracy 206/210 (98.1%);
   search probes correct in top three 10/10; verified SQL queries 10/10.
+
+## 2026-09-30 — Phase 3b tools and agent deployment
+
+- **Date/time (IST):** 2026-09-30 15:30
+- **Phase:** 3b
+- **Goal:** Deploy caller-rights deterministic tools and a tool-first Cortex
+  Agent using current account syntax.
+- **CoCo prompt:** Review the four Snowpark procedure contracts and the Agent
+  specification; confirm generic procedure resources, execution environments,
+  and `DATA_AGENT_RUN` invocation.
+- **Skill used:** Agent-studio guidance, checked against current official docs
+  and live Snowflake compilation.
+- **Result:** Four Python 3.11 procedures compiled and returned non-PII VARIANT
+  payloads. Live testing found and fixed comma-formatted extracted rupees. Agent
+  creation succeeded after replacing YAML anchors/flow lists that collided with
+  Snow CLI templating and adding warehouse execution environments to Analyst
+  and Search. `DATA_AGENT_RUN` completed with all tools available.
+- **SQL saved to:** `sql/40_tools.sql` and `sql/50_agent.sql`.
+- **Follow-up / verification:** Run the ten-case `eval.phase3b_acceptance` gate
+  after local Snowpark connector OAuth is cached; target is schema-valid 10/10
+  and outcome-correct at least 8/10.

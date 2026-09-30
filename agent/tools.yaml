@@ -1,4 +1,28 @@
-# Phase 3b TODO: add schemas for TOOL_GET_CASE, TOOL_CHECK_WAITING_PERIODS,
-# TOOL_COMPUTE_PAYABLE, and TOOL_SLA_STATUS.
-tools: []
-
+tools:
+  - tool_spec:
+      type: generic
+      name: tool_get_case
+      description: Load non-PII policy and extracted facts for one request. Always call first.
+      input_schema: &request_input
+        type: object
+        properties:
+          request_id: {type: string, description: CashlessIQ request identifier.}
+        required:
+          - request_id
+  - tool_spec: {type: generic, name: tool_check_waiting_periods, description: Deterministically check waiting periods and exclusions., input_schema: *request_input}
+  - tool_spec: {type: generic, name: tool_compute_payable, description: Deterministically calculate payable lines and totals in integer rupees., input_schema: *request_input}
+  - tool_spec: {type: generic, name: tool_sla_status, description: Calculate current one-hour SLA state., input_schema: *request_input}
+  - tool_spec: {type: cortex_search, name: clause_search, description: Retrieve exact policy wording filtered to the case product.}
+  - tool_spec: {type: cortex_analyst_text_to_sql, name: member_360, description: Retrieve context only; never calculate decisions or money.}
+tool_resources:
+  tool_get_case: {identifier: CASHLESSIQ.AI.TOOL_GET_CASE, type: procedure, execution_environment: {type: warehouse, warehouse: CIQ_WH}}
+  tool_check_waiting_periods: {identifier: CASHLESSIQ.AI.TOOL_CHECK_WAITING_PERIODS, type: procedure, execution_environment: {type: warehouse, warehouse: CIQ_WH}}
+  tool_compute_payable: {identifier: CASHLESSIQ.AI.TOOL_COMPUTE_PAYABLE, type: procedure, execution_environment: {type: warehouse, warehouse: CIQ_WH}}
+  tool_sla_status: {identifier: CASHLESSIQ.AI.TOOL_SLA_STATUS, type: procedure, execution_environment: {type: warehouse, warehouse: CIQ_WH}}
+  clause_search:
+    search_service: CASHLESSIQ.AI.CLAUSE_SEARCH
+    max_results: '5'
+    execution_environment: {type: warehouse, warehouse: CIQ_WH}
+  member_360:
+    semantic_view: CASHLESSIQ.AI.MEMBER_360
+    execution_environment: {type: warehouse, warehouse: CIQ_WH}
