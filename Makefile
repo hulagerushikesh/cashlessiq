@@ -3,7 +3,7 @@ SNOW_CONNECTION ?= cashlessiq
 PYTHON ?= python3.11
 SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql sql/03_docs_tables.sql sql/04_app_eval_tables.sql sql/05_spike_agent.sql
 
-.PHONY: install setup teardown test lint generate-data policy-source data deploy eval
+.PHONY: install setup teardown test lint generate-data policy-source data documents deploy eval
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -34,6 +34,13 @@ policy-source:
 
 data: generate-data policy-source
 	snow sql --connection $(SNOW_CONNECTION) --filename sql/10_load_data.sql
+
+documents:
+	snow sql --connection $(SNOW_CONNECTION) --filename sql/20_extract_preauth.sql
+	snow sql --connection $(SNOW_CONNECTION) --filename sql/21_policy_clauses.sql
+	snow sql --connection $(SNOW_CONNECTION) --filename sql/22_search_service.sql
+	snow sql --connection $(SNOW_CONNECTION) --filename sql/30_semantic_view.sql
+	$(PYTHON) -m eval.phase2_acceptance --connection $(SNOW_CONNECTION)
 
 deploy:
 	@echo "Phase 0 spike: verify snowflake.yml with CoCo, then run: snow streamlit deploy --connection $(SNOW_CONNECTION)"
