@@ -87,3 +87,30 @@ response contract was tightened to enumerate every permitted JSON key and to
 require `APPROVE_WITH_DEDUCTIONS` whenever the tool totals differ. The corrected
 smoke case passed, followed by the full exit gate: schema-valid 10/10 and
 outcome-correct 10/10. Decisions were persisted to `APP.DECISION`.
+
+## 2026-09-30 — Phase 4 app and governance
+
+- **Date/time (IST):** 2026-09-30 18:30
+- **Phase:** 4
+- **Goal:** Deploy the reviewer console with viewer-context masking and verify
+  all three governance personas without exposing synthetic PII in test output.
+- **CoCo prompt:** Review the container Streamlit role model, masking-policy
+  bodies, persona grants, and the policy-onboarding workflow. Confirm that the
+  app uses restricted caller rights and that proposed policy rules require
+  human approval before merge.
+- **Skill used:** Streamlit container-runtime and governance guidance, checked
+  against current Snowflake documentation and live account compilation.
+- **Result:** The app was recreated with `CIQ_ADMIN` ownership because this
+  account rejects direct ownership transfer for Streamlit objects. Restricted
+  caller grants were limited to the named Phase 4 tables, stage, agent, search
+  service, semantic view, and procedures. The live Queue, Case, and Decision
+  Log pages loaded successfully. Label-only role checks returned
+  medical=clear/clear/clear, processor=partial/partial/masked, and
+  auditor=masked/masked/masked for name/phone/clinical note.
+- **SQL saved to:** `sql/60_governance.sql`, `sql/61_governance_check.sql`, and
+  `sql/62_app_caller_grants.sql`.
+- **Follow-up / verification:** Configure authentication outside the repository
+  for `CIQ_MO_USER`, `CIQ_PROC_USER`, and `CIQ_AUDIT_USER`; exercise the full
+  UI as each user. Run `policy-onboarding` once end to end and append its rule
+  approval, object counts, probes, and three synthetic decisions here before
+  tagging Phase 4.
