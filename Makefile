@@ -3,7 +3,7 @@ SNOW_CONNECTION ?= cashlessiq
 PYTHON ?= python3.11
 SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql sql/03_docs_tables.sql sql/04_app_eval_tables.sql sql/05_spike_agent.sql
 
-.PHONY: install setup teardown test lint generate-data policy-source data documents deploy eval
+.PHONY: install setup teardown test lint generate-data policy-source data documents tools agent deploy eval
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -41,6 +41,15 @@ documents:
 	snow sql --connection $(SNOW_CONNECTION) --filename sql/22_search_service.sql
 	snow sql --connection $(SNOW_CONNECTION) --filename sql/30_semantic_view.sql
 	$(PYTHON) -m eval.phase2_acceptance --connection $(SNOW_CONNECTION)
+
+tools:
+	rm -f /tmp/cashlessiq.zip
+	cd src && zip -q -r /tmp/cashlessiq.zip cashlessiq -x '*/__pycache__/*' '*.pyc'
+	snow sql --connection $(SNOW_CONNECTION) --query "PUT file:///tmp/cashlessiq.zip @CASHLESSIQ.AI.CIQ_CODE_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE"
+	snow sql --connection $(SNOW_CONNECTION) --filename sql/40_tools.sql
+
+agent: tools
+	snow sql --connection $(SNOW_CONNECTION) --filename sql/50_agent.sql
 
 deploy:
 	@echo "Phase 0 spike: verify snowflake.yml with CoCo, then run: snow streamlit deploy --connection $(SNOW_CONNECTION)"
