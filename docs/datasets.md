@@ -12,7 +12,8 @@ Only synthetic member/clinical data and publicly available policy documents are 
 - **Purpose:** Demonstration, extraction evaluation, and deterministic rules testing
 - **Synthetic or public:** Synthetic
 - **Contains real patient or insurer data:** No
-- **Integrity / human verification:** Counts and golden matrix are enforced by pytest
+- **Integrity / human verification:** Counts and golden matrix are enforced by pytest. Golden
+  policy dates and declared conditions are explicit scenario inputs, not random generator side effects.
 - **Attribution required:** Faker project attribution in repository documentation
 
 ## Arogya Sanjeevani Policy, The New India Assurance Co. Ltd
@@ -26,7 +27,9 @@ Only synthetic member/clinical data and publicly available policy documents are 
 - **Purpose:** Sole primary policy source for clause retrieval and rule parameters
 - **Synthetic or public:** Public
 - **Contains real patient or insurer data:** No patient data; publisher identity is retained for attribution
-- **Integrity / human verification:** SHA-256 `890ab4794c98a56eda8ef2749124e2114589cc00a5e596bed0392ea13667efce`; rule review pending
+- **Integrity / human verification:** SHA-256 `890ab4794c98a56eda8ef2749124e2114589cc00a5e596bed0392ea13667efce`;
+  rule parameters reviewed by Rushikesh on 2026-09-29. The Phase 3a rules core reproduces all
+  30 golden outcomes and every non-null expected payable amount.
 - **Attribution required:** Insurer, product name, UIN, and source link
 
 ## Future entry template

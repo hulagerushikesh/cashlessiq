@@ -32,7 +32,14 @@ CLAUSES = (
 RULES = (
     ("RULE_ROOM", "ROOM_RENT_CAP", '{"pct_of_si":2,"max_inr_per_day":5000}', "NIA-4.1-A"),
     ("RULE_ICU", "ICU_CAP", '{"pct_of_si":5,"max_inr_per_day":10000}', "NIA-4.1-B"),
-    ("RULE_PROP", "PROPORTIONATE_DEDUCTION", '{"exempt_items":["medicines"]}', "NIA-4.1-NOTE-B"),
+    (
+        "RULE_PROP",
+        "PROPORTIONATE_DEDUCTION",
+        '{"applies_to":["procedure and professional fees","surgery and implant",'
+        '"hernia repair package","debridement and medical care","medical management"],'
+        '"exempt_items":["medicines"]}',
+        "NIA-4.1-NOTE-B",
+    ),
     (
         "RULE_CATARACT",
         "PROCEDURE_SUBLIMIT",
@@ -43,13 +50,15 @@ RULES = (
     (
         "RULE_SPECIFIC_24",
         "WAITING_SPECIFIC",
-        '{"months":24,"conditions":["cataract","hernia","gallstones","non_infective_arthritis"]}',
+        '{"months":24,"conditions":["cataract","hernia","gallstones",'
+        '"non_infective_arthritis"],"accident_exempt":true}',
         "NIA-6.2-24",
     ),
     (
         "RULE_SPECIFIC_36",
         "WAITING_SPECIFIC",
-        '{"months":36,"conditions":["joint_replacement","osteoarthritis","osteoporosis"]}',
+        '{"months":36,"conditions":["joint_replacement","osteoarthritis",'
+        '"osteoporosis"],"accident_exempt":true}',
         "NIA-6.2-36",
     ),
     ("RULE_INITIAL", "WAITING_INITIAL", '{"days":30,"accident_exempt":true}', "NIA-6.3"),

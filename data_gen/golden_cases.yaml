@@ -5,6 +5,8 @@ policy_product_id: AS_NIA_V02_2425
 templates:
   clean: &clean
     tag: clean
+    inception_date: 2023-01-01
+    continuous_cover_since: 2023-01-01
     admission_date: 2026-10-02
     diagnosis: Acute appendicitis
     icd10_code: K35.8
@@ -24,6 +26,8 @@ templates:
     expected_clause_ids: [NIA-4.1-A, NIA-9.5]
   room: &room
     tag: room_over_cap
+    inception_date: 2023-01-01
+    continuous_cover_since: 2023-01-01
     admission_date: 2026-10-02
     diagnosis: Acute cholecystitis
     icd10_code: K81.0
@@ -43,6 +47,8 @@ templates:
     expected_clause_ids: [NIA-4.1-A, NIA-4.1-NOTE-B, NIA-9.5]
   sublimit: &sublimit
     tag: sublimit
+    inception_date: 2023-01-01
+    continuous_cover_since: 2023-01-01
     admission_date: 2026-10-02
     diagnosis: Age-related cataract
     icd10_code: H25.9
@@ -59,6 +65,8 @@ templates:
     expected_clause_ids: [NIA-4.3, NIA-9.5]
   initial: &initial
     tag: waiting_initial
+    inception_date: 2026-09-15
+    continuous_cover_since: 2026-09-15
     admission_date: 2026-10-02
     diagnosis: Viral pneumonia
     icd10_code: J12.9
@@ -75,6 +83,8 @@ templates:
     expected_clause_ids: [NIA-6.3]
   accident: &accident
     tag: accident_exempt
+    inception_date: 2026-09-15
+    continuous_cover_since: 2026-09-15
     admission_date: 2026-10-02
     diagnosis: Closed fracture of forearm after road accident
     icd10_code: S52.9
@@ -91,6 +101,8 @@ templates:
     expected_clause_ids: [NIA-6.3, NIA-9.5]
   specific: &specific
     tag: waiting_specific
+    inception_date: 2026-01-01
+    continuous_cover_since: 2026-01-01
     admission_date: 2026-10-02
     diagnosis: Inguinal hernia
     icd10_code: K40.9
@@ -107,6 +119,11 @@ templates:
     expected_clause_ids: [NIA-6.2-24]
   ped: &ped
     tag: waiting_ped
+    inception_date: 2026-01-01
+    continuous_cover_since: 2026-01-01
+    declared_conditions:
+      - {icd10_code: E11.6, condition_name: Type 2 diabetes with foot complication,
+         first_diagnosed_on: 2024-01-01, declared_at_proposal: true}
     admission_date: 2026-10-02
     diagnosis: Type 2 diabetes with foot complication
     icd10_code: E11.6
@@ -123,6 +140,8 @@ templates:
     expected_clause_ids: [NIA-6.1]
   missing_cost: &missing_cost
     tag: missing_info
+    inception_date: 2023-01-01
+    continuous_cover_since: 2023-01-01
     admission_date: 2026-10-02
     diagnosis: Acute appendicitis
     icd10_code: K35.8
@@ -139,6 +158,8 @@ templates:
     expected_clause_ids: [NIA-4.1-A]
   missing_diagnosis: &missing_diagnosis
     tag: missing_info
+    inception_date: 2023-01-01
+    continuous_cover_since: 2023-01-01
     admission_date: 2026-10-02
     diagnosis: null
     icd10_code: null
@@ -155,6 +176,8 @@ templates:
     expected_clause_ids: [NIA-4.1-A]
   si: &si
     tag: si_exhaustion
+    inception_date: 2023-01-01
+    continuous_cover_since: 2023-01-01
     admission_date: 2026-10-02
     diagnosis: Acute appendicitis
     icd10_code: K35.8
@@ -172,6 +195,8 @@ templates:
     expected_clause_ids: [NIA-4.1-A, NIA-9.5]
   exclusion: &exclusion
     tag: exclusion
+    inception_date: 2023-01-01
+    continuous_cover_since: 2023-01-01
     admission_date: 2026-10-02
     diagnosis: Refractive error of 3 dioptres
     icd10_code: H52.1

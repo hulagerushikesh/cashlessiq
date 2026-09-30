@@ -100,6 +100,12 @@ def generate_core(fake: Faker, rng: random.Random) -> tuple[list[dict], list[dic
                 "status": "ACTIVE",
             }
         )
+    spec = yaml.safe_load((ROOT / "data_gen" / "golden_cases.yaml").read_text(encoding="utf-8"))
+    golden_cases = spec["cases"]
+    for case in golden_cases:
+        policy = policies[int(case["policy_id"][-4:]) - 1]
+        policy["inception_date"] = case["inception_date"].isoformat()
+        policy["continuous_cover_since"] = case["continuous_cover_since"].isoformat()
     conditions = []
     pairs: set[tuple[int, int]] = set()
     while len(pairs) < 800:
@@ -116,6 +122,25 @@ def generate_core(fake: Faker, rng: random.Random) -> tuple[list[dict], list[dic
                 "declared_at_proposal": rng.random() < 0.35,
             }
         )
+    protected_members = {
+        f"MEM{int(case['policy_id'][-4:]):04d}"
+        for case in golden_cases
+        if case.get("declared_conditions")
+    }
+    forced_condition_count = sum(
+        len(case.get("declared_conditions", ())) for case in golden_cases
+    )
+    removable = [
+        index
+        for index, condition in enumerate(conditions)
+        if condition["member_id"] not in protected_members
+    ][-forced_condition_count:]
+    for index in reversed(removable):
+        conditions.pop(index)
+    for case in golden_cases:
+        member_id = f"MEM{int(case['policy_id'][-4:]):04d}"
+        for condition in case.get("declared_conditions", ()):
+            conditions.append({"member_id": member_id, **condition})
     claims = []
     for index in range(300):
         policy_index = rng.randrange(500)
