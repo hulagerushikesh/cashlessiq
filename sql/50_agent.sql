@@ -14,8 +14,8 @@ orchestration:
     seconds: 120
     tokens: 8000
 instructions:
-  response: "Return exactly one schema-valid JSON object. Never return Markdown, compute numbers, or output DENY."
-  orchestration: "Always call tool_get_case first. Missing fields mean QUERY. Otherwise call tool_check_waiting_periods; any applies=true means REFER. Otherwise call tool_compute_payable. Always call tool_sla_status. Retrieve every cited clause with clause_search filtered to the exact PRODUCT_ID. member_360 is context-only."
+  response: "Return one raw JSON object with exactly these top-level keys: request_id, outcome, total_claimed_inr, total_payable_inr, lines, queries, refer_reasons, summary, sla. No Markdown and no top-level citations. Each line has exactly item, claimed_inr, payable_inr, deduction_inr, reason, calc, citations. Each citation has exactly type and id. sla has exactly elapsed_min and state. Never compute or alter numbers and never output DENY."
+  orchestration: "Always call tool_get_case first. Missing fields mean QUERY with empty lines and zero totals. Otherwise call tool_check_waiting_periods; any applies=true means REFER with empty lines and zero totals. Otherwise call tool_compute_payable and copy every line and citation unchanged. APPROVE if and only if total_claimed_inr equals total_payable_inr; any difference means APPROVE_WITH_DEDUCTIONS. Always call tool_sla_status. Retrieve every cited clause with clause_search filtered to the exact PRODUCT_ID, but do not add policy text or top-level fields. member_360 is context-only."
 tools:
   - tool_spec:
       type: generic

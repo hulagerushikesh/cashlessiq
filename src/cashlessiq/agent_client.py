@@ -51,6 +51,22 @@ def _json_object(value: Any) -> dict[str, Any]:
     raise ValueError("Agent response contains no CashlessIQ decision JSON")
 
 
+def _text_items(value: Any) -> list[str]:
+    """Collect response text for concise diagnostics when JSON is absent."""
+
+    found: list[str] = []
+    if isinstance(value, Mapping):
+        text = value.get("text")
+        if isinstance(text, str):
+            found.append(text)
+        for child in value.values():
+            found.extend(_text_items(child))
+    elif isinstance(value, list):
+        for child in value:
+            found.extend(_text_items(child))
+    return found
+
+
 def _run(session: Any, prompt: str) -> tuple[dict[str, Any], str | None]:
     body = json.dumps(
         {"messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}]}
@@ -64,7 +80,12 @@ def _run(session: Any, prompt: str) -> tuple[dict[str, Any], str | None]:
     if isinstance(response, str):
         response = json.loads(response)
     run_id = response.get("run_id") if isinstance(response, Mapping) else None
-    return _json_object(response), run_id
+    try:
+        decision = _json_object(response)
+    except ValueError as exc:
+        tail = " | ".join(item[-500:] for item in _text_items(response)[-3:])
+        raise ValueError(f"{exc}; final agent text: {tail}") from exc
+    return decision, run_id
 
 
 def decide(

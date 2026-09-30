@@ -78,3 +78,12 @@ and reproducible. Append entries; do not rewrite successful history.
 - **Follow-up / verification:** Run the ten-case `eval.phase3b_acceptance` gate
   after local Snowpark connector OAuth is cached; target is schema-valid 10/10
   and outcome-correct at least 8/10.
+
+### Phase 3b tuning result
+
+The first agent smoke run returned an extra top-level `citations` field and
+mislabelled a ₹100,000 claimed / ₹95,000 payable result as `APPROVE`. The
+response contract was tightened to enumerate every permitted JSON key and to
+require `APPROVE_WITH_DEDUCTIONS` whenever the tool totals differ. The corrected
+smoke case passed, followed by the full exit gate: schema-valid 10/10 and
+outcome-correct 10/10. Decisions were persisted to `APP.DECISION`.
