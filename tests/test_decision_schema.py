@@ -41,6 +41,11 @@ def test_valid_example(valid_decision: dict) -> None:
     validate_decision(valid_decision)
 
 
+def test_generated_request_id_is_valid(valid_decision: dict) -> None:
+    valid_decision["request_id"] = "GOL001"
+    validate_decision(valid_decision)
+
+
 def test_missing_citation_is_rejected(valid_decision: dict) -> None:
     invalid = deepcopy(valid_decision)
     invalid["lines"][0]["citations"] = []
@@ -74,4 +79,3 @@ def test_deny_is_rejected(valid_decision: dict) -> None:
     invalid["outcome"] = "DENY"
     with pytest.raises(DecisionValidationError, match="outcome"):
         validate_decision(invalid)
-

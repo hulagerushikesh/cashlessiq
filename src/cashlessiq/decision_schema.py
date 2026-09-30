@@ -26,7 +26,7 @@ DECISION_SCHEMA: dict[str, Any] = {
         "sla",
     ],
     "properties": {
-        "request_id": {"type": "string", "pattern": "^PAR-[0-9]{4,}$"},
+        "request_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9_-]{2,19}$"},
         "outcome": {"enum": list(OUTCOMES)},
         "total_claimed_inr": {"type": "integer", "minimum": 0},
         "total_payable_inr": {"type": "integer", "minimum": 0},
@@ -132,4 +132,3 @@ def validate_decision(decision: Mapping[str, Any]) -> None:
 
     if errors:
         raise DecisionValidationError("; ".join(errors))
-
