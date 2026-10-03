@@ -27,7 +27,12 @@ member, patient, or claim data through this skill.
    `DOCS.POLICY_CLAUSE`; do not merge yet.
 5. Propose `POLICY_RULE` rows for caps, proportions, sub-limits, co-pay,
    waiting periods, and exclusions. Every rule must reference a staged clause
-   and keep all thresholds in `PARAMS`.
+   and keep all thresholds in `PARAMS`. Before staging a rule, read the live
+   `POLICY_RULE.RULE_TYPE` constraint and the deterministic Python rules core.
+   A proposed executable rule type must be accepted by both. If policy text
+   describes a benefit that the current engine cannot calculate, stage it as a
+   searchable clause only and report it as `CLAUSE_ONLY_UNSUPPORTED`; never
+   invent a new rule type or silently treat it as executable.
 6. Present a human-readable rule diff including source text, extracted value,
    rule type, parameters, and clause ID. Stop and ask for explicit approval.
    Never insert or merge unapproved rules.
@@ -47,4 +52,6 @@ member, patient, or claim data through this skill.
 - Never let an LLM calculate payable amounts.
 - Never create a `DENY` expectation or outcome.
 - Never auto-approve proposed clauses or rules.
+- Never merge a rule type that is absent from either the live table constraint
+  or the deterministic Python rules core.
 - Roll back the merge if any rule lacks a valid clause or any test fails.

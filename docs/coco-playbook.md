@@ -109,8 +109,13 @@ outcome-correct 10/10. Decisions were persisted to `APP.DECISION`.
   auditor=masked/masked/masked for name/phone/clinical note.
 - **SQL saved to:** `sql/60_governance.sql`, `sql/61_governance_check.sql`, and
   `sql/62_app_caller_grants.sql`.
-- **Follow-up / verification:** Configure authentication outside the repository
-  for `CIQ_MO_USER`, `CIQ_PROC_USER`, and `CIQ_AUDIT_USER`; exercise the full
-  UI as each user. Run `policy-onboarding` once end to end and append its rule
-  approval, object counts, probes, and three synthetic decisions here before
-  tagging Phase 4.
+- **Follow-up / verification:** Authentication was configured outside the
+  repository for `CIQ_MO_USER`, `CIQ_PROC_USER`, and `CIQ_AUDIT_USER`.
+  On 2026-09-30 the human reviewer exercised the deployed console as all three
+  personas and confirmed the expected masking and action differences passed.
+  The first `policy-onboarding` proposal was stopped at its human-review gate:
+  it proposed six executable rule types not supported by the live table
+  constraint or deterministic engine. No permanent policy rows were changed.
+  The skill was tightened to classify such benefits as searchable clauses only.
+  Rerun the corrected onboarding flow and append its approval, object counts,
+  probes, and three synthetic decisions here before tagging Phase 4.
