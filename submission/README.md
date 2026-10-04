@@ -1,6 +1,10 @@
 # Submission package
 
-- `CashlessIQ-Hackathon-Deck-v2.pptx` — final editable 10-slide judge deck.
+- `CashlessIQ-Official-Prototype-Deck.pptx` — official six-slide template deck
+  for upload to the hackathon submission form.
+- `CashlessIQ-Hackathon-Deck-v2.pptx` — extended editable 10-slide judge deck.
+- `cashlessiq-public-demo.zip` — anonymous static prototype for Cloudflare Pages.
+- `mvp-brief.md` and `demo-video-script.md` — form copy and recording script.
 - Live app: <https://app.snowflake.com/me-central2.gcp/ca31605/#/streamlit-apps/CASHLESSIQ_APP>
 - Evaluation evidence: `../docs/evaluation.md`
 - Three-minute walkthrough: `../docs/demo-script.md`

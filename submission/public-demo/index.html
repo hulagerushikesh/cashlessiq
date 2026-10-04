@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="CashlessIQ public prototype: a Snowflake-native cashless pre-authorisation copilot.">
+  <title>CashlessIQ | Cashless pre-authorisation copilot</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <a class="brand" href="#top">Cashless<span>IQ</span></a>
+    <nav><a href="#demo">Demo</a><a href="#architecture">Architecture</a><a href="#evidence">Evidence</a></nav>
+    <a class="button ghost" href="https://github.com/hulagerushikesh/cashlessiq">GitHub</a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow">SNOWFLAKE COCO CLI HACKATHON · GCC EDITION</p>
+      <h1>Review cashless pre-authorisations with cited policy logic</h1>
+      <p class="lede">CashlessIQ drafts a reviewable recommendation from synthetic pre-auth documents, member history and policy wording. Deterministic Python computes every rupee. A human makes the final decision.</p>
+      <div class="actions"><a class="button" href="#demo">Try the public demo</a><a class="button ghost" href="https://app.snowflake.com/streamlit/nooirvx/ca31605/#/apps/a3gfspf7joxnsjryt3pd">Authenticated Snowflake app</a></div>
+      <div class="metrics"><div><strong>30/30</strong><span>schema-valid</span></div><div><strong>90%</strong><span>outcomes correct</span></div><div><strong>96.7%</strong><span>amounts correct</span></div><div><strong>41.4s</strong><span>mean agent latency</span></div></div>
+    </section>
+
+    <section id="demo" class="demo section">
+      <div class="section-copy"><p class="eyebrow">PUBLIC DEMO MODE</p><h2>Explore fixed-seed evaluation cases</h2><p>This public experience uses precomputed synthetic cases so judges need no Snowflake account. The authenticated implementation runs the same workflow inside Snowflake.</p></div>
+      <div class="console">
+        <div class="controls">
+          <label>Case<select id="case-select"><option value="GOL007">GOL007 · room-cap deduction</option><option value="GOL027">GOL027 · missing breakup query</option><option value="GOL024">GOL024 · PED referral</option></select></label>
+          <label>Reviewer view<select id="role-select"><option>Medical officer</option><option>Processor</option><option>Auditor</option></select></label>
+          <button id="run-demo">Run public demo</button>
+        </div>
+        <div class="result" aria-live="polite">
+          <div><span class="status" id="outcome">APPROVE WITH DEDUCTIONS</span><span id="request">GOL007</span></div>
+          <div class="amounts"><p>Claimed<strong id="claimed">₹120,000</strong></p><p>Recommended payable<strong id="payable">₹79,800</strong></p></div>
+          <div id="explanation" class="explanation"></div>
+          <p class="citation" id="citation">Evidence: NIA-4.1-A, NIA-4.1-NOTE-B, NIA-9.5</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="section architecture">
+      <p class="eyebrow">ARCHITECTURE</p><h2>Snowflake-native orchestration with deterministic rules</h2>
+      <div class="flow"><div>Synthetic PDFs<br><small>AI_PARSE_DOCUMENT + AI_EXTRACT</small></div><b>→</b><div>Member 360 + policy search<br><small>Semantic View + Cortex Search</small></div><b>→</b><div>Deterministic tools<br><small>Waiting periods, payable, SLA</small></div><b>→</b><div>Reviewer console<br><small>Validated JSON + audit trail</small></div></div>
+      <p class="guardrail">The output contract excludes DENY. Ambiguous cases become QUERY or REFER, and policy onboarding stops for explicit human approval.</p>
+    </section>
+
+    <section id="evidence" class="section evidence">
+      <p class="eyebrow">PROOF, NOT A PROMISE</p><h2>Measured on 30 hand-calculated golden cases</h2>
+      <p>All decisions passed the JSON schema. Three PED cases exposed an extraction-normalisation gap, and one case exposed a sum-insured scenario override gap. We disclose both in the repository rather than re-labelling the results.</p>
+      <div class="actions"><a class="button" href="https://github.com/hulagerushikesh/cashlessiq/blob/main/docs/evaluation.md">Read evaluation</a><a class="button ghost" href="https://github.com/hulagerushikesh/cashlessiq/blob/main/docs/architecture.md">View architecture</a></div>
+    </section>
+  </main>
+  <footer><span>CashlessIQ · Synthetic data only</span><span>Built for Snowflake CoCo CLI Hackathon 2026</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>

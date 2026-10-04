@@ -1,0 +1,7 @@
+const cases={
+  GOL007:{outcome:"APPROVE WITH DEDUCTIONS",claimed:"₹120,000",payable:"₹79,800",lines:["Room: ₹24,000 claimed, ₹15,000 payable under the ₹5,000 daily cap.","Professional fees: proportionate deduction uses the 5,000/8,000 room-rate ratio.","Mandatory 5% co-pay applies after eligible deductions."],citation:"Evidence: NIA-4.1-A, NIA-4.1-NOTE-B, NIA-9.5"},
+  GOL027:{outcome:"QUERY",claimed:"₹0",payable:"₹0",lines:["The extracted request does not contain the required cost breakup.","The reviewer asks the hospital for itemised costs before calculating a payable amount."],citation:"Validation: missing_fields includes cost_breakup"},
+  GOL024:{outcome:"REFER",claimed:"₹0",payable:"₹0",lines:["Declared diabetes maps to the 36-month pre-existing disease waiting period.","The medical officer reviews coverage before any payable amount is drafted."],citation:"Evidence: NIA-6.2-36"}
+};
+function render(){const id=document.querySelector("#case-select").value;const c=cases[id];document.querySelector("#request").textContent=id;document.querySelector("#outcome").textContent=c.outcome;document.querySelector("#claimed").textContent=c.claimed;document.querySelector("#payable").textContent=c.payable;document.querySelector("#explanation").innerHTML=c.lines.map(x=>`<p>${x}</p>`).join("");document.querySelector("#citation").textContent=c.citation;}
+document.querySelector("#run-demo").addEventListener("click",render);document.querySelector("#case-select").addEventListener("change",render);render();
