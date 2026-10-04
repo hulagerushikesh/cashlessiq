@@ -4,11 +4,12 @@
 
 - **GitHub:** https://github.com/hulagerushikesh/cashlessiq
 - **Prototype:** https://cashlessiq.hulage.in
+- **Team:** HiggsBosons
 - **Challenges:** Patient and Member 360; Clinical or Regulatory Document Copilot
 - **Prototype/MVP brief:** paste the contents of `mvp-brief.md`
 - **Demo video:** upload a 2–3 minute recording as Unlisted on YouTube or Loom,
   then paste its share link
-- **Prototype deck:** upload `CashlessIQ-Official-Prototype-Deck.pptx`
+- **Prototype deck:** upload `CashlessIQ-Official-Prototype-Deck-HiggsBosons.pptx`
 
 ## Public prototype deployment
 

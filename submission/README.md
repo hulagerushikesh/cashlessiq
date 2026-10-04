@@ -1,6 +1,6 @@
 # Submission package
 
-- `CashlessIQ-Official-Prototype-Deck.pptx` — official six-slide template deck
+- `CashlessIQ-Official-Prototype-Deck-HiggsBosons.pptx` — official six-slide template deck
   for upload to the hackathon submission form.
 - `CashlessIQ-Hackathon-Deck-v2.pptx` — extended editable 10-slide judge deck.
 - `cashlessiq-public-demo.zip` — anonymous static prototype for Cloudflare Pages.

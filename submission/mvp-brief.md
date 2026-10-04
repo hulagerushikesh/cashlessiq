@@ -7,6 +7,7 @@ The prototype serves medical officers, pre-authorisation processors and auditors
 The live evaluation processed 30 fixed-seed golden cases: 30/30 responses passed the schema, 27/30 outcomes matched, 29/30 payable amounts matched, and mean Agent latency was 41.4 seconds. The repository documents the remaining extraction, scenario-override and citation-recall gaps.
 
 **Challenges:** Patient and Member 360; Clinical or Regulatory Document Copilot  
+**Team:** HiggsBosons
 **Repository:** https://github.com/hulagerushikesh/cashlessiq  
 **Public prototype:** https://cashlessiq.hulage.in  
 **Authenticated Snowflake app:** https://app.snowflake.com/streamlit/nooirvx/ca31605/#/apps/a3gfspf7joxnsjryt3pd
