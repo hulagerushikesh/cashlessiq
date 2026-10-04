@@ -56,4 +56,4 @@ deploy:
 	snow sql --connection $(SNOW_CONNECTION) --filename sql/62_app_caller_grants.sql
 
 eval:
-	@echo "Phase 5 TODO: run the golden-set evaluator."
+	$(PYTHON) -m eval.run_eval --connection $(SNOW_CONNECTION)
