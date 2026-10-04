@@ -151,3 +151,25 @@ outcome-correct 10/10. Decisions were persisted to `APP.DECISION`.
 - **Follow-up / verification:** Final live counts were 35 clauses and 10 rules.
   The search service was suspended after validation for cost control. Local
   verification finished with 57 tests passing and Ruff clean.
+
+## 2026-10-04 — Phase 5 golden-set evaluation
+
+- **Goal:** Run all 30 fixed-seed golden cases through the deployed Agent,
+  persist an auditable scorecard, and disclose failures without re-labelling.
+- **Prompt:** Evaluate each case independently, validate the exact decision
+  schema, score outcome, payable amount, and strict line-level citation recall,
+  and retain partial results if an individual request fails.
+- **Skill used:** None; the repository evaluator calls the deployed Snowflake
+  Agent and the deterministic local scoring functions.
+- **Result:** Run `EVAL-E6E692A5D0E04347B06F` recorded 30/30 schema-valid,
+  27/30 outcome-correct (90%), 29/30 payable-correct (96.7%), 55% strict
+  citation recall, and 41.4-second mean latency. The required 80% outcome target
+  passed. GOL024–026 exposed an extracted-ICD10 normalization gap; GOL029 exposed
+  an unimplemented golden scenario override. See `docs/evaluation.md`.
+- **SQL saved to:** Results are durable in `CASHLESSIQ.EVAL.EVAL_RUN` and
+  `CASHLESSIQ.EVAL.EVAL_RESULT`; caller grants are in
+  `sql/62_app_caller_grants.sql`.
+- **Follow-up / verification:** The live Scorecard page was deployed.
+  `CASHLESSIQ.AI.CLAUSE_SEARCH` was confirmed `SUSPENDED`, and final seven-day
+  warehouse usage was 4.996 credits. Test `CIQ_JUDGE` privately and complete
+  final packaging before tagging Phase 5.
