@@ -119,3 +119,35 @@ outcome-correct 10/10. Decisions were persisted to `APP.DECISION`.
   The skill was tightened to classify such benefits as searchable clauses only.
   Rerun the corrected onboarding flow and append its approval, object counts,
   probes, and three synthetic decisions here before tagging Phase 4.
+
+## 2026-10-03 — Governed policy-onboarding rehearsal
+
+- **Goal:** Complete the corrected Arogya Sanjeevani onboarding rehearsal while
+  preserving the human approval gate and deterministic-rule boundary.
+- **Prompt:** Stage a diff from the public policy PDF, classify unsupported
+  benefits as searchable clauses only, stop for approval, then merge only the
+  approved diff and validate search plus three fixed-seed cases.
+- **Human approval:** Rushikesh explicitly approved: “I approve the 25
+  clause-only additions and zero rule changes.”
+- **Skill used:** Repository skill `policy-onboarding`.
+- **Result:** The transaction inserted 25 clause-only rows. The product now has
+  35 clauses; its 10 existing executable rules were unchanged. Six benefits
+  (ambulance, AYUSH, pre/post hospitalisation, special procedures, and
+  cumulative bonus) remain searchable but non-executable, and 19 individually
+  numbered exclusions were added as searchable evidence. The refreshed search
+  corpus contained 35 rows and the standard ten product-filtered probes passed
+  10/10 at rank 1. `CLAUSE_SEARCH` was suspended after testing.
+- **Synthetic decisions:** All three fixed-seed cases completed through the live
+  agent and passed the repository decision validator. `GOL002` returned
+  `APPROVE_WITH_DEDUCTIONS` (INR 100,000 claimed; INR 95,000 payable; mandatory
+  5% co-pay only). This is the policy-correct cleanest case: a literal
+  zero-deduction `APPROVE` is impossible while clause NIA-9.5 applies to every
+  claim. `GOL007` returned `APPROVE_WITH_DEDUCTIONS` (INR 120,000 claimed; INR
+  79,800 payable; room cap, proportionate deduction, and co-pay). `GOL027`
+  returned `QUERY` for missing `cost_breakup`. No `DENY` was produced. The first
+  two GOL007 attempts hit the Agent API time limit because the warehouse was
+  cold; warming the exact tools allowed the bounded final retry to complete.
+- **SQL saved to:** `sql/63_policy_onboarding_run.sql`.
+- **Follow-up / verification:** Final live counts were 35 clauses and 10 rules.
+  The search service was suspended after validation for cost control. Local
+  verification finished with 57 tests passing and Ruff clean.
