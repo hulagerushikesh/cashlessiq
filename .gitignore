@@ -1,5 +1,7 @@
 .env
 .venv/
+node_modules/
+*.tsbuildinfo
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -15,3 +17,5 @@ data_gen/output/*
 !data_gen/output/.gitkeep
 tmp/
 .snowflake/
+submission/public-demo-react/vite.config.js
+submission/public-demo-react/vite.config.d.ts
