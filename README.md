@@ -82,3 +82,13 @@ and rejects unsupported executable rule types.
 
 Phases 0–4 are tagged and complete. Phase 5 evaluation meets the required
 accuracy target; final judge-login testing and submission packaging remain.
+
+## Product direction
+
+The productization plan preserves the deterministic rules core and human
+approval gate while separating the production web application, workflow API,
+asynchronous workers, and Snowflake intelligence services. Start with the
+[product requirements](docs/product/product-requirements.md),
+[target architecture](docs/architecture/target-architecture.md), and
+[migration plan](docs/architecture/migration-plan.md). Product Phase P0 status
+is tracked in the [P0 checklist](docs/product/phase-p0-checklist.md).
