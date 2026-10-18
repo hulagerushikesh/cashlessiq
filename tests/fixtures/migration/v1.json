@@ -1,0 +1,2600 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "6406d74",
+  "decision_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "CashlessIQ decision",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "request_id",
+      "outcome",
+      "total_claimed_inr",
+      "total_payable_inr",
+      "lines",
+      "queries",
+      "refer_reasons",
+      "summary",
+      "sla"
+    ],
+    "properties": {
+      "request_id": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_-]{2,19}$"
+      },
+      "outcome": {
+        "enum": [
+          "APPROVE",
+          "APPROVE_WITH_DEDUCTIONS",
+          "QUERY",
+          "REFER"
+        ]
+      },
+      "total_claimed_inr": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "total_payable_inr": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "lines": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "item",
+            "claimed_inr",
+            "payable_inr",
+            "deduction_inr",
+            "reason",
+            "calc",
+            "citations"
+          ],
+          "properties": {
+            "item": {
+              "type": "string",
+              "minLength": 1
+            },
+            "claimed_inr": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "payable_inr": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "deduction_inr": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "calc": {
+              "type": "string",
+              "minLength": 1
+            },
+            "citations": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "id"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "clause",
+                      "record"
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "queries": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "refer_reasons": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "summary": {
+        "type": "string",
+        "minLength": 1
+      },
+      "sla": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "elapsed_min",
+          "state"
+        ],
+        "properties": {
+          "elapsed_min": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "state": {
+            "enum": [
+              "GREEN",
+              "AMBER",
+              "RED"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "rule_results": {
+    "GOL001": {
+      "request_id": "GOL001",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000,
+            "payable_inr": 11400,
+            "deduction_inr": 600,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(12000, 5000 x 3) = 12000; 12000 x 95% = 11400",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000,
+            "payable_inr": 64600,
+            "deduction_inr": 3400,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "68000 x 95% = 64600",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000,
+            "payable_inr": 19000,
+            "deduction_inr": 1000,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "20000 x 95% = 19000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 95000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5"
+      ]
+    },
+    "GOL002": {
+      "request_id": "GOL002",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000,
+            "payable_inr": 11400,
+            "deduction_inr": 600,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(12000, 5000 x 3) = 12000; 12000 x 95% = 11400",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000,
+            "payable_inr": 64600,
+            "deduction_inr": 3400,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "68000 x 95% = 64600",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000,
+            "payable_inr": 19000,
+            "deduction_inr": 1000,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "20000 x 95% = 19000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 95000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5"
+      ]
+    },
+    "GOL003": {
+      "request_id": "GOL003",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000,
+            "payable_inr": 11400,
+            "deduction_inr": 600,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(12000, 5000 x 3) = 12000; 12000 x 95% = 11400",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000,
+            "payable_inr": 64600,
+            "deduction_inr": 3400,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "68000 x 95% = 64600",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000,
+            "payable_inr": 19000,
+            "deduction_inr": 1000,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "20000 x 95% = 19000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 95000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5"
+      ]
+    },
+    "GOL004": {
+      "request_id": "GOL004",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000,
+            "payable_inr": 11400,
+            "deduction_inr": 600,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(12000, 5000 x 3) = 12000; 12000 x 95% = 11400",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000,
+            "payable_inr": 64600,
+            "deduction_inr": 3400,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "68000 x 95% = 64600",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000,
+            "payable_inr": 19000,
+            "deduction_inr": 1000,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "20000 x 95% = 19000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 95000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5"
+      ]
+    },
+    "GOL005": {
+      "request_id": "GOL005",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000,
+            "payable_inr": 11400,
+            "deduction_inr": 600,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(12000, 5000 x 3) = 12000; 12000 x 95% = 11400",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000,
+            "payable_inr": 64600,
+            "deduction_inr": 3400,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "68000 x 95% = 64600",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000,
+            "payable_inr": 19000,
+            "deduction_inr": 1000,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "20000 x 95% = 19000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 95000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5"
+      ]
+    },
+    "GOL006": {
+      "request_id": "GOL006",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000,
+            "payable_inr": 11400,
+            "deduction_inr": 600,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(12000, 5000 x 3) = 12000; 12000 x 95% = 11400",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000,
+            "payable_inr": 64600,
+            "deduction_inr": 3400,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "68000 x 95% = 64600",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000,
+            "payable_inr": 19000,
+            "deduction_inr": 1000,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "20000 x 95% = 19000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 95000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5"
+      ]
+    },
+    "GOL007": {
+      "request_id": "GOL007",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000,
+            "payable_inr": 14250,
+            "deduction_inr": 9750,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(24000, 5000 x 3) = 15000; 15000 x 95% = 14250",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000,
+            "payable_inr": 42750,
+            "deduction_inr": 29250,
+            "reason": "Room eligibility ratio applies to this configured expense category. Mandatory 5% co-payment applied.",
+            "calc": "5000/8000 x 72000 = 45000; 45000 x 95% = 42750",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-NOTE-B"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000,
+            "payable_inr": 22800,
+            "deduction_inr": 1200,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "24000 x 95% = 22800",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 120000,
+        "total_payable_inr": 79800,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5",
+        "NIA-4.1-NOTE-B"
+      ]
+    },
+    "GOL008": {
+      "request_id": "GOL008",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000,
+            "payable_inr": 14250,
+            "deduction_inr": 9750,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(24000, 5000 x 3) = 15000; 15000 x 95% = 14250",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000,
+            "payable_inr": 42750,
+            "deduction_inr": 29250,
+            "reason": "Room eligibility ratio applies to this configured expense category. Mandatory 5% co-payment applied.",
+            "calc": "5000/8000 x 72000 = 45000; 45000 x 95% = 42750",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-NOTE-B"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000,
+            "payable_inr": 22800,
+            "deduction_inr": 1200,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "24000 x 95% = 22800",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 120000,
+        "total_payable_inr": 79800,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5",
+        "NIA-4.1-NOTE-B"
+      ]
+    },
+    "GOL009": {
+      "request_id": "GOL009",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000,
+            "payable_inr": 14250,
+            "deduction_inr": 9750,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(24000, 5000 x 3) = 15000; 15000 x 95% = 14250",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000,
+            "payable_inr": 42750,
+            "deduction_inr": 29250,
+            "reason": "Room eligibility ratio applies to this configured expense category. Mandatory 5% co-payment applied.",
+            "calc": "5000/8000 x 72000 = 45000; 45000 x 95% = 42750",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-NOTE-B"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000,
+            "payable_inr": 22800,
+            "deduction_inr": 1200,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "24000 x 95% = 22800",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 120000,
+        "total_payable_inr": 79800,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5",
+        "NIA-4.1-NOTE-B"
+      ]
+    },
+    "GOL010": {
+      "request_id": "GOL010",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000,
+            "payable_inr": 14250,
+            "deduction_inr": 9750,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(24000, 5000 x 3) = 15000; 15000 x 95% = 14250",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000,
+            "payable_inr": 42750,
+            "deduction_inr": 29250,
+            "reason": "Room eligibility ratio applies to this configured expense category. Mandatory 5% co-payment applied.",
+            "calc": "5000/8000 x 72000 = 45000; 45000 x 95% = 42750",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-NOTE-B"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000,
+            "payable_inr": 22800,
+            "deduction_inr": 1200,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "24000 x 95% = 22800",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 120000,
+        "total_payable_inr": 79800,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5",
+        "NIA-4.1-NOTE-B"
+      ]
+    },
+    "GOL011": {
+      "request_id": "GOL011",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000,
+            "payable_inr": 14250,
+            "deduction_inr": 9750,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(24000, 5000 x 3) = 15000; 15000 x 95% = 14250",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000,
+            "payable_inr": 42750,
+            "deduction_inr": 29250,
+            "reason": "Room eligibility ratio applies to this configured expense category. Mandatory 5% co-payment applied.",
+            "calc": "5000/8000 x 72000 = 45000; 45000 x 95% = 42750",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-NOTE-B"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000,
+            "payable_inr": 22800,
+            "deduction_inr": 1200,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "24000 x 95% = 22800",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 120000,
+        "total_payable_inr": 79800,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A",
+        "NIA-9.5",
+        "NIA-4.1-NOTE-B"
+      ]
+    },
+    "GOL012": {
+      "request_id": "GOL012",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Cataract package",
+            "claimed_inr": 60000,
+            "payable_inr": 38000,
+            "deduction_inr": 22000,
+            "reason": "Cataract is subject to a procedure sub-limit. Mandatory 5% co-payment applied.",
+            "calc": "min(60000, 40000) = 40000; 40000 x 95% = 38000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.3"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 60000,
+        "total_payable_inr": 38000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.3",
+        "NIA-9.5"
+      ]
+    },
+    "GOL013": {
+      "request_id": "GOL013",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Cataract package",
+            "claimed_inr": 60000,
+            "payable_inr": 38000,
+            "deduction_inr": 22000,
+            "reason": "Cataract is subject to a procedure sub-limit. Mandatory 5% co-payment applied.",
+            "calc": "min(60000, 40000) = 40000; 40000 x 95% = 38000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.3"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 60000,
+        "total_payable_inr": 38000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.3",
+        "NIA-9.5"
+      ]
+    },
+    "GOL014": {
+      "request_id": "GOL014",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Cataract package",
+            "claimed_inr": 60000,
+            "payable_inr": 38000,
+            "deduction_inr": 22000,
+            "reason": "Cataract is subject to a procedure sub-limit. Mandatory 5% co-payment applied.",
+            "calc": "min(60000, 40000) = 40000; 40000 x 95% = 38000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.3"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 60000,
+        "total_payable_inr": 38000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.3",
+        "NIA-9.5"
+      ]
+    },
+    "GOL015": {
+      "request_id": "GOL015",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Cataract package",
+            "claimed_inr": 60000,
+            "payable_inr": 38000,
+            "deduction_inr": 22000,
+            "reason": "Cataract is subject to a procedure sub-limit. Mandatory 5% co-payment applied.",
+            "calc": "min(60000, 40000) = 40000; 40000 x 95% = 38000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.3"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 60000,
+        "total_payable_inr": 38000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.3",
+        "NIA-9.5"
+      ]
+    },
+    "GOL016": {
+      "request_id": "GOL016",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": true,
+          "months_elapsed": 0,
+          "months_required": 1,
+          "reason": "Admission is inside the first 30 days."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "Admission is inside the first 30 days."
+      ],
+      "clause_ids": [
+        "NIA-6.3"
+      ]
+    },
+    "GOL017": {
+      "request_id": "GOL017",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": true,
+          "months_elapsed": 0,
+          "months_required": 1,
+          "reason": "Admission is inside the first 30 days."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "Admission is inside the first 30 days."
+      ],
+      "clause_ids": [
+        "NIA-6.3"
+      ]
+    },
+    "GOL018": {
+      "request_id": "GOL018",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": true,
+          "months_elapsed": 0,
+          "months_required": 1,
+          "reason": "Admission is inside the first 30 days."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "Admission is inside the first 30 days."
+      ],
+      "clause_ids": [
+        "NIA-6.3"
+      ]
+    },
+    "GOL019": {
+      "request_id": "GOL019",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 8000,
+            "payable_inr": 7600,
+            "deduction_inr": 400,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(8000, 5000 x 2) = 8000; 8000 x 95% = 7600",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Surgery and implant",
+            "claimed_inr": 92000,
+            "payable_inr": 87400,
+            "deduction_inr": 4600,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "92000 x 95% = 87400",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 95000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 1,
+          "reason": "Initial waiting period is checked but the accident exemption applies."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-6.3",
+        "NIA-4.1-A",
+        "NIA-9.5"
+      ]
+    },
+    "GOL020": {
+      "request_id": "GOL020",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 8000,
+            "payable_inr": 7600,
+            "deduction_inr": 400,
+            "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+            "calc": "min(8000, 5000 x 2) = 8000; 8000 x 95% = 7600",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-4.1-A"
+              },
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          },
+          {
+            "item": "Surgery and implant",
+            "claimed_inr": 92000,
+            "payable_inr": 87400,
+            "deduction_inr": 4600,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "92000 x 95% = 87400",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 95000,
+        "si_remaining_inr": 500000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 0,
+          "months_required": 1,
+          "reason": "Initial waiting period is checked but the accident exemption applies."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-6.3",
+        "NIA-4.1-A",
+        "NIA-9.5"
+      ]
+    },
+    "GOL021": {
+      "request_id": "GOL021",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": true,
+          "months_elapsed": 9,
+          "months_required": 24,
+          "reason": "hernia is inside its 24-month waiting period."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "hernia is inside its 24-month waiting period."
+      ],
+      "clause_ids": [
+        "NIA-6.2-24"
+      ]
+    },
+    "GOL022": {
+      "request_id": "GOL022",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": true,
+          "months_elapsed": 9,
+          "months_required": 24,
+          "reason": "hernia is inside its 24-month waiting period."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "hernia is inside its 24-month waiting period."
+      ],
+      "clause_ids": [
+        "NIA-6.2-24"
+      ]
+    },
+    "GOL023": {
+      "request_id": "GOL023",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": true,
+          "months_elapsed": 9,
+          "months_required": 24,
+          "reason": "hernia is inside its 24-month waiting period."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "hernia is inside its 24-month waiting period."
+      ],
+      "clause_ids": [
+        "NIA-6.2-24"
+      ]
+    },
+    "GOL024": {
+      "request_id": "GOL024",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": true,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Declared pre-existing condition is inside the 36-month window."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "Declared pre-existing condition is inside the 36-month window."
+      ],
+      "clause_ids": [
+        "NIA-6.1"
+      ]
+    },
+    "GOL025": {
+      "request_id": "GOL025",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": true,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Declared pre-existing condition is inside the 36-month window."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "Declared pre-existing condition is inside the 36-month window."
+      ],
+      "clause_ids": [
+        "NIA-6.1"
+      ]
+    },
+    "GOL026": {
+      "request_id": "GOL026",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": true,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Declared pre-existing condition is inside the 36-month window."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 9,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "Declared pre-existing condition is inside the 36-month window."
+      ],
+      "clause_ids": [
+        "NIA-6.1"
+      ]
+    },
+    "GOL027": {
+      "request_id": "GOL027",
+      "outcome": "QUERY",
+      "payable": null,
+      "checks": [],
+      "queries": [
+        "Please provide cost breakup."
+      ],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A"
+      ]
+    },
+    "GOL028": {
+      "request_id": "GOL028",
+      "outcome": "QUERY",
+      "payable": null,
+      "checks": [],
+      "queries": [
+        "Please provide diagnosis."
+      ],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-4.1-A"
+      ]
+    },
+    "GOL029": {
+      "request_id": "GOL029",
+      "outcome": "APPROVE_WITH_DEDUCTIONS",
+      "payable": {
+        "lines": [
+          {
+            "item": "Hospital package",
+            "claimed_inr": 100000,
+            "payable_inr": 45000,
+            "deduction_inr": 55000,
+            "reason": "Mandatory 5% co-payment applied.",
+            "calc": "100000 x 95% = 95000",
+            "citations": [
+              {
+                "type": "clause",
+                "id": "NIA-9.5"
+              }
+            ]
+          }
+        ],
+        "total_claimed_inr": 100000,
+        "total_payable_inr": 45000,
+        "si_remaining_inr": 45000
+      },
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": false,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Configured exclusion does not match the case."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [],
+      "clause_ids": [
+        "NIA-9.5"
+      ]
+    },
+    "GOL030": {
+      "request_id": "GOL030",
+      "outcome": "REFER",
+      "payable": null,
+      "checks": [
+        {
+          "rule_id": "RULE_PED",
+          "clause_id": "NIA-6.1",
+          "rule_type": "WAITING_PED",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Pre-existing disease waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_24",
+          "clause_id": "NIA-6.2-24",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 24,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_SPECIFIC_36",
+          "clause_id": "NIA-6.2-36",
+          "rule_type": "WAITING_SPECIFIC",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 36,
+          "reason": "Specific waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_INITIAL",
+          "clause_id": "NIA-6.3",
+          "rule_type": "WAITING_INITIAL",
+          "applies": false,
+          "months_elapsed": 45,
+          "months_required": 1,
+          "reason": "Initial waiting period does not apply."
+        },
+        {
+          "rule_id": "RULE_EXCLUSION",
+          "clause_id": "NIA-7.12",
+          "rule_type": "EXCLUSION",
+          "applies": true,
+          "months_elapsed": null,
+          "months_required": null,
+          "reason": "Case matches exclusion refractive_error_below_7_5_dioptres."
+        }
+      ],
+      "queries": [],
+      "refer_reasons": [
+        "Case matches exclusion refractive_error_below_7_5_dioptres."
+      ],
+      "clause_ids": [
+        "NIA-7.12"
+      ]
+    }
+  }
+}

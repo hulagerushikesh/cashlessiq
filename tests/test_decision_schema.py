@@ -1,10 +1,23 @@
 """Contract tests for Cortex Agent decision output."""
 
+import json
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
-from cashlessiq.decision_schema import DecisionValidationError, validate_decision
+from cashlessiq.decision_schema import (
+    DECISION_SCHEMA,
+    DecisionValidationError,
+    validate_decision,
+)
+
+
+def test_migration_preserves_v1_decision_schema() -> None:
+    baseline = json.loads(
+        (Path(__file__).parent / "fixtures/migration/v1.json").read_text(encoding="utf-8")
+    )
+    assert baseline["decision_schema"] == DECISION_SCHEMA
 
 
 @pytest.fixture

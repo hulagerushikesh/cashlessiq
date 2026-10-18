@@ -92,3 +92,7 @@ asynchronous workers, and Snowflake intelligence services. Start with the
 [target architecture](docs/architecture/target-architecture.md), and
 [migration plan](docs/architecture/migration-plan.md). Product Phase P0 status
 is tracked in the [P0 checklist](docs/product/phase-p0-checklist.md).
+P0 is approved; P1 progress is tracked in the
+[P1 checklist](docs/product/phase-p1-checklist.md). Before restructuring, preserve
+the [migration contracts](docs/architecture/contract-versioning.md) and follow the
+[Snowflake budget plan](docs/product/snowflake-budget.md).

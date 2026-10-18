@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from dataclasses import asdict
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
@@ -23,6 +24,9 @@ from cashlessiq.rules.models import (
 from data_gen.policies import PRODUCT, RULES
 
 ROOT = Path(__file__).resolve().parents[1]
+MIGRATION_BASELINE = json.loads(
+    (ROOT / "tests/fixtures/migration/v1.json").read_text(encoding="utf-8")
+)
 
 
 def _cases() -> list[dict]:
@@ -102,6 +106,10 @@ def test_all_golden_outcomes_and_amounts(case: dict) -> None:
         declared_conditions=conditions,
     )
 
+    # Freeze the complete trace, citations, checks, and line amounts before migration.
+    assert json.loads(json.dumps(asdict(result), default=str)) == (
+        MIGRATION_BASELINE["rule_results"][case["request_id"]]
+    )
     assert result.outcome == Outcome(case["expected_outcome"])
     if case["expected_payable_inr"] is None:
         assert result.payable is None
@@ -129,6 +137,12 @@ def test_golden_suite_exercises_every_required_tag() -> None:
         "missing_info",
         "si_exhaustion",
         "exclusion",
+    }
+
+
+def test_migration_baseline_preserves_all_golden_identifiers() -> None:
+    assert set(MIGRATION_BASELINE["rule_results"]) == {
+        case["request_id"] for case in _cases()
     }
 
 
