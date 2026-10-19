@@ -1,4 +1,9 @@
 .env
+.env.*
+!.env.example
+.next/
+playwright-report/
+test-results/
 .venv/
 node_modules/
 *.tsbuildinfo
