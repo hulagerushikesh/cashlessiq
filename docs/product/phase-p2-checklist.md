@@ -12,14 +12,34 @@ deployment, policy activation, or reviewer writes.
 
 ## First slice: local synthetic case reads
 
-- [ ] Authenticated, tenant-scoped queue and detail contracts.
-- [ ] Repository boundary with deterministic synthetic snapshots and provenance.
-- [ ] Queue filtering, pagination, empty and failure states.
-- [ ] Case, member context, calculation trace, and evidence references.
-- [ ] Clinical-sensitive detail restricted by role; no patient identifiers.
-- [ ] No reviewer mutation or upload endpoints/actions.
-- [ ] API isolation/revocation tests, browser walkthroughs, mobile checks.
-- [ ] Existing golden results and generated contracts remain consistent.
+- [x] Authenticated, tenant-scoped queue and detail contracts.
+- [x] Repository boundary with deterministic synthetic snapshots and provenance.
+- [x] Queue filtering, pagination, empty and failure states implemented.
+- [x] Case, synthetic member context, calculation trace, and evidence references.
+- [x] Clinical narrative restricted by role; no patient identifiers.
+- [x] No reviewer mutation or upload endpoints/actions.
+- [x] API isolation/revocation tests, browser walkthroughs, mobile checks.
+- [x] Existing golden results and generated contracts remain consistent locally.
+- [ ] Remote CI passes for the new case slice after push.
+
+## Local verification
+
+On 19 October: 62 existing/contract regression tests, 36 API/PostgreSQL tests,
+and 12 browser tests passed (110 total). Ruff, web lint, TypeScript, Next.js
+production build, and Docker startup passed. Desktop and 390px mobile layouts
+were visually inspected. The browser suite covers the three roles, all three
+case journeys, filter/empty state, missing case, anonymous access, and overflow.
+
+Data consists of GOL001, GOL024, and GOL027 copied from the frozen baseline
+`6406d74`. Snapshot regeneration is checked for drift in CI. Financial traces
+are copied, never recomputed by the web or API. Query/referral payable is null,
+not zero. Policy evidence contains registered source references, not retrieved
+clause text. Live member history, SLA clocks, and assignment are not simulated.
+
+The API strips diagnosis, procedure, and submitted clinical note for processors
+and auditors. Financial line labels and rule explanations remain visible; this
+is not a complete clinical-data masking policy for real data. Synthetic reads
+are disabled outside local/test environments. No data ingestion path exists.
 
 ## Later P2 integration — not required for first local slice
 

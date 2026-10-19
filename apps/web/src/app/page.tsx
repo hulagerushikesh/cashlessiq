@@ -59,8 +59,14 @@ export default async function Workspace() {
           >
             <LayoutDashboard size={18} /> Overview
           </Link>
+          <Link
+            href="/cases"
+            className="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50"
+          >
+            <ClipboardCheck size={18} />
+            Case queue
+          </Link>
           {[
-            { title: "Case queue", icon: ClipboardCheck },
             { title: "Policy library", icon: BookOpen },
             { title: "Audit history", icon: ShieldCheck },
           ].map(({ title, icon: Icon }) => (
@@ -164,7 +170,7 @@ export default async function Workspace() {
               </h2>
               <p className="mt-3 max-w-md text-sm leading-7 text-slate-500">
                 {identity
-                  ? "Your organisation and role are verified. This foundation connects your workspace to a governed identity before case review is introduced."
+                  ? "Your organisation and role are verified. Explore three synthetic cases, deterministic calculations and policy references in the read-only alpha."
                   : "Enter the synthetic sandbox to explore the workspace as a processor, medical officer or auditor."}
               </p>
               <div className="mt-7">
@@ -183,6 +189,14 @@ export default async function Workspace() {
                   </Button>
                 )}
               </div>
+              {identity && (
+                <Link
+                  href="/cases"
+                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-teal-800"
+                >
+                  Open case queue <ArrowRight size={16} />
+                </Link>
+              )}
             </div>
             <div className="border-t border-slate-100 bg-slate-50/70 p-7 lg:border-l lg:border-t-0 lg:p-9">
               <p className="text-[10px] font-semibold tracking-[.16em] text-slate-400">

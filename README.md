@@ -111,6 +111,9 @@ make product-up
 ```
 
 Open [localhost:3000](http://localhost:3000) and choose a synthetic reviewer role.
+The [case queue](http://localhost:3000/cases) now supports read-only exploration
+of three golden scenarios, calculation traces, and policy source references.
+See the [P2 checklist](docs/product/phase-p2-checklist.md) for scope and limits.
 The stack runs Next.js, FastAPI, PostgreSQL, and Redis locally. It does not call
 Snowflake or AI services. Stop it with `make product-down`; local database data
 is retained. See [local development](docs/architecture/local-development.md)

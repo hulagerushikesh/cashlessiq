@@ -36,7 +36,7 @@ database password. No command above starts Snowflake or calls a model.
 | Path | Responsibility |
 | --- | --- |
 | `apps/web` | Next.js reviewer shell, server-side session cookie and API client |
-| `apps/api` | FastAPI identity, tenant membership, operational health |
+| `apps/api` | FastAPI identity, tenant membership, health, read-only synthetic case repository |
 | `apps/api/migrations` | Versioned PostgreSQL schema |
 | `apps/worker` | Reserved worker boundary; no consumers yet |
 | `packages/contracts` | Generated OpenAPI; canonical definitions are API models |
@@ -78,6 +78,8 @@ development-only bootstrap route, keeping the bootstrap key server-side. The
 browser receives an HttpOnly, SameSite=Strict cookie. Login/logout reject
 cross-origin form posts. The API checks the JWT signature, issuer, audience,
 expiry, and server-side active membership on every `/v1/me` request.
+The same checks protect every case read; tenant scope is derived from verified
+membership, not a query parameter or browser header.
 
 Staging/customer SSO: OIDC issuer, audience, and HTTPS JWKS URL with RS256
 access-token verification. External identity is the `(issuer, subject)` pair;
@@ -103,3 +105,30 @@ See `.env.example` for names only. Never place credentials in tracked files.
 The API reads CIQ_DATABASE_URL via a secret value. Keep database statements and
 tokens out of application logs. The web service uses CIQ_API_URL only on the
 server and never exposes Snowflake credentials or an access token to client JS.
+
+## P2 synthetic read-only workspace
+
+After sign-in, open http://localhost:3000/cases. Search request/member references
+or filter recommendation outcomes. Open GOL001 for deductions, GOL024 for PED
+referral, or GOL027 for missing-cost query. All are fixed synthetic scenarios,
+not new live assessments. Only the medical-officer role receives diagnosis,
+procedure, and submitted clinical note. Financial labels and policy-check
+explanations remain visible to all three current review roles.
+
+`GET /v1/cases` accepts `search` (up to 80 characters), `outcome`, `page`, and
+`page_size` (1–50). `GET /v1/cases/{request_id}` returns a read-only detail. Both
+require `case:read` and active tenant membership. Another tenant sees an empty
+queue and 404 for the fixed tenant's IDs, even with valid membership. There are
+no assignment, approval, query-send, upload, or policy-write endpoints.
+
+Snapshots are packaged with the API, not stored in PostgreSQL as operational
+cases. Reproduce them with `uv run python -m scripts.export_synthetic_cases`.
+It copies source facts from the seeded YAML and complete calculation/check
+outputs from the frozen migration fixture. CI checks regeneration for drift.
+The runtime API imports neither the generator nor the Snowflake/rules runtime.
+
+`CaseRepository` defines the boundary for the future Snowflake adapter; this
+slice implements only `SyntheticCaseRepository`. Reads are disabled outside
+local/test environments. Evidence links reference the existing policy source
+register; clause retrieval, real member history, and live SLA are not present.
+Real-data access and rollout require separate research/privacy/security gates.

@@ -6,6 +6,15 @@ This matrix defines ownership for the P1 identity slice and the next case slices
 Only synthetic identity data is currently seeded. Rows marked planned do not
 represent implemented storage or synchronisation.
 
+P2 local-alpha exception: three packaged golden case snapshots are available
+only to the fixed synthetic tenant in local/test environments. They contain no
+real patient identifiers. Membership is checked on every read; narrative fields
+(diagnosis, procedure, clinical note) are returned only to medical officers.
+Financial line labels and rule explanations remain visible to processors and
+auditors. This limited synthetic display rule is not a validated real-data
+masking policy. No new operational case storage or live Snowflake access has
+been introduced; the planned ownership rows below remain planned.
+
 | Fields | Classification | Authoritative owner | P1 storage / access |
 | --- | --- | --- | --- |
 | Tenant UUID, name, active status | Internal | Application tenant registry | PostgreSQL; validated membership |

@@ -5,6 +5,11 @@ import { createApiClient, type Identity } from "@cashlessiq/api-client";
 export const SESSION_COOKIE = "ciq_session";
 export const apiUrl = () => process.env.CIQ_API_URL ?? "http://127.0.0.1:8000";
 
+export async function sessionApi() {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  return token ? createApiClient(apiUrl(), token) : null;
+}
+
 export async function currentIdentity(): Promise<
   { state: "ready"; identity: Identity } | { state: "anonymous" | "unavailable" }
 > {
