@@ -123,6 +123,15 @@ and canonical summary-only validator handler, with 34 new tests. Peer transport,
 delegation, restart-safe replay, packaging/secret custody and live SQL/isolation
 remain open. Nothing is provisioned or live; P2 remains open.
 
+Next offline increment adds a token-verifying summary broker, fresh PostgreSQL
+membership adapter, internal-user UUID subjects and immutable tenant/disclosure
+routing. Broker delivery rechecks session/membership and validates response
+scope. Seventeen additional disposable-database/fake-source tests pass; latest
+API total is **196**, root regression **145**, with Ruff/format/whitespace checks
+passing. This in-process summary composition is not the read-worker delegation
+or authenticated transport implementation. No HTTP startup integration, live
+source access, persistent identities, push or website deployment was added.
+
 The website must remain unchanged per Rushikesh's latest instruction. Completing
 offline tests does not waive these gates or authorise P3, public deployment,
 new grants, account-wide restrictions or reuse of human OAuth in a server.

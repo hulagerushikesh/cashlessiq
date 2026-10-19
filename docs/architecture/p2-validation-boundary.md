@@ -7,8 +7,10 @@ Scope: local-only synthetic P2; TPA001/GOL001 and TPA003/GOL024/GOL027.
 Rushikesh explicitly approved this design, including two additional validator
 identities. This approves offline implementation, not provisioning or live reads.
 See the [implementation checkpoint](../product/p2-worker-boundary-checklist.md).
-Transport, secret delivery and database isolation are not implemented by the
-first in-process primitive; the future-tense design below remains the target.
+The offline broker now resolves fresh database membership with issuer-qualified
+identity, issues internal-user UUID assertions and uses fixed summary routes.
+Transport, read-worker delegation, secret delivery and database isolation are
+not implemented by this in-process composition; the design below remains the target.
 
 ## Decision proposed
 

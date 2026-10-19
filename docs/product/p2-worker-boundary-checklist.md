@@ -21,24 +21,36 @@ Design: [validation/credential boundary](../architecture/p2-validation-boundary.
   citations, foreign/duplicate/overflow evidence and input failure -> unavailable,
   never missing/fallback. QUERY/REFER preserve uncomputed null payable.
 - [x] 34 new no-network tests; keys are ephemeral in-memory test objects only.
+- [x] Offline summary broker verifies application tokens and resolves active
+  PostgreSQL user/tenant/membership using issuer plus subject. Assertions carry
+  internal application user UUIDs; workers independently query fresh membership
+  by that UUID and their pinned tenant. Fixed immutable tenant/disclosure routes,
+  case allowlists and response scope checks have no browser-selected destination.
+- [x] Broker re-verifies the application token and fresh membership after worker
+  return, denying role changes, deactivated users/tenants/memberships and expiry.
+  Seventeen additional tests use disposable PostgreSQL schemas, ephemeral keys
+  and fake validator inputs; no Snowflake/network worker transport is involved.
 
-Files: apps/api/src/ciq_api/worker_authority.py and validation_worker.py,
+Files: apps/api/src/ciq_api/worker_authority.py, validation_worker.py and worker_broker.py,
 with corresponding tests. They are not imported into main/create_app or HTTP
 startup, do not change public v2/OpenAPI and contain no connector creation.
 The handler is an in-process test primitive, not a running isolated container.
 
 ## Remaining, in order
 
-- [ ] Integrate broker identity/membership resolution and fixed worker routing
-  offline; subject must resolve unambiguously to an internal application user,
-  not an unqualified external OIDC sub. No caller-provided assertion minting API.
+- [x] Integrate broker identity/membership resolution and fixed summary routing
+  offline using internal application user IDs. No caller-provided assertion
+  minting API. This direct in-process summary composition is not the future
+  read-worker path and is deliberately not exposed through HTTP startup.
 - [ ] Specify and test separate read-worker-to-validator delegation: separate
   audiences, no caller scope widening, authenticated peer identity and no raw export.
 - [ ] Implement private peer-authenticated transport and asymmetric assertion
   issuer lifecycle; current verification does not establish mTLS or peer identity.
 - [ ] Implement authoritative membership adapter and before-delivery checks at
-  broker/read workers, including medical response downgrade. Fake callbacks do
-  not establish actual database-backed or distributed revocation behaviour.
+  read workers, including medical response downgrade. The broker and validator
+  now exercise a database-backed adapter in disposable local tests. No private
+  remote membership protocol or distributed revocation behaviour is established;
+  separate workers must not receive general operational database credentials.
 - [ ] Replace process-local replay state with a reviewed atomic shared strategy
   before multi-process/restart-capable use. Current ledger resets on restart;
   restarting with the same still-valid issuer epoch permits replay. No deployment
@@ -60,8 +72,8 @@ clinical prose, financial lines or persisted projection is introduced.
 
 ## Verification
 
-179 API tests passed, including existing disposable PostgreSQL tests and the
-34 new boundary tests. All 145 root regression tests pass. API/root Ruff checks,
+196 API tests passed, including disposable PostgreSQL tests and the
+51 boundary/broker tests. All 145 root regression tests pass. API/root Ruff checks,
 API format checks and git whitespace checks pass.
 Web/browser/build and remote CI are not rerun for this internal-only increment.
 No Snowflake/AI calls, credentials, persistent source identities, source routing,

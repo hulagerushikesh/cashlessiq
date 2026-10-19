@@ -557,3 +557,19 @@ Verification: 62 root and 98 API/PostgreSQL tests pass (160 total), including
 git whitespace checks pass. No web/API contracts changed, so browser/build
 checks were not rerun. The proposed SQL remains unexecuted and must be reviewed
 against live object definitions by CoCo before use.
+
+## Offline broker authorization checkpoint — 19 October
+
+The approved worker design now has a local, unmounted summary broker and fresh
+PostgreSQL membership adapter. Issuer-qualified application identity resolves to
+an internal UUID; tenant/disclosure routing is fixed server configuration. Both
+validator and broker check current membership before delivery; revoked users,
+tenants, memberships, changed roles and expired requests fail closed. The
+existing v2 HTTP/public UI/source configuration is unchanged.
+
+Verification: 196 API tests, 145 root tests, root/API Ruff, API formatting and
+whitespace checks pass. Seventeen new tests use disposable local PostgreSQL
+schemas and fake source inputs. No Snowflake/AI, new credentials, provisioning,
+push, website deployment or P3. Read-worker delegation, authenticated transport,
+restart-safe replay and live isolation remain open; see the
+[worker boundary checklist](p2-worker-boundary-checklist.md).
