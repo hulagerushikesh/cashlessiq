@@ -49,6 +49,17 @@ class OfflinePeer:
     audience: str
 
 
+@dataclass(frozen=True)
+class TransportPeer:
+    """Transport-derived identity inside the trusted process, never a wire field.
+
+    The TLS adapter constructs this only after chain, certificate pin and URI SAN
+    checks. Like any Python object it is not isolation from compromised local code.
+    """
+
+    audience: str
+
+
 def issue_detail_assertion(
     private_key: object,
     *,
@@ -136,7 +147,7 @@ class DelegatedSummaryAuthority(SummaryAuthority):
             raise WorkerDenied("Worker access denied")
         return claims
 
-    def check_peer(self, token: str, peer: OfflinePeer) -> None:
+    def check_peer(self, token: str, peer: OfflinePeer | TransportPeer) -> None:
         try:
             if not isinstance(token, str) or len(token) > 4096:
                 raise WorkerDenied("Worker access denied")
@@ -149,7 +160,10 @@ class DelegatedSummaryAuthority(SummaryAuthority):
                 options={"strict_aud": True, "verify_exp": False, "verify_iat": False},
             )
             claims = self._parse_claims(raw)
-            if type(peer) is not OfflinePeer or peer.audience != claims.reader_audience:
+            if (
+                type(peer) not in {OfflinePeer, TransportPeer}
+                or peer.audience != claims.reader_audience
+            ):
                 raise WorkerDenied("Worker access denied")
         except Exception:
             raise WorkerDenied("Worker access denied") from None
@@ -162,7 +176,7 @@ class OfflineDelegatedValidator:
         self._authority = authority
         self._worker = worker
 
-    def validate(self, token: str, *, peer: OfflinePeer) -> SummaryObservation:
+    def validate(self, token: str, *, peer: OfflinePeer | TransportPeer) -> SummaryObservation:
         self._authority.check_peer(token, peer)
         return self._worker.validate(token)
 

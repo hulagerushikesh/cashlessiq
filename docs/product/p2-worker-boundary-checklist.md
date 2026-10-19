@@ -42,12 +42,19 @@ Design: [validation/credential boundary](../architecture/p2-validation-boundary.
   expiry/replay independently and only the strict scoped summary returns.
 - [x] Fixed reader/disclosure peer-policy checks with injected **fake** peer
   context. This tests authorization policy, NOT actual peer authentication.
+- [x] Real loopback mTLS candidate for both broker -> reader and reader ->
+  validator hops: explicit CA, required peer certificates, hostname/IP SAN checks,
+  leaf pin plus URI identity, certificate-derived TransportPeer, fixed operations,
+  bounded bodies/handlers and generic no-store responses. Twenty-three transport
+  tests include real handshakes with temporary PKI/fake inputs. See
+  [transport evidence and limits](../architecture/p2-worker-transport.md).
 
 Files: apps/api/src/ciq_api/worker_authority.py, validation_worker.py and worker_broker.py,
-plus worker_replay.py and worker_delegation.py, with corresponding tests.
+plus worker_replay.py, worker_delegation.py and worker_transport.py, with tests.
 They are not imported into main/create_app or HTTP
 startup, do not change public v2/OpenAPI and contain no connector creation.
-The handler is an in-process test primitive, not a running isolated container.
+Delegation/source handlers are test primitives, not running isolated containers.
+Transport tests temporarily start loopback listeners; no normal startup changes.
 
 ## Remaining, in order
 
@@ -58,10 +65,13 @@ The handler is an in-process test primitive, not a running isolated container.
 - [x] Specify and test offline read-worker-to-validator delegation: separate
   audiences/operations, no scope widening, parent nonce binding and no raw export.
   The broker can select this path by trusted fixed route configuration only.
-- [ ] Establish actual authenticated peer identity for delegation. OfflinePeer
-  is explicitly a test double; never construct it from a browser/header claim.
+- [x] Establish certificate-derived peer identity for loopback delegation tests.
+  OfflinePeer remains a test double; the TLS adapter instead constructs
+  TransportPeer only from verified certificate/pin/SAN state, never headers.
 - [ ] Implement private peer-authenticated transport and asymmetric assertion
-  issuer lifecycle; current verification does not establish mTLS or peer identity.
+  issuer lifecycle in separately packaged workers. Loopback mTLS now passes;
+  container/private addressing, signing/CA custody, rotation/revocation, production
+  server/timeout handling and network/mount isolation remain unimplemented.
 - [ ] Implement authoritative membership adapter and before-delivery checks at
   read workers, including medical response downgrade. Broker, relay and validator
   now exercise a database-backed adapter in disposable local tests. No private
@@ -92,8 +102,8 @@ clinical prose, financial lines or persisted projection is introduced.
 
 ## Verification
 
-255 API tests passed, including disposable PostgreSQL tests and the
-110 boundary/broker/replay/delegation tests. Eleven replay tests include spawned processes,
+278 API tests passed, including disposable PostgreSQL tests and the
+133 boundary/broker/replay/delegation/transport tests. Eleven replay tests include spawned processes,
 restart/capacity/storage failures and expiry during consumption.
 The delegation increment adds 32 focused tests and 16 existing broker scenarios
 rerun through the delegated route. Both tenant scopes/all roles and SAVED/MISSING
@@ -102,6 +112,7 @@ swapped child, replay, extra output, source failure and delivery-role changes.
 All 145 root regression tests pass. API/root Ruff checks,
 API format checks and git whitespace checks pass.
 Web/browser/build and remote CI are not rerun for this internal-only increment.
-No Snowflake/AI calls, credentials, persistent source identities, source routing,
-SQL/grants, service startup, push or website deployment. Existing local stack
-was already running; regression schemas are disposable and removed by fixtures.
+No Snowflake/AI calls, real/persistent credentials, persistent source identities,
+source routing, SQL/grants, ordinary service startup, push or website deployment.
+Existing local stack was already running. Regression schemas, temporary test
+certificates/keys and test-only loopback listeners are cleaned up by fixtures.

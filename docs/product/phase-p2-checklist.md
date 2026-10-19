@@ -5,6 +5,22 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Loopback mutually authenticated worker transport — latest
+
+Both broker -> read relay and read relay -> validator now pass real mTLS tests,
+using temporary test PKI and fake source inputs. Certificate chain/validity/EKU,
+server IP SAN, leaf pin and URI identity are checked; transport-derived peer
+identity cannot be replaced by a header. Fixed scoped operations and assertion/
+membership/replay checks remain in force. No ordinary source/HTTP startup change.
+
+278 API/PostgreSQL and 145 root tests pass; lint/format/whitespace checks pass.
+23 transport tests cover positive/negative handshakes, protocol rejection,
+identity spoofing, replay and safe errors. No Snowflake/AI, real credentials,
+grants, provisioning, push, deployment or P3. Temporary listeners/certificates
+are cleaned up. Separate worker packaging, remote membership, secret/CA/replay
+lifecycle and live Snowflake isolation remain open; see
+[transport limits](../architecture/p2-worker-transport.md).
+
 ### Offline delegated read/validation path — latest checkpoint
 
 The authenticated broker can select a fixed read relay and tenant validator

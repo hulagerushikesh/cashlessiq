@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Real mutually authenticated private transport, authoritative remote membership checks, retained replay lifecycle, separate packages and tested secret/network mounts |
+| Worker security | Loopback mTLS passes; still need authoritative remote membership, private container transport, retained replay/key lifecycle, separate packages and tested secret/network mounts |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -311,6 +311,27 @@ lint, API formatting and whitespace checks pass. The increment adds 32 delegatio
 tests and reruns 16 existing broker scenarios through the delegated path. Web/
 browser/build/remote CI were not rerun for these internal-only changes. No
 Snowflake/AI calls, keys saved to disk, grants, provisioning, push or deployment.
+
+## Latest transport checkpoint
+
+The two local worker hops now have an explicitly constructed mTLS transport
+candidate: required client certificates, explicit CA, IP SAN verification,
+certificate pins/URI identities and certificate-derived peer context. Twenty-three
+real loopback TLS tests pass, including both-hop composition, missing/foreign/
+untrusted/expired/wrong-purpose credentials, spoofed headers, malformed requests,
+replay and generic failure handling. Temporary test PKI is deleted by fixtures.
+
+Latest backend total: **278 API/PostgreSQL tests**, plus **145 root tests**, with
+root/API lint, API formatting and whitespace checks passing. Web/browser/build/
+remote CI were not rerun for this internal-only increment. No Snowflake/AI calls,
+real credentials, grants, source activation, ordinary startup, push or deployment.
+
+This closes loopback peer authentication, not deployed isolation. Remote
+membership, separate packaging/mounts, CA/signing-key custody/rotation, replay
+lifecycle and exact Snowflake/live acceptance gates remain. See the
+[transport checkpoint](../architecture/p2-worker-transport.md). Next: authoritative
+remote membership and worker packaging preparation; do not give workers general
+operational DB credentials or activate human OAuth as a shortcut.
 
 ## Spend guardrails
 
