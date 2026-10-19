@@ -1,8 +1,14 @@
 # P2 local validation and credential boundary
 
-Date: 19 October 2026. Status: design for review, **not implemented or provisioned**.
+Date: 19 October 2026. Status: **design approved; first offline primitive implemented**.
 Parent: [approved isolation architecture](../product/p2-isolation-proposal.md).
 Scope: local-only synthetic P2; TPA001/GOL001 and TPA003/GOL024/GOL027.
+
+Rushikesh explicitly approved this design, including two additional validator
+identities. This approves offline implementation, not provisioning or live reads.
+See the [implementation checkpoint](../product/p2-worker-boundary-checklist.md).
+Transport, secret delivery and database isolation are not implemented by the
+first in-process primitive; the future-tense design below remains the target.
 
 ## Decision proposed
 
@@ -15,8 +21,8 @@ assessment/projection table. This document does not edit Compose or start worker
 The approved architecture named four read identities but left the validator's
 identity unresolved. This design proposes **two additional validator identities**:
 six runtime Snowflake identities total, plus a separate non-runtime governance
-owner. This expansion needs explicit design approval before preparing its exact
-principal/grant package. None exists as a result of this document.
+owner. The owner approved this design expansion; exact principal/grant package
+and provisioning still require their separate reviews. None was created here.
 
 | Component | Count | Source authority and output |
 | --- | --- | --- |

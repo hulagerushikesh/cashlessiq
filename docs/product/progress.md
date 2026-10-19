@@ -116,9 +116,12 @@ or account changes.
 
 Next design prepared: [local validation/credential boundary](../architecture/p2-validation-boundary.md).
 It proposes four read workers plus two tenant validators, with no Snowflake
-credentials in the API. The two extra validator identities, internal invocation
-authentication and exact secret custody need review before implementation SQL.
-Nothing is provisioned or live; P2 remains open.
+credentials in the API. Rushikesh approved the design including the two extra
+validator identities. First [offline boundary slice](p2-worker-boundary-checklist.md)
+is implemented: asymmetric assertions, fresh injected membership/replay guards
+and canonical summary-only validator handler, with 34 new tests. Peer transport,
+delegation, restart-safe replay, packaging/secret custody and live SQL/isolation
+remain open. Nothing is provisioned or live; P2 remains open.
 
 The website must remain unchanged per Rushikesh's latest instruction. Completing
 offline tests does not waive these gates or authorise P3, public deployment,

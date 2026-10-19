@@ -5,6 +5,20 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Approved design: first offline worker-boundary slice — 19 October
+
+Rushikesh approved the local validation design, including two additional tenant
+validators. Implemented explicit RS256 internal assertions, strict fixed scope,
+30-second expiry, bounded concurrent replay ledger, fresh injected membership
+checks before reads/delivery and a summary-only canonical validator handler.
+34 new fake-source/no-network tests pass; all 179 API/PostgreSQL tests pass.
+All 145 root regression tests and root/API Ruff checks pass; API format and git
+whitespace checks pass. See [remaining boundary work](p2-worker-boundary-checklist.md):
+peer transport/delegation, restart-safe replay, actual membership/routing adapters,
+worker packaging/secret custody and coherent source SQL are not complete.
+No public routes/contracts, Snowflake/AI calls, secrets, provisioning, live source
+activation, website deployment, push or P3. Existing local services were unchanged.
+
 ### Local validation boundary designed — 19 October
 
 Prepared the [worker/credential design](../architecture/p2-validation-boundary.md):
