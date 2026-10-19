@@ -2,6 +2,43 @@
 
 Status: bounded live source reads verified; not enabled in the API. 19 October 2026.
 
+## Offline member-history expectations — 19 October
+
+`cashlessiq.source_history` now validates and copies scoped policy/member
+references, sum insured/bonus, policy status, claim count, total paid, latest
+admission and conditions into immutable comparison observations. It rejects
+missing/mismatched identifiers, malformed or non-integer amounts/counts,
+inconsistent empty-claim aggregates, timestamps in date fields, non-boolean
+declarations, duplicate conditions and more than 20 conditions. Zero prior
+claims and an empty condition list are legitimate, not fabricated coverage.
+It does not calculate remaining cover, waiting periods, PED eligibility or
+decision amounts. Conditions remain restricted clinical history with no HTTP
+exposure; a separate role-based disclosure policy is still required.
+
+Explicit constants in `tests/fixtures/migration/member_history.json` record
+seed-42 core observations, independently of UI/rule-result snapshots:
+
+| Request | Policy/member | Prior claims | Paid INR | Latest admission | Conditions |
+| --- | --- | --- | --- | --- | --- |
+| GOL001 | POL0001 / MEM0001 | 1 | 86,400 | 2025-11-14 | 0 |
+| GOL024 | POL0024 / MEM0024 | 0 | 0 | none | 4, including declared E11.6 |
+| GOL027 | POL0027 / MEM0027 | 0 | 0 | none | 2 |
+
+These are synthetic source expectations, not live parity evidence or patient
+facts. A regression test independently runs core generation in memory and
+compares these constants; it writes no CSV/PDF and reads no local generated
+output. No demographic facts or output files are committed. The generator is
+unchanged. This increment adds 32 tests; all 124 root tests and root lint pass.
+API/UI/contracts are unchanged and their suites were not rerun.
+
+The offline history and null-payable preparation is complete. Next is the CoCo
+review of proposed SQL 65, followed by separately approved minimum grants and
+a bounded live comparison using these validators. Do not claim P2 integration
+success from offline tests, nor import root-domain code into the API by changing
+`sys.path`. Live parity, shared-domain packaging, service identity and the
+repository integration exit criteria remain open. No Snowflake calls, grants,
+deployment, source writes or persistent local seed changes ran in this step.
+
 ## Offline saved-decision validation — 19 October
 
 `cashlessiq.source_decision.observe_saved_decision` now reuses the existing

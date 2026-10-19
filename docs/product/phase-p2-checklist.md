@@ -120,7 +120,7 @@ UI changed; browser/build checks were not rerun for this identity-only increment
 - [x] Proposed minimum extra reader grants saved separately for CoCo review;
   no grants executed and no automatic CLI/API/startup integration.
 - [ ] Live inspection and canonical saved-decision/citation validation.
-- [ ] Explicit member-history expectations and QUERY/REFER null-payable adapter.
+- [x] Explicit offline member-history expectations and QUERY/REFER null-payable adapter.
 
 19 October follow-up: the offline null-payable adapter is implemented in the
 domain package, reusing canonical decision validation and checking stored-row
@@ -132,6 +132,16 @@ remain pending, so the combined checkbox above stays open. This does not claim
 live saved-decision or citation parity and is not registered in the API/CLI.
 API/UI and contracts are unchanged; their suites were not rerun in this step.
 No Snowflake usage or grant changes; P2 remains open and P3 is not started.
+
+Subsequent history increment: immutable domain observations now validate member,
+policy/TPA/request identity, claim aggregates, dates and bounded conditions.
+Explicit seed-42 history constants for all three cases are checked against
+in-memory core generation independently of UI snapshots; no generator output
+files are changed. All 124 root tests and lint pass (32 new history tests).
+This closes only the offline preparation checkbox, not live history or decision
+parity. CoCo review of SQL 65 and its minimum-grant approval are next, before a
+bounded live comparison. No Snowflake spend, grants, API/UI changes, deployments
+or reviewer writes. P2's two integration exits remain unchecked.
 
 The diagnostic reader does not establish parity or return product read models.
 No Snowflake usage, AI calls or reviewer writes were needed for this preparation.

@@ -1,0 +1,31 @@
+{
+  "provenance": "Synthetic seed-42 core CSV observations; generator 8e652c9. Not live Snowflake evidence or UI snapshots.",
+  "cases": [
+    {
+      "request_id": "GOL001", "tpa_id": "TPA001", "policy_id": "POL0001", "member_id": "MEM0001",
+      "sum_insured_inr": 450000, "cumulative_bonus_inr": 0, "status": "ACTIVE",
+      "claim_count": 1, "total_paid_inr": 86400, "last_admission_date": "2025-11-14",
+      "conditions": []
+    },
+    {
+      "request_id": "GOL024", "tpa_id": "TPA003", "policy_id": "POL0024", "member_id": "MEM0024",
+      "sum_insured_inr": 950000, "cumulative_bonus_inr": 0, "status": "ACTIVE",
+      "claim_count": 0, "total_paid_inr": 0, "last_admission_date": null,
+      "conditions": [
+        {"icd10_code": "E11.6", "condition_name": "Type 2 diabetes with foot complication", "first_diagnosed_on": "2024-01-01", "declared_at_proposal": true},
+        {"icd10_code": "H25.9", "condition_name": "Age-related cataract", "first_diagnosed_on": "2022-08-25", "declared_at_proposal": false},
+        {"icd10_code": "I10", "condition_name": "Essential hypertension", "first_diagnosed_on": "2018-04-23", "declared_at_proposal": false},
+        {"icd10_code": "I83.9", "condition_name": "Varicose veins", "first_diagnosed_on": "2019-09-27", "declared_at_proposal": false}
+      ]
+    },
+    {
+      "request_id": "GOL027", "tpa_id": "TPA003", "policy_id": "POL0027", "member_id": "MEM0027",
+      "sum_insured_inr": 600000, "cumulative_bonus_inr": 0, "status": "ACTIVE",
+      "claim_count": 0, "total_paid_inr": 0, "last_admission_date": null,
+      "conditions": [
+        {"icd10_code": "N20.0", "condition_name": "Kidney stone", "first_diagnosed_on": "2024-04-05", "declared_at_proposal": false},
+        {"icd10_code": "N43.3", "condition_name": "Hydrocele", "first_diagnosed_on": "2020-03-09", "declared_at_proposal": false}
+      ]
+    }
+  ]
+}
