@@ -1,19 +1,23 @@
 # Snowflake development budget
 
-Last updated: 18 October 2026
+Last updated: 19 October 2026
 
 ## Spending envelope
 
-Rushikesh reports $205 remaining and 19 days of account availability. This is
+Rushikesh reconfirmed $205 remaining and 18 days of account availability on
+19 October, and authorised necessary Snowflake usage for product work. This is
 the planning baseline, not a balance independently verified from billing SQL.
 Do not upgrade the account or incur out-of-pocket charges.
+The planning expiry is approximately 6 November 2026; the exact account expiry
+and timezone must be confirmed from the account before relying on that date.
+Aim to retain useful evidence before expiry, not to consume the entire balance.
 
 | Use | Maximum USD |
 | --- | ---: |
 | Checks and existing service overhead | 20 |
 | Backend integration tests | 35 |
 | Agent and extraction evaluations | 65 |
-| Final validation and demonstrations | 35 |
+| Product validation and reproducibility exports | 35 |
 | Reserve | 50 |
 | Total | 205 |
 
@@ -54,13 +58,25 @@ Streamlit app during local development because it can wake container compute.
 
 ## Working schedule and gates
 
-1. Days 1–6: local P1 contracts, application foundation, identity and tests.
-2. Days 7–12: integration only after P1 exits; reuse existing extraction/indexes.
-3. Days 13–16: evaluate three cases, then ten; run 30 only after small batches pass.
-4. Days 17–19: validate the completed slice and export reproducibility evidence.
+1. 19–22 October: finish remote CI for the local alpha, inspect spend/state, and
+   implement bounded P2 Snowflake reads behind the repository interface. Reuse
+   existing synthetic data and extraction/index outputs; do not wake Streamlit.
+2. 23–28 October: after P2 exits, verify the next approved product slice against
+   the existing governed objects. Do not resume AI/extraction merely to spend
+   credits or skip reviewer-command/worker prerequisites to fit the calendar.
+3. 29 October–2 November: if the assessment slice is ready, evaluate three cases,
+   then ten; run 30 only after smaller batches pass. Otherwise spend only on
+   relevant read parity and deterministic integration checks.
+4. 3–5 November: export synthetic fixtures, schema/object definitions, evaluation
+   evidence, and recovery instructions. Verify local development still works
+   without the expiring account. Do not leave paid services running for expiry.
 
 Dates do not override phase exit criteria. An unfinished phase stays unfinished.
 Keep local development and the public demo independent of live AI calls.
+The five interviews were explicitly deferred for a synthetic-only alpha on
+19 October. This permits P2 integration using existing synthetic records, not
+real-data ingestion or production deployment. The $50 reserve is still held;
+report before reallocating it, even near expiry.
 
 ## Session procedure
 

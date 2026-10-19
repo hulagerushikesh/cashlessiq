@@ -20,9 +20,13 @@ deployment, policy activation, or reviewer writes.
 - [x] No reviewer mutation or upload endpoints/actions.
 - [x] API isolation/revocation tests, browser walkthroughs, mobile checks.
 - [x] Existing golden results and generated contracts remain consistent locally.
-- [ ] Remote CI passes for the new case slice after push.
+- [x] Remote CI passes for the new case slice after push.
 
 ## Local verification
+
+Remote confirmation: [CI run 39198298419](https://github.com/hulagerushikesh/cashlessiq/actions/runs/39198298419)
+passed on 19 October for `d3623da`, including regression, snapshot/contract drift,
+lint, type/build, Docker, API/PostgreSQL, and browser checks.
 
 On 19 October: 62 existing/contract regression tests, 36 API/PostgreSQL tests,
 and 12 browser tests passed (110 total). Ruff, web lint, TypeScript, Next.js
