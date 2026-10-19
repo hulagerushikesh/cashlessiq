@@ -26,7 +26,7 @@ confirmed suspended after the cost inspection. M0 is complete; M1 is next.
 - [x] Authenticated web-to-API GET /v1/me.
 - [x] OpenAPI contract and generated TypeScript client.
 - [x] CI workflow without Snowflake plus local API/browser smoke checks.
-- [ ] GitHub CI run passes after pushing the implementation.
+- [x] GitHub CI run passes after pushing the implementation.
 - [x] Field-level ownership and data-classification matrix.
 - [ ] Interview notes or validated assumptions from at least five target users.
 - [x] Existing prototype and golden-rule tests still pass.
@@ -48,8 +48,20 @@ confirmed suspended after the cost inspection. M0 is complete; M1 is next.
   session cookies, mobile overflow, and cross-origin login rejection.
 - Product builds and tests require no Snowflake connection or paid IdP.
 
+## Remote engineering evidence
+
+- On 19 October, [Product foundation run 39195287483](https://github.com/hulagerushikesh/cashlessiq/actions/runs/39195287483)
+  passed for commit `5e9db2e`: existing regression tests, lint, generated-contract
+  drift checks, TypeScript, production build, Docker startup, API/PostgreSQL
+  integration, and browser smoke tests.
+- The first remote run exposed repo-level test imports that depended on the
+  launch path. Pytest now explicitly includes the repository root; no domain
+  logic or golden expectations changed.
+- No Snowflake queries, paid identity service, or cloud product deployment were
+  needed for this verification. The existing public demo remains unchanged.
+
 Local engineering work does not close the phase. The remaining gates are a
-successful remote CI run and real research evidence from five target users.
+real research evidence from five target users and reconciliation of findings.
 Use `docs/product/research/interview-template.md` to collect that evidence.
 
 P1 is not complete and no P2 work may begin. Research evidence is outstanding;
