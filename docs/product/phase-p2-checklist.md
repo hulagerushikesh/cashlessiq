@@ -78,6 +78,17 @@ were made. This remains an operator spike, not tenant-RLS or full P2 completion.
 - [ ] Governed Snowflake read adapter behind the repository interface.
 - [ ] Approved economical integration verification and view parity.
 
+Next local increment: immutable operator source scopes now require separate
+UUID bindings for TPA001 and TPA003, reject the mixed offline demo tenant, and
+bind/validate request IDs against their inspected owner rather than a global
+allowlist. Invalid mappings fail before any connection; unknown tenants do no
+I/O. No tenant/membership provisioning or HTTP integration was introduced.
+62 root and 58 API/PostgreSQL/gateway tests pass (120 total); Ruff passes.
+No Snowflake calls, grant changes, policy activation, or reviewer writes ran.
+These guards were tested offline; the new query bindings have not been live
+re-verified. Member/decision/evidence parity and service-identity hardening
+remain outstanding. The two integration exit boxes remain unchecked.
+
 Full M2/P2 is not complete until the integration criteria are met. The first
 slice must work without Snowflake calls or AI spend. Do not start M3/P3 reviewer
 commands as part of this work.

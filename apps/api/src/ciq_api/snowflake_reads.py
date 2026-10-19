@@ -11,7 +11,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-ALPHA_REQUESTS = ("GOL001", "GOL024", "GOL027")
+from ciq_api.source_scopes import SyntheticSourceScopes
+
 READ_SQL = """
 SELECT R.REQUEST_ID, P.POLICY_ID, P.TPA_ID, P.PRODUCT_ID,
        PP.PRODUCT_NAME, PP.VERSION AS POLICY_VERSION,
@@ -53,24 +54,31 @@ class SnowflakeCaseSource:
 
     def __init__(self, connect: Callable[[], Any], tenant_tpas: Mapping[UUID, str]):
         self._connect = connect
-        self._tenant_tpas = dict(tenant_tpas)
+        self._scopes = SyntheticSourceScopes(tenant_tpas)
 
     def read_cases(self, tenant_id: UUID) -> list[SourceCase]:
-        tpa = self._tenant_tpas.get(tenant_id)
-        if tpa is None:
+        scope = self._scopes.get(tenant_id)
+        if scope is None:
             return []
         try:
             with self._connect() as connection, connection.cursor() as cursor:
                 cursor.execute("USE SECONDARY ROLES NONE", timeout=30)
-                cursor.execute(READ_SQL, (tpa, *ALPHA_REQUESTS), timeout=30)
+                # Keep the fixed SQL shape while binding only this owner's IDs.
+                request_slots = (*scope.request_ids, *(None,) * (3 - len(scope.request_ids)))
+                cursor.execute(READ_SQL, (scope.tpa_id, *request_slots), timeout=30)
                 columns = [column[0].lower() for column in cursor.description]
                 rows = cursor.fetchmany(4)
                 records = [
                     SourceCase.model_validate(dict(zip(columns, row, strict=True))) for row in rows
                 ]
-                if len(records) > 3 or len({r.request_id for r in records}) != len(records):
+                if len(records) > len(scope.request_ids) or len(
+                    {r.request_id for r in records}
+                ) != len(records):
                     raise ValueError("Duplicate or excessive source records")
-                if any(r.tpa_id != tpa or r.request_id not in ALPHA_REQUESTS for r in records):
+                if any(
+                    r.tpa_id != scope.tpa_id or r.request_id not in scope.request_ids
+                    for r in records
+                ):
                     raise ValueError("Source scope mismatch")
                 return records
         except Exception as exc:
@@ -111,7 +119,10 @@ def main() -> None:
     parser.add_argument("--tenant-id", type=UUID, required=True)
     parser.add_argument("--verified-tpa-id", required=True)
     args = parser.parse_args()
-    gateway = SnowflakeCaseSource(local_connection, {args.tenant_id: args.verified_tpa_id})
+    try:
+        gateway = SnowflakeCaseSource(local_connection, {args.tenant_id: args.verified_tpa_id})
+    except ValueError:
+        parser.exit(2, "Invalid synthetic source scope; use a separate tenant and verified TPA.\n")
     try:
         records = gateway.read_cases(args.tenant_id)
     except SourceReadUnavailable:

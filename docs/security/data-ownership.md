@@ -12,8 +12,13 @@ real patient identifiers. Membership is checked on every read; narrative fields
 (diagnosis, procedure, clinical note) are returned only to medical officers.
 Financial line labels and rule explanations remain visible to processors and
 auditors. This limited synthetic display rule is not a validated real-data
-masking policy. No new operational case storage or live Snowflake access has
-been introduced; the planned ownership rows below remain planned.
+masking policy. No new operational case storage or HTTP-triggered live
+Snowflake access has been introduced; the planned ownership rows below remain
+planned. A separate operator-only gateway has verified bounded synthetic source
+metadata reads. Its explicit owner-specific scopes reject the mixed offline demo
+tenant and do not provision application tenants or memberships. See the
+[integration status](../architecture/snowflake-read-integration.md); production
+service identity and effective PUBLIC privileges remain unresolved.
 
 | Fields | Classification | Authoritative owner | P1 storage / access |
 | --- | --- | --- | --- |

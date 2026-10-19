@@ -54,7 +54,7 @@ def test_bounded_parameterized_read_and_cleanup():
     assert records[0].estimated_total_inr == 100000
     assert cursor.execute.call_args_list == [
         call("USE SECONDARY ROLES NONE", timeout=30),
-        call(READ_SQL, ("TPA001", "GOL001", "GOL024", "GOL027"), timeout=30),
+        call(READ_SQL, ("TPA001", "GOL001", None, None), timeout=30),
     ]
     cursor.fetchmany.assert_called_once_with(4)
     connect.return_value.__exit__.assert_called_once()
@@ -98,3 +98,24 @@ def test_secondary_role_disable_failure_prevents_source_read():
     cursor.execute.assert_called_once_with("USE SECONDARY ROLES NONE", timeout=30)
     cursor.fetchmany.assert_not_called()
     connect.return_value.__exit__.assert_called_once()
+
+
+def test_two_source_tenants_bind_disjoint_request_ids():
+    first, second = uuid4(), uuid4()
+    _, _, connect, cursor = source()
+    gateway = SnowflakeCaseSource(connect, {first: "TPA001", second: "TPA003"})
+    assert [record.request_id for record in gateway.read_cases(first)] == ["GOL001"]
+    cursor.fetchmany.return_value = [
+        (request_id, "POL0024", "TPA003", *ROW[3:]) for request_id in ("GOL024", "GOL027")
+    ]
+    assert [record.request_id for record in gateway.read_cases(second)] == ["GOL024", "GOL027"]
+    assert cursor.execute.call_args == call(
+        READ_SQL, ("TPA003", "GOL024", "GOL027", None), timeout=30
+    )
+
+
+def test_globally_allowed_id_with_wrong_owner_is_rejected():
+    # Even a row labelled TPA001 cannot smuggle TPA003's known request through.
+    gateway, tenant, _, _ = source([("GOL024", *ROW[1:])])
+    with pytest.raises(SourceReadUnavailable):
+        gateway.read_cases(tenant)

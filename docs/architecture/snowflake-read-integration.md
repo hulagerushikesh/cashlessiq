@@ -2,6 +2,34 @@
 
 Status: bounded live source reads verified; not enabled in the API. 19 October 2026.
 
+## Current increment — source ownership guards
+
+`SyntheticSourceScopes` now validates an immutable, explicit operator binding
+before the gateway can connect. It accepts only the inspected synthetic owners:
+TPA001 -> GOL001 and TPA003 -> GOL024/GOL027. Each TPA must have a distinct UUID;
+duplicate TPA bindings, unknown TPAs, malformed tenant keys, and the existing
+mixed-ownership offline demo tenant are rejected. No default binding exists.
+The query binds only the selected owner's IDs, with unused fixed SQL slots
+bound to NULL. Returned IDs are checked against that owner-specific allowlist,
+even if the returned TPA field looks correct. Unknown tenants perform no I/O.
+
+This is configuration validation, NOT tenant provisioning, membership approval,
+Snowflake row-access policy, or production authorization. No tenant/membership
+records were created, no fixture ownership was rewritten, and HTTP remains
+offline. The inspected ownership manifest is limited to these three synthetic
+requests; do not extend it to customer data or treat it as live ownership discovery.
+
+Verification: 62 root tests and 58 API/PostgreSQL/gateway tests passed (120 total),
+with Ruff clean. This increment made no Snowflake calls or grant changes and
+consumed no Snowflake compute/AI credits. Earlier live reads below preceded
+these new guards; no live re-verification of this version is claimed.
+
+Next within P2: define separate synthetic application tenant/membership mappings
+before any HTTP integration, then verify member, decision and evidence reads
+with reviewed minimum grants. Keep the PUBLIC-privilege caveat below open; the
+operator credential is not a production service identity. Do not return frozen
+offline financial traces as if they were a live source decision.
+
 ## Restricted-role follow-up — 19 October
 
 After CoCo applied the role and exact operator grant, local SHOW checks confirmed
@@ -90,7 +118,7 @@ Table-level SELECT is still NOT tenant RLS. A customer deployment requires
 tenant-scoped secure views, validated mapping and service authentication;
 this gateway is only a synthetic operator spike.
 
-## Next live verification
+## Earlier live verification procedure (completed for metadata only)
 
 1. Complete local browser authentication: `snow connection test -c cashlessiq`.
 2. Run the existing explicit cost snapshot before billable integration. Confirm
@@ -127,6 +155,10 @@ Only after the ownership and parity evidence passes should the repository use
 this gateway. Live evidence/decision mapping remains separate P2 work. The HTTP
 API and UI deliberately continue to show their existing synthetic snapshots.
 No production environment, policy activation, or reviewer write is enabled.
+
+The CLI now rejects the actual seeded offline demo UUID
+`00000000-0000-4000-8000-000000000001`. The example operator UUID above does not
+create an application tenant or membership and must not be presented as one.
 
 The connector is an optional API extra, not a default runtime dependency. Tests
 use fake connections, assert bound parameters/row caps, prevent cross-tenant
