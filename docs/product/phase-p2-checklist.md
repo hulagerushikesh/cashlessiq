@@ -112,3 +112,22 @@ check/format and `uv run make lint` passed, as did git whitespace checks.
 Plain `make lint` selected a system Python without Ruff; running it through
 the project's uv environment resolves that tooling issue. No web contracts or
 UI changed; browser/build checks were not rerun for this identity-only increment.
+
+## Parity-input preparation — 19 October
+
+- [x] Operator-only bounded member/claim, condition, latest-decision and
+  product-clause inspection queries, with request/TPA ownership guards.
+- [x] Proposed minimum extra reader grants saved separately for CoCo review;
+  no grants executed and no automatic CLI/API/startup integration.
+- [ ] Live inspection and canonical saved-decision/citation validation.
+- [ ] Explicit member-history expectations and QUERY/REFER null-payable adapter.
+
+The diagnostic reader does not establish parity or return product read models.
+No Snowflake usage, AI calls or reviewer writes were needed for this preparation.
+The two P2 integration exit boxes remain unchecked.
+
+Verification: 62 root and 98 API/PostgreSQL tests pass (160 total), including
+27 new no-network inspection tests. Root/API Ruff and API format checks pass;
+git whitespace checks pass. No web/API contracts changed, so browser/build
+checks were not rerun. The proposed SQL remains unexecuted and must be reviewed
+against live object definitions by CoCo before use.

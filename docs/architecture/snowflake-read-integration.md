@@ -2,6 +2,55 @@
 
 Status: bounded live source reads verified; not enabled in the API. 19 October 2026.
 
+## Pending parity-input inspection — 19 October
+
+`source_inspection.py` now prepares four fixed, parameterized diagnostic SELECTs
+for one allowlisted request and its verified TPA per call. It uses the same
+immutable ownership scopes, disables secondary roles first, and closes the
+connection on success/failure. Unknown/cross-owner cases perform no I/O.
+
+| Input | Bound | Purpose and limitation |
+| --- | --- | --- |
+| Policy/member reference + claims aggregate | 1 row | Same claim count/paid total/latest admission as legacy member summary; no demographics |
+| Declared conditions | 20 rows | Restricted clinical history; no current offline member-history baseline exists |
+| Latest saved decision | 1 row | Deterministic creation-time/ID ordering; empty stays empty, stored validation flag is not trusted as fresh validation |
+| Product clause references | 100 rows | Heading/page/source URL registry for that policy product; not retrieved text or proof every citation resolves |
+
+Multi-row reads use one overflow sentinel; overflow, duplicate keys, missing
+policy context, ambiguous columns, and ownership mismatches fail closed. Empty
+conditions can be legitimate. Empty decision/evidence must be reported as
+missing coverage, never substituted with frozen fixtures. Returned rows are
+diagnostic inputs, **not validated API models or a parity pass**. Conditions and
+decision JSON are restricted clinical data: do not log/export them casually.
+There is deliberately no CLI or HTTP registration for this inspector yet.
+
+No Snowflake call, grant application, or persistent local provisioning ran for
+this increment. Existing reader grants cannot execute all these queries.
+`sql/65_product_inspection_reader.sql` proposes only APP schema USAGE and SELECT
+on CLAIM, MEMBER_CONDITION, DECISION and POLICY_CLAUSE. It is excluded from
+automatic setup and requires CoCo review; full MEMBER demographics/stages,
+review actions, AI, writes, future-table grants and PUBLIC revocations are not
+requested. Table-level access remains an operator synthetic spike, not RLS.
+
+Next operator step (not executed): give CoCo the actual contents of that SQL
+file, not just its local path, and this prompt:
+
+> Review the attached SQL and current live object definitions for this P2
+> synthetic-only inspection. Do not execute grants yet. Confirm the existing
+> CIQ_PRODUCT_READER role and its single operator RUSHIKESH2001; inspect effective
+> PUBLIC/user/secondary-role privileges. Confirm exactly which of the five
+> proposed grants are needed by the four SELECTs in source_inspection.py. No
+> AI, extraction, policy activation, reviewer writes, Streamlit startup, or
+> account-wide privilege changes. Report the review for approval first.
+
+After review/application, a separately bounded operator run must validate live
+rows, saved decision JSON with the existing canonical validator, request/product
+ownership of every citation, and snapshot differences. Legacy QUERY/REFER rows
+store numeric zero while the product contract uses null for an uncomputed
+payable; this needs an explicit adapter test, not a blind JSON copy. Member
+history needs its own expected observations because the frozen UI snapshots
+do not include history. Only then build the repository adapter; P2 remains open.
+
 ## Current increment — separate application identity fixtures
 
 The optional local seed now defines distinct application tenant UUIDs ending
