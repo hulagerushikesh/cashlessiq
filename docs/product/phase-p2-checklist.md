@@ -5,6 +5,38 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### V2 source read adapter — 19 October
+
+The preliminary `SourceCaseRepository` now composes the bounded metadata and
+inspection gateways with the installed domain validators. It rechecks TPA,
+request/product/policy/member references against the inspected synthetic scope,
+enforces coverage/uniqueness, validates evidence references and saved decisions,
+and never falls back to demo snapshots. Unknown/unowned requests do no source
+I/O. Record citations fail closed until independently governed record lookup
+exists; an ID copied from a citation is not considered verification.
+
+New authenticated `/v2/cases` routes expose a metadata-only queue and a separate
+detail summary with validated member/claim history, role-restricted conditions,
+SAVED/MISSING recommendation and product-clause register. No clinical prose,
+raw JSON or calculation text is returned in this slice. Authenticated source
+reads are 503 by default; an injected local/test repository is required and
+staging/production injection is rejected. No operator connection is constructed
+at startup. This is not a production service identity or full UI/view parity.
+
+Verification: 145 root and 145 API/PostgreSQL tests pass, including 44 new source
+repository/HTTP tests. Root/API lint, API formatting and whitespace checks pass.
+OpenAPI and browser types were regenerated; every pre-existing path/component
+schema remains unchanged and web typecheck passes. No frozen fixtures/schema or
+policy rules changed. Browser/UI and remote CI were not rerun for this backend
+increment. No Snowflake calls, source writes, AI or public/private deployment.
+The updated API Docker image builds and its non-root OpenAPI/import smoke passes
+with networking disabled. Local PostgreSQL was stopped after the isolated test
+suite; its volume was retained.
+
+Remaining P2 work includes a reviewed live adapter check, safe calculation-trace
+and citation presentation, source identity hardening and separate-tenant UI
+integration. The two integration exits remain open; P3 is not started.
+
 ### Shared-domain packaging boundary — 19 October
 
 The API now declares a locked local dependency on `cashlessiq-domain`, whose

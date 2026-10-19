@@ -2,6 +2,22 @@
 
 Status: bounded live source reads verified; not enabled in the API. 19 October 2026.
 
+## Current adapter status — 19 October
+
+V2 source contracts and an injected local/test repository now compose the
+gateways and pure domain validators. The HTTP factory does not create source
+connections and authenticated v2 reads return 503 by default. Staging/production
+repository injection is rejected. V1 snapshots and the current UI are unchanged.
+See [v2 read semantics](contract-versioning.md#p2-versioned-synthetic-source-reads--19-october).
+
+Offline/real-PostgreSQL verification covers all three synthetic scopes, missing
+recommendations, invalid/foreign citations, ambiguous source data, source
+failures, immediate membership revocation and role-based condition disclosure.
+The source queue is metadata-only, not an assessment-status queue. Detail returns
+validated totals and product-clause metadata, not calculation text, retrieved
+clause text or raw clinical/decision prose. No new live adapter check was run.
+The existing operator grant/PUBLIC caveats and P2 exit gates still apply.
+
 ## Latest inspection result — 19 October
 
 The approved 13 direct reader privileges have now been independently verified,

@@ -431,6 +431,19 @@
         "title": "MeResponse",
         "type": "object"
       },
+      "MissingSourceRecommendation": {
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "const": "MISSING",
+            "default": "MISSING",
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "title": "MissingSourceRecommendation",
+        "type": "object"
+      },
       "PolicyCheck": {
         "additionalProperties": false,
         "properties": {
@@ -516,6 +529,377 @@
           "source_url"
         ],
         "title": "PolicyEvidence",
+        "type": "object"
+      },
+      "SavedSourceRecommendation": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_basis": {
+            "enum": [
+              "saved_calculation",
+              "supplied_estimate"
+            ],
+            "title": "Amount Basis",
+            "type": "string"
+          },
+          "claimed_inr": {
+            "minimum": 0.0,
+            "title": "Claimed Inr",
+            "type": "integer"
+          },
+          "outcome": {
+            "enum": [
+              "APPROVE",
+              "APPROVE_WITH_DEDUCTIONS",
+              "QUERY",
+              "REFER"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "payable_inr": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payable Inr"
+          },
+          "state": {
+            "const": "SAVED",
+            "default": "SAVED",
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome",
+          "claimed_inr",
+          "payable_inr",
+          "amount_basis"
+        ],
+        "title": "SavedSourceRecommendation",
+        "type": "object"
+      },
+      "SourceCaseDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "case": {
+            "$ref": "#/components/schemas/SourceCaseSummary"
+          },
+          "data_mode": {
+            "const": "synthetic_source",
+            "default": "synthetic_source",
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/SourceClauseReference"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "evidence_kind": {
+            "const": "product_clause_register",
+            "default": "product_clause_register",
+            "title": "Evidence Kind",
+            "type": "string"
+          },
+          "member_history": {
+            "$ref": "#/components/schemas/SourceMemberHistory"
+          },
+          "recommendation": {
+            "discriminator": {
+              "mapping": {
+                "MISSING": "#/components/schemas/MissingSourceRecommendation",
+                "SAVED": "#/components/schemas/SavedSourceRecommendation"
+              },
+              "propertyName": "state"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MissingSourceRecommendation"
+              },
+              {
+                "$ref": "#/components/schemas/SavedSourceRecommendation"
+              }
+            ],
+            "title": "Recommendation"
+          },
+          "schema_version": {
+            "const": 2,
+            "default": 2,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "case",
+          "member_history",
+          "recommendation",
+          "evidence"
+        ],
+        "title": "SourceCaseDetail",
+        "type": "object"
+      },
+      "SourceCaseQueue": {
+        "additionalProperties": false,
+        "properties": {
+          "data_mode": {
+            "const": "synthetic_source",
+            "default": "synthetic_source",
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SourceCaseSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "recommendations_loaded": {
+            "const": false,
+            "default": false,
+            "title": "Recommendations Loaded",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 2,
+            "default": 2,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "SourceCaseQueue",
+        "type": "object"
+      },
+      "SourceCaseSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "admission_date": {
+            "format": "date",
+            "title": "Admission Date",
+            "type": "string"
+          },
+          "continuous_cover_since": {
+            "format": "date",
+            "title": "Continuous Cover Since",
+            "type": "string"
+          },
+          "estimated_total_inr": {
+            "minimum": 0.0,
+            "title": "Estimated Total Inr",
+            "type": "integer"
+          },
+          "policy_id": {
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "policy_id",
+          "product_id",
+          "product_name",
+          "policy_version",
+          "continuous_cover_since",
+          "admission_date",
+          "estimated_total_inr"
+        ],
+        "title": "SourceCaseSummary",
+        "type": "object"
+      },
+      "SourceClauseReference": {
+        "additionalProperties": false,
+        "properties": {
+          "clause_id": {
+            "minLength": 1,
+            "title": "Clause Id",
+            "type": "string"
+          },
+          "page": {
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "source_url": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clause_id",
+          "title",
+          "page",
+          "source_url"
+        ],
+        "title": "SourceClauseReference",
+        "type": "object"
+      },
+      "SourceCondition": {
+        "additionalProperties": false,
+        "properties": {
+          "condition_name": {
+            "title": "Condition Name",
+            "type": "string"
+          },
+          "declared_at_proposal": {
+            "title": "Declared At Proposal",
+            "type": "boolean"
+          },
+          "first_diagnosed_on": {
+            "format": "date",
+            "title": "First Diagnosed On",
+            "type": "string"
+          },
+          "icd10_code": {
+            "title": "Icd10 Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "icd10_code",
+          "condition_name",
+          "first_diagnosed_on",
+          "declared_at_proposal"
+        ],
+        "title": "SourceCondition",
+        "type": "object"
+      },
+      "SourceMemberHistory": {
+        "additionalProperties": false,
+        "properties": {
+          "claim_count": {
+            "minimum": 0.0,
+            "title": "Claim Count",
+            "type": "integer"
+          },
+          "conditions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SourceCondition"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conditions"
+          },
+          "conditions_visible": {
+            "title": "Conditions Visible",
+            "type": "boolean"
+          },
+          "cumulative_bonus_inr": {
+            "minimum": 0.0,
+            "title": "Cumulative Bonus Inr",
+            "type": "integer"
+          },
+          "last_admission_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Admission Date"
+          },
+          "member_id": {
+            "title": "Member Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "sum_insured_inr": {
+            "minimum": 0.0,
+            "title": "Sum Insured Inr",
+            "type": "integer"
+          },
+          "total_paid_inr": {
+            "minimum": 0.0,
+            "title": "Total Paid Inr",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "member_id",
+          "sum_insured_inr",
+          "cumulative_bonus_inr",
+          "status",
+          "claim_count",
+          "total_paid_inr",
+          "last_admission_date",
+          "conditions_visible",
+          "conditions"
+        ],
+        "title": "SourceMemberHistory",
         "type": "object"
       },
       "TenantView": {
@@ -805,6 +1189,120 @@
           }
         ],
         "summary": "Me"
+      }
+    },
+    "/v2/cases": {
+      "get": {
+        "operationId": "list_source_cases",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Search",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCaseQueue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Source Cases"
+      }
+    },
+    "/v2/cases/{request_id}": {
+      "get": {
+        "operationId": "get_source_case",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCaseDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Source Case"
       }
     }
   }

@@ -23,7 +23,8 @@ the deployed agent has no remaining issues.
 
 ## API and schema versions
 
-- Product routes begin with `/v1`; readiness and liveness routes are operational.
+- Product routes use explicit major prefixes (`/v1` snapshots, `/v2` source reads);
+  readiness and liveness routes are operational.
 - Existing decision JSON remains the v1 payload without additional fields.
 - New API responses wrap historical decisions in an envelope containing
   `schema_version`, `tenant_id`, and the unchanged `decision` payload.
@@ -33,6 +34,32 @@ the deployed agent has no remaining issues.
   inside the strict historical decision payload remain rejected.
 - Integer INR values retain rupee units. A future paise contract must use an
   explicit new field or version, never reinterpret existing `_inr` amounts.
+
+## P2 versioned synthetic source reads — 19 October
+
+The `/v1/cases` snapshot contract remains unchanged, including its required
+outcome and frozen example journeys. New `/v2/cases` and `/v2/cases/{request_id}`
+routes use `schema_version: 2`, `tenant_id`, and `data_mode: synthetic_source`.
+They are disabled by default (authenticated 503), require an explicitly injected
+repository in local/test, and cannot be configured in staging/production by this
+factory. There is no env switch or default operator connection on HTTP startup.
+
+The queue is metadata-only and declares `recommendations_loaded: false`; it
+does not infer availability or filter on an unread outcome. Detail separates
+the supplied estimate from a discriminated recommendation: `MISSING` has no
+outcome/payable, while `SAVED` contains freshly validated outcome, amounts and
+amount provenance. A saved QUERY/REFER has a null payable; this is neither an
+absent recommendation nor zero. Source failures/invalid records return a generic
+503, unknown/unowned requests 404. All v2 case responses use `no-store`.
+
+Detail currently includes validated member/claim aggregates, conditions only
+for active medical-officer memberships, and product-clause reference metadata.
+Condition arrays are null when withheld, not an invented empty history. Raw
+clinical/decision prose, financial line labels/calculation text and historical
+decision JSON are deliberately excluded from this first disclosure slice.
+The canonical saved JSON is still validated internally; its schema is unchanged.
+This is not full calculation-trace, citation-display or UI parity. Evidence
+metadata is explicitly a product clause register, not retrieved/grounded text.
 
 ## Identifiers and tenant scope
 

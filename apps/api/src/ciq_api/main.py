@@ -26,10 +26,19 @@ from ciq_api.contracts import (
 )
 from ciq_api.database import make_engine, session_for
 from ciq_api.seed import TENANT_ID
+from ciq_api.snowflake_reads import SourceReadUnavailable
+from ciq_api.source_cases import SourceCaseRepository
+from ciq_api.source_contracts import SourceCaseDetail, SourceCaseQueue
 
 
-def create_app(settings: Settings | None = None, engine: Engine | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    engine: Engine | None = None,
+    source_repository: SourceCaseRepository | None = None,
+) -> FastAPI:
     config = settings or Settings()
+    if source_repository is not None and config.environment not in {"local", "test"}:
+        raise ValueError("Synthetic source repository is local/test only")
     database = engine or make_engine(config)
     verifier = JWTVerifier(config)
 
@@ -40,6 +49,13 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
 
     app = FastAPI(title="CashlessIQ API", version="1.0.0", lifespan=lifespan)
     bearer = HTTPBearer(auto_error=False)
+
+    @app.middleware("http")
+    async def source_cache_control(request, call_next):
+        response = await call_next(request)
+        if request.url.path == "/v2/cases" or request.url.path.startswith("/v2/cases/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
 
     def get_session() -> Iterator[Session]:
         with session_for(database) as session:
@@ -112,6 +128,45 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             record.procedure = None
             record.clinical_note = None
             record.clinical_visible = False
+        return record
+
+    def source_access(who: MeResponse) -> SourceCaseRepository:
+        if "case:read" not in who.capabilities:
+            raise HTTPException(403, "Case read access required")
+        if source_repository is None:
+            raise HTTPException(503, "Synthetic source reads are not enabled")
+        return source_repository
+
+    @app.get("/v2/cases", response_model=SourceCaseQueue, operation_id="list_source_cases")
+    def list_source_cases(
+        who: Identity,
+        search: Annotated[str, Query(max_length=80)] = "",
+        page: Annotated[int, Query(ge=1, le=10000)] = 1,
+        page_size: Annotated[int, Query(ge=1, le=50)] = 20,
+    ) -> SourceCaseQueue:
+        repository = source_access(who)
+        try:
+            return repository.list_cases(who.tenant.id, search, page, page_size)
+        except SourceReadUnavailable:
+            raise HTTPException(503, "Source cases unavailable") from None
+
+    @app.get(
+        "/v2/cases/{request_id}",
+        response_model=SourceCaseDetail,
+        operation_id="get_source_case",
+    )
+    def get_source_case(request_id: str, who: Identity) -> SourceCaseDetail:
+        repository = source_access(who)
+        try:
+            record = repository.get_case(
+                who.tenant.id,
+                request_id,
+                include_conditions=who.role == "medical_officer",
+            )
+        except SourceReadUnavailable:
+            raise HTTPException(503, "Source case unavailable") from None
+        if record is None:
+            raise HTTPException(404, "Case not found")
         return record
 
     if config.auth_mode == "local":

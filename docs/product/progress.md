@@ -42,8 +42,9 @@ demo-video work is not part of this product plan.
    absent recommendations under the approved gate revision below. Record discrepancies, never hide
    them with fixture fallback, fresh AI output or changed golden expectations.
 3. [x] Establish the explicit shared-domain package boundary for the API.
-4. [ ] Implement and test the repository adapter, including source failure,
-   missing data, separate tenant ownership and role-based clinical disclosure.
+4. [x] Implement and test the preliminary v2 repository adapter, including source
+   failure, missing data, separate tenant ownership and condition disclosure.
+   Default HTTP reads remain disabled; this is not full workspace parity.
 5. [ ] Review source identity/effective privileges with CoCo. Operator table
    grants and disabled secondary roles are not production tenant RLS; inherited
    PUBLIC capabilities are unresolved. No account-wide revocations are approved.
@@ -69,8 +70,8 @@ Policy activation continues to require explicit human approval.
 - Root regression: **145 passed** after domain-packaging regressions; root/API
   lint, API formatting and git whitespace checks pass.
 - Targeted metadata/inspection boundary suite: **39 passed** this checkpoint.
-- API/PostgreSQL suite: **101 passed** at the domain-packaging checkpoint, including
-  three installed-domain tests. This supersedes the earlier unavailable-Docker
+- API/PostgreSQL suite: **145 passed** after the v2 source-adapter increment,
+  including 44 new repository/HTTP tests. This supersedes the earlier unavailable-Docker
   test attempt. Local PostgreSQL was started for disposable test schemas, then
   stopped with its data volume retained. No volume was deleted.
 - Isolated domain wheel: byte identity with all four canonical modules, frozen
@@ -78,8 +79,12 @@ Policy activation continues to require explicit human approval.
   Snowflake, Streamlit or FastAPI installed. API Docker build and non-root image
   smoke pass with network disabled for the smoke. The normal image has no
   Snowflake/Streamlit runtime dependency. API OpenAPI regenerated with no drift.
-- Browser/UI and remote CI were not rerun for this packaging-only increment;
-  no new HTTP source path or UI changes are enabled.
+- Generated v2 OpenAPI/TypeScript contracts and web typecheck pass. All previous
+  paths and component schemas are unchanged. New source routes authenticate but
+  return 503 unless a repository is injected explicitly in local/test. No default
+  connection, source UI/login or staging/production activation is enabled.
+- Updated API Docker build and network-disabled non-root v2 schema smoke pass.
+- Browser/UI and remote CI have not been rerun for this backend increment.
 - Remote CI: last verified passing `d3623da`; newer local commits are not covered
   by that run. Recheck the branch before reporting an ahead count or pushing.
 - Python source authentication now completed. All three independent history
@@ -105,13 +110,15 @@ source, isolation, clinical-disclosure or UI integration gates.
   invented outcome/payable/calculation/query/referral. Invalid saved rows and
   ambiguous reads remain errors, never missing-state fallback.
 - [x] Explicit shared-domain package boundary (`cashlessiq-domain`).
-- [ ] Versioned source-read API; existing v1 outcome remains required.
+- [x] Versioned source-read API with tested opt-in adapter; v1 is unchanged.
 - [ ] UI distinguishes no saved recommendation from QUERY/REFER, source error
   and zero payable; end-to-end coverage with separate source-alpha tenants.
 
-The existing v1 API requires an outcome, so it is unchanged. The new observation
-is not wired into HTTP/UI and is not itself proof of source parity. No source
-writes, AI calls, deployment or historical decision-schema changes are needed.
+The existing v1 API requires an outcome, so it is unchanged. The v2 adapter uses
+the new observation, but HTTP reads stay disabled by default and the UI is not
+integrated. The first source view omits raw clinical prose and calculation text;
+full financial trace/citation display and live repository verification remain
+open. No source writes, AI calls, deployment or historical schema changes ran.
 
 ## Spend guardrails
 

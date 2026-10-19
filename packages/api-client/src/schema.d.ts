@@ -89,6 +89,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v2/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Source Cases */
+        get: operations["list_source_cases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/cases/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Source Case */
+        get: operations["get_source_case"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -279,6 +313,14 @@ export interface components {
             tenant: components["schemas"]["TenantView"];
             user: components["schemas"]["UserView"];
         };
+        /** MissingSourceRecommendation */
+        MissingSourceRecommendation: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            state: "MISSING";
+        };
         /** PolicyCheck */
         PolicyCheck: {
             /** Applies */
@@ -306,6 +348,168 @@ export interface components {
             source_url: string;
             /** Title */
             title: string;
+        };
+        /** SavedSourceRecommendation */
+        SavedSourceRecommendation: {
+            /**
+             * Amount Basis
+             * @enum {string}
+             */
+            amount_basis: "saved_calculation" | "supplied_estimate";
+            /** Claimed Inr */
+            claimed_inr: number;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "APPROVE" | "APPROVE_WITH_DEDUCTIONS" | "QUERY" | "REFER";
+            /** Payable Inr */
+            payable_inr: number | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            state: "SAVED";
+        };
+        /** SourceCaseDetail */
+        SourceCaseDetail: {
+            case: components["schemas"]["SourceCaseSummary"];
+            /**
+             * Data Mode
+             * @default synthetic_source
+             * @constant
+             */
+            data_mode: "synthetic_source";
+            /** Evidence */
+            evidence: components["schemas"]["SourceClauseReference"][];
+            /**
+             * Evidence Kind
+             * @default product_clause_register
+             * @constant
+             */
+            evidence_kind: "product_clause_register";
+            member_history: components["schemas"]["SourceMemberHistory"];
+            /** Recommendation */
+            recommendation: components["schemas"]["MissingSourceRecommendation"] | components["schemas"]["SavedSourceRecommendation"];
+            /**
+             * Schema Version
+             * @default 2
+             * @constant
+             */
+            schema_version: 2;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+        };
+        /** SourceCaseQueue */
+        SourceCaseQueue: {
+            /**
+             * Data Mode
+             * @default synthetic_source
+             * @constant
+             */
+            data_mode: "synthetic_source";
+            /** Items */
+            items: components["schemas"]["SourceCaseSummary"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /**
+             * Recommendations Loaded
+             * @default false
+             * @constant
+             */
+            recommendations_loaded: false;
+            /**
+             * Schema Version
+             * @default 2
+             * @constant
+             */
+            schema_version: 2;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Total */
+            total: number;
+        };
+        /** SourceCaseSummary */
+        SourceCaseSummary: {
+            /**
+             * Admission Date
+             * Format: date
+             */
+            admission_date: string;
+            /**
+             * Continuous Cover Since
+             * Format: date
+             */
+            continuous_cover_since: string;
+            /** Estimated Total Inr */
+            estimated_total_inr: number;
+            /** Policy Id */
+            policy_id: string;
+            /** Policy Version */
+            policy_version: string;
+            /** Product Id */
+            product_id: string;
+            /** Product Name */
+            product_name: string;
+            /** Request Id */
+            request_id: string;
+        };
+        /** SourceClauseReference */
+        SourceClauseReference: {
+            /** Clause Id */
+            clause_id: string;
+            /** Page */
+            page: number;
+            /**
+             * Source Url
+             * Format: uri
+             */
+            source_url: string;
+            /** Title */
+            title: string;
+        };
+        /** SourceCondition */
+        SourceCondition: {
+            /** Condition Name */
+            condition_name: string;
+            /** Declared At Proposal */
+            declared_at_proposal: boolean;
+            /**
+             * First Diagnosed On
+             * Format: date
+             */
+            first_diagnosed_on: string;
+            /** Icd10 Code */
+            icd10_code: string;
+        };
+        /** SourceMemberHistory */
+        SourceMemberHistory: {
+            /** Claim Count */
+            claim_count: number;
+            /** Conditions */
+            conditions: components["schemas"]["SourceCondition"][] | null;
+            /** Conditions Visible */
+            conditions_visible: boolean;
+            /** Cumulative Bonus Inr */
+            cumulative_bonus_inr: number;
+            /** Last Admission Date */
+            last_admission_date: string | null;
+            /** Member Id */
+            member_id: string;
+            /** Status */
+            status: string;
+            /** Sum Insured Inr */
+            sum_insured_inr: number;
+            /** Total Paid Inr */
+            total_paid_inr: number;
         };
         /** TenantView */
         TenantView: {
@@ -470,6 +674,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    list_source_cases: {
+        parameters: {
+            query?: {
+                search?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceCaseQueue"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_source_case: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceCaseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
