@@ -76,6 +76,9 @@ demo-video work is not part of this product plan.
    source parity. No source access has been activated. See the latest P2 checkpoint.
    The Evidence fixture now exercises searchable clause-reference metadata and
    page links; it does not retrieve PDF content or establish narrative grounding.
+   The offline v2 HTTP-client boundary is implemented with exported-schema
+   validation and 41 no-network tests. It is not invoked by UI routes; live
+   source identities, security approval and end-to-end parity remain open.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push
    authority, then verify remote CI. Review P2 exit evidence before starting P3.
 
@@ -92,6 +95,13 @@ customer rollout, autonomous denial or unsupported executable rule activation.
 Policy activation continues to require explicit human approval.
 
 ## Verification and delivery checkpoint
+
+- Latest client increment: **41 no-network client tests pass**; client/web
+  typecheck and lint pass, as does the web production build. No source route
+  was enabled or connected. Canonical API/domain and database behaviour are
+  unchanged; their Python suites were not rerun for this increment.
+  Local web Docker rebuild/readiness and all **22 browser regressions** pass
+  with the new locked client dependencies. No remote CI run is claimed.
 
 - Latest presentation increment: **22 browser tests pass**, web typecheck/lint
   and production build pass. Local-only fixture route returns 404 in production

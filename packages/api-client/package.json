@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": { "openapi-fetch": "^0.15.0" }
+  "exports": {
+    ".": "./src/index.ts",
+    "./source": "./src/source-reader.ts"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "openapi-fetch": "^0.15.0"
+  }
 }

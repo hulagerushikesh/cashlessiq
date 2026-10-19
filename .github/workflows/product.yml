@@ -37,6 +37,7 @@ jobs:
           make product-contracts
           git diff --exit-code -- packages/contracts/openapi.json packages/api-client/src/schema.d.ts
           npm run typecheck
+          npm run test:client
           npm run lint
           npm run build
       - name: Start isolated product stack

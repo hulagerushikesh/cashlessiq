@@ -10,6 +10,41 @@ connections and authenticated v2 reads return 503 by default. Staging/production
 repository injection is rejected. V1 snapshots and the current UI are unchanged.
 See [v2 read semantics](contract-versioning.md#p2-versioned-synthetic-source-reads--19-october).
 
+### Web-client boundary (offline, not activated)
+
+`@cashlessiq/api-client/source` exports `readSourceQueue` and `readSourceCase`.
+They accept the existing typed HTTP client and a trusted, API-verified identity;
+future server callers must resolve current membership for every request, not
+construct identity from browser-supplied headers or reuse stale role claims.
+Use the existing server-side `createApiClient` bearer/no-store configuration.
+The helpers have no cookie/bootstrap/Snowflake credentials and no startup hook.
+Neither the source preview nor normal queue imports or invokes them yet.
+
+Responses are checked against the exported OpenAPI schemas with Ajv 2020-12
+and format validation, without coercion, defaults or extra-property removal.
+Additional checks reject wrong tenant/request, unsafe JS integers, contradictory
+condition visibility, nonmedical condition disclosure, inconsistent saved
+outcome/payable provenance, duplicate references and non-HTTP(S) document links.
+These are response-consumption checks, not database tenant/clinical isolation
+or a replacement for canonical Python arithmetic/citation validation.
+
+401, 403 and detail 404 have separate typed states. Queue 404, disabled-source
+503, malformed/invalid bodies and transport failures are unavailable; none
+produces a MISSING recommendation, empty queue, retry or v1/demo fallback.
+Requests use a five-second abort signal and reject redirects. Queue input is
+bounded and contains no client-selected tenant parameter. No payloads, errors
+or credentials are logged. An authentic MISSING body is preserved unchanged.
+
+Run `npm run test:client` without a server/browser/Snowflake connection. All
+41 tests use an injected fetch on an invalid hostname, never real HTTP I/O.
+Root typecheck/lint include this package and tests; CI runs the new client suite.
+Schema export/drift checks remain canonical; the API contract has not changed.
+The web Docker image includes the exported schema for future server consumption.
+No route, source identity or live source repository was enabled by this work.
+
+Validator references: [JSON Schema support](https://ajv.js.org/json-schema.html)
+and [format validation](https://ajv.js.org/guide/formats.html).
+
 Offline/real-PostgreSQL verification covers all three synthetic scopes, missing
 recommendations, invalid/foreign citations, ambiguous source data, source
 failures, immediate membership revocation and role-based condition disclosure.

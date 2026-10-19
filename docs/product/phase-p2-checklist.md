@@ -5,6 +5,28 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Offline web-to-v2 client boundary — 19 October
+
+Added typed source queue/detail HTTP readers, checked against the exported
+OpenAPI response schemas (Ajv/format validation, no coercion/removal/defaults).
+They reject wrong tenant/request, unsafe integers, unexpected fields, clinical
+visibility mismatches and inconsistent saved outcome/payable provenance.
+401/403/detail-404 are distinct from unavailable; malformed/failed reads never
+become MISSING, an empty queue or a demo fallback. Five-second abort signals,
+redirect rejection and bounded query inputs are exercised without network I/O.
+API canonical Python validation remains authoritative; client checks do not
+establish database isolation or compute eligibility/money.
+
+All 41 client tests pass with injected fetch only, no servers/credentials/browser
+needed. Root typecheck and lint now include the client package/tests, and CI
+runs `npm run test:client`. Web build passes. No API schema or Python domain/API
+code changed, so those suites were not rerun. No source helper is imported by a
+UI route, source identity seeded, source repository activated, Snowflake/AI
+invoked or public deployment made. P2 integration/security gates remain open;
+P3 is not started. See the integration architecture for caller requirements.
+Local web Docker rebuild is healthy; all 22 browser regressions also pass with
+the locked dependencies. Remote CI remains unverified until an approved push.
+
 ### Searchable clause register — 19 October
 
 The v2 presentation now has an ID/title text filter, visible reference counts,

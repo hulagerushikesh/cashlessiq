@@ -124,6 +124,8 @@ clear-filter state and page links. These fictional Example.org PDF links are
 placeholders, not real policy documents or validated supporting evidence.
 It exercises v2 presentation only, not source/API parity or tenant isolation;
 it never calls Snowflake and returns 404 outside local/local-auth mode.
+`npm run test:client` checks the not-yet-connected v2 HTTP-client boundary using
+injected responses only; no browser, server or Snowflake credentials required.
 The stack runs Next.js, FastAPI, PostgreSQL, and Redis locally. It does not call
 Snowflake or AI services. Stop it with `make product-down`; local database data
 is retained. See [local development](docs/architecture/local-development.md)

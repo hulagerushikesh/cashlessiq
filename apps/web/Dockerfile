@@ -7,6 +7,7 @@ COPY packages/api-client/package.json ./packages/api-client/package.json
 RUN npm ci
 COPY --chown=node:node apps/web ./apps/web
 COPY packages/api-client ./packages/api-client
+COPY packages/contracts/openapi.json ./packages/contracts/openapi.json
 RUN chown -R node:node /app/apps/web
 USER node
 EXPOSE 3000
