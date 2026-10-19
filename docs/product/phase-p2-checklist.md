@@ -122,6 +122,17 @@ UI changed; browser/build checks were not rerun for this identity-only increment
 - [ ] Live inspection and canonical saved-decision/citation validation.
 - [ ] Explicit member-history expectations and QUERY/REFER null-payable adapter.
 
+19 October follow-up: the offline null-payable adapter is implemented in the
+domain package, reusing canonical decision validation and checking stored-row
+consistency and scoped citation registries. Thirty no-network tests cover
+valid saved calculations, uncomputed QUERY/REFER, invalid arithmetic, missing
+and cross-owner/product citations, duplicate JSON keys and ambiguous partial
+calculations. All 92 root tests and root lint pass. Member-history expectations
+remain pending, so the combined checkbox above stays open. This does not claim
+live saved-decision or citation parity and is not registered in the API/CLI.
+API/UI and contracts are unchanged; their suites were not rerun in this step.
+No Snowflake usage or grant changes; P2 remains open and P3 is not started.
+
 The diagnostic reader does not establish parity or return product read models.
 No Snowflake usage, AI calls or reviewer writes were needed for this preparation.
 The two P2 integration exit boxes remain unchecked.

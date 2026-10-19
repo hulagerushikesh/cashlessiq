@@ -2,6 +2,35 @@
 
 Status: bounded live source reads verified; not enabled in the API. 19 October 2026.
 
+## Offline saved-decision validation — 19 October
+
+`cashlessiq.source_decision.observe_saved_decision` now reuses the existing
+canonical JSON/arithmetic validator in the domain package, with no API,
+Snowflake, or framework imports. It checks row/JSON request and outcome,
+stored payable consistency, integer rupees, and each line citation against a
+request/TPA/product-scoped clause registry or independently verified record IDs.
+The stored `SCHEMA_VALID` flag is not trusted. Duplicate JSON keys, missing
+evidence coverage, foreign references, empty approvals and ambiguous partial
+QUERY/REFER calculations fail closed with a generic error message.
+
+For an uncomputed QUERY/REFER (empty lines and zero saved totals), the comparison
+observation copies the separately supplied estimate and exposes payable as null.
+For approvals it copies saved calculation totals. It never recomputes money or
+substitutes fixtures. Tests explicitly cover the 90,000 QUERY and 80,000 REFER
+estimate semantics, not live decisions. The returned immutable observation is
+not a case model or parity verdict. It does not invent calculation checks,
+clause text, clinical history or SLA state.
+
+This is an offline operator building block only, with 30 new tests (92 root
+tests total). It is deliberately not imported into the separately packaged API;
+future HTTP integration needs an explicit shared-domain dependency boundary.
+The supplied citation registries are assertions, not ownership discovery: the
+live operator must independently verify them. QUERY/REFER JSON has no line
+citations, so this does not prove its narrative is supported by policy evidence.
+Typed member/history validation, independent history expectations, live parity,
+CoCo grant review and service-identity hardening remain pending. No Snowflake
+queries, grants, source writes, deployment or persistent seeds ran in this step.
+
 ## Pending parity-input inspection — 19 October
 
 `source_inspection.py` now prepares four fixed, parameterized diagnostic SELECTs
