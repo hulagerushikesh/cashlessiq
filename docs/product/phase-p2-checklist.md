@@ -5,6 +5,33 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Live v2 repository check — 19 October
+
+The actual SourceCaseRepository now passes a bounded live check through both
+Snowflake gateways, not just independently tested diagnostic inputs. One
+CIQ_PRODUCT_READER connection had secondary roles disabled and checked the
+primary role before reads. Two tenant queues and three details used five
+metadata SELECTs and twelve inspection SELECTs. Expected queue ownership was
+exactly TPA001/GOL001 and TPA003/GOL024,GOL027.
+
+All seven metadata comparisons and every independent member/history field
+(including conditions) matched for all three cases. GOL001's saved recommendation
+freshly validated against scoped citations with an empty record-ID allowlist;
+outcome/claimed/payable matched the frozen baseline. GOL024/GOL027 were MISSING
+with no invented recommendation fields. Each case returned 35 scoped clause
+references. Only IDs, states, counts and difference-field lists were printed;
+no raw clinical payload or credentials were logged. Comparison fixtures were
+not used as runtime fallback. The process exited successfully.
+
+This establishes preliminary repository summary/reference parity under the
+approved missing-state revision. It does not establish full financial trace,
+narrative grounding, authenticated API/browser parity, production identity/RLS
+or resolved PUBLIC privileges. No source writes, AI, grants, persistent seeds
+or deployment ran; P2 stays open and P3 has not started.
+Final reader-role SHOW confirmed CIQ_WH SUSPENDED with zero started clusters,
+running or queued queries; X-Small/60-second auto-suspend were unchanged. No
+incremental dollar amount or current trial balance is claimed.
+
 ### V2 source read adapter — 19 October
 
 The preliminary `SourceCaseRepository` now composes the bounded metadata and

@@ -37,10 +37,13 @@ demo-video work is not part of this product plan.
 ## P2 remaining work — in order
 
 1. [x] Complete Python reader authentication and bounded live source inspection.
-2. [ ] Compare all three cases against independent metadata/history expectations;
+2. [x] Compare all three cases against independent metadata/history expectations;
    validate available saved decisions and every citation; explicitly preserve
    absent recommendations under the approved gate revision below. Record discrepancies, never hide
    them with fixture fallback, fresh AI output or changed golden expectations.
+   Live repository check passed on 19 October: GOL001 SAVED, GOL024/GOL027
+   MISSING, no compared-field differences. This is summary/reference parity,
+   not full calculation-trace or narrative-grounding/UI parity.
 3. [x] Establish the explicit shared-domain package boundary for the API.
 4. [x] Implement and test the preliminary v2 repository adapter, including source
    failure, missing data, separate tenant ownership and condition disclosure.
@@ -117,8 +120,29 @@ source, isolation, clinical-disclosure or UI integration gates.
 The existing v1 API requires an outcome, so it is unchanged. The v2 adapter uses
 the new observation, but HTTP reads stay disabled by default and the UI is not
 integrated. The first source view omits raw clinical prose and calculation text;
-full financial trace/citation display and live repository verification remain
-open. No source writes, AI calls, deployment or historical schema changes ran.
+full financial trace/citation display remains open. Live repository verification
+subsequently passed as recorded below. No source writes, AI calls, deployment or
+historical schema changes ran.
+
+### Live repository verification — 19 October
+
+One operator connection explicitly used CIQ_PRODUCT_READER with secondary roles
+disabled. The actual repository composed the metadata and inspection gateways;
+two queue reads and three detail reads made five bounded metadata SELECTs and
+twelve bounded inspection SELECTs. All three cases matched the frozen seven-field
+metadata baseline and independent member/history constants, including conditions.
+The frozen files were comparison inputs only, never source fallback.
+
+GOL001's saved recommendation passed fresh canonical/citation validation and
+matched outcome/claimed/payable. GOL024/GOL027 returned only the approved MISSING
+state, without invented outcome/payable. Each detail contained 35 validated,
+scoped clause-register references; this does not prove retrieved text/narrative
+grounding. No source writes, AI, grants, persistent identity seeds, HTTP/UI
+activation or deployment ran. This check exercises the repository directly,
+not authenticated browser parity. Source identity/PUBLIC and UI gates remain open.
+Final SHOW under the reader role confirmed CIQ_WH SUSPENDED, zero started
+clusters/running/queued queries, X-Small and 60-second auto-suspend unchanged.
+Incremental dollars and current trial balance were not measured.
 
 ## Spend guardrails
 
