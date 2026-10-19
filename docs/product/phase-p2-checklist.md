@@ -573,3 +573,19 @@ schemas and fake source inputs. No Snowflake/AI, new credentials, provisioning,
 push, website deployment or P3. Read-worker delegation, authenticated transport,
 restart-safe replay and live isolation remain open; see the
 [worker boundary checklist](p2-worker-boundary-checklist.md).
+
+## Offline shared replay checkpoint — 19 October
+
+An optional injected SQLite ledger now atomically consumes hashed assertion
+nonces across same-host processes and retains rejection after authority restart.
+No token/source payload is stored. Missing, corrupt, locked or full stores deny
+without an in-memory fallback; expiry is checked again after storage consumption.
+Default process-local replay and all HTTP/source startup configuration remain
+unchanged. Same retained file, trusted host, stable clock and fixed namespace
+capacity are prerequisites; deletion/rollback, network filesystems and separate
+hosts are not covered. Packaging and lifecycle review remain activation gates.
+
+Verification: 207 API/PostgreSQL tests and 145 root tests pass, with 11 new replay
+tests including spawned processes. Root/API lint, API formatting and whitespace
+checks pass. No Snowflake/AI calls, credentials, grants, push, website deployment
+or P3. Next: offline read-worker delegation and authenticated peer transport.

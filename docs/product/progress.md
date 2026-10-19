@@ -257,6 +257,22 @@ Final SHOW under the reader role confirmed CIQ_WH SUSPENDED, zero started
 clusters/running/queued queries, X-Small and 60-second auto-suspend unchanged.
 Incremental dollars and current trial balance were not measured.
 
+## Latest offline increment — restart-aware replay
+
+- [x] Optional same-host atomic replay ledger and authority integration, not
+  imported into startup. Eleven new tests cover concurrent spawned processes,
+  retained consumption after restart, shared capacity, expiry and fail-closed
+  missing/corrupt/locked/full storage. No raw tokens or source payloads persisted.
+- [x] 207 API/PostgreSQL tests, 145 root tests, root/API lint and API formatting
+  pass. Existing local stack only; test schemas/files are disposable.
+- [ ] Read-worker delegation, authenticated private peer transport, lifecycle/
+  secret mounts, exact Snowflake isolation package and live acceptance remain.
+  The replay candidate requires retained shared local state and lifecycle review;
+  it is not distributed-host or deployed isolation. Default replay is unchanged.
+
+No Snowflake/AI use, source activation, new credentials/grants, push or deployment.
+The two-day credit plan is committed; actual balance/expiry remain unverified.
+
 ## Spend guardrails
 
 Latest planning baseline: **$203 remaining and four days until expiry**, reported

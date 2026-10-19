@@ -11,6 +11,9 @@ The offline broker now resolves fresh database membership with issuer-qualified
 identity, issues internal-user UUID assertions and uses fixed summary routes.
 Transport, read-worker delegation, secret delivery and database isolation are
 not implemented by this in-process composition; the design below remains the target.
+An optional same-host SQLite replay candidate now passes atomic multiprocess and
+retained-state restart tests. It is not activated; shared-file custody, mount and
+lifecycle review remain required, and the default ledger is still process-local.
 
 ## Decision proposed
 

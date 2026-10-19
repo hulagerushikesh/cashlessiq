@@ -2,11 +2,13 @@
 
 The broker is trusted. Callers must resolve application identity before minting.
 Workers receive verification keys only and independently resolve fresh membership.
-The bounded replay ledger is process-local, not a multi-worker deployment solution.
+Default replay is process-local. An explicitly injected same-host ledger is an
+offline candidate only, not permission to deploy workers.
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from hashlib import sha256
 from threading import Lock
 from typing import Literal
 from uuid import UUID, uuid4
@@ -15,6 +17,7 @@ import jwt
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ciq_api.source_scopes import SyntheticSourceScopes
+from ciq_api.worker_replay import ReplayLedger
 
 ISSUER = "urn:cashlessiq:internal:offline"
 MAX_LIFETIME = 30
@@ -98,6 +101,7 @@ class SummaryAuthority:
         membership: Callable[[str], Membership | None],
         clock: Callable[[], int],
         capacity: int = 1000,
+        replay: ReplayLedger | None = None,
     ):
         scope = scopes.get(tenant_id)
         if scope is None or type(capacity) is not int or capacity < 1:
@@ -110,6 +114,8 @@ class SummaryAuthority:
         self._capacity = capacity
         self._used: dict[str, int] = {}
         self._lock = Lock()
+        self._replay = replay
+        self._replay_namespace = sha256(f"{ISSUER}\0{audience}\0{tenant_id}".encode()).hexdigest()
 
     def _check_current(self, claims: Assertion) -> None:
         now = self._clock()
@@ -136,12 +142,24 @@ class SummaryAuthority:
             )
             claims = Assertion.model_validate(raw)
             self._check_current(claims)
-            with self._lock:
-                now = self._clock()
-                self._used = {key: expiry for key, expiry in self._used.items() if expiry > now}
-                if claims.jti in self._used or len(self._used) >= self._capacity:
-                    raise WorkerDenied("Worker access denied")
-                self._used[claims.jti] = claims.exp
+            now = self._clock()
+            if not claims.iat <= now < claims.exp:
+                raise WorkerDenied("Worker access denied")
+            if self._replay is not None:
+                self._replay.consume(
+                    self._replay_namespace,
+                    sha256(claims.jti.encode()).hexdigest(),
+                    claims.exp,
+                    now,
+                )
+            else:
+                with self._lock:
+                    self._used = {key: expiry for key, expiry in self._used.items() if expiry > now}
+                    if claims.jti in self._used or len(self._used) >= self._capacity:
+                        raise WorkerDenied("Worker access denied")
+                    self._used[claims.jti] = claims.exp
+            if not claims.iat <= self._clock() < claims.exp:
+                raise WorkerDenied("Worker access denied")
             return claims
         except (jwt.PyJWTError, ValidationError, ValueError, TypeError, WorkerDenied):
             raise WorkerDenied("Worker access denied") from None

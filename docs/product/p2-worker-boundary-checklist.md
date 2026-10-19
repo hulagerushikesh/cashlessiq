@@ -13,6 +13,11 @@ Design: [validation/credential boundary](../architecture/p2-validation-boundary.
   revocation, tenant mismatch, medical downgrade, expiry and lookup outage deny.
 - [x] Bounded, lock-protected process-local replay ledger. Duplicate concurrent
   attempts have one winner; full capacity denies rather than evicting live tokens.
+- [x] Optional offline same-host SQLite replay ledger, explicitly initialized only
+  by tests and injected into the authority. Atomic transactions share consumption
+  and namespace capacity across processes; retained state rejects replay after
+  authority restart. Missing/corrupt/locked/full storage denies without fallback.
+  Only hashed authority namespaces/nonces and expiry are stored, never tokens.
 - [x] Offline validator handler receives explicitly injected fake coherent input,
   validates request/policy/product/evidence scope and calls canonical Python
   saved-recommendation validation. Only an explicit summary allowlist returns.
@@ -32,7 +37,7 @@ Design: [validation/credential boundary](../architecture/p2-validation-boundary.
   and fake validator inputs; no Snowflake/network worker transport is involved.
 
 Files: apps/api/src/ciq_api/worker_authority.py, validation_worker.py and worker_broker.py,
-with corresponding tests. They are not imported into main/create_app or HTTP
+plus worker_replay.py, with corresponding tests. They are not imported into main/create_app or HTTP
 startup, do not change public v2/OpenAPI and contain no connector creation.
 The handler is an in-process test primitive, not a running isolated container.
 
@@ -52,9 +57,13 @@ The handler is an in-process test primitive, not a running isolated container.
   remote membership protocol or distributed revocation behaviour is established;
   separate workers must not receive general operational database credentials.
 - [ ] Replace process-local replay state with a reviewed atomic shared strategy
-  before multi-process/restart-capable use. Current ledger resets on restart;
-  restarting with the same still-valid issuer epoch permits replay. No deployment
-  until epoch invalidation/shared consumption semantics are tested. Do not expose
+  before multi-process/restart-capable use. The optional SQLite candidate now
+  passes same-host multiprocess/restart tests; the default remains process-local.
+  All consumers must share one retained local file and fixed capacity. Separate
+  files, network filesystems, rollback/restoration/deletion of ledger state and
+  untrusted host/file administrators are not supported. Deployment packaging,
+  mount/access/capacity configuration, clock discipline and lifecycle/backup
+  handling still need review and tests; no live wiring is approved. Do not expose
   consume/before_delivery as independent HTTP endpoints or accept client claims.
 - [ ] Package workers separately and test secret/network/mount isolation. Current
   API code location is a development scaffold, not credential/process separation.
@@ -72,8 +81,10 @@ clinical prose, financial lines or persisted projection is introduced.
 
 ## Verification
 
-196 API tests passed, including disposable PostgreSQL tests and the
-51 boundary/broker tests. All 145 root regression tests pass. API/root Ruff checks,
+207 API tests passed, including disposable PostgreSQL tests and the
+62 boundary/broker/replay tests. Eleven new replay tests include spawned processes,
+restart/capacity/storage failures and expiry during consumption.
+All 145 root regression tests pass. API/root Ruff checks,
 API format checks and git whitespace checks pass.
 Web/browser/build and remote CI are not rerun for this internal-only increment.
 No Snowflake/AI calls, credentials, persistent source identities, source routing,
