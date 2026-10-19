@@ -25,6 +25,7 @@ from ciq_api.worker_authority import (
     WorkerDenied,
     issue_summary_assertion,
 )
+from ciq_api.worker_delegation import issue_detail_assertion
 
 
 @dataclass(frozen=True)
@@ -86,12 +87,14 @@ class WorkerMembershipStore:
 class OfflineSummaryRoute:
     audience: str
     invoke: Callable[[str], SummaryObservation] = field(repr=False)
+    validator_audience: str | None = None
 
 
 class OfflineSummaryBroker:
     """Authenticate -> fixed route -> summary -> fresh delivery authorization.
 
-    This is a summary-only test composition, not the future read-worker path.
+    A configured validator audience selects the offline read-relay path; otherwise
+    this remains a direct summary test composition, never a live source route.
     No caller chooses tenant, disclosure, audience, destination or signing key.
     """
 
@@ -111,6 +114,14 @@ class OfflineSummaryBroker:
             or disclosure not in {"nonclinical", "medical"}
             or not route.audience
             or len(route.audience) > 120
+            or (
+                route.validator_audience is not None
+                and (
+                    not route.validator_audience
+                    or len(route.validator_audience) > 120
+                    or route.validator_audience == route.audience
+                )
+            )
             for (tenant, disclosure), route in copied.items()
         ) or len({route.audience for route in copied.values()}) != len(copied):
             raise ValueError("Invalid offline broker configuration")
@@ -137,15 +148,22 @@ class OfflineSummaryBroker:
             if route is None:
                 raise WorkerDenied("Worker access denied")
             now = self._clock()
-            assertion = issue_summary_assertion(
-                self._key,
+            arguments = dict(
                 subject=str(identity.user_id),
                 membership=identity.membership,
-                audience=route.audience,
                 request_id=request_id,
                 scopes=self._scopes,
                 now=now,
             )
+            if route.validator_audience is None:
+                assertion = issue_summary_assertion(self._key, audience=route.audience, **arguments)
+            else:
+                assertion = issue_detail_assertion(
+                    self._key,
+                    reader_audience=route.audience,
+                    validator_audience=route.validator_audience,
+                    **arguments,
+                )
             result = SummaryObservation.model_validate(route.invoke(assertion).model_dump())
             # Re-verify session lifetime as well as current authoritative membership.
             current_principal = self._verifier.verify(token)

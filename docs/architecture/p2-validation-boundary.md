@@ -9,8 +9,13 @@ identities. This approves offline implementation, not provisioning or live reads
 See the [implementation checkpoint](../product/p2-worker-boundary-checklist.md).
 The offline broker now resolves fresh database membership with issuer-qualified
 identity, issues internal-user UUID assertions and uses fixed summary routes.
-Transport, read-worker delegation, secret delivery and database isolation are
-not implemented by this in-process composition; the design below remains the target.
+Offline delegation is now implemented with a broker-signed read-detail assertion
+enclosing a separately audience-bound summary capability. Their subject/tenant/
+disclosure/case/lifetime and parent nonce must match. Readers only forward the
+broker-signed child; they cannot mint capabilities. Fixed reader/disclosure
+peer-policy checks use an injected test identity, NOT authenticated transport.
+Real transport, secret delivery and database isolation are not implemented by
+this in-process composition; the design below remains the target.
 An optional same-host SQLite replay candidate now passes atomic multiprocess and
 retained-state restart tests. It is not activated; shared-file custody, mount and
 lifecycle review remain required, and the default ledger is still process-local.

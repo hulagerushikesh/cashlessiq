@@ -18,10 +18,17 @@ from ciq_api.source_scopes import source_alpha_scopes
 from ciq_api.validation_worker import OfflineValidationWorker, ValidationInputs
 from ciq_api.worker_authority import SummaryAuthority, WorkerDenied
 from ciq_api.worker_broker import OfflineSummaryBroker, OfflineSummaryRoute, WorkerMembershipStore
+from ciq_api.worker_delegation import (
+    DelegatedSummaryAuthority,
+    DetailAuthority,
+    OfflineDelegatedValidator,
+    OfflinePeer,
+    OfflineReadRelay,
+)
 
 
-@pytest.fixture
-def broker_setup(engine, settings):
+@pytest.fixture(params=["direct", "delegated"])
+def broker_setup(engine, settings, request):
     tenant = SOURCE_TENANTS[0].tenant_id
     user_id = uuid4()
     other_id = uuid4()
@@ -52,6 +59,22 @@ def broker_setup(engine, settings):
     routes = {}
     calls = {}
     tokens = []
+    validator_audience = f"offline:{tenant}:validator"
+    delegated_authority = DelegatedSummaryAuthority(
+        public_key=key.public_key(),
+        audience=validator_audience,
+        tenant_id=tenant,
+        scopes=scopes,
+        membership=lambda subject: store.lookup(subject, tenant),
+        clock=clock,
+        readers={f"offline:{tenant}:{d}:summary": d for d in ("nonclinical", "medical")},
+    )
+    delegated_endpoint = OfflineDelegatedValidator(
+        delegated_authority,
+        OfflineValidationWorker(
+            authority=delegated_authority, scope=scopes.get(tenant), read_inputs=read
+        ),
+    )
     for disclosure in ("nonclinical", "medical"):
         audience = f"offline:{tenant}:{disclosure}:summary"
         authority = SummaryAuthority(
@@ -65,8 +88,27 @@ def broker_setup(engine, settings):
         worker = OfflineValidationWorker(
             authority=authority, scope=scopes.get(tenant), read_inputs=read
         )
+        validate = worker.validate
+        if request.param == "delegated":
+            relay = OfflineReadRelay(
+                authority=DetailAuthority(
+                    public_key=key.public_key(),
+                    audience=audience,
+                    tenant_id=tenant,
+                    scopes=scopes,
+                    membership=lambda subject: store.lookup(subject, tenant),
+                    clock=clock,
+                    disclosure=disclosure,
+                ),
+                public_key=key.public_key(),
+                validator_audience=validator_audience,
+                invoke_validator=lambda token, audience=audience: delegated_endpoint.validate(
+                    token, peer=OfflinePeer(audience)
+                ),
+            )
+            validate = relay.summary
 
-        def invoke(token, worker=worker):
+        def invoke(token, validate=validate):
             tokens.append(
                 jwt.decode(
                     token,
@@ -75,10 +117,14 @@ def broker_setup(engine, settings):
                     options={"verify_aud": False, "verify_exp": False},
                 )
             )
-            return worker.validate(token)
+            return validate(token)
 
         calls[disclosure] = Mock(side_effect=invoke)
-        routes[(tenant, disclosure)] = OfflineSummaryRoute(audience, calls[disclosure])
+        routes[(tenant, disclosure)] = OfflineSummaryRoute(
+            audience,
+            calls[disclosure],
+            validator_audience if request.param == "delegated" else None,
+        )
     broker = OfflineSummaryBroker(
         verifier=JWTVerifier(settings),
         memberships=store,

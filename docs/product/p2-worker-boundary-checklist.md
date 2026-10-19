@@ -35,9 +35,17 @@ Design: [validation/credential boundary](../architecture/p2-validation-boundary.
   return, denying role changes, deactivated users/tenants/memberships and expiry.
   Seventeen additional tests use disposable PostgreSQL schemas, ephemeral keys
   and fake validator inputs; no Snowflake/network worker transport is involved.
+- [x] Offline broker -> fixed read relay -> tenant validator composition. Broker
+  pre-signs separate read-detail and summary capabilities, binding parent nonce,
+  subject/tenant/disclosure/case/lifetime. Readers have public keys only; swapped
+  or widened children fail before validator input. Each hop checks membership/
+  expiry/replay independently and only the strict scoped summary returns.
+- [x] Fixed reader/disclosure peer-policy checks with injected **fake** peer
+  context. This tests authorization policy, NOT actual peer authentication.
 
 Files: apps/api/src/ciq_api/worker_authority.py, validation_worker.py and worker_broker.py,
-plus worker_replay.py, with corresponding tests. They are not imported into main/create_app or HTTP
+plus worker_replay.py and worker_delegation.py, with corresponding tests.
+They are not imported into main/create_app or HTTP
 startup, do not change public v2/OpenAPI and contain no connector creation.
 The handler is an in-process test primitive, not a running isolated container.
 
@@ -47,12 +55,15 @@ The handler is an in-process test primitive, not a running isolated container.
   offline using internal application user IDs. No caller-provided assertion
   minting API. This direct in-process summary composition is not the future
   read-worker path and is deliberately not exposed through HTTP startup.
-- [ ] Specify and test separate read-worker-to-validator delegation: separate
-  audiences, no caller scope widening, authenticated peer identity and no raw export.
+- [x] Specify and test offline read-worker-to-validator delegation: separate
+  audiences/operations, no scope widening, parent nonce binding and no raw export.
+  The broker can select this path by trusted fixed route configuration only.
+- [ ] Establish actual authenticated peer identity for delegation. OfflinePeer
+  is explicitly a test double; never construct it from a browser/header claim.
 - [ ] Implement private peer-authenticated transport and asymmetric assertion
   issuer lifecycle; current verification does not establish mTLS or peer identity.
 - [ ] Implement authoritative membership adapter and before-delivery checks at
-  read workers, including medical response downgrade. The broker and validator
+  read workers, including medical response downgrade. Broker, relay and validator
   now exercise a database-backed adapter in disposable local tests. No private
   remote membership protocol or distributed revocation behaviour is established;
   separate workers must not receive general operational database credentials.
@@ -81,9 +92,13 @@ clinical prose, financial lines or persisted projection is introduced.
 
 ## Verification
 
-207 API tests passed, including disposable PostgreSQL tests and the
-62 boundary/broker/replay tests. Eleven new replay tests include spawned processes,
+255 API tests passed, including disposable PostgreSQL tests and the
+110 boundary/broker/replay/delegation tests. Eleven replay tests include spawned processes,
 restart/capacity/storage failures and expiry during consumption.
+The delegation increment adds 32 focused tests and 16 existing broker scenarios
+rerun through the delegated route. Both tenant scopes/all roles and SAVED/MISSING
+are covered using fake source inputs. Tests reject wrong peer, changed scope,
+swapped child, replay, extra output, source failure and delivery-role changes.
 All 145 root regression tests pass. API/root Ruff checks,
 API format checks and git whitespace checks pass.
 Web/browser/build and remote CI are not rerun for this internal-only increment.

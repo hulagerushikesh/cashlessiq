@@ -36,6 +36,24 @@ demo-video work is not part of this product plan.
 
 ## P2 remaining work — in order
 
+### Current completion gates (latest summary)
+
+The local application and bounded operator source checks are implemented. P2 is
+**not complete**: the live product path is still disabled and must not reuse the
+operator's credentials or raw-input API adapter.
+
+| Remaining gate | What closes it |
+| --- | --- |
+| Worker security | Real mutually authenticated private transport, authoritative remote membership checks, retained replay lifecycle, separate packages and tested secret/network mounts |
+| Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
+| Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
+| Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
+| Final delivery verification | Full regression/browser/build/contract checks, separately authorised push, remote CI and P2 exit review |
+
+No website deployment or P3 is included. User interviews/customer rollout and
+real-data operational gates remain separate; synthetic-alpha permission does
+not waive them. Detailed evidence and next actions are below.
+
 1. [x] Complete Python reader authentication and bounded live source inspection.
 2. [x] Compare all three cases against independent metadata/history expectations;
    validate available saved decisions and every citation; explicitly preserve
@@ -272,6 +290,27 @@ Incremental dollars and current trial balance were not measured.
 
 No Snowflake/AI use, source activation, new credentials/grants, push or deployment.
 The two-day credit plan is committed; actual balance/expiry remain unverified.
+
+### Subsequent offline delegation increment
+
+Broker-authenticated requests can now take a fixed read-relay -> tenant-validator
+path in disposable tests. The broker signs separate audience/operation-bound
+parent/summary capabilities with identical subject, tenant, disclosure, case and
+lifetime, plus a parent nonce binding. Readers hold no signing key and forward
+the enclosed summary capability unchanged. Reader and validator independently
+consume replay guards and check fresh membership; broker checks again on delivery.
+
+The endpoint checks a fixed reader/disclosure pairing against **injected fake
+peer context**, not real TLS authentication. Real transport, remote membership,
+packaging and credential isolation remain open. This relay returns summary only,
+not a complete queue/detail read worker or approved financial-trace projection.
+All HTTP startup, source/UI activation and public v2 contracts remain unchanged.
+
+Latest verification: **255 API/PostgreSQL tests and 145 root tests** pass; root/API
+lint, API formatting and whitespace checks pass. The increment adds 32 delegation
+tests and reruns 16 existing broker scenarios through the delegated path. Web/
+browser/build/remote CI were not rerun for these internal-only changes. No
+Snowflake/AI calls, keys saved to disk, grants, provisioning, push or deployment.
 
 ## Spend guardrails
 

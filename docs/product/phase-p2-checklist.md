@@ -5,6 +5,22 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Offline delegated read/validation path — latest checkpoint
+
+The authenticated broker can select a fixed read relay and tenant validator
+using separate broker-signed audience/operation-bound capabilities. Scope and
+parent nonce binding prevent child swaps/widening. Each hop rechecks membership,
+expiry and replay; validators expose only scoped summaries. The peer identity
+used in tests is explicitly fake; no network/mTLS or credential isolation is
+claimed. This is not a complete queue/detail worker or full financial-trace view.
+
+255 API/PostgreSQL tests and 145 root tests pass, with root/API lint, API formatting
+and whitespace checks green. All source/HTTP startup and v2 contracts are unchanged.
+No Snowflake/AI use, grants, credentials persisted, provisioning, push, deployment
+or P3. See the current [five P2 completion gates](progress.md#p2-remaining-work--in-order)
+and [worker checklist](p2-worker-boundary-checklist.md). Earlier counts below are
+historical checkpoints, not current totals.
+
 ### Approved design: first offline worker-boundary slice — 19 October
 
 Rushikesh approved the local validation design, including two additional tenant

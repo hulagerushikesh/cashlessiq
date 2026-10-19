@@ -128,6 +128,9 @@ class SummaryAuthority:
         ):
             raise WorkerDenied("Worker access denied")
 
+    def _parse_claims(self, raw: dict) -> Assertion:
+        return Assertion.model_validate(raw)
+
     def consume(self, token: str) -> Assertion:
         try:
             if not isinstance(token, str) or len(token) > 4096:
@@ -140,7 +143,7 @@ class SummaryAuthority:
                 audience=self._audience,
                 options={"strict_aud": True, "verify_exp": False, "verify_iat": False},
             )
-            claims = Assertion.model_validate(raw)
+            claims = self._parse_claims(raw)
             self._check_current(claims)
             now = self._clock()
             if not claims.iat <= now < claims.exp:
