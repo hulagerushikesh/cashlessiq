@@ -1,6 +1,6 @@
 # Product Phase P1 checklist
 
-Status: In progress
+Status: Engineering complete; research gate explicitly deferred for synthetic alpha
 Last updated: 19 October 2026
 
 ## M0: Contracts before movement
@@ -66,5 +66,13 @@ Use `docs/product/research/interview-template.md` to collect that evidence.
 The [validation kit](research/validation-kit.md) supplies the session guide and
 three frozen synthetic scenarios. This is preparation, not completed research.
 
-P1 is not complete and no P2 work may begin. Research evidence is outstanding;
-architecture defaults must not be presented as completed user interviews.
+## Approved gate revision — 19 October 2026
+
+Rushikesh explicitly approved deferring the five interviews and starting P2 as
+a synthetic-only alpha. The engineering prerequisite is complete and P2 may
+begin under that exception. The unchecked research item above remains deferred,
+not passed. No interviews, customer validation, or pilot readiness are claimed.
+
+Real patient data, customer rollout, and production readiness remain blocked
+until workflow findings and privacy/security gates are met. This approval does
+not waive policy activation approval or permit reviewer mutations in P2.

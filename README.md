@@ -82,8 +82,9 @@ and rejects unsupported executable rule types.
 
 The hackathon submission is complete. Active work is product development;
 video, deck, and submission packaging are no longer active milestones.
-Product P0 is approved, and P1 engineering CI passes. P1 remains open for
-target-user workflow validation before the read-only P2 case slice begins.
+Product P0 is approved, and P1 engineering CI passes. Rushikesh approved
+deferring interviews to begin the read-only P2 synthetic alpha; workflow
+assumptions remain unvalidated and real patient data is not permitted.
 The Snowflake/Streamlit setup above describes the retained prototype; the new
 product workspace runs independently as described below.
 
