@@ -3,6 +3,44 @@
 Status: In progress — synthetic-only alpha  
 Last updated: 19 October 2026
 
+## Latest checkpoint — authenticated inspection
+
+The subsequent unbuffered Python operator check authenticated successfully as
+CIQ_PRODUCT_READER. One connection, secondary roles disabled, two bounded
+metadata reads and twelve inspection SELECTs covered exactly the three allowed
+cases. No AI, extraction, grants, source writes or Streamlit startup occurred.
+
+| Case | Verified owner | Independent history comparison | Latest saved decision | Product clause references |
+| --- | --- | --- | --- | --- |
+| GOL001 | TPA001 | Matches all expected fields | Present; fresh canonical validation and clause resolution pass; outcome/claimed/payable match snapshot | 35 |
+| GOL024 | TPA003 | Matches all expected fields | **Missing** | 35 |
+| GOL027 | TPA003 | Matches all expected fields | **Missing** | 35 |
+
+GOL001 validated without any record-ID allowlist: no record citation was
+invented. The other two cases cannot pass saved-decision parity because no
+saved rows exist. Reference counts do not prove narrative grounding or clause
+text retrieval. No source data was created or golden expectations changed to
+hide this gap. Earlier authentication-failure/grant-pending notes below describe
+historical checkpoints, superseded by this inspection.
+
+Post-session SHOW confirmed CIQ_WH SUSPENDED, zero started clusters and zero
+running/queued queries; X-Small/60-second auto-suspend remained unchanged.
+Exact incremental dollars and the remaining trial balance were not measured.
+
+P2 remains open. Next is a decision on missing-source coverage: either explicitly
+accept/test a missing-recommendation state in the synthetic read-only migration,
+or separately authorize a controlled source backfill. Do not run a fresh agent,
+create reviewer decisions or silently reuse snapshots as live data. The governed
+repository adapter, service-identity review and API/UI parity remain outstanding.
+P3 has not started. See the [current progress checklist](progress.md).
+
+Checkpoint tests: 124 root regressions and root lint pass; 39 targeted
+metadata/inspection boundary tests pass. The full API rerun had 54 passes and
+44 database-setup errors because Docker was unavailable. After starting Docker,
+the active environment had no cached stack images; the fresh image-download
+attempt was cancelled before containers started. Full API/PostgreSQL/browser
+verification remains pending; no database volume was deleted.
+
 ## Authority and limits
 
 Rushikesh approved the P1 research-gate deferral on 19 October. Five target-user

@@ -90,6 +90,9 @@ product workspace runs independently as described below.
 
 ## Product direction
 
+For the current phase, completed work, remaining gates and next steps, use the
+[product progress checklist](docs/product/progress.md).
+
 The productization plan preserves the deterministic rules core and human
 approval gate while separating the production web application, workflow API,
 asynchronous workers, and Snowflake intelligence services. Start with the

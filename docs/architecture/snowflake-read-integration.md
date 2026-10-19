@@ -2,6 +2,26 @@
 
 Status: bounded live source reads verified; not enabled in the API. 19 October 2026.
 
+## Latest inspection result — 19 October
+
+The approved 13 direct reader privileges have now been independently verified,
+and the bounded Python inspection authenticated successfully. History validation
+matches the independent seed-42 constants for all three cases. GOL001's saved
+decision passes fresh canonical validation, clause-reference resolution and
+outcome/amount comparison. GOL024 and GOL027 have **no saved decisions**; each
+case has 35 scoped product-clause references, which alone are not decision or
+narrative-evidence parity. No fixture fallback or source backfill was performed.
+
+The read session closed, and a final SHOW confirmed CIQ_WH SUSPENDED with zero
+running/queued queries and zero started clusters. No AI or Streamlit was started.
+Remaining balance is not inferred from this check. PUBLIC inheritance and the
+operator-only identity limitations below still apply.
+
+These findings supersede the historical pending-auth/grant notes below, not the
+remaining integration gates. Resolve the missing-recommendation contract before
+building the adapter; do not fabricate source recommendations or begin P3.
+See [current product progress](../product/progress.md).
+
 ## Offline member-history expectations — 19 October
 
 `cashlessiq.source_history` now validates and copies scoped policy/member
