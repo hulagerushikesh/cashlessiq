@@ -58,6 +58,20 @@ Streamlit app during local development because it can wake container compute.
 
 ## Working schedule and gates
 
+### 19 October follow-up inspection
+
+Authentication succeeded. Initial SHOW results again found all four warehouses,
+both container pools, and CLAUSE_SEARCH indexing/serving suspended. CIQ_RM showed
+2.15/10 monthly warehouse credits used. Currency history now includes $0.12 of
+warehouse usage on 18 October; this does not measure the current session or
+independently establish the remaining trial balance. A bounded three-case
+metadata SELECT used CIQ_WH; no AI, extraction, search, or Streamlit was started.
+No resource size or grants were changed. The $205 planning baseline and $50
+reserve remain unchanged pending a live balance from the account UI.
+End-state check found CIQ_WH started with zero running/queued queries after our
+reads. Because it had been suspended before this session and was activated by
+these checks, it was explicitly suspended and confirmed SUSPENDED/zero clusters.
+
 1. 19–22 October: finish remote CI for the local alpha, inspect spend/state, and
    implement bounded P2 Snowflake reads behind the repository interface. Reuse
    existing synthetic data and extraction/index outputs; do not wake Streamlit.

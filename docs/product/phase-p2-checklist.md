@@ -59,6 +59,14 @@ Increment verification: 62 root tests and 45 API/PostgreSQL/gateway tests passed
 API Ruff and git whitespace checks passed. OAuth connection test timed out before
 authentication; no source SQL, grants, warehouse activation or AI call ran.
 
+Subsequent authenticated inspection on 19 October: bounded source metadata
+parity passed for all three cases under CIQ_ADMIN. Live ownership is TPA001 for
+GOL001 and TPA003 for GOL024/GOL027; the offline demo grouping must not become a
+cross-TPA live tenant mapping. Dedicated CIQ_PRODUCT_READER does not yet exist;
+its CoCo grant review, restricted-role verification, explicit tenant mapping,
+and remaining member/decision/evidence parity are still outstanding. No grants
+or source-data mutations were applied. This does not complete P2.
+
 - [ ] Governed Snowflake read adapter behind the repository interface.
 - [ ] Approved economical integration verification and view parity.
 
