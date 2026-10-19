@@ -1,6 +1,367 @@
 {
   "components": {
     "schemas": {
+      "CalculationLine": {
+        "additionalProperties": false,
+        "properties": {
+          "calc": {
+            "title": "Calc",
+            "type": "string"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/Citation"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "claimed_inr": {
+            "title": "Claimed Inr",
+            "type": "integer"
+          },
+          "deduction_inr": {
+            "title": "Deduction Inr",
+            "type": "integer"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "payable_inr": {
+            "title": "Payable Inr",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "claimed_inr",
+          "payable_inr",
+          "deduction_inr",
+          "reason",
+          "calc",
+          "citations"
+        ],
+        "title": "CalculationLine",
+        "type": "object"
+      },
+      "CaseDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "admission_date": {
+            "format": "date",
+            "title": "Admission Date",
+            "type": "string"
+          },
+          "baseline_commit": {
+            "title": "Baseline Commit",
+            "type": "string"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyCheck"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "claimed_inr": {
+            "title": "Claimed Inr",
+            "type": "integer"
+          },
+          "clinical_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clinical Note"
+          },
+          "clinical_visible": {
+            "default": false,
+            "title": "Clinical Visible",
+            "type": "boolean"
+          },
+          "continuous_cover_since": {
+            "format": "date",
+            "title": "Continuous Cover Since",
+            "type": "string"
+          },
+          "data_mode": {
+            "const": "synthetic_snapshot",
+            "default": "synthetic_snapshot",
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "diagnosis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diagnosis"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyEvidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CalculationLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "member_reference": {
+            "title": "Member Reference",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "APPROVE",
+              "APPROVE_WITH_DEDUCTIONS",
+              "QUERY",
+              "REFER"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "payable_inr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payable Inr"
+          },
+          "policy_id": {
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "procedure": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Procedure"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "queries": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Queries",
+            "type": "array"
+          },
+          "refer_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Refer Reasons",
+            "type": "array"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "workflow_state": {
+            "const": "DRAFT_READY",
+            "default": "DRAFT_READY",
+            "title": "Workflow State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "member_reference",
+          "outcome",
+          "admission_date",
+          "claimed_inr",
+          "payable_inr",
+          "baseline_commit",
+          "policy_id",
+          "product_name",
+          "policy_version",
+          "continuous_cover_since",
+          "lines",
+          "checks",
+          "queries",
+          "refer_reasons",
+          "evidence"
+        ],
+        "title": "CaseDetail",
+        "type": "object"
+      },
+      "CaseQueue": {
+        "additionalProperties": false,
+        "properties": {
+          "data_mode": {
+            "const": "synthetic_snapshot",
+            "default": "synthetic_snapshot",
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CaseSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "CaseQueue",
+        "type": "object"
+      },
+      "CaseSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "admission_date": {
+            "format": "date",
+            "title": "Admission Date",
+            "type": "string"
+          },
+          "claimed_inr": {
+            "title": "Claimed Inr",
+            "type": "integer"
+          },
+          "member_reference": {
+            "title": "Member Reference",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "APPROVE",
+              "APPROVE_WITH_DEDUCTIONS",
+              "QUERY",
+              "REFER"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "payable_inr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payable Inr"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "workflow_state": {
+            "const": "DRAFT_READY",
+            "default": "DRAFT_READY",
+            "title": "Workflow State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "member_reference",
+          "outcome",
+          "admission_date",
+          "claimed_inr",
+          "payable_inr"
+        ],
+        "title": "CaseSummary",
+        "type": "object"
+      },
+      "Citation": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "clause",
+              "record"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id"
+        ],
+        "title": "Citation",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
       "HealthResponse": {
         "additionalProperties": false,
         "properties": {
@@ -70,6 +431,93 @@
         "title": "MeResponse",
         "type": "object"
       },
+      "PolicyCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "applies": {
+            "title": "Applies",
+            "type": "boolean"
+          },
+          "clause_id": {
+            "title": "Clause Id",
+            "type": "string"
+          },
+          "months_elapsed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Months Elapsed"
+          },
+          "months_required": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Months Required"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "rule_type": {
+            "title": "Rule Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "clause_id",
+          "rule_type",
+          "applies",
+          "months_elapsed",
+          "months_required",
+          "reason"
+        ],
+        "title": "PolicyCheck",
+        "type": "object"
+      },
+      "PolicyEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "clause_id": {
+            "title": "Clause Id",
+            "type": "string"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clause_id",
+          "title",
+          "page",
+          "source_url"
+        ],
+        "title": "PolicyEvidence",
+        "type": "object"
+      },
       "TenantView": {
         "additionalProperties": false,
         "properties": {
@@ -108,6 +556,46 @@
           "display_name"
         ],
         "title": "UserView",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
         "type": "object"
       }
     },
@@ -158,6 +646,142 @@
           }
         },
         "summary": "Ready"
+      }
+    },
+    "/v1/cases": {
+      "get": {
+        "operationId": "list_cases",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "outcome",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "APPROVE",
+                    "APPROVE_WITH_DEDUCTIONS",
+                    "QUERY",
+                    "REFER"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Outcome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Search",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseQueue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Cases"
+      }
+    },
+    "/v1/cases/{request_id}": {
+      "get": {
+        "operationId": "get_case",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Case"
       }
     },
     "/v1/me": {

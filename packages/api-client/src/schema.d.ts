@@ -38,6 +38,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Cases */
+        get: operations["list_cases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/cases/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Case */
+        get: operations["get_case"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -59,6 +93,161 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** CalculationLine */
+        CalculationLine: {
+            /** Calc */
+            calc: string;
+            /** Citations */
+            citations: components["schemas"]["Citation"][];
+            /** Claimed Inr */
+            claimed_inr: number;
+            /** Deduction Inr */
+            deduction_inr: number;
+            /** Item */
+            item: string;
+            /** Payable Inr */
+            payable_inr: number;
+            /** Reason */
+            reason: string;
+        };
+        /** CaseDetail */
+        CaseDetail: {
+            /**
+             * Admission Date
+             * Format: date
+             */
+            admission_date: string;
+            /** Baseline Commit */
+            baseline_commit: string;
+            /** Checks */
+            checks: components["schemas"]["PolicyCheck"][];
+            /** Claimed Inr */
+            claimed_inr: number;
+            /** Clinical Note */
+            clinical_note?: string | null;
+            /**
+             * Clinical Visible
+             * @default false
+             */
+            clinical_visible: boolean;
+            /**
+             * Continuous Cover Since
+             * Format: date
+             */
+            continuous_cover_since: string;
+            /**
+             * Data Mode
+             * @default synthetic_snapshot
+             * @constant
+             */
+            data_mode: "synthetic_snapshot";
+            /** Diagnosis */
+            diagnosis?: string | null;
+            /** Evidence */
+            evidence: components["schemas"]["PolicyEvidence"][];
+            /** Lines */
+            lines: components["schemas"]["CalculationLine"][];
+            /** Member Reference */
+            member_reference: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "APPROVE" | "APPROVE_WITH_DEDUCTIONS" | "QUERY" | "REFER";
+            /** Payable Inr */
+            payable_inr: number | null;
+            /** Policy Id */
+            policy_id: string;
+            /** Policy Version */
+            policy_version: string;
+            /** Procedure */
+            procedure?: string | null;
+            /** Product Name */
+            product_name: string;
+            /** Queries */
+            queries: string[];
+            /** Refer Reasons */
+            refer_reasons: string[];
+            /** Request Id */
+            request_id: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * Workflow State
+             * @default DRAFT_READY
+             * @constant
+             */
+            workflow_state: "DRAFT_READY";
+        };
+        /** CaseQueue */
+        CaseQueue: {
+            /**
+             * Data Mode
+             * @default synthetic_snapshot
+             * @constant
+             */
+            data_mode: "synthetic_snapshot";
+            /** Items */
+            items: components["schemas"]["CaseSummary"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Total */
+            total: number;
+        };
+        /** CaseSummary */
+        CaseSummary: {
+            /**
+             * Admission Date
+             * Format: date
+             */
+            admission_date: string;
+            /** Claimed Inr */
+            claimed_inr: number;
+            /** Member Reference */
+            member_reference: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "APPROVE" | "APPROVE_WITH_DEDUCTIONS" | "QUERY" | "REFER";
+            /** Payable Inr */
+            payable_inr: number | null;
+            /** Request Id */
+            request_id: string;
+            /**
+             * Workflow State
+             * @default DRAFT_READY
+             * @constant
+             */
+            workflow_state: "DRAFT_READY";
+        };
+        /** Citation */
+        Citation: {
+            /** Id */
+            id: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "clause" | "record";
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** HealthResponse */
         HealthResponse: {
             /**
@@ -90,6 +279,34 @@ export interface components {
             tenant: components["schemas"]["TenantView"];
             user: components["schemas"]["UserView"];
         };
+        /** PolicyCheck */
+        PolicyCheck: {
+            /** Applies */
+            applies: boolean;
+            /** Clause Id */
+            clause_id: string;
+            /** Months Elapsed */
+            months_elapsed: number | null;
+            /** Months Required */
+            months_required: number | null;
+            /** Reason */
+            reason: string;
+            /** Rule Id */
+            rule_id: string;
+            /** Rule Type */
+            rule_type: string;
+        };
+        /** PolicyEvidence */
+        PolicyEvidence: {
+            /** Clause Id */
+            clause_id: string;
+            /** Page */
+            page: number;
+            /** Source Url */
+            source_url: string;
+            /** Title */
+            title: string;
+        };
         /** TenantView */
         TenantView: {
             /**
@@ -109,6 +326,19 @@ export interface components {
              * Format: uuid
              */
             id: string;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
         };
     };
     responses: never;
@@ -155,6 +385,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    list_cases: {
+        parameters: {
+            query?: {
+                outcome?: ("APPROVE" | "APPROVE_WITH_DEDUCTIONS" | "QUERY" | "REFER") | null;
+                search?: string;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseQueue"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_case: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

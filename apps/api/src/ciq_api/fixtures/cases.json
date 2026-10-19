@@ -1,0 +1,292 @@
+[
+  {
+    "request_id": "GOL001",
+    "member_reference": "SYN-GOL001",
+    "outcome": "APPROVE_WITH_DEDUCTIONS",
+    "admission_date": "2026-10-02",
+    "claimed_inr": 100000,
+    "payable_inr": 95000,
+    "baseline_commit": "6406d74",
+    "policy_id": "POL0001",
+    "product_name": "Arogya Sanjeevani Policy, The New India Assurance Co. Ltd",
+    "policy_version": "V02 2024-25",
+    "continuous_cover_since": "2023-01-01",
+    "diagnosis": "Acute appendicitis",
+    "procedure": "Laparoscopic appendicectomy",
+    "clinical_note": "Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.",
+    "clinical_visible": true,
+    "lines": [
+      {
+        "item": "Room and nursing",
+        "claimed_inr": 12000,
+        "payable_inr": 11400,
+        "deduction_inr": 600,
+        "reason": "Room charge checked against the daily policy cap. Mandatory 5% co-payment applied.",
+        "calc": "min(12000, 5000 x 3) = 12000; 12000 x 95% = 11400",
+        "citations": [
+          {
+            "type": "clause",
+            "id": "NIA-4.1-A"
+          },
+          {
+            "type": "clause",
+            "id": "NIA-9.5"
+          }
+        ]
+      },
+      {
+        "item": "Procedure and professional fees",
+        "claimed_inr": 68000,
+        "payable_inr": 64600,
+        "deduction_inr": 3400,
+        "reason": "Mandatory 5% co-payment applied.",
+        "calc": "68000 x 95% = 64600",
+        "citations": [
+          {
+            "type": "clause",
+            "id": "NIA-9.5"
+          }
+        ]
+      },
+      {
+        "item": "Medicines and diagnostics",
+        "claimed_inr": 20000,
+        "payable_inr": 19000,
+        "deduction_inr": 1000,
+        "reason": "Mandatory 5% co-payment applied.",
+        "calc": "20000 x 95% = 19000",
+        "citations": [
+          {
+            "type": "clause",
+            "id": "NIA-9.5"
+          }
+        ]
+      }
+    ],
+    "checks": [
+      {
+        "rule_id": "RULE_PED",
+        "clause_id": "NIA-6.1",
+        "rule_type": "WAITING_PED",
+        "applies": false,
+        "months_elapsed": 45,
+        "months_required": 36,
+        "reason": "Pre-existing disease waiting period does not apply."
+      },
+      {
+        "rule_id": "RULE_SPECIFIC_24",
+        "clause_id": "NIA-6.2-24",
+        "rule_type": "WAITING_SPECIFIC",
+        "applies": false,
+        "months_elapsed": 45,
+        "months_required": 24,
+        "reason": "Specific waiting period does not apply."
+      },
+      {
+        "rule_id": "RULE_SPECIFIC_36",
+        "clause_id": "NIA-6.2-36",
+        "rule_type": "WAITING_SPECIFIC",
+        "applies": false,
+        "months_elapsed": 45,
+        "months_required": 36,
+        "reason": "Specific waiting period does not apply."
+      },
+      {
+        "rule_id": "RULE_INITIAL",
+        "clause_id": "NIA-6.3",
+        "rule_type": "WAITING_INITIAL",
+        "applies": false,
+        "months_elapsed": 45,
+        "months_required": 1,
+        "reason": "Initial waiting period does not apply."
+      },
+      {
+        "rule_id": "RULE_EXCLUSION",
+        "clause_id": "NIA-7.12",
+        "rule_type": "EXCLUSION",
+        "applies": false,
+        "months_elapsed": null,
+        "months_required": null,
+        "reason": "Configured exclusion does not match the case."
+      }
+    ],
+    "queries": [],
+    "refer_reasons": [],
+    "evidence": [
+      {
+        "clause_id": "NIA-4.1-A",
+        "title": "Hospitalization - room rent",
+        "page": 7,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-6.1",
+        "title": "Pre-existing diseases",
+        "page": 9,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-6.2-24",
+        "title": "24-month specific waiting period",
+        "page": 10,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-6.2-36",
+        "title": "36-month specific waiting period",
+        "page": 10,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-6.3",
+        "title": "First thirty days waiting period",
+        "page": 10,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-7.12",
+        "title": "Refractive error exclusion",
+        "page": 12,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-9.5",
+        "title": "Co-payment",
+        "page": 15,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      }
+    ]
+  },
+  {
+    "request_id": "GOL024",
+    "member_reference": "SYN-GOL024",
+    "outcome": "REFER",
+    "admission_date": "2026-10-02",
+    "claimed_inr": 80000,
+    "payable_inr": null,
+    "baseline_commit": "6406d74",
+    "policy_id": "POL0024",
+    "product_name": "Arogya Sanjeevani Policy, The New India Assurance Co. Ltd",
+    "policy_version": "V02 2024-25",
+    "continuous_cover_since": "2026-01-01",
+    "diagnosis": "Type 2 diabetes with foot complication",
+    "procedure": "Debridement and inpatient glycaemic management",
+    "clinical_note": "Declared diabetes predates policy inception; admission requested for infected foot wound.",
+    "clinical_visible": true,
+    "lines": [],
+    "checks": [
+      {
+        "rule_id": "RULE_PED",
+        "clause_id": "NIA-6.1",
+        "rule_type": "WAITING_PED",
+        "applies": true,
+        "months_elapsed": 9,
+        "months_required": 36,
+        "reason": "Declared pre-existing condition is inside the 36-month window."
+      },
+      {
+        "rule_id": "RULE_SPECIFIC_24",
+        "clause_id": "NIA-6.2-24",
+        "rule_type": "WAITING_SPECIFIC",
+        "applies": false,
+        "months_elapsed": 9,
+        "months_required": 24,
+        "reason": "Specific waiting period does not apply."
+      },
+      {
+        "rule_id": "RULE_SPECIFIC_36",
+        "clause_id": "NIA-6.2-36",
+        "rule_type": "WAITING_SPECIFIC",
+        "applies": false,
+        "months_elapsed": 9,
+        "months_required": 36,
+        "reason": "Specific waiting period does not apply."
+      },
+      {
+        "rule_id": "RULE_INITIAL",
+        "clause_id": "NIA-6.3",
+        "rule_type": "WAITING_INITIAL",
+        "applies": false,
+        "months_elapsed": 9,
+        "months_required": 1,
+        "reason": "Initial waiting period does not apply."
+      },
+      {
+        "rule_id": "RULE_EXCLUSION",
+        "clause_id": "NIA-7.12",
+        "rule_type": "EXCLUSION",
+        "applies": false,
+        "months_elapsed": null,
+        "months_required": null,
+        "reason": "Configured exclusion does not match the case."
+      }
+    ],
+    "queries": [],
+    "refer_reasons": [
+      "Declared pre-existing condition is inside the 36-month window."
+    ],
+    "evidence": [
+      {
+        "clause_id": "NIA-6.1",
+        "title": "Pre-existing diseases",
+        "page": 9,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-6.2-24",
+        "title": "24-month specific waiting period",
+        "page": 10,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-6.2-36",
+        "title": "36-month specific waiting period",
+        "page": 10,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-6.3",
+        "title": "First thirty days waiting period",
+        "page": 10,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      },
+      {
+        "clause_id": "NIA-7.12",
+        "title": "Refractive error exclusion",
+        "page": 12,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      }
+    ]
+  },
+  {
+    "request_id": "GOL027",
+    "member_reference": "SYN-GOL027",
+    "outcome": "QUERY",
+    "admission_date": "2026-10-02",
+    "claimed_inr": 90000,
+    "payable_inr": null,
+    "baseline_commit": "6406d74",
+    "policy_id": "POL0027",
+    "product_name": "Arogya Sanjeevani Policy, The New India Assurance Co. Ltd",
+    "policy_version": "V02 2024-25",
+    "continuous_cover_since": "2023-01-01",
+    "diagnosis": "Acute appendicitis",
+    "procedure": "Laparoscopic appendicectomy",
+    "clinical_note": "Cost break-up has not been supplied by the hospital.",
+    "clinical_visible": true,
+    "lines": [],
+    "checks": [],
+    "queries": [
+      "Please provide cost breakup."
+    ],
+    "refer_reasons": [],
+    "evidence": [
+      {
+        "clause_id": "NIA-4.1-A",
+        "title": "Hospitalization - room rent",
+        "page": 7,
+        "source_url": "https://www.newindia.co.in/assets/docs/know-more/health/arogya-sanjeevani/POLICY%20CLAUSES%20Arogya%20Sanjeevani.pdf"
+      }
+    ]
+  }
+]
