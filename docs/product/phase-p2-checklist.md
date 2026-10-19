@@ -5,6 +5,50 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Offline authenticated source API-to-UI integration — 19 October
+
+The new `/source-cases` queue/detail routes consume the validated v2 client and
+existing source presentation. They require local environment, local auth and
+`CIQ_SOURCE_UI_MODE=contract_test`; normal startup is unchanged/404. They also
+return 404 in production mode even if that flag is set. Every test page labels
+its fake gateways and placeholder references. There is no live-source flag,
+credential injection, automatic source login or reviewer write capability.
+
+`make product-test-source-ui` builds Next, then temporarily starts a loopback
+test API (8003) and built web (3003). The API uses real JWT verification and real
+PostgreSQL membership resolution in a random isolated schema; only its source
+gateways are fake, reused from the API unit tests. Persistent source identities
+are not seeded. Test tokens use a public test-only key that is never installed
+in the ordinary stack. The harness refuses non-loopback/non-test database URLs.
+
+All 15 integration tests pass: both tenants/all roles, saved vs MISSING fidelity,
+condition visibility, no raw decision prose in HTML, known foreign-ID 404s even
+with spoofed headers, anonymous/expired sessions, filters/empty queue, mobile
+layout, page links and a test-only injected HTTP 503 outage. The outage fixture
+tests transport handling, not a live Snowflake outage. Desktop screenshot was
+visually inspected. Source financial line/clinical prose and narrative-grounding
+parity remain out of scope of the current summary contract, not completed.
+
+Root regression 145 and API/PostgreSQL 145 pass. Client 41, typecheck, lint,
+production build, isolated domain-wheel and contract-drift checks pass. CI now
+includes the offline source integration target; remote CI has not run. Test
+output directories are separated to avoid suite artifacts clobbering each other.
+The first medical browser assertion needed a list-item locator; fixed and rerun.
+All 23 normal-stack browser regressions pass, including the source-route
+default-off checks. Local web container rebuilt and healthy; no test flag set.
+
+Shutdown testing exposed Uvicorn's signal replay bypassing outer cleanup. The
+test-only server restores signal handlers without replay so cleanup executes.
+Three explicitly identified leftover test schemas were checked and removed;
+their fixtures are reproducible. A subsequent full run leaves zero test schemas
+and zero source-alpha tenants in the persistent sandbox. SIGKILL/power-loss
+cleanup is not guaranteed; do not use broad schema-deletion commands.
+
+No Snowflake usage, source writes/grants, public deployment or push. Website
+deployment is explicitly excluded by the owner. P2 remains open for CoCo security
+follow-up, approved service/tenant/clinical isolation, governed trace projection,
+live browser parity and remote CI; P3 is not started.
+
 ### Offline web-to-v2 client boundary — 19 October
 
 Added typed source queue/detail HTTP readers, checked against the exported

@@ -126,6 +126,10 @@ It exercises v2 presentation only, not source/API parity or tenant isolation;
 it never calls Snowflake and returns 404 outside local/local-auth mode.
 `npm run test:client` checks the not-yet-connected v2 HTTP-client boundary using
 injected responses only; no browser, server or Snowflake credentials required.
+`make product-test-source-ui` additionally exercises the gated source screens
+through a real temporary API and PostgreSQL memberships with fake source gateways.
+It uses ports 3003/8003 and disposable test identities; normal startup and the
+public website remain unchanged. See the local-development guide for boundaries.
 The stack runs Next.js, FastAPI, PostgreSQL, and Redis locally. It does not call
 Snowflake or AI services. Stop it with `make product-down`; local database data
 is retained. See [local development](docs/architecture/local-development.md)

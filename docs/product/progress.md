@@ -77,10 +77,32 @@ demo-video work is not part of this product plan.
    The Evidence fixture now exercises searchable clause-reference metadata and
    page links; it does not retrieve PDF content or establish narrative grounding.
    The offline v2 HTTP-client boundary is implemented with exported-schema
-   validation and 41 no-network tests. It is not invoked by UI routes; live
-   source identities, security approval and end-to-end parity remain open.
+   validation and 41 no-network tests. It is now exercised through gated
+   `/source-cases` routes in an isolated contract-test stack: real API/PostgreSQL
+   identity checks, fake source gateways, two tenants and all three roles.
+   Fifteen browser integration tests pass; this is not live source parity.
+   Normal local startup and production return 404 for these routes. No
+   persistent source identities or live connections have been activated.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push
    authority, then verify remote CI. Review P2 exit evidence before starting P3.
+   - [x] Full local regression, API/PostgreSQL, client, offline source integration,
+     web build/typecheck/lint, domain-wheel and contract-drift checks rerun.
+   - [ ] Push authority and remote CI for the resulting commits.
+   - [ ] Live security/source acceptance and full financial-trace/evidence gates.
+
+## Remaining P2 blockers (not website deployment)
+
+- [ ] CoCo administrative MFA enforcement/PUBLIC dependency report; see the
+  [read-only prompt](source-hardening-followup.md).
+- [ ] Review/approve the narrow service-authentication and database tenant/
+  clinical-isolation implementation before provisioning anything.
+- [ ] Approve a governed financial-trace/clinical projection and verify the
+  calculation/citation display; the current v2 contract deliberately omits prose.
+- [ ] Bounded live API/UI parity after those security gates, then review P2 exit.
+
+The website must remain unchanged per Rushikesh's latest instruction. Completing
+offline tests does not waive these gates or authorise P3, public deployment,
+new grants, account-wide restrictions or reuse of human OAuth in a server.
 
 ## Gates that remain open
 
@@ -95,6 +117,19 @@ customer rollout, autonomous denial or unsupported executable rule activation.
 Policy activation continues to require explicit human approval.
 
 ## Verification and delivery checkpoint
+
+- Latest offline integration checkpoint: root **145**, API/PostgreSQL **145**,
+  client **41**, source API-to-UI **15**, normal browser **23** tests pass. Typecheck/lint/production
+  build, isolated domain wheel and contract regeneration without drift pass.
+  The test stack uses loopback ports 8003/3003 and a disposable PostgreSQL schema;
+  no source-alpha tenants were seeded into the persistent sandbox. Graceful
+  shutdown cleanup was verified after fixing Uvicorn signal replay; the three
+  earlier disposable test schemas were removed explicitly, and the latest run
+  leaves zero. Fixtures can recreate them; no sandbox volume/data was removed.
+  Production-mode source routes return 404 even with the contract-test flag set.
+  The normal local stack also verifies both source routes return 404; its web
+  container was rebuilt and is healthy without enabling the contract-test flag.
+  No Snowflake/AI, grants, push, remote CI or website deployment ran.
 
 - Latest client increment: **41 no-network client tests pass**; client/web
   typecheck and lint pass, as does the web production build. No source route
@@ -158,7 +193,9 @@ source, isolation, clinical-disclosure or UI integration gates.
 - [ ] UI distinguishes no saved recommendation from QUERY/REFER, source error
   and zero payable; end-to-end coverage with separate source-alpha tenants.
   Local fixture presentation is implemented; real source-alpha integration and
-  its owner/clinical-access tests remain open. The fixture preview is explicitly
+  its live owner/clinical-access tests remain open. The isolated real-HTTP fake-
+  gateway integration now tests both tenant scopes and all three roles, not
+  Snowflake enforcement or live parity. The fixture preview is explicitly
   labelled, authenticated and unavailable outside local/local-auth mode.
 
 The existing v1 API requires an outcome, so it is unchanged. The v2 adapter uses

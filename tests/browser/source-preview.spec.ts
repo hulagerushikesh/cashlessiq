@@ -6,6 +6,14 @@ test("source preview requires authentication", async ({ page }) => {
   await expect(page.getByText("UI-FIXTURE-001", { exact: true })).toHaveCount(0);
 });
 
+test("source integration routes stay disabled in the normal stack", async ({ page }) => {
+  for (const path of ["/source-cases", "/source-cases/GOL001"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { name: "404", exact: true })).toBeVisible();
+    await expect(page.getByText("Offline source contract test · Fake gateways")).toHaveCount(0);
+  }
+});
+
 test.describe("authenticated local fixture presentation", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/login");

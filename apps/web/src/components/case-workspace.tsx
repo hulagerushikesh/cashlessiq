@@ -58,6 +58,11 @@ export function CaseWorkspace({ identity, children }: { identity: Identity; chil
             {process.env.CIQ_ENVIRONMENT === "local" && process.env.CIQ_AUTH_MODE === "local" && (
               <Link href="/source-preview">UI preview</Link>
             )}
+            {process.env.CIQ_ENVIRONMENT === "local" &&
+              process.env.CIQ_AUTH_MODE === "local" &&
+              process.env.CIQ_SOURCE_UI_MODE === "contract_test" && (
+                <Link href="/source-cases">Source contract test</Link>
+              )}
           </nav>
           <div className="flex items-center gap-4 text-sm">
             <span>{identity.user.display_name}</span>

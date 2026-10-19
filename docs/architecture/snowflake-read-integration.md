@@ -18,7 +18,9 @@ future server callers must resolve current membership for every request, not
 construct identity from browser-supplied headers or reuse stale role claims.
 Use the existing server-side `createApiClient` bearer/no-store configuration.
 The helpers have no cookie/bootstrap/Snowflake credentials and no startup hook.
-Neither the source preview nor normal queue imports or invokes them yet.
+The source preview and normal queue do not invoke them. Gated `/source-cases`
+routes now exercise them only in the isolated offline contract-test harness;
+normal startup and production return 404. See the local-development test guide.
 
 Responses are checked against the exported OpenAPI schemas with Ajv 2020-12
 and format validation, without coercion, defaults or extra-property removal.
@@ -40,7 +42,9 @@ Run `npm run test:client` without a server/browser/Snowflake connection. All
 Root typecheck/lint include this package and tests; CI runs the new client suite.
 Schema export/drift checks remain canonical; the API contract has not changed.
 The web Docker image includes the exported schema for future server consumption.
-No route, source identity or live source repository was enabled by this work.
+No live-source route, persistent source identity or live source repository is
+enabled. The offline test stack uses a real API/membership database but fake
+gateways, never human Snowflake OAuth or a runtime fallback.
 
 Validator references: [JSON Schema support](https://ajv.js.org/json-schema.html)
 and [format validation](https://ajv.js.org/guide/formats.html).

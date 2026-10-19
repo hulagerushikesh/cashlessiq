@@ -58,6 +58,7 @@ npm run lint
 npm run build
 npm run test:browser:install
 npm run test:browser
+make product-test-source-ui
 make test
 make lint
 ```
@@ -65,6 +66,30 @@ make lint
 API integration tests require running local PostgreSQL. Each test creates an
 isolated random schema, applies real migrations, and removes only that schema.
 The application tables and seeded sandbox users are not reset by tests.
+
+### Offline source API-to-UI test stack
+
+`make product-test-source-ui` requires the ordinary local PostgreSQL service and
+installed browser/dependencies. It builds the web application and starts a
+temporary API on 127.0.0.1:8003 plus web on 127.0.0.1:3003. Do not run concurrent
+instances. The script passes the ignored local DB credentials privately; do not
+copy its test token/key into any normal runtime. It creates/migrates/seeds a
+random disposable schema, not the persistent sandbox, and removes it on graceful
+shutdown. Hard termination/power loss can interrupt cleanup; inspect exact test
+schema ownership/content before removing any leftover individually.
+
+The real API repository/domain validators consume shared **fake gateway inputs**
+from API tests. Real PostgreSQL memberships enforce the application-layer tenant
+and role checks. This is offline contract integration, not Snowflake service
+identity, database tenant isolation, live data/trace parity or customer readiness.
+No source credentials, source reads or AI calls are needed. The artificial 503
+outage fixture lives only in the test server, never `create_app` startup.
+
+Source routes `/source-cases` and `/source-cases/<id>` are hidden behind
+local/local-auth plus `CIQ_SOURCE_UI_MODE=contract_test`, set only by this
+harness. They show a persistent fake-gateway banner. Leave the flag unset in
+the ordinary stack; production returns 404 even if it is set. This does not
+enable source-profile bootstrap/login or deploy anything to the public website.
 
 `make product-contracts` regenerates OpenAPI from Python models and the browser
 types from OpenAPI without connecting to any database. Review schema changes

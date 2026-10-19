@@ -48,6 +48,8 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           npm run test:browser
+      - name: Offline source API-to-UI integration
+        run: make product-test-source-ui
       - name: Failure diagnostics
         if: failure()
         run: make product-logs

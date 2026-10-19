@@ -22,8 +22,7 @@ TPA1, TPA3 = SOURCE_TENANTS
 SCOPES = {t.tenant_id: t.tpa_id for t in SOURCE_TENANTS}
 
 
-@pytest.fixture
-def sources():
+def build_test_sources():
     metadata, inspection = MagicMock(), MagicMock()
     records, details = {}, {}
     for tenant in SOURCE_TENANTS:
@@ -114,6 +113,11 @@ def sources():
     inspection.inspect.side_effect = lambda tenant, request: deepcopy(details[request])
     repository = SourceCaseRepository(metadata, inspection, SCOPES)
     return repository, metadata, inspection, records, details
+
+
+@pytest.fixture
+def sources():
+    return build_test_sources()
 
 
 def test_queue_is_metadata_only_bounded_and_sorted(sources):

@@ -7,10 +7,11 @@
     "dev": "npm run dev --workspace @cashlessiq/web",
     "build": "npm run build --workspace @cashlessiq/web",
     "typecheck": "npm run typecheck --workspace @cashlessiq/web && tsc --project packages/api-client/tsconfig.json",
-    "lint": "npm run lint --workspace @cashlessiq/web && biome lint packages/api-client/src tests/client playwright.client.config.ts",
+    "lint": "npm run lint --workspace @cashlessiq/web && biome lint packages/api-client/src tests/client tests/source_e2e/*.ts playwright.client.config.ts playwright.source.config.ts",
     "contracts": "openapi-typescript packages/contracts/openapi.json -o packages/api-client/src/schema.d.ts",
     "test:browser": "playwright test",
     "test:client": "playwright test --config playwright.client.config.ts",
+    "test:source-ui": "playwright test --config playwright.source.config.ts",
     "test:browser:install": "playwright install chromium"
   },
   "devDependencies": {

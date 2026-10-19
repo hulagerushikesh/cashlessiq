@@ -5,7 +5,10 @@ SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql 
 
 .PHONY: install setup teardown test lint generate-data policy-source data documents tools agent deploy eval
 .PHONY: product-up product-down product-status product-logs product-test product-contracts
-.PHONY: product-domain-check
+.PHONY: product-domain-check product-test-source-ui
+
+product-test-source-ui:
+	$(PYTHON) scripts/product.py test-source-ui
 
 product-domain-check:
 	$(PYTHON) scripts/check_domain_package.py

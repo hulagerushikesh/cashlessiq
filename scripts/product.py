@@ -29,7 +29,9 @@ def run(*command: str, env: dict[str, str] | None = None) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["up", "down", "status", "logs", "test-api"])
+    parser.add_argument(
+        "action", choices=["up", "down", "status", "logs", "test-api", "test-source-ui"]
+    )
     action = parser.parse_args().action
     private = local_environment()
     compose = (
@@ -57,7 +59,12 @@ def main() -> None:
                 f"postgresql+psycopg://ciq:{private['CIQ_DB_PASSWORD']}@127.0.0.1:55432/cashlessiq"
             ),
         }
-        run("uv", "run", "--project", "apps/api", "pytest", "apps/api/tests", env=env)
+        env.pop("VIRTUAL_ENV", None)
+        if action == "test-source-ui":
+            run("npm", "run", "build", env=env)
+            run("npm", "run", "test:source-ui", env=env)
+        else:
+            run("uv", "run", "--project", "apps/api", "pytest", "apps/api/tests", env=env)
 
 
 if __name__ == "__main__":
