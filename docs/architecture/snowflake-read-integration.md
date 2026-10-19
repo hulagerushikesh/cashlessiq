@@ -25,6 +25,21 @@ Versioned API/UI integration is pending: v1's required outcome is unchanged.
 Do not fabricate source recommendations or begin P3.
 See [current product progress](../product/progress.md).
 
+## Shared-domain packaging boundary — 19 October
+
+The API's local path dependency `cashlessiq-domain` now supplies source validators
+via `cashlessiq_domain`, without installing the legacy Snowpark/Streamlit app.
+A temporary allowlisted wheel bridge packages the existing canonical files
+unchanged except relative imports; rules and stored-procedure paths do not move.
+See [package instructions](../../packages/domain/README.md). Standalone sdists
+are not supported by this bridge; build wheels from the repository checkout.
+
+`uv run make product-domain-check` builds and validates an isolated wheel, including
+byte identity and schema parity. The API lockfile and Dockerfile include this
+boundary explicitly. 145 root and 101 API/PostgreSQL tests pass. No live source
+path is enabled; the versioned read contract and repository integration remain
+P2 work. This removes the packaging obstacle, not the isolation/identity gates.
+
 ## Offline member-history expectations — 19 October
 
 `cashlessiq.source_history` now validates and copies scoped policy/member

@@ -30,6 +30,8 @@ jobs:
         run: |
           uv sync --project apps/api --frozen
           npm ci
+      - name: Isolated domain wheel boundary
+        run: uv run python scripts/check_domain_package.py
       - name: Contract drift, types and build
         run: |
           make product-contracts

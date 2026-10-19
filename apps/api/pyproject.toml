@@ -8,6 +8,7 @@ version = "0.1.0"
 requires-python = ">=3.11,<3.12"
 dependencies = [
   "alembic>=1.16,<2",
+  "cashlessiq-domain==0.1.0",
   "fastapi>=0.115,<1",
   "psycopg[binary]>=3.2,<4",
   "pydantic-settings>=2.10,<3",
@@ -31,6 +32,9 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ciq_api"]
+
+[tool.uv.sources]
+cashlessiq-domain = { path = "../../packages/domain" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

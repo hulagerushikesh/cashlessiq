@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
-from cashlessiq.decision_schema import validate_decision
+from .decision_schema import validate_decision
 
 
 class SourceDecisionError(ValueError):

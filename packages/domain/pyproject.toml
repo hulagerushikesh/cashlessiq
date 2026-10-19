@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cashlessiq-domain"
+version = "0.1.0"
+description = "Pure source-observation and decision validation boundary"
+requires-python = ">=3.11,<3.12"
+dependencies = ["jsonschema>=4.25,<5"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cashlessiq_domain"]
+
+# Temporary packaging bridge: one canonical implementation, no copied core.
+# Build wheels from this repository checkout; standalone sdists are not supported.
+[tool.hatch.build.targets.wheel.force-include]
+"../../src/cashlessiq/decision_schema.py" = "cashlessiq_domain/decision_schema.py"
+"../../src/cashlessiq/source_decision.py" = "cashlessiq_domain/source_decision.py"
+"../../src/cashlessiq/source_history.py" = "cashlessiq_domain/source_history.py"
+"../../src/cashlessiq/source_recommendation.py" = "cashlessiq_domain/source_recommendation.py"
+
+[tool.uv]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "src/cashlessiq_domain/__init__.py" },
+  { file = "../../src/cashlessiq/decision_schema.py" },
+  { file = "../../src/cashlessiq/source_decision.py" },
+  { file = "../../src/cashlessiq/source_history.py" },
+  { file = "../../src/cashlessiq/source_recommendation.py" },
+]

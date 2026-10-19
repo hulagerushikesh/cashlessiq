@@ -5,6 +5,34 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Shared-domain packaging boundary — 19 October
+
+The API now declares a locked local dependency on `cashlessiq-domain`, whose
+only direct runtime dependency is jsonschema. An allowlisted wheel bridge builds
+the four canonical schema/source-observation modules under `cashlessiq_domain`;
+no source implementation is duplicated, no `sys.path` edits are used, and the
+rules/procedure/legacy application tree is not moved. The API uses the distinct
+namespace; do not exchange class instances across old/new namespaces. See the
+[package boundary](../../packages/domain/README.md) for build limits.
+
+The wheel check verifies canonical byte identity, the frozen decision schema,
+isolated imports and missing/invalid-state behavior without Snowflake, Streamlit,
+FastAPI or the legacy cashlessiq package installed. It is now a CI step. Explicit
+cache keys cover canonical source files outside the package directory. The API
+Dockerfile preserves the dependency layout and copies only those required files.
+
+Verification: 145 root tests, 101 full API/PostgreSQL tests, root/API lint and API
+format checks pass. The API image builds and runs its non-root import/OpenAPI/
+missing-state smoke with networking disabled. Product OpenAPI regenerates with
+no drift; frozen schema, snapshots and golden results are unchanged. PostgreSQL
+was started locally for isolated schemas and stopped afterward, volume retained.
+No source reads, grants, AI, deployment, reviewer writes or policy changes ran.
+Browser/UI and remote CI have not been rerun for this packaging increment.
+
+Next: versioned source-read contract and repository integration tests, preserving
+explicit missing recommendations and separate owner scopes. P2 exits remain
+open; no P3 work is started.
+
 ### Approved follow-up: explicit missing state
 
 Rushikesh approved “Approve explicit missing-recommendation state” on 19 October.

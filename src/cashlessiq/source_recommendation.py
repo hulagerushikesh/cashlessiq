@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from cashlessiq.source_decision import (
+from .source_decision import (
     DecisionObservation,
     SourceDecisionError,
     observe_saved_decision,

@@ -41,7 +41,7 @@ demo-video work is not part of this product plan.
    validate available saved decisions and every citation; explicitly preserve
    absent recommendations under the approved gate revision below. Record discrepancies, never hide
    them with fixture fallback, fresh AI output or changed golden expectations.
-3. [ ] Establish the explicit shared-domain package boundary for the API.
+3. [x] Establish the explicit shared-domain package boundary for the API.
 4. [ ] Implement and test the repository adapter, including source failure,
    missing data, separate tenant ownership and role-based clinical disclosure.
 5. [ ] Review source identity/effective privileges with CoCo. Operator table
@@ -66,15 +66,20 @@ Policy activation continues to require explicit human approval.
 
 ## Verification and delivery checkpoint
 
-- Root regression: **139 passed** after the missing-state increment (15 new tests);
-  root lint and git whitespace checks pass.
+- Root regression: **145 passed** after domain-packaging regressions; root/API
+  lint, API formatting and git whitespace checks pass.
 - Targeted metadata/inspection boundary suite: **39 passed** this checkpoint.
-- API suite: **98 passed** at the earlier inspection-query increment. This
-  checkpoint's full rerun produced 54 passes and 44 database-setup errors because
-  Docker was stopped; it is not a passing integration run. Docker was started,
-  but its active environment had no cached images/containers/volumes. A fresh
-  stack build began downloading images and was cancelled before any containers
-  started. No volume was deleted. Full API/PostgreSQL/UI verification is pending.
+- API/PostgreSQL suite: **101 passed** at the domain-packaging checkpoint, including
+  three installed-domain tests. This supersedes the earlier unavailable-Docker
+  test attempt. Local PostgreSQL was started for disposable test schemas, then
+  stopped with its data volume retained. No volume was deleted.
+- Isolated domain wheel: byte identity with all four canonical modules, frozen
+  schema and missing/invalid-state smoke pass without the legacy package,
+  Snowflake, Streamlit or FastAPI installed. API Docker build and non-root image
+  smoke pass with network disabled for the smoke. The normal image has no
+  Snowflake/Streamlit runtime dependency. API OpenAPI regenerated with no drift.
+- Browser/UI and remote CI were not rerun for this packaging-only increment;
+  no new HTTP source path or UI changes are enabled.
 - Remote CI: last verified passing `d3623da`; newer local commits are not covered
   by that run. Recheck the branch before reporting an ahead count or pushing.
 - Python source authentication now completed. All three independent history
@@ -99,7 +104,8 @@ source, isolation, clinical-disclosure or UI integration gates.
 - [x] Missing state has only validated context and the supplied estimate; no
   invented outcome/payable/calculation/query/referral. Invalid saved rows and
   ambiguous reads remain errors, never missing-state fallback.
-- [ ] Explicit shared-domain package boundary and versioned source-read API.
+- [x] Explicit shared-domain package boundary (`cashlessiq-domain`).
+- [ ] Versioned source-read API; existing v1 outcome remains required.
 - [ ] UI distinguishes no saved recommendation from QUERY/REFER, source error
   and zero payable; end-to-end coverage with separate source-alpha tenants.
 
