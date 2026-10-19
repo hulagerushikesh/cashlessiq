@@ -60,8 +60,8 @@ confirmed suspended after the cost inspection. M0 is complete; M1 is next.
 - No Snowflake queries, paid identity service, or cloud product deployment were
   needed for this verification. The existing public demo remains unchanged.
 
-Local engineering work does not close the phase. The remaining gates are a
-real research evidence from five target users and reconciliation of findings.
+Engineering verification does not close the phase. The remaining gate is real
+research evidence from five target users and reconciliation of findings.
 Use `docs/product/research/interview-template.md` to collect that evidence.
 
 P1 is not complete and no P2 work may begin. Research evidence is outstanding;
