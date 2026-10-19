@@ -51,6 +51,8 @@ demo-video work is not part of this product plan.
 5. [ ] Review source identity/effective privileges with CoCo. Operator table
    grants and disabled secondary roles are not production tenant RLS; inherited
    PUBLIC capabilities are unresolved. No account-wide revocations are approved.
+   [Self-contained review prompt](source-access-review.md) is ready to paste;
+   the live CoCo report and any remediation approval are still pending.
 6. [ ] Opt in separate local source identities and exercise authenticated API/UI
    parity. Keep the existing mixed offline demo and public site unchanged.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push

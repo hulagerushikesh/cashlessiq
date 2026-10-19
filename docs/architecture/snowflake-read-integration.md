@@ -15,8 +15,13 @@ recommendations, invalid/foreign citations, ambiguous source data, source
 failures, immediate membership revocation and role-based condition disclosure.
 The source queue is metadata-only, not an assessment-status queue. Detail returns
 validated totals and product-clause metadata, not calculation text, retrieved
-clause text or raw clinical/decision prose. No new live adapter check was run.
+clause text or raw clinical/decision prose. The subsequent live repository
+check passed all three scoped metadata/history comparisons: GOL001 SAVED and
+GOL024/GOL027 MISSING, with 35 clause references each. See the latest
+[P2 evidence](../product/phase-p2-checklist.md). This is not full UI parity.
 The existing operator grant/PUBLIC caveats and P2 exit gates still apply.
+The next [source-access review packet](../product/source-access-review.md)
+contains a self-contained read-only CoCo prompt; no grant change is approved.
 
 ## Latest inspection result — 19 October
 
@@ -243,7 +248,10 @@ SNOWFLAKE.CORTEX_USER, as well as SNOWFLAKE_LEARNING_ROLE and compute-pool usage
 Every account role inherits PUBLIC, so this is NOT an effectively AI-disabled
 or account-wide read-only identity. The operator also has direct grants on its
 personal workspace/schema. Do not claim that disabling secondary roles removes
-PUBLIC or all user grants. The gateway itself executes only fixed session/SELECT
+PUBLIC or revoke user grants. Under current documented UBAC behaviour, direct
+user privileges are considered with secondary roles ALL; review actual account
+settings rather than assuming those privileges are active with NONE. The gateway
+itself executes only fixed session/SELECT
 statements and no AI calls; it is still an operator-only synthetic spike.
 No PUBLIC/user grants were revoked or changed. Production service identity and
 account-wide privilege hardening require a separately reviewed plan with CoCo
