@@ -92,13 +92,21 @@ demo-video work is not part of this product plan.
 
 ## Remaining P2 blockers (not website deployment)
 
-- [ ] CoCo administrative MFA enforcement/PUBLIC dependency report; see the
-  [read-only prompt](source-hardening-followup.md).
+- [x] Receive CoCo administrative follow-up report (28 metadata statements,
+  owner-supplied; not independently rerun). Review found policy/count
+  inconsistencies and unsafe proposed auth restrictions; receipt is not acceptance.
+- [ ] Resolve effective MFA/PUBLIC dependency and live-definition gaps identified
+  in the [corrected review-only proposal](p2-isolation-proposal.md).
 - [ ] Review/approve the narrow service-authentication and database tenant/
   clinical-isolation implementation before provisioning anything.
 - [ ] Approve a governed financial-trace/clinical projection and verify the
   calculation/citation display; the current v2 contract deliberately omits prose.
 - [ ] Bounded live API/UI parity after those security gates, then review P2 exit.
+
+The owner approved preparing the corrected isolation/authentication proposal
+locally, not applying it. It separates tenant projections, clinical validation,
+service authentication and human login changes, with staged approval packets and
+negative tests. No new SQL, credentials, source activation or account changes.
 
 The website must remain unchanged per Rushikesh's latest instruction. Completing
 offline tests does not waive these gates or authorise P3, public deployment,

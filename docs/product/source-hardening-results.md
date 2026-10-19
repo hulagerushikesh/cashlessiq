@@ -2,6 +2,18 @@
 
 Date: 19 October 2026. Status: partial live review; no remediation performed.
 
+## Subsequent CoCo report received — review, not implementation
+
+The owner supplied a 28-statement follow-up report. Its observations have not
+been independently rerun here. It reports no authentication/session/row policies,
+but contains user-policy visibility and role-count inconsistencies. Do not treat
+its proposed account authentication SQL, PUBLIC safety labels, categorical MFA
+coverage or claimed RAP limitation as approved findings/instructions.
+See the [corrected review-only implementation proposal](p2-isolation-proposal.md)
+for disposition, official references, unresolved validation boundary and staged
+approvals. No policies, identities, views, credentials or grants were changed.
+The historical partial-review evidence below remains attributed as recorded.
+
 ## Latest checkpoint — owner passkey enrolled
 
 Rushikesh reports enrolling a passkey. A subsequent independent local reader

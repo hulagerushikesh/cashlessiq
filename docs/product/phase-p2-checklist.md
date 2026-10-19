@@ -5,6 +5,23 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Corrected isolation implementation proposal — 19 October
+
+Received the owner's full CoCo follow-up (28 metadata statements reported, no
+mutations). Reconciled it with repository contracts and official authentication/
+row-access documentation. Proposed auth allowlists/client spelling, categorical
+MFA claims, unsupported RAP limitation, PUBLIC safety claims and role counts
+cannot be accepted as supplied. No report SQL was executed.
+
+The owner approved preparation of a [review-only implementation proposal](p2-isolation-proposal.md).
+It defines two tenant/disclosure classes, explicit ownership/column boundaries,
+a still-unimplemented trusted canonical-validation boundary, separate human
+authentication recovery planning and ordered approval/negative-test packets.
+The proposal does not approve provisioning, new credentials, source activation,
+PUBLIC revocation, account login changes or website deployment. P2 remains open.
+Documentation-only change: no code/contract behaviour changed; no Snowflake/AI
+calls, functional isolation tests or regression-suite rerun are claimed.
+
 ### Offline authenticated source API-to-UI integration — 19 October
 
 The new `/source-cases` queue/detail routes consume the validated v2 client and
