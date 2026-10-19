@@ -10,6 +10,7 @@ from types import MappingProxyType
 from uuid import UUID
 
 from ciq_api.seed import TENANT_ID
+from ciq_api.source_alpha import SOURCE_TENANTS
 
 VERIFIED_ALPHA_OWNERSHIP = MappingProxyType({"TPA001": ("GOL001",), "TPA003": ("GOL024", "GOL027")})
 
@@ -49,3 +50,12 @@ class SyntheticSourceScopes:
 
     def get(self, tenant_id: UUID) -> SourceScope | None:
         return self._scopes.get(tenant_id)
+
+
+def source_alpha_scopes() -> SyntheticSourceScopes:
+    """Explicit fixture mapping; not proof that these tenants have been seeded.
+
+    HTTP still does not use this registry. Future integration must independently
+    resolve active application membership before selecting a source scope.
+    """
+    return SyntheticSourceScopes({source.tenant_id: source.tpa_id for source in SOURCE_TENANTS})

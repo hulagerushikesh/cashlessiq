@@ -2,6 +2,27 @@
 
 Status: bounded live source reads verified; not enabled in the API. 19 October 2026.
 
+## Current increment — separate application identity fixtures
+
+The optional local seed now defines distinct application tenant UUIDs ending
+`0101` (TPA001) and `0103` (TPA003), each with three separate synthetic role
+users and exactly one membership per user. `source_alpha_scopes()` provides an
+explicit immutable mapping for these fixtures, not a default HTTP connection.
+Normal startup, old demo identities, fixture ownership, and contracts are
+unchanged. The seed is opt-in, local-identity-only, transactional and idempotent;
+it does not restore revoked access or override database-owned roles.
+
+Only isolated PostgreSQL test schemas were provisioned during this increment;
+the persistent local stack was not seeded with these extra identities. See
+[local opt-in instructions](local-development.md#optional-p2-source-identity-fixtures).
+Tests verify all six identities, cross-TPA/demo rejection, no snapshot fallback,
+revocation, collision rollback, and absence of automatic bootstrap access.
+No Snowflake grants, queries, services, or policy rules were changed.
+
+Remaining P2 work: member/decision/evidence parity and a reviewed service
+identity/read adapter before source-case UI/login is enabled. Application
+mapping is not Snowflake RLS and does not resolve PUBLIC privileges.
+
 ## Current increment — source ownership guards
 
 `SyntheticSourceScopes` now validates an immutable, explicit operator binding
@@ -24,9 +45,9 @@ with Ruff clean. This increment made no Snowflake calls or grant changes and
 consumed no Snowflake compute/AI credits. Earlier live reads below preceded
 these new guards; no live re-verification of this version is claimed.
 
-Next within P2: define separate synthetic application tenant/membership mappings
-before any HTTP integration, then verify member, decision and evidence reads
-with reviewed minimum grants. Keep the PUBLIC-privilege caveat below open; the
+Next within P2: verify member, decision and evidence reads with reviewed minimum
+grants before HTTP integration. The later identity-fixture increment above
+defines separate synthetic application mappings. Keep the PUBLIC-privilege caveat open; the
 operator credential is not a production service identity. Do not return frozen
 offline financial traces as if they were a live source decision.
 

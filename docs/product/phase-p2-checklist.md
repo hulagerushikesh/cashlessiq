@@ -92,3 +92,23 @@ remain outstanding. The two integration exit boxes remain unchecked.
 Full M2/P2 is not complete until the integration criteria are met. The first
 slice must work without Snowflake calls or AI spend. Do not start M3/P3 reviewer
 commands as part of this work.
+
+## Separate source-identity preparation — 19 October
+
+- [x] Fixed, disjoint synthetic tenant mappings for TPA001 and TPA003.
+- [x] Optional local-only seed with three distinct role users per source tenant.
+- [x] Real PostgreSQL tests for identity/membership isolation, immediate revocation,
+  idempotency, preserved database roles, and collision rollback.
+- [x] Default demo startup and existing contracts remain unchanged; no snapshot
+  fallback or automatic source-profile bootstrap login.
+
+The new tenants were created only in isolated test schemas. Opt-in setup for
+the persistent local stack is documented, not executed. No Snowflake calls or
+credits were needed. These identity fixtures do not complete the two integration
+exit criteria above, grant customer access, or permit P3 reviewer writes.
+
+Verification: 62 root and 71 API/PostgreSQL tests passed (133 total). API Ruff
+check/format and `uv run make lint` passed, as did git whitespace checks.
+Plain `make lint` selected a system Python without Ruff; running it through
+the project's uv environment resolves that tooling issue. No web contracts or
+UI changed; browser/build checks were not rerun for this identity-only increment.

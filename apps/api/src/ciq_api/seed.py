@@ -6,6 +6,7 @@ from ciq_api.auth import LOCAL_ISSUER
 from ciq_api.config import Settings
 from ciq_api.database import make_engine, session_for
 from ciq_api.models import AppUser, Membership, Tenant
+from ciq_api.source_alpha import SOURCE_TENANTS
 
 TENANT_ID = UUID("00000000-0000-4000-8000-000000000001")
 PROFILES = {
@@ -15,7 +16,7 @@ PROFILES = {
 }
 
 
-def seed(settings: Settings) -> None:
+def seed(settings: Settings, *, include_source_tenants: bool = False) -> None:
     if settings.environment not in {"local", "test"} or settings.auth_mode != "local":
         raise RuntimeError("Synthetic seed requires local/test identity mode")
     engine = make_engine(settings)
@@ -38,9 +39,44 @@ def seed(settings: Settings) -> None:
                     session.flush()
                 if session.get(Membership, (TENANT_ID, user_uuid)) is None:
                     session.add(Membership(tenant_id=TENANT_ID, user_id=user_uuid, role=profile))
+            if include_source_tenants:
+                for source in SOURCE_TENANTS:
+                    tenant = session.get(Tenant, source.tenant_id)
+                    if tenant is None:
+                        session.add(Tenant(id=source.tenant_id, name=source.name))
+                        session.flush()
+                    elif tenant.name != source.name:
+                        raise RuntimeError("Source alpha tenant identity conflict")
+                    for profile in source.profiles:
+                        user = session.get(AppUser, profile.user_id)
+                        if user is None:
+                            session.add(
+                                AppUser(
+                                    id=profile.user_id,
+                                    issuer=LOCAL_ISSUER,
+                                    subject=profile.subject,
+                                    display_name=profile.display_name,
+                                )
+                            )
+                            session.flush()
+                        elif (user.issuer, user.subject) != (LOCAL_ISSUER, profile.subject):
+                            raise RuntimeError("Source alpha user identity conflict")
+                        if session.get(Membership, (source.tenant_id, profile.user_id)) is None:
+                            session.add(
+                                Membership(
+                                    tenant_id=source.tenant_id,
+                                    user_id=profile.user_id,
+                                    role=profile.role,
+                                )
+                            )
     finally:
         engine.dispose()
 
 
 if __name__ == "__main__":
-    seed(Settings())
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--include-source-tenants", action="store_true")
+    args = parser.parse_args()
+    seed(Settings(), include_source_tenants=args.include_source_tenants)

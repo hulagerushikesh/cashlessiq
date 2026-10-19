@@ -20,6 +20,14 @@ tenant and do not provision application tenants or memberships. See the
 [integration status](../architecture/snowflake-read-integration.md); production
 service identity and effective PUBLIC privileges remain unresolved.
 
+P2 identity preparation adds opt-in, local-only tenant/user/membership fixtures
+for TPA001 and TPA003, separate from the mixed demo tenant. The fixture manifest
+is server-owned configuration, not a new authoritative customer registry or
+browser entitlement. Default startup does not seed these identities, and their
+source-case login/HTTP reads remain disabled. The mapping is tested through real
+PostgreSQL membership resolution in isolated schemas; no persistent local or
+Snowflake provisioning was performed in this increment.
+
 | Fields | Classification | Authoritative owner | P1 storage / access |
 | --- | --- | --- | --- |
 | Tenant UUID, name, active status | Internal | Application tenant registry | PostgreSQL; validated membership |

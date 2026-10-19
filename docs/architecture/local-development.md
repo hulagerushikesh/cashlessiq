@@ -132,3 +132,41 @@ slice implements only `SyntheticCaseRepository`. Reads are disabled outside
 local/test environments. Evidence links reference the existing policy source
 register; clause retrieval, real member history, and live SLA are not present.
 Real-data access and rollout require separate research/privacy/security gates.
+
+## Optional P2 source-identity fixtures
+
+Normal startup still creates only the original mixed offline demo tenant and
+three users. `ciq_api.source_alpha` defines two **separate synthetic** application
+tenants for future source integration:
+
+| Tenant UUID | Inspected source owner | Allowlisted synthetic requests |
+| --- | --- | --- |
+| `00000000-0000-4000-8000-000000000101` | TPA001 | GOL001 |
+| `00000000-0000-4000-8000-000000000103` | TPA003 | GOL024, GOL027 |
+
+Each has its own processor, medical-officer, and auditor user, with subjects
+`source-alpha:<TPA_ID>:<role>`. No user is shared across these tenants or added
+to the old demo tenant. IDs and labels are fixed development fixtures, not real
+customer provisioning or verified customer entitlements.
+
+When these identities are needed locally, rebuild the local API image with
+`make product-up`, then opt in explicitly:
+
+```sh
+docker compose --env-file .env.product.local -f compose.product.yml exec api \
+  .venv/bin/python -m ciq_api.seed --include-source-tenants
+```
+
+Expected: exit zero without printing secrets. Repeating the seed does not
+duplicate rows, reactivate revoked users/tenants/memberships, or restore a
+changed membership role. Identity collisions fail and roll back the transaction.
+The seed refuses staging/production and non-local authentication modes. It
+does not connect to Snowflake. Do not run it with customer credentials/data.
+
+This is identity preparation only. The existing browser/local bootstrap still
+supports only the original three demo profiles; source-profile login is not
+enabled. PostgreSQL integration tests issue test-only signed tokens to verify
+source membership, cross-tenant rejection and immediate revocation. A source
+identity receives an empty queue/404 from the current offline repository,
+never another tenant's snapshots. Merely importing the fixture mapping does
+not grant membership. No Snowflake adapter is wired into HTTP yet.
