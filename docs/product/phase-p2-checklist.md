@@ -5,6 +5,17 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Passkey enrollment verified — 19 October
+
+After Rushikesh enrolled a passkey, a local reader OAuth connection executed
+three bounded metadata/session statements. SHOW MFA METHODS reports one PASSKEY;
+DESCRIBE USER reports HAS_MFA true, reader default and empty secondary defaults.
+No factor identifiers/secrets were logged. Connection closed; no source reads,
+AI, writes or app startup. Enrollment passes. Second interactive passkey login
+and effective authentication-policy enforcement are not established by OAuth.
+Administrative enforcement/PUBLIC dependency review remains the next security
+gate; no service provisioning or source HTTP/UI activation is authorised.
+
 ### Local hardening follow-up — 19 October
 
 Two reader/NONE OAuth connections executed nine bounded metadata/session

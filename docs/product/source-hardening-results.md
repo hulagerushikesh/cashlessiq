@@ -2,6 +2,22 @@
 
 Date: 19 October 2026. Status: partial live review; no remediation performed.
 
+## Latest checkpoint — owner passkey enrolled
+
+Rushikesh reports enrolling a passkey. A subsequent independent local reader
+OAuth connection executed three bounded metadata/session statements: USE
+SECONDARY ROLES NONE, SHOW MFA METHODS and DESCRIBE USER RUSHIKESH2001.
+Snowflake returned one method of type PASSKEY and HAS_MFA true. Stored defaults
+remain CIQ_PRODUCT_READER and [] secondary roles. Only method count/type and
+allowlisted user properties were printed; no factor identifiers or secrets.
+The connection closed without source reads, AI, writes or app startup.
+
+Enrollment is verified; the zero-method observation below is historical.
+Effective authentication-policy enforcement and a second interactive login
+with the passkey remain unverified. The existing OAuth connection does not
+prove that the passkey was required or used. No authentication policy or grant
+was changed by this verification.
+
 ## Independently observed metadata
 
 Two explicit local OAuth connections used CIQ_PRODUCT_READER. Each disabled
@@ -108,8 +124,8 @@ environment without purchasing/provisioning it or exceeding the credit reserve.
 
 ## Exact next boundary
 
-Owner action: inspect/enrol MFA interactively, preserving the working admin
-session and recovery material. Verify a second login; never send factors/codes.
+Owner enrollment is now verified above. Preserve the working admin session
+and recovery material. Verify a second login; never send factors/codes.
 No enforcement change or role revocation is implied.
 
 CoCo administrative follow-up is still needed for effective user/account

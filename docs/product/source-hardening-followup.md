@@ -34,7 +34,9 @@ Return three sections:
 
 1. HUMAN MFA: use SHOW MFA METHODS FOR USER RUSHIKESH2001 and supported metadata
 inspection to distinguish enrolled methods from effective user/account
-authentication-policy enforcement. Report method types/counts only, no method
+authentication-policy enforcement. Owner passkey enrollment was independently
+verified: one PASSKEY method, HAS_MFA true. Do not ask the owner to reenroll.
+Report method types/counts only, no method
 identifiers, comments, factors, codes, keys or tokens. Inspect only relevant
 policy metadata where visible without compute. Mark upstream IdP enforcement,
 client/OAuth scope and any unavailable evidence unknown. Do not infer enforcement
@@ -94,7 +96,8 @@ Enrollment is not proof of enforcement across all authentication methods.
 ## Completion checklist
 
 - [x] Follow-up scope prepared; no further mutations authorised.
-- [x] Local MFA enrollment checked: zero methods. Enforcement remains unknown.
+- [x] Owner passkey enrollment independently verified: one PASSKEY method,
+  HAS_MFA true; supersedes the initial zero-method check. Enforcement remains unknown.
 - [x] Visible PUBLIC inventory and preliminary impact matrix recorded; no revocations.
 - [ ] Administrative policy enforcement and live dependency gaps resolved.
 - [ ] Tenant-isolation candidate and negative-test plan reviewed.

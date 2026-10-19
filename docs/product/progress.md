@@ -64,6 +64,10 @@ demo-video work is not part of this product plan.
    methods and 109 visible PUBLIC grants; CIQ_WH remained suspended at inspection.
    [Results/design proposal](source-hardening-results.md) records enforcement and
    dependency visibility gaps. No new service/views or PUBLIC changes applied.
+   Subsequent owner passkey enrollment is independently verified: one PASSKEY,
+   HAS_MFA true; stored defaults unchanged. This supersedes the zero-method
+   observation. Effective policy enforcement and second interactive login remain
+   unverified; administrative dependency review is still pending.
 6. [ ] Opt in separate local source identities and exercise authenticated API/UI
    parity. Keep the existing mixed offline demo and public site unchanged.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push
