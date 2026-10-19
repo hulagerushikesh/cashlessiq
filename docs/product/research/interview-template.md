@@ -3,6 +3,9 @@
 Status: No interviews recorded yet
 Last updated: 19 October 2026
 
+Use the [validation kit](validation-kit.md) for the invitation draft,
+20-minute session, frozen synthetic scenarios, and synthesis criteria.
+
 Use synthetic cases or anonymised workflow descriptions. Do not collect patient
 records, credentials, or employer-confidential screenshots. Rushikesh conducts
 or supplies the interviews; no outreach has been sent by the application agent.

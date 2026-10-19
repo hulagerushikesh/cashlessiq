@@ -80,8 +80,12 @@ and rejects unsupported executable rule types.
 
 ## Project status
 
-Phases 0–4 are tagged and complete. Phase 5 evaluation meets the required
-accuracy target; final judge-login testing and submission packaging remain.
+The hackathon submission is complete. Active work is product development;
+video, deck, and submission packaging are no longer active milestones.
+Product P0 is approved, and P1 engineering CI passes. P1 remains open for
+target-user workflow validation before the read-only P2 case slice begins.
+The Snowflake/Streamlit setup above describes the retained prototype; the new
+product workspace runs independently as described below.
 
 ## Product direction
 

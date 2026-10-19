@@ -63,6 +63,8 @@ confirmed suspended after the cost inspection. M0 is complete; M1 is next.
 Engineering verification does not close the phase. The remaining gate is real
 research evidence from five target users and reconciliation of findings.
 Use `docs/product/research/interview-template.md` to collect that evidence.
+The [validation kit](research/validation-kit.md) supplies the session guide and
+three frozen synthetic scenarios. This is preparation, not completed research.
 
 P1 is not complete and no P2 work may begin. Research evidence is outstanding;
 architecture defaults must not be presented as completed user interviews.
