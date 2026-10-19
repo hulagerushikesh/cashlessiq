@@ -18,7 +18,8 @@ export default async function SourcePreview({
   if (session.state === "anonymous") redirect("/login");
   if (session.state !== "ready") return <CaseServiceError />;
   const state = (await searchParams).state ?? "missing";
-  if (!["saved", "missing", "query", "refer", "unavailable"].includes(state)) notFound();
+  if (!["saved", "missing", "query", "refer", "evidence", "unavailable"].includes(state))
+    notFound();
   const record: SourceCaseDetail = {
     schema_version: 2,
     data_mode: "synthetic_source",
@@ -57,7 +58,29 @@ export default async function SourcePreview({
               state === "query" || state === "refer" ? "supplied_estimate" : "saved_calculation",
           },
     evidence_kind: "product_clause_register",
-    evidence: [],
+    evidence:
+      state === "evidence"
+        ? [
+            {
+              clause_id: "UI-CLAUSE-001",
+              title: "Fictional co-pay reference",
+              page: 7,
+              source_url: "https://example.org/ui-policy.pdf#old-fragment",
+            },
+            {
+              clause_id: "UI-CLAUSE-002",
+              title: "Fictional waiting period reference",
+              page: 12,
+              source_url: "https://example.org/ui-policy.pdf",
+            },
+            {
+              clause_id: "UI-CLAUSE-003",
+              title: "Fictional room category reference",
+              page: 4,
+              source_url: "https://example.org/ui-policy.pdf",
+            },
+          ]
+        : [],
   };
   return (
     <CaseWorkspace identity={session.identity}>
@@ -68,8 +91,14 @@ export default async function SourcePreview({
           GOL001, GOL024 or GOL027. All roles see the same nonclinical fixtures; this is not a
           tenant-isolation or medical-access test.
         </p>
+        {state === "evidence" && (
+          <p className="mt-2 text-sm font-medium">
+            Example.org PDF links are placeholders, not real policy documents. No policy text has
+            been retrieved or verified.
+          </p>
+        )}
         <nav aria-label="Fixture states" className="mt-4 flex flex-wrap gap-4 text-sm">
-          {["saved", "missing", "query", "refer", "unavailable"].map((value) => (
+          {["saved", "missing", "query", "refer", "evidence", "unavailable"].map((value) => (
             <Link
               key={value}
               href={`/source-preview?state=${value}`}

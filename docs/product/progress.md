@@ -74,6 +74,8 @@ demo-video work is not part of this product plan.
    fictional v2 fixtures for SAVED/MISSING, saved QUERY/REFER and source failure.
    It does not call `/v2/cases` or Snowflake, seed source tenants, or establish
    source parity. No source access has been activated. See the latest P2 checkpoint.
+   The Evidence fixture now exercises searchable clause-reference metadata and
+   page links; it does not retrieve PDF content or establish narrative grounding.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push
    authority, then verify remote CI. Review P2 exit evidence before starting P3.
 
@@ -91,9 +93,12 @@ Policy activation continues to require explicit human approval.
 
 ## Verification and delivery checkpoint
 
-- Latest presentation increment: **19 browser tests pass**, web typecheck/lint
+- Latest presentation increment: **22 browser tests pass**, web typecheck/lint
   and production build pass. Local-only fixture route returns 404 in production
-  mode. This tests presentation, not real source API/UI or service isolation.
+  mode in the prior checkpoint; its environment/auth guards are unchanged.
+  Clause filter/title/ID matching, reset, page-link attributes and mobile layout
+  are now covered. Desktop screenshot visually inspected. This tests presentation,
+  not real source API/UI or service isolation.
   Python/API suites were not rerun for this frontend-only increment.
 
 - Root regression: **145 passed** after domain-packaging regressions; root/API

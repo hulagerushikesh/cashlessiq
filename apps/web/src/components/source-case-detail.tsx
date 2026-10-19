@@ -1,6 +1,7 @@
-import { ExternalLink, FileText, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import type { SourceCaseDetail } from "@cashlessiq/api-client";
 import { OutcomeBadge, rupees } from "@/components/case-workspace";
+import { SourceClauseRegister } from "@/components/source-clause-register";
 
 export function SourceUnavailable() {
   return (
@@ -122,39 +123,7 @@ export function SourceCaseView({ record }: { record: SourceCaseDetail }) {
           <p className="mt-3 text-sm text-slate-500">No recorded member conditions.</p>
         )}
       </section>
-      <section className="rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <FileText size={19} /> Product clause register
-        </h2>
-        <p className="mt-3 text-sm text-slate-600">{record.case.product_name}</p>
-        <p className="mt-2 text-xs leading-5 text-slate-500">
-          Reference metadata, not retrieved quotations or proof that every clause supports this
-          recommendation. Verify page references against the policy PDF.
-        </p>
-        {record.evidence.length === 0 && (
-          <p className="mt-4 text-sm text-slate-500">No clause references returned.</p>
-        )}
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          {record.evidence.map((clause) => (
-            <article
-              key={clause.clause_id}
-              className="min-w-0 rounded-lg border border-slate-200 p-4"
-            >
-              <h3 className="break-words text-sm font-medium">
-                {clause.clause_id} · {clause.title}
-              </h3>
-              <a
-                href={`${clause.source_url.split("#")[0]}#page=${clause.page}`}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-2 text-xs text-teal-800 underline"
-              >
-                Source PDF · page {clause.page} <ExternalLink size={12} />
-              </a>
-            </article>
-          ))}
-        </div>
-      </section>
+      <SourceClauseRegister productName={record.case.product_name} clauses={record.evidence} />
     </div>
   );
 }

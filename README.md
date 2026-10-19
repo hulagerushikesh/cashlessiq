@@ -119,6 +119,9 @@ of three golden scenarios, calculation traces, and policy source references.
 See the [P2 checklist](docs/product/phase-p2-checklist.md) for scope and limits.
 The local **UI preview** navigation opens `/source-preview`: authenticated,
 fictional fixtures for saved, missing, query, referral and unavailable states.
+Choose **Evidence** to try the clause-register ID/title filter, result count,
+clear-filter state and page links. These fictional Example.org PDF links are
+placeholders, not real policy documents or validated supporting evidence.
 It exercises v2 presentation only, not source/API parity or tenant isolation;
 it never calls Snowflake and returns 404 outside local/local-auth mode.
 The stack runs Next.js, FastAPI, PostgreSQL, and Redis locally. It does not call

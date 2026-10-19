@@ -5,6 +5,27 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Searchable clause register — 19 October
+
+The v2 presentation now has an ID/title text filter, visible reference counts,
+clear control and a distinct zero-match message that makes no coverage inference.
+PDF links preserve each recorded page and announce new-tab navigation. The
+register remains explicitly metadata, not retrieved quotations, evidence ranking
+or proof of narrative grounding. No money or eligibility calculation was added.
+
+The authenticated local preview's Evidence state supplies three fictional UI-*
+references; its Example.org PDF links are labelled placeholders, not real policy
+documents. No GOL fixture/source fact was changed. All 22 browser tests pass,
+including three new filter/link/mobile tests; typecheck, lint, production build
+and whitespace checks pass. Desktop screenshot visually inspected. Browser tests
+inspect placeholder link attributes without requesting those documents.
+
+The local web container was rebuilt and is healthy. Public hosting is unchanged.
+No Snowflake reads/spend, AI, grants, source identities or live adapter activation.
+Python/API suites were not rerun for this frontend-only change. P2 source UI/API
+parity, full trace, effective-privilege and service-isolation gates remain open;
+P3 has not started. Remote CI is not verified for this increment.
+
 ### V2 presentation groundwork — 19 October
 
 Added a typed SourceCaseView consuming the generated v2 contract, without any

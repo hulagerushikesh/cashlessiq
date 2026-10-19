@@ -59,6 +59,48 @@ test.describe("authenticated local fixture presentation", () => {
     await expect(page.getByText("₹95,000", { exact: true })).toHaveCount(0);
   });
 
+  test("clause register filters by title and ID without changing the recommendation", async ({ page }) => {
+    await page.getByRole("link", { name: "Evidence", exact: true }).click();
+    const register = page.getByRole("region", { name: "Product clause register" });
+    const search = register.getByRole("searchbox", { name: "Find a clause by ID or title" });
+    await expect(register.getByRole("status")).toHaveText("Showing 3 of 3 clause references");
+    await expect(page.getByText("Example.org PDF links are placeholders", { exact: false })).toBeVisible();
+    await search.fill("  CO-PAY  ");
+    await expect(register.getByRole("status")).toHaveText("Showing 1 of 3 clause references");
+    await expect(register.getByRole("heading", { name: /UI-CLAUSE-001/ })).toBeVisible();
+    await search.fill("UI-CLAUSE-002");
+    await expect(register.getByRole("heading", { name: /waiting period/ })).toBeVisible();
+    await expect(register.getByRole("heading", { name: /co-pay/ })).toHaveCount(0);
+    await expect(page.getByText("₹95,000", { exact: true })).toBeVisible();
+    await expect(register.getByText("not relevance ranking.", { exact: false })).toBeVisible();
+  });
+
+  test("no filter matches is not absent policy evidence and can be reset", async ({ page }) => {
+    await page.getByRole("link", { name: "Evidence", exact: true }).click();
+    const register = page.getByRole("region", { name: "Product clause register" });
+    await register.getByRole("searchbox").fill("<script>not-a-clause</script>");
+    await expect(register.getByRole("status")).toHaveText("Showing 0 of 3 clause references");
+    await expect(register.getByText("this does not mean a policy clause is absent", { exact: false })).toBeVisible();
+    await expect(register.getByRole("link")).toHaveCount(0);
+    await register.getByRole("button", { name: "Clear filter" }).click();
+    await expect(register.getByRole("searchbox")).toHaveValue("");
+    await expect(register.getByRole("link")).toHaveCount(3);
+    await expect(register.getByRole("button", { name: "Clear filter" })).toHaveCount(0);
+  });
+
+  test("PDF links retain page provenance and the register fits mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("link", { name: "Evidence", exact: true }).click();
+    const register = page.getByRole("region", { name: "Product clause register" });
+    const link = register.getByRole("link", { name: "UI-CLAUSE-001: source PDF, page 7 (opens in new tab)", exact: true });
+    await expect(link).toHaveAttribute("href", "https://example.org/ui-policy.pdf#page=7");
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noreferrer");
+    await register.getByRole("searchbox").fill("nothing");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    // Inspect link attributes only; never navigate to placeholder documents.
+  });
+
   test("mobile preview fits and unknown fixture is rejected", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
