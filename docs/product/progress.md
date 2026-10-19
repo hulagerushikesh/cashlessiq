@@ -259,8 +259,12 @@ Incremental dollars and current trial balance were not measured.
 
 ## Spend guardrails
 
-Planning baseline: $205 credit balance reported by Rushikesh, **not a fresh
-billing measurement**; retain $50 reserve. Necessary bounded reads are approved.
+Latest planning baseline: **$203 remaining and four days until expiry**, reported
+by Rushikesh, not independently verified. Concentrate useful Snowflake work into
+the next two days using the [revised sprint budget](snowflake-budget.md): maximum
+$153 ordinary work plus $50 reserve. This supersedes earlier $205/18-day estimates.
+Necessary bounded reads are approved; service/credential/grant packages and live
+activation retain their separate exact approval gates.
 Do not upgrade or incur out-of-pocket charges. Do not start agents, extraction,
 search or Streamlit just to use expiring credits. Confirm exact expiry and
 balance before larger batches; historical billing lags.

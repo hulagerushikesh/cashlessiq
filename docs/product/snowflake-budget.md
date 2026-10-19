@@ -4,27 +4,63 @@ Last updated: 19 October 2026
 
 ## Spending envelope
 
-Rushikesh reconfirmed $205 remaining and 18 days of account availability on
-19 October, and authorised necessary Snowflake usage for product work. This is
-the planning baseline, not a balance independently verified from billing SQL.
+Latest owner update: **$203 remaining, four days until expiry**, with useful
+Snowflake work to be concentrated into the **next two days**. This supersedes
+the earlier $205/18-day estimate and the calendar schedule below. The exact
+expiry timestamp and balance have not been independently verified. Use relative
+Day 1/Day 2 rather than infer a new expiry date from the older document date.
+Necessary product-related Snowflake spend is authorised; exact service-user,
+credential, grant and live-activation packages still need separate approval.
 Do not upgrade the account or incur out-of-pocket charges.
-The planning expiry is approximately 6 November 2026; the exact account expiry
-and timezone must be confirmed from the account before relying on that date.
 Aim to retain useful evidence before expiry, not to consume the entire balance.
 
 | Use | Maximum USD |
 | --- | ---: |
-| Checks and existing service overhead | 20 |
-| Backend integration tests | 35 |
-| Agent and extraction evaluations | 65 |
-| Product validation and reproducibility exports | 35 |
+| Day 1: inventory, reviewed isolation verification and bounded source tests | 60 |
+| Day 2: authenticated local parity and negative/regression tests | 55 |
+| Synthetic evidence/recovery exports and restore checks | 25 |
+| Retry allowance after failure review | 13 |
 | Reserve | 50 |
-| Total | 205 |
+| Total | 203 |
 
 These are ceilings rather than forecasts or configured Snowflake budgets.
 Pause bulk AI work when measured daily usage exceeds $10. Stop ordinary work
 at $50 remaining and report before allocating the reserve. Because billing
 views lag, restrict test batch size independently of historical spending.
+
+## Priority two-day sprint — latest owner instruction
+
+**Day 1:** confirm trial expiry/balance and resource state; finish offline
+delegation/peer/replay prerequisites locally without Snowflake spend. Prepare
+the exact tenant-view, six runtime-principal, key-custody and rollback package
+for CoCo review. Obtain that package's separate approval before provisioning.
+Only after approval, run bounded ownership/base-table/foreign-tenant denial and
+coherent-input tests against the three existing synthetic cases. Start with one
+case and expand only after it passes. Record query IDs, statement counts, elapsed
+time, results and cost visibility limitations. No account-wide PUBLIC/auth changes.
+
+**Day 2:** if Day 1 security gates pass, exercise local authenticated API/UI
+parity for both tenants and all three roles; verify revocation/downgrade, masked
+or forbidden fields, unavailable input and true MISSING states. Preserve GOL001
+SAVED and GOL024/GOL027 MISSING without backfill or agent calls. Export a bounded
+synthetic recovery bundle: reviewed definitions, redacted grants/config inventory,
+permitted fixtures, canonical expected summaries, query/test evidence and restore
+instructions. Exclude credentials, tokens and unnecessary clinical payloads.
+Test replay/restore locally with Snowflake disabled, then verify project resources
+are suspended. No website deployment or P3.
+
+If isolation/credential approval or offline prerequisites remain incomplete,
+switch to already-authorised operator-only bounded inspection and recovery
+exports; label them supervised evidence, not isolated API/UI acceptance. Do not
+activate the existing raw API adapter as a shortcut or buy compute to bypass a
+security gate. The sprint can finish with P2 still open and credits unspent.
+
+The $153 usable envelope is a ceiling, not a spending target or a billing-enforced
+hard stop. Each functional test batch still needs a statement/time/credit cap;
+USD forecasts must use observed account pricing, never a guessed universal rate.
+No AI/extraction/search/Streamlit budget is allocated in this sprint. Keep the
+$50 reserve unless the owner separately reallocates it. Remaining trial days
+provide contingency, not an instruction to schedule unattended work.
 
 ## Live baseline checked on 18 October
 
@@ -78,6 +114,8 @@ PUBLIC Cortex privileges; no account-wide revocations were attempted. Both pools
 and search remained suspended. CIQ_WH was again suspended and confirmed with
 zero running/queued queries and zero clusters after the probes. Exact incremental
 cost remains subject to billing lag; no new dollar balance is inferred.
+
+The following is the superseded original schedule, retained for history only:
 
 1. 19–22 October: finish remote CI for the local alpha, inspect spend/state, and
    implement bounded P2 Snowflake reads behind the repository interface. Reuse
