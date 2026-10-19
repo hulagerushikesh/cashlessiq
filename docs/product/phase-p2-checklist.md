@@ -5,6 +5,22 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Approved operator defaults and worksheet context — 19 October
+
+CoCo reports DEFAULT_ROLE changed from ACCOUNTADMIN to CIQ_PRODUCT_READER and
+DEFAULT_SECONDARY_ROLES from ALL to empty for RUSHIKESH2001, with all existing
+grants unchanged. Rushikesh's first supplied worksheet still used ACCOUNTADMIN;
+the later screenshot after both USE commands shows the reader and empty
+secondary roles. Explicit worksheet context passes; unmodified fresh-login
+defaults remain unverified. No clinical masking behaviour was tested with data.
+
+See the [change record](operator-defaults-change.md) and next
+[read-only hardening packet](source-hardening-followup.md). MFA enrollment and
+enforcement, PUBLIC dependency impact and tenant-isolation implementation are
+still open; no additional grants/policies/credentials or service provisioning
+are authorised. No Snowflake calls or compute were used to prepare this packet.
+P2 remains open; P3 has not started.
+
 ### CoCo source-access review received — 19 October
 
 Rushikesh supplied the metadata-only security report and policy-reference

@@ -3,7 +3,8 @@
 Date: 19 October 2026  
 Evidence: Rushikesh supplied CoCo's ACCOUNTADMIN metadata review and subsequent
 policy-reference results. These are reported live observations, not a new
-independent Snowflake inspection by this commit. No remediation is applied.
+independent Snowflake inspection by this document. The later, narrowly approved
+user-default change is reported separately below; other remediation is pending.
 
 ## Reconciled review
 
@@ -11,7 +12,7 @@ independent Snowflake inspection by this commit. No remediation is applied.
 | --- | --- | --- |
 | Reader role | Exactly 13 expected direct grants; no grant options; only RUSHIKESH2001 as grantee; no roles granted to it | Direct grant reconciliation passes, not effective-privilege isolation |
 | PUBLIC | AI/Cortex, agent-task, learning and compute-related capabilities | Reader is not effectively no-AI or universally read-only |
-| Human identity | ACCOUNTADMIN default; secondary roles ALL; admin roles available | Unsuitable for unattended product service authentication |
+| Human identity | Initially ACCOUNTADMIN/ALL; later approved reader/empty defaults reported applied; admin roles remain available | Still unsuitable for unattended product service authentication |
 | Authentication metadata | HAS_MFA false; no key pair or workload identity reported | MFA/enforcement review and a separately provisioned service identity remain necessary |
 | Source policies | No row-access or projection policies on any of eight tables | Application TPA predicates are not a database isolation boundary |
 | Masking | MASK_CLINICAL_TEXT on PREAUTH_FACTS.CLINICAL_NOTE only | Other source columns are not protected by this specific policy |
@@ -56,11 +57,21 @@ This does not protect other clinical fields or make conditions non-sensitive.
    production multi-tenant security boundary. CoCo's conditional supervised-use
    assessment is retained; customer/unattended use is not approved.
 
-## Remediation sequence — proposals, not authority to execute
+## Approved user-default change — 19 October
 
-1. Obtain Rushikesh's separate approval to change only his default primary role
-   to CIQ_PRODUCT_READER and default secondary roles to empty. Have CoCo first
-   capture the current values and confirm affected Snowsight/CLI workflows.
+Rushikesh explicitly approved only DEFAULT_ROLE = CIQ_PRODUCT_READER and
+DEFAULT_SECONDARY_ROLES = () for RUSHIKESH2001. CoCo's supplied before/after
+report confirms both stored changes and unchanged grants. Independent
+fresh-session verification is pending. A supplied screenshot verifies the reader
+and empty secondary roles only after explicit USE commands; no unmasking data
+test was performed. Existing
+roles/grants, PUBLIC, masking, MFA, service identities and account settings are
+outside this approval. See [execution packet](operator-defaults-change.md).
+
+## Remediation sequence — approval scoped per step
+
+1. CoCo reports the approved default primary role is now CIQ_PRODUCT_READER
+   and default secondary roles are empty; existing grants are unchanged.
    This changes session defaults, not memberships, grants or masking logic.
    Existing sessions may retain their context. Fresh-session metadata checks
    must confirm the outcome; never print credentials or clinical values.
@@ -89,10 +100,16 @@ gates. No real data or deployment is authorised by this report.
 - [x] CoCo report received, direct grants reconciled, visibility limits recorded.
 - [x] Policy attachments reviewed in the supplied follow-up.
 - [x] Supervised synthetic use assessed conditionally; service alternatives reviewed.
-- [ ] Human default changes approved/applied and independently verified.
+- [x] Human default changes approved and reported applied by CoCo.
+- [ ] Human defaults independently verified in a fresh session without overrides.
+- [x] Explicit reader/empty-secondary worksheet context verified by screenshot.
 - [ ] MFA/enforcement review completed by account owner.
 - [ ] PUBLIC dependency review and isolation design approved.
 - [ ] Service identity and database tenant-isolation implementation verified.
+
+The next bounded review is specified in the
+[hardening follow-up packet](source-hardening-followup.md). It does not authorise
+PUBLIC revocations, MFA enforcement changes or service provisioning.
 
 P2 remains open; P3 is not started. The current web/API source opt-in remains
 disabled by default. No SQL, grants, policy changes, source writes, AI calls,

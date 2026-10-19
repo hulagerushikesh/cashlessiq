@@ -23,7 +23,11 @@ The existing operator grant/PUBLIC caveats and P2 exit gates still apply.
 The [source-access review packet](../product/source-access-review.md) has now
 received CoCo's report and policy-reference follow-up. See the
 [reconciled findings](../product/source-access-findings.md); no grant/default/
-masking change is approved or applied by that review.
+masking change was approved or applied by that review. Subsequently, the narrow
+human default-role change was approved and CoCo reports it applied. Explicit
+reader/NONE worksheet context is verified, not automatic fresh-login defaults.
+See the [change record](../product/operator-defaults-change.md) and
+[read-only hardening follow-up](../product/source-hardening-followup.md).
 
 ## Latest inspection result — 19 October
 

@@ -56,6 +56,10 @@ demo-video work is not part of this product plan.
    remediation/service identity/isolation approval and implementation remain open.
    None of the eight source tables has a row-access policy; only CLINICAL_NOTE
    has the reported masking policy. No unattended/customer deployment is approved.
+   CoCo subsequently reports the approved reader/empty-secondary user defaults
+   applied with grants unchanged. The reader/NONE worksheet context is verified
+   after explicit USE commands; automatic fresh-login context remains unverified.
+   Next: [bounded MFA/PUBLIC/isolation follow-up](source-hardening-followup.md).
 6. [ ] Opt in separate local source identities and exercise authenticated API/UI
    parity. Keep the existing mixed offline demo and public site unchanged.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push
