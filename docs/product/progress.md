@@ -60,6 +60,10 @@ demo-video work is not part of this product plan.
    applied with grants unchanged. The reader/NONE worksheet context is verified
    after explicit USE commands; automatic fresh-login context remains unverified.
    Next: [bounded MFA/PUBLIC/isolation follow-up](source-hardening-followup.md).
+   Local follow-up independently confirmed stored defaults, zero enrolled MFA
+   methods and 109 visible PUBLIC grants; CIQ_WH remained suspended at inspection.
+   [Results/design proposal](source-hardening-results.md) records enforcement and
+   dependency visibility gaps. No new service/views or PUBLIC changes applied.
 6. [ ] Opt in separate local source identities and exercise authenticated API/UI
    parity. Keep the existing mixed offline demo and public site unchanged.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push

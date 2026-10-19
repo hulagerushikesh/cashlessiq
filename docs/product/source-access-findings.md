@@ -110,6 +110,12 @@ gates. No real data or deployment is authorised by this report.
 The next bounded review is specified in the
 [hardening follow-up packet](source-hardening-followup.md). It does not authorise
 PUBLIC revocations, MFA enforcement changes or service provisioning.
+The subsequent [local results](source-hardening-results.md) independently confirm
+stored reader/empty defaults, zero enrolled MFA methods and 109 visible PUBLIC
+grants. Reader policy visibility is insufficient to establish effective MFA
+enforcement; administrative dependency review remains pending. These results do
+not verify automatic login context or replace the original report's full role
+hierarchy inspection.
 
 P2 remains open; P3 is not started. The current web/API source opt-in remains
 disabled by default. No SQL, grants, policy changes, source writes, AI calls,

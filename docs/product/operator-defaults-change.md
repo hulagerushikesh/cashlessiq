@@ -65,6 +65,7 @@ defaults are independently verified. Never request tokens or recovery codes.
 - [ ] Fresh-session role context independently checked without overrides.
 - [x] Relevant role memberships confirmed unchanged (supplied report).
 - [x] Explicit worksheet role/secondary context verified in supplied screenshot.
+- [x] Stored reader/empty-secondary defaults independently verified locally.
 
 ## Report received
 
@@ -85,5 +86,9 @@ selected worksheet context, not automatic login behaviour; restored worksheet
 state or another client override remains a possibility, not a proven cause.
 Unmodified fresh-session default verification remains open. Do not repeatedly
 ALTER USER or revoke admin membership to force that test to pass.
+
+A subsequent local DESCRIBE USER independently confirmed stored defaults are
+CIQ_PRODUCT_READER and []; the connector explicitly requested reader and issued
+NONE, so that check still does not establish automatic login behaviour.
 
 Syntax reference: [Snowflake ALTER USER](https://docs.snowflake.com/en/sql-reference/sql/alter-user).

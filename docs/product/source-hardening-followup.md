@@ -1,6 +1,8 @@
 # P2 hardening follow-up: read-only review
 
-Date: 19 October 2026. Status: prepared; live review not yet received.
+Date: 19 October 2026. Status: partial local read-only review completed; see
+[results and isolation proposal](source-hardening-results.md). Administrative
+enforcement/dependency visibility and implementation approval remain pending.
 
 ## Current boundary
 
@@ -92,8 +94,9 @@ Enrollment is not proof of enforcement across all authentication methods.
 ## Completion checklist
 
 - [x] Follow-up scope prepared; no further mutations authorised.
-- [ ] MFA enrollment and enforcement evidence returned (unknowns explicit).
-- [ ] PUBLIC dependency/impact matrix returned without revocations.
+- [x] Local MFA enrollment checked: zero methods. Enforcement remains unknown.
+- [x] Visible PUBLIC inventory and preliminary impact matrix recorded; no revocations.
+- [ ] Administrative policy enforcement and live dependency gaps resolved.
 - [ ] Tenant-isolation candidate and negative-test plan reviewed.
 - [ ] Narrow implementation proposal approved before provisioning.
 

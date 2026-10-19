@@ -5,6 +5,22 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Local hardening follow-up — 19 October
+
+Two reader/NONE OAuth connections executed nine bounded metadata/session
+statements; no case data, writes, AI or apps. Stored reader/empty defaults were
+independently confirmed. SHOW MFA METHODS returned zero methods; HAS_MFA false.
+Authentication-policy listing returned no rows under reader visibility, not proof
+of absent enforcement. PUBLIC had 109 visible direct grant rows; the first
+100-row cap was exceeded and a bounded retry completed within 1,001 rows.
+CIQ_WH was SUSPENDED with zero started clusters/running/queued on inspection.
+Both connections closed. No fresh balance or exact cost claim is made.
+
+See [results, impact matrix and isolation proposal](source-hardening-results.md).
+Owner MFA setup and administrative policy/dependency visibility remain open.
+No service provisioning, PUBLIC revocation or source HTTP activation ran. P2
+remains open, P3 not started; automatic fresh-login defaults remain unverified.
+
 ### Approved operator defaults and worksheet context — 19 October
 
 CoCo reports DEFAULT_ROLE changed from ACCOUNTADMIN to CIQ_PRODUCT_READER and
