@@ -1,7 +1,7 @@
 """No-network tests for the source gateway's scope and resource lifecycle."""
 
 from datetime import date
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 from uuid import uuid4
 
 import pytest
@@ -52,9 +52,10 @@ def test_bounded_parameterized_read_and_cleanup():
     gateway, tenant, connect, cursor = source()
     records = gateway.read_cases(tenant)
     assert records[0].estimated_total_inr == 100000
-    cursor.execute.assert_called_once_with(
-        READ_SQL, ("TPA001", "GOL001", "GOL024", "GOL027"), timeout=30
-    )
+    assert cursor.execute.call_args_list == [
+        call("USE SECONDARY ROLES NONE", timeout=30),
+        call(READ_SQL, ("TPA001", "GOL001", "GOL024", "GOL027"), timeout=30),
+    ]
     cursor.fetchmany.assert_called_once_with(4)
     connect.return_value.__exit__.assert_called_once()
     assert "CLINICAL_NOTE" not in READ_SQL and "FULL_NAME" not in READ_SQL
@@ -87,3 +88,13 @@ def test_error_is_generic_and_connections_close():
 def test_absent_source_rows_are_not_fabricated():
     gateway, tenant, _, _ = source([])
     assert gateway.read_cases(tenant) == []
+
+
+def test_secondary_role_disable_failure_prevents_source_read():
+    gateway, tenant, connect, cursor = source()
+    cursor.execute.side_effect = RuntimeError("Session policy rejected context change")
+    with pytest.raises(SourceReadUnavailable):
+        gateway.read_cases(tenant)
+    cursor.execute.assert_called_once_with("USE SECONDARY ROLES NONE", timeout=30)
+    cursor.fetchmany.assert_not_called()
+    connect.return_value.__exit__.assert_called_once()

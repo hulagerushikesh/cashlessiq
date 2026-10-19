@@ -61,6 +61,7 @@ class SnowflakeCaseSource:
             return []
         try:
             with self._connect() as connection, connection.cursor() as cursor:
+                cursor.execute("USE SECONDARY ROLES NONE", timeout=30)
                 cursor.execute(READ_SQL, (tpa, *ALPHA_REQUESTS), timeout=30)
                 columns = [column[0].lower() for column in cursor.description]
                 rows = cursor.fetchmany(4)

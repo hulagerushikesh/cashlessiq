@@ -1,6 +1,45 @@
 # P2 bounded Snowflake source gateway
 
-Status: offline-tested gateway; not enabled in the API. 19 October 2026.
+Status: bounded live source reads verified; not enabled in the API. 19 October 2026.
+
+## Restricted-role follow-up — 19 October
+
+After CoCo applied the role and exact operator grant, local SHOW checks confirmed
+the eight direct USAGE/SELECT grants, no grant options, no inherited account
+role in that direct grant list, and RUSHIKESH2001 as its single grantee.
+The Python gateway connected explicitly as CIQ_PRODUCT_READER and returned:
+
+- TPA001: GOL001 only (one record).
+- TPA003: GOL024 and GOL027 only (two records).
+
+These were separate operator probes using explicit UUID/TPA arguments, NOT
+persisted application tenant mappings or changes to API fixtures/memberships.
+The TPA003 probe passed after the gateway was hardened to run
+`USE SECONDARY ROLES NONE` before source reads. The earlier TPA001 probe used
+the explicit primary reader role but preceded this hardening. Unit tests assert
+the session command runs first and prevents reads if rejected.
+
+**Effective privileges caveat:** CoCo's "no AI privileges" conclusion described
+direct grants only. Live PUBLIC grants include USE AI FUNCTIONS and
+SNOWFLAKE.CORTEX_USER, as well as SNOWFLAKE_LEARNING_ROLE and compute-pool usage.
+Every account role inherits PUBLIC, so this is NOT an effectively AI-disabled
+or account-wide read-only identity. The operator also has direct grants on its
+personal workspace/schema. Do not claim that disabling secondary roles removes
+PUBLIC or all user grants. The gateway itself executes only fixed session/SELECT
+statements and no AI calls; it is still an operator-only synthetic spike.
+No PUBLIC/user grants were revoked or changed. Production service identity and
+account-wide privilege hardening require a separately reviewed plan with CoCo
+to avoid breaking the existing app and interactive tools.
+
+Sources: [secondary-role control](https://docs.snowflake.com/en/sql-reference/sql/use-secondary-roles),
+[default Cortex access](https://docs.snowflake.com/en/user-guide/snowflake-cortex/opting-out),
+[pending direct-user-grant behavior](https://docs.snowflake.com/en/release-notes/bcr-bundles/2026_08/bcr-2438).
+
+Verification: 62 root tests and 46 API/PostgreSQL/gateway tests pass (108 total),
+plus API Ruff and whitespace checks. No policy/rule changes or reviewer writes.
+End-state inspection confirmed both container pools and search indexing/serving
+still suspended. CIQ_WH had zero running/queued queries, was explicitly suspended
+after the source checks, and the final SHOW confirmed zero clusters/SUSPENDED.
 
 ## Live inspection — 19 October
 

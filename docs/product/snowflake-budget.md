@@ -72,6 +72,13 @@ End-state check found CIQ_WH started with zero running/queued queries after our
 reads. Because it had been suspended before this session and was activated by
 these checks, it was explicitly suspended and confirmed SUSPENDED/zero clusters.
 
+After CoCo created the reader role, two bounded gateway probes read one TPA001
+case and two TPA003 cases with no AI calls. Grant inspection also found inherited
+PUBLIC Cortex privileges; no account-wide revocations were attempted. Both pools
+and search remained suspended. CIQ_WH was again suspended and confirmed with
+zero running/queued queries and zero clusters after the probes. Exact incremental
+cost remains subject to billing lag; no new dollar balance is inferred.
+
 1. 19–22 October: finish remote CI for the local alpha, inspect spend/state, and
    implement bounded P2 Snowflake reads behind the repository interface. Reuse
    existing synthetic data and extraction/index outputs; do not wake Streamlit.

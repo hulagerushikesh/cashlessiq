@@ -16,3 +16,7 @@ GRANT SELECT ON TABLE CASHLESSIQ.DOCS.PREAUTH_FACTS TO ROLE CIQ_PRODUCT_READER;
 -- only after inspecting CURRENT_USER(); do not grant it to PUBLIC or app users.
 -- Table privileges are sufficient for this synthetic spike, NOT tenant RLS.
 -- Production needs tenant-scoped secure views and validated identity mapping.
+-- No direct AI grants does NOT mean effectively AI-disabled: PUBLIC may grant
+-- Cortex/USE AI FUNCTIONS and other capabilities. Inspect PUBLIC/user grants
+-- with CoCo; never revoke account-wide grants automatically from this script.
+-- Operator gateway sessions explicitly USE SECONDARY ROLES NONE before reads.

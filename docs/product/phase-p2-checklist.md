@@ -67,6 +67,14 @@ its CoCo grant review, restricted-role verification, explicit tenant mapping,
 and remaining member/decision/evidence parity are still outstanding. No grants
 or source-data mutations were applied. This does not complete P2.
 
+After CoCo applied the reader grants, direct grants and single grantee were
+independently confirmed. Bounded Python gateway reads returned GOL001 for
+TPA001 and GOL024/GOL027 for TPA003. Secondary roles are now explicitly disabled
+before reads; tests fail closed if that command fails. 62 root and 46 API tests
+pass. PUBLIC still grants Cortex/AI access, so the identity is not effectively
+AI-disabled despite having no direct AI grants. No account-wide revocations
+were made. This remains an operator spike, not tenant-RLS or full P2 completion.
+
 - [ ] Governed Snowflake read adapter behind the repository interface.
 - [ ] Approved economical integration verification and view parity.
 
