@@ -1,0 +1,51 @@
+name: Product foundation
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+      - name: Existing deterministic regression suite
+        run: |
+          uv sync --frozen --extra dev
+          uv run pytest
+          uv run ruff check .
+      - name: Product dependencies
+        run: |
+          uv sync --project apps/api --frozen
+          npm ci
+      - name: Contract drift, types and build
+        run: |
+          make product-contracts
+          git diff --exit-code -- packages/contracts/openapi.json packages/api-client/src/schema.d.ts
+          npm run typecheck
+          npm run lint
+          npm run build
+      - name: Start isolated product stack
+        run: make product-up
+      - name: API and PostgreSQL integration
+        run: make product-test
+      - name: Browser smoke
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:browser
+      - name: Failure diagnostics
+        if: failure()
+        run: make product-logs
+      - name: Stop stack
+        if: always()
+        run: make product-down

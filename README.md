@@ -96,3 +96,17 @@ P0 is approved; P1 progress is tracked in the
 [P1 checklist](docs/product/phase-p1-checklist.md). Before restructuring, preserve
 the [migration contracts](docs/architecture/contract-versioning.md) and follow the
 [Snowflake budget plan](docs/product/snowflake-budget.md).
+
+### Local product workspace
+
+With Docker Compose and Python 3.11 installed:
+
+```sh
+make product-up
+```
+
+Open [localhost:3000](http://localhost:3000) and choose a synthetic reviewer role.
+The stack runs Next.js, FastAPI, PostgreSQL, and Redis locally. It does not call
+Snowflake or AI services. Stop it with `make product-down`; local database data
+is retained. See [local development](docs/architecture/local-development.md)
+for tests, generated API contracts, and identity configuration.

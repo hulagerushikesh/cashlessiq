@@ -1,0 +1,32 @@
+{
+  "name": "@cashlessiq/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint src next.config.ts postcss.config.mjs"
+  },
+  "dependencies": {
+    "@cashlessiq/api-client": "0.1.0",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@tailwindcss/postcss": "4.3.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tailwind-merge": "^3.3.0",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@biomejs/biome": "2.5.15",
+    "typescript": "^5.9.3"
+  }
+}

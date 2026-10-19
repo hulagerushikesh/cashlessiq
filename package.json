@@ -1,0 +1,19 @@
+{
+  "name": "cashlessiq-product",
+  "private": true,
+  "workspaces": ["apps/web", "packages/api-client"],
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "npm run dev --workspace @cashlessiq/web",
+    "build": "npm run build --workspace @cashlessiq/web",
+    "typecheck": "npm run typecheck --workspace @cashlessiq/web",
+    "lint": "npm run lint --workspace @cashlessiq/web",
+    "contracts": "openapi-typescript packages/contracts/openapi.json -o packages/api-client/src/schema.d.ts",
+    "test:browser": "playwright test",
+    "test:browser:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "openapi-typescript": "7.13.0"
+  }
+}

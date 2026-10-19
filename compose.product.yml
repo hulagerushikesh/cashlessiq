@@ -1,0 +1,70 @@
+name: cashlessiq-product
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: cashlessiq
+      POSTGRES_USER: ciq
+      POSTGRES_PASSWORD: ${CIQ_DB_PASSWORD:?Run make product-up}
+    ports: ["127.0.0.1:55432:5432"]
+    volumes: ["product-db:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ciq -d cashlessiq"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7.4-bookworm
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment: &api-environment
+      CIQ_ENVIRONMENT: local
+      CIQ_AUTH_MODE: local
+      CIQ_DATABASE_URL: postgresql+psycopg://ciq:${CIQ_DB_PASSWORD}@db:5432/cashlessiq
+      CIQ_LOCAL_AUTH_SECRET: ${CIQ_LOCAL_AUTH_SECRET:?Run make product-up}
+    command: ["sh", "-c", ".venv/bin/alembic upgrade head && .venv/bin/python -m ciq_api.seed"]
+    depends_on:
+      db: { condition: service_healthy }
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment: *api-environment
+    ports: ["127.0.0.1:8000:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", ".venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      CIQ_ENVIRONMENT: local
+      CIQ_AUTH_MODE: local
+      CIQ_API_URL: http://api:8000
+      CIQ_WEB_ORIGIN: http://localhost:3000
+      CIQ_LOCAL_AUTH_SECRET: ${CIQ_LOCAL_AUTH_SECRET}
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on:
+      api: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+volumes:
+  product-db:
