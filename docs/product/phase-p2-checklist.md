@@ -5,6 +5,18 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Local validation boundary designed — 19 October
+
+Prepared the [worker/credential design](../architecture/p2-validation-boundary.md):
+four tenant/disclosure readers and two additional tenant validators, trusted
+broker, asymmetric internal assertions/private peer authentication, isolated
+secret custody, coherent-input validation prerequisite, failure/revocation and
+rollback gates. This is proposed design, not implemented authentication or
+provisioned identities. Current raw-inspection API composition is explicitly
+not the isolated runtime. Exact design approval precedes offline implementation
+and SQL review. Documentation checks only; no runtime tests, Snowflake/AI calls,
+worker startup, secrets, push, deployment or P3.
+
 ### Approved metadata preflight report reconciled — 19 October
 
 Owner approved the bounded read-only execution and supplied CoCo's report:

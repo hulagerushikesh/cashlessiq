@@ -114,6 +114,12 @@ credential custody must be settled before the implementation package. Architectu
 approval is not provisioning approval. No new SQL, credentials, source activation
 or account changes.
 
+Next design prepared: [local validation/credential boundary](../architecture/p2-validation-boundary.md).
+It proposes four read workers plus two tenant validators, with no Snowflake
+credentials in the API. The two extra validator identities, internal invocation
+authentication and exact secret custody need review before implementation SQL.
+Nothing is provisioned or live; P2 remains open.
+
 The website must remain unchanged per Rushikesh's latest instruction. Completing
 offline tests does not waive these gates or authorise P3, public deployment,
 new grants, account-wide restrictions or reuse of human OAuth in a server.
