@@ -115,6 +115,28 @@ UI changed; browser/build checks were not rerun for this identity-only increment
 
 ## Parity-input preparation — 19 October
 
+### Approved inspection grants — 19 October
+
+Rushikesh approved the four net-new inspection grants after CoCo's review.
+CoCo applied them, and an independent local `SHOW GRANTS` check confirmed 13
+direct privileges: five USAGE grants (warehouse, database, three schemas) and
+eight table SELECT grants, all without grant option. The only grantee remains
+user RUSHIKESH2001. No role-membership or PUBLIC changes were made.
+POLICY_CLAUSE SELECT was already present and was not a net-new grant.
+
+Preflight confirmed CIQ_WH X-Small, auto-suspend 60 seconds, SUSPENDED with
+zero running/queued queries, and both container pools SUSPENDED with zero
+active nodes. These SHOW checks do not establish source-data parity or a live
+credit balance. PUBLIC inheritance remains unresolved; this is an operator
+synthetic-data identity, not a production service identity. P2 integration
+exits remain open. No AI calls, reviewer writes or app deployment were made.
+
+The subsequent Python operator probe did not complete its first connection and
+was stopped after approximately 90 seconds with no source results. CLI auth
+success does not establish Python-connector authentication. No live history,
+saved-decision or evidence parity is claimed. Root regression tests (124) and
+lint passed; API/UI suites were not rerun for this documentation-only change.
+
 - [x] Operator-only bounded member/claim, condition, latest-decision and
   product-clause inspection queries, with request/TPA ownership guards.
 - [x] Proposed minimum extra reader grants saved separately for CoCo review;
