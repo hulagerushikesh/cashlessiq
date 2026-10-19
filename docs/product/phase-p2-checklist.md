@@ -5,6 +5,18 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Approved metadata preflight report reconciled — 19 October
+
+Owner approved the bounded read-only execution and supplied CoCo's report:
+21 attempted statements including one failure; no mutations/data reads/AI
+reported. Compared all eight column inventories with repository DDL and recorded
+the DECISION nullability-count discrepancy, missing query IDs/time evidence,
+policy-scope uncertainty and inherited-role inspection gaps in the
+[reconciliation](p2-isolation-preflight-results.md). No independent Snowflake
+rerun or full isolation/MFA acceptance. Next is validation-host/credential-boundary
+design before the exact implementation package. Documentation checks only;
+runtime tests not rerun, no push/deploy or P3.
+
 ### Architecture approved; metadata preflight prepared — 19 October
 
 Rushikesh explicitly approved the [isolation architecture](p2-isolation-proposal.md).

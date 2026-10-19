@@ -1,7 +1,11 @@
 # P2 isolation: bounded metadata preflight
 
-Date: 19 October 2026. Status: prepared, **not executed**.
+Date: 19 October 2026. Status: **execution approved; CoCo report received and reviewed**.
 Architecture: [approved proposal](p2-isolation-proposal.md).
+
+See [report reconciliation and remaining gaps](p2-isolation-preflight-results.md).
+CoCo reports 21 attempts; no independent rerun, query IDs or elapsed-time evidence.
+The plan and prompt below are historical execution scope, not permission to rerun.
 
 ## Purpose and approval boundary
 
@@ -72,7 +76,7 @@ No automatic implementation. Attach longer evidence as text, not chat dumps.
 
 ## After the report
 
-- [ ] Reconcile evidence with repository definitions; record uncertainties.
+- [x] Reconcile supplied evidence with repository definitions; record uncertainties.
 - [ ] Select validation hosting/invocation and isolated secret custody explicitly.
   Prefer local-only isolated workers for the next synthetic acceptance design;
   this is a candidate, not approval to create identities or start services.

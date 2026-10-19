@@ -105,8 +105,11 @@ demo-video work is not part of this product plan.
 
 Rushikesh approved the corrected architecture on 19 October. It separates tenant
 projections, clinical validation, service authentication and human login changes.
-The [bounded metadata preflight plan](p2-isolation-preflight.md) is prepared,
-not executed; its execution needs separate approval. Validation hosting and
+The [bounded metadata preflight](p2-isolation-preflight.md) was separately approved;
+CoCo reports 21 attempts with no changes/data reads/AI. Its column inventory was
+compared with repository DDL; [report limitations](p2-isolation-preflight-results.md)
+include missing query IDs/time evidence, policy scope and inherited-role checks.
+No independent rerun or isolation acceptance is claimed. Validation hosting and
 credential custody must be settled before the implementation package. Architecture
 approval is not provisioning approval. No new SQL, credentials, source activation
 or account changes.
