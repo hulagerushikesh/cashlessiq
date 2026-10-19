@@ -1,7 +1,9 @@
 # P2 source-access review packet
 
 Date: 19 October 2026  
-Status: repository/design review prepared; **live CoCo review pending**.
+Status: CoCo report and policy-reference follow-up received; remediation pending
+approval. See [reconciled findings](source-access-findings.md). The prompt below
+is retained as the review specification, not a request to rerun it.
 
 ## Decision boundary
 
@@ -106,12 +108,15 @@ End with proposed changes and tests ONLY, requiring approval before execution.
 
 ## Review acceptance checklist
 
-- [ ] CoCo report received; review date and metadata-visibility limits recorded.
-- [ ] All direct grants, grantees and inherited roles reconciled.
-- [ ] PUBLIC and direct-user access distinguished from inactive secondary roles.
-- [ ] Supervised synthetic-only use explicitly assessed; no production waiver.
-- [ ] Proposed service authentication and tenant-isolation design reviewed.
-- [ ] Required remediation/change approval identified; no broad revocations run.
+- [x] CoCo report received; review date and metadata-visibility limits recorded.
+- [x] Reported direct grants, grantees and inherited roles reconciled.
+- [x] PUBLIC and direct-user access distinguished from inactive secondary roles.
+- [x] Supervised synthetic-only use explicitly assessed; no production waiver.
+- [x] Proposed service authentication and tenant-isolation alternatives reviewed.
+- [x] Required remediation/change approval identified; no broad revocations run.
+
+These checks record review completion, not approval or implementation of the
+proposals. The findings register separately tracks those outstanding gates.
 
 The review does not itself provision a service. Production acceptance separately
 requires approved authentication, effective-privilege evidence, database-enforced

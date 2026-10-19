@@ -20,8 +20,10 @@ check passed all three scoped metadata/history comparisons: GOL001 SAVED and
 GOL024/GOL027 MISSING, with 35 clause references each. See the latest
 [P2 evidence](../product/phase-p2-checklist.md). This is not full UI parity.
 The existing operator grant/PUBLIC caveats and P2 exit gates still apply.
-The next [source-access review packet](../product/source-access-review.md)
-contains a self-contained read-only CoCo prompt; no grant change is approved.
+The [source-access review packet](../product/source-access-review.md) has now
+received CoCo's report and policy-reference follow-up. See the
+[reconciled findings](../product/source-access-findings.md); no grant/default/
+masking change is approved or applied by that review.
 
 ## Latest inspection result — 19 October
 

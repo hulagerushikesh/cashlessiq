@@ -5,6 +5,24 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### CoCo source-access review received — 19 October
+
+Rushikesh supplied the metadata-only security report and policy-reference
+follow-up. All 13 direct reader grants match; PUBLIC and human-admin identity
+risks remain. None of the eight source tables has a row-access or projection
+policy. Only PREAUTH_FACTS.CLINICAL_NOTE has MASK_CLINICAL_TEXT, which intentionally
+permits medical/admin role hierarchies. An active admin secondary hierarchy can
+therefore authorise clear text; a primary reader role alone is not sufficient.
+The fixed metadata query does not select this column. No clinical unmasking test
+was performed here. See [findings and qualifications](source-access-findings.md)
+for OAuth/default-role caveats and the proposed remediation sequence.
+
+The review gate is documented, not the remediation/production-isolation gate.
+Default-user changes, MFA, PUBLIC impact review and service provisioning require
+their respective approvals/workflows. No Snowflake call or change accompanied
+this documentation increment; source HTTP remains disabled by default. P2 stays
+open, with financial/evidence display and authenticated UI parity outstanding.
+
 ### Live v2 repository check — 19 October
 
 The actual SourceCaseRepository now passes a bounded live check through both

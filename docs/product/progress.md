@@ -48,11 +48,14 @@ demo-video work is not part of this product plan.
 4. [x] Implement and test the preliminary v2 repository adapter, including source
    failure, missing data, separate tenant ownership and condition disclosure.
    Default HTTP reads remain disabled; this is not full workspace parity.
-5. [ ] Review source identity/effective privileges with CoCo. Operator table
+5. [x] Review source identity/effective privileges with CoCo. Operator table
    grants and disabled secondary roles are not production tenant RLS; inherited
    PUBLIC capabilities are unresolved. No account-wide revocations are approved.
-   [Self-contained review prompt](source-access-review.md) is ready to paste;
-   the live CoCo report and any remediation approval are still pending.
+   CoCo report and policy-reference follow-up received; see
+   [reconciled findings](source-access-findings.md). Review is complete, but
+   remediation/service identity/isolation approval and implementation remain open.
+   None of the eight source tables has a row-access policy; only CLINICAL_NOTE
+   has the reported masking policy. No unattended/customer deployment is approved.
 6. [ ] Opt in separate local source identities and exercise authenticated API/UI
    parity. Keep the existing mixed offline demo and public site unchanged.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push
