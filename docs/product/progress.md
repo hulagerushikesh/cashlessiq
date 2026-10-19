@@ -38,7 +38,8 @@ demo-video work is not part of this product plan.
 
 1. [x] Complete Python reader authentication and bounded live source inspection.
 2. [ ] Compare all three cases against independent metadata/history expectations;
-   validate saved decisions and every citation. Record discrepancies, never hide
+   validate available saved decisions and every citation; explicitly preserve
+   absent recommendations under the approved gate revision below. Record discrepancies, never hide
    them with fixture fallback, fresh AI output or changed golden expectations.
 3. [ ] Establish the explicit shared-domain package boundary for the API.
 4. [ ] Implement and test the repository adapter, including source failure,
@@ -65,7 +66,8 @@ Policy activation continues to require explicit human approval.
 
 ## Verification and delivery checkpoint
 
-- Root regression: **124 passed** again this checkpoint; root lint passed.
+- Root regression: **139 passed** after the missing-state increment (15 new tests);
+  root lint and git whitespace checks pass.
 - Targeted metadata/inspection boundary suite: **39 passed** this checkpoint.
 - API suite: **98 passed** at the earlier inspection-query increment. This
   checkpoint's full rerun produced 54 passes and 44 database-setup errors because
@@ -85,14 +87,25 @@ Policy activation continues to require explicit human approval.
   alpha. Product source integration has not been deployed.
 - Preserve the untracked submission video; do not include it in product commits.
 
-### Immediate scope decision
+### Approved missing-recommendation scope revision — 19 October
 
-Missing source recommendations must not be copied from demo snapshots. Before
-the repository adapter is built, approve one explicit approach: model and test
-an honest missing-recommendation state for the synthetic migration, or authorize
-a controlled source backfill separately. The first avoids source writes and AI
-spend but changes the parity expectation for two cases; neither is silently
-treated as a passing original three-decision parity gate.
+Rushikesh approved an explicit missing-recommendation state rather than source
+backfill. P2 must faithfully show an absent recommendation for GOL024/GOL027;
+it must not reproduce the demo QUERY/REFER as live decisions. This revises the
+original expectation of three matching saved decisions, not the remaining
+source, isolation, clinical-disclosure or UI integration gates.
+
+- [x] Pure-Python immutable SAVED/MISSING source observations and offline tests.
+- [x] Missing state has only validated context and the supplied estimate; no
+  invented outcome/payable/calculation/query/referral. Invalid saved rows and
+  ambiguous reads remain errors, never missing-state fallback.
+- [ ] Explicit shared-domain package boundary and versioned source-read API.
+- [ ] UI distinguishes no saved recommendation from QUERY/REFER, source error
+  and zero payable; end-to-end coverage with separate source-alpha tenants.
+
+The existing v1 API requires an outcome, so it is unchanged. The new observation
+is not wired into HTTP/UI and is not itself proof of source parity. No source
+writes, AI calls, deployment or historical decision-schema changes are needed.
 
 ## Spend guardrails
 

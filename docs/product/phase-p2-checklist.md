@@ -5,6 +5,25 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Approved follow-up: explicit missing state
+
+Rushikesh approved “Approve explicit missing-recommendation state” on 19 October.
+P2's source parity gate now requires faithfully preserving absent recommendations
+for GOL024/GOL027, not copying the frozen QUERY/REFER outcomes into live views.
+The original all-three-saved-decision comparison is not claimed as passed.
+
+`cashlessiq.source_recommendation` now provides immutable SAVED/MISSING
+observations after a successful owner-scoped inspection. Missing contains only
+request/TPA/product context and the supplied estimate. A present row still goes
+through the canonical saved-decision and scoped-citation validator. Invalid,
+ambiguous or failed reads do not become missing, and no money is computed.
+Fifteen offline tests cover absence, saved approval/QUERY/REFER, unresolved
+citations, malformed rows and invalid context. Existing v1 API/UI and the frozen
+decision schema remain unchanged; versioned source-read integration is next.
+No new Snowflake calls, grants, backfill, policy activation or reviewer writes.
+Verification: 139 root tests and root lint pass; git whitespace checks pass.
+API/browser suites were not rerun for this domain-only increment.
+
 The subsequent unbuffered Python operator check authenticated successfully as
 CIQ_PRODUCT_READER. One connection, secondary roles disabled, two bounded
 metadata reads and twelve inspection SELECTs covered exactly the three allowed
@@ -27,9 +46,8 @@ Post-session SHOW confirmed CIQ_WH SUSPENDED, zero started clusters and zero
 running/queued queries; X-Small/60-second auto-suspend remained unchanged.
 Exact incremental dollars and the remaining trial balance were not measured.
 
-P2 remains open. Next is a decision on missing-source coverage: either explicitly
-accept/test a missing-recommendation state in the synthetic read-only migration,
-or separately authorize a controlled source backfill. Do not run a fresh agent,
+P2 remains open. The follow-up approval above resolves the missing-source scope
+choice in favor of an explicit missing state, not source backfill. Do not run a fresh agent,
 create reviewer decisions or silently reuse snapshots as live data. The governed
 repository adapter, service-identity review and API/UI parity remain outstanding.
 P3 has not started. See the [current progress checklist](progress.md).

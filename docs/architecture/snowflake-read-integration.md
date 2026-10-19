@@ -18,8 +18,11 @@ Remaining balance is not inferred from this check. PUBLIC inheritance and the
 operator-only identity limitations below still apply.
 
 These findings supersede the historical pending-auth/grant notes below, not the
-remaining integration gates. Resolve the missing-recommendation contract before
-building the adapter; do not fabricate source recommendations or begin P3.
+remaining integration gates. Rushikesh subsequently approved an explicit missing
+state instead of backfill. `cashlessiq.source_recommendation` now models it
+without an invented outcome/payable, while revalidating present decisions.
+Versioned API/UI integration is pending: v1's required outcome is unchanged.
+Do not fabricate source recommendations or begin P3.
 See [current product progress](../product/progress.md).
 
 ## Offline member-history expectations — 19 October
