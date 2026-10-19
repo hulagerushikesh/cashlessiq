@@ -117,6 +117,10 @@ Open [localhost:3000](http://localhost:3000) and choose a synthetic reviewer rol
 The [case queue](http://localhost:3000/cases) now supports read-only exploration
 of three golden scenarios, calculation traces, and policy source references.
 See the [P2 checklist](docs/product/phase-p2-checklist.md) for scope and limits.
+The local **UI preview** navigation opens `/source-preview`: authenticated,
+fictional fixtures for saved, missing, query, referral and unavailable states.
+It exercises v2 presentation only, not source/API parity or tenant isolation;
+it never calls Snowflake and returns 404 outside local/local-auth mode.
 The stack runs Next.js, FastAPI, PostgreSQL, and Redis locally. It does not call
 Snowflake or AI services. Stop it with `make product-down`; local database data
 is retained. See [local development](docs/architecture/local-development.md)

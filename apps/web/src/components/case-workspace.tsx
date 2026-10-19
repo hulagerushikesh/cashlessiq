@@ -55,6 +55,9 @@ export function CaseWorkspace({ identity, children }: { identity: Identity; chil
             <Link href="/cases" className="font-semibold text-teal-800">
               Case queue
             </Link>
+            {process.env.CIQ_ENVIRONMENT === "local" && process.env.CIQ_AUTH_MODE === "local" && (
+              <Link href="/source-preview">UI preview</Link>
+            )}
           </nav>
           <div className="flex items-center gap-4 text-sm">
             <span>{identity.user.display_name}</span>

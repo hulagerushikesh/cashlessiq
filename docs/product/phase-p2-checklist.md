@@ -5,6 +5,34 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### V2 presentation groundwork — 19 October
+
+Added a typed SourceCaseView consuming the generated v2 contract, without any
+source fetch or money computation. SAVED, MISSING and unavailable presentation
+remain distinct; saved QUERY/REFER show uncalculated payable rather than zero.
+Member/history values are displayed as recorded, conditions follow visibility,
+and the clause register is labelled reference metadata, not retrieved quotations.
+No calculation trace, clinical narrative or grounding claim was added.
+
+An authenticated `/source-preview` route is available only in local/local-auth
+mode, linked from local workspace navigation. Its clearly labelled fictional
+UI-* fixtures are not GOL/source records; all roles see the same nonclinical
+examples. This is presentation testing, not an identity, source parity or
+medical-disclosure test. The normal case queue and public demo are unchanged.
+The route returns 404 in production-mode verification. A desktop screenshot
+was visually inspected and mobile overflow is covered by browser tests.
+
+Verification: all 19 browser tests pass (seven new preview tests plus the
+existing 12 workspace/case tests), web typecheck/lint/production build and git
+whitespace checks pass. The initial browser executable was absent; Chromium
+was installed before rerunning. Accessible link names and a named failure alert
+were corrected during testing. API/PostgreSQL and Python suites were not rerun
+for this presentation-only increment; remote CI has not run on this commit.
+
+No source adapter was injected, source tenants seeded, Snowflake/AI invoked,
+grants changed or public deployment performed. Source UI/API parity and the
+security/financial-trace gates remain open; P3 is not started.
+
 ### Passkey enrollment verified — 19 October
 
 After Rushikesh enrolled a passkey, a local reader OAuth connection executed

@@ -70,6 +70,10 @@ demo-video work is not part of this product plan.
    unverified; administrative dependency review is still pending.
 6. [ ] Opt in separate local source identities and exercise authenticated API/UI
    parity. Keep the existing mixed offline demo and public site unchanged.
+   Presentation groundwork: the authenticated local `/source-preview` now renders
+   fictional v2 fixtures for SAVED/MISSING, saved QUERY/REFER and source failure.
+   It does not call `/v2/cases` or Snowflake, seed source tenants, or establish
+   source parity. No source access has been activated. See the latest P2 checkpoint.
 7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push
    authority, then verify remote CI. Review P2 exit evidence before starting P3.
 
@@ -86,6 +90,11 @@ customer rollout, autonomous denial or unsupported executable rule activation.
 Policy activation continues to require explicit human approval.
 
 ## Verification and delivery checkpoint
+
+- Latest presentation increment: **19 browser tests pass**, web typecheck/lint
+  and production build pass. Local-only fixture route returns 404 in production
+  mode. This tests presentation, not real source API/UI or service isolation.
+  Python/API suites were not rerun for this frontend-only increment.
 
 - Root regression: **145 passed** after domain-packaging regressions; root/API
   lint, API formatting and git whitespace checks pass.
@@ -133,6 +142,9 @@ source, isolation, clinical-disclosure or UI integration gates.
 - [x] Versioned source-read API with tested opt-in adapter; v1 is unchanged.
 - [ ] UI distinguishes no saved recommendation from QUERY/REFER, source error
   and zero payable; end-to-end coverage with separate source-alpha tenants.
+  Local fixture presentation is implemented; real source-alpha integration and
+  its owner/clinical-access tests remain open. The fixture preview is explicitly
+  labelled, authenticated and unavailable outside local/local-auth mode.
 
 The existing v1 API requires an outcome, so it is unchanged. The v2 adapter uses
 the new observation, but HTTP reads stay disabled by default and the UI is not

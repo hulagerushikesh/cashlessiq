@@ -5,6 +5,7 @@ export type Identity = components["schemas"]["MeResponse"];
 export type CaseDetail = components["schemas"]["CaseDetail"];
 export type CaseQueue = components["schemas"]["CaseQueue"];
 export type Outcome = components["schemas"]["CaseSummary"]["outcome"];
+export type SourceCaseDetail = components["schemas"]["SourceCaseDetail"];
 
 export function createApiClient(baseUrl: string, token: string) {
   return createClient<paths>({
