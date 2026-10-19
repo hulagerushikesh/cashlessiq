@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Loopback mTLS passes; still need authoritative remote membership, private container transport, retained replay/key lifecycle, separate packages and tested secret/network mounts |
+| Worker security | Loopback mTLS and fresh remote membership pass; still need private container transport, membership-service DB policy, retained replay/key lifecycle, separate packages and tested secret/network mounts |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -332,6 +332,23 @@ lifecycle and exact Snowflake/live acceptance gates remain. See the
 [transport checkpoint](../architecture/p2-worker-transport.md). Next: authoritative
 remote membership and worker packaging preparation; do not give workers general
 operational DB credentials or activate human OAuth as a shortcut.
+
+## Latest membership checkpoint
+
+The narrow authoritative membership service/client now passes loopback mTLS tests
+without giving workers general DB credentials. Certificate identity pins the
+tenant; UUID/nonce-bound responses contain only the fresh current role or null.
+Revocation, lookup outages and medical downgrade deny before delivery. Both tenant
+scopes/all roles compose with fake source inputs; no source endpoint was activated.
+
+Latest verification: **312 API/PostgreSQL tests**, **145 root tests**, root/API
+lint, API formatting and whitespace checks. Web/browser/build/remote CI not rerun
+for this internal-only change. No Snowflake spend, real credentials, grants, push,
+ordinary startup or deployment. See [evidence/limits](../architecture/p2-worker-membership.md).
+
+Next: separate worker/membership packaging, private network and mount-isolation
+tests, then reviewed secret/replay lifecycle and exact Snowflake package. P2 is
+not complete; the live product path and public website remain unchanged.
 
 ## Spend guardrails
 

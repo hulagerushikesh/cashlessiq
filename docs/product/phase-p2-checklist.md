@@ -5,6 +5,22 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Authoritative membership over loopback mTLS — latest
+
+Workers now have a narrow pinned membership client instead of requiring general
+PostgreSQL credentials. The trusted service checks fresh active user, tenant and
+membership; certificate identity selects a fixed tenant. Strict UUID/nonce-bound
+responses return only the current role or null; errors deny without stale cache.
+34 new tests cover database role/revocation changes, protocol/scope rejection and
+medical downgrade before delivery at validator and reader boundaries. Both tenant
+scopes compose using fake source inputs. Details and limits:
+[membership checkpoint](../architecture/p2-worker-membership.md).
+
+312 API/PostgreSQL and 145 root tests pass; lint/format/whitespace checks pass.
+No Snowflake/AI, real credentials, grants, source/normal startup, push or deployment.
+P2 remains open: separate packaging/private networks/mounts, key/replay lifecycle,
+exact Snowflake isolation, governed evidence projection and live acceptance.
+
 ### Loopback mutually authenticated worker transport — latest
 
 Both broker -> read relay and read relay -> validator now pass real mTLS tests,

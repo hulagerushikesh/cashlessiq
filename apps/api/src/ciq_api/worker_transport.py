@@ -168,6 +168,18 @@ class LoopbackSummaryServer(ThreadingHTTPServer):
         # No request, assertion, source exception or TLS credential logging.
         pass
 
+    def _dispatch(self, message: dict, peer: TransportPeer) -> bytes:
+        if (
+            set(message) != {"token"}
+            or type(message["token"]) is not str
+            or not 0 < len(message["token"]) <= 4096
+        ):
+            raise ValueError("Invalid worker message")
+        result = SummaryObservation.model_validate(
+            self._validate(message["token"], peer=peer).model_dump()
+        )
+        return result.model_dump_json().encode()
+
 
 class _SummaryHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -196,16 +208,7 @@ class _SummaryHandler(BaseHTTPRequestHandler):
             if len(body) != length:
                 raise ValueError("Invalid worker message")
             message = _json(body)
-            if (
-                set(message) != {"token"}
-                or type(message["token"]) is not str
-                or not 0 < len(message["token"]) <= 4096
-            ):
-                raise ValueError("Invalid worker message")
-            result = SummaryObservation.model_validate(
-                self.server._validate(message["token"], peer=peer).model_dump()
-            )
-            response = result.model_dump_json().encode()
+            response = self.server._dispatch(message, peer)
             if len(response) > MAX_BODY:
                 raise ValueError("Invalid worker message")
         except Exception:
@@ -235,13 +238,20 @@ class LoopbackSummaryClient:
         self._path = _path(operation)
 
     def summary(self, token: str) -> SummaryObservation:
+        if type(token) is not str or not 0 < len(token) <= 4096:
+            raise WorkerDenied("Worker access denied")
+        try:
+            return SummaryObservation.model_validate(self._exchange({"token": token}))
+        except Exception:
+            raise WorkerDenied("Worker access denied") from None
+
+    def _exchange(self, message: dict) -> dict:
+        """Shared framing/TLS only; subclasses must enforce their strict contract."""
         connection = HTTPSConnection(
             "127.0.0.1", self._port, timeout=TIMEOUT, context=self._context
         )
         try:
-            if type(token) is not str or not 0 < len(token) <= 4096:
-                raise WorkerDenied("Worker access denied")
-            body = json.dumps({"token": token}).encode()
+            body = json.dumps(message).encode()
             if len(body) > MAX_BODY:
                 raise WorkerDenied("Worker access denied")
             connection.connect()
@@ -256,7 +266,7 @@ class LoopbackSummaryClient:
             payload = response.read(length + 1)
             if len(payload) != length:
                 raise ValueError("Invalid worker message")
-            return SummaryObservation.model_validate(_json(payload))
+            return _json(payload)
         except Exception:
             raise WorkerDenied("Worker access denied") from None
         finally:

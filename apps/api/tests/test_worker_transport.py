@@ -60,6 +60,7 @@ def pki():
             ("foreign", "reader:1:nonclinical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("medical", "reader:0:medical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("validator", "validator:0", ExtendedKeyUsageOID.SERVER_AUTH),
+            ("membership", "membership:0", ExtendedKeyUsageOID.SERVER_AUTH),
             ("wrong_uri", "other-validator", ExtendedKeyUsageOID.SERVER_AUTH),
             ("expired", "validator:0", ExtendedKeyUsageOID.SERVER_AUTH),
             ("wrong_eku", "reader:0:nonclinical", ExtendedKeyUsageOID.SERVER_AUTH),

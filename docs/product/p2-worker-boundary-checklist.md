@@ -50,7 +50,8 @@ Design: [validation/credential boundary](../architecture/p2-validation-boundary.
   [transport evidence and limits](../architecture/p2-worker-transport.md).
 
 Files: apps/api/src/ciq_api/worker_authority.py, validation_worker.py and worker_broker.py,
-plus worker_replay.py, worker_delegation.py and worker_transport.py, with tests.
+plus worker_replay.py, worker_delegation.py, worker_transport.py and worker_membership.py,
+with tests.
 They are not imported into main/create_app or HTTP
 startup, do not change public v2/OpenAPI and contain no connector creation.
 Delegation/source handlers are test primitives, not running isolated containers.
@@ -68,15 +69,20 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
 - [x] Establish certificate-derived peer identity for loopback delegation tests.
   OfflinePeer remains a test double; the TLS adapter instead constructs
   TransportPeer only from verified certificate/pin/SAN state, never headers.
+- [x] Narrow loopback mTLS membership service/client, immutable peer-to-tenant
+  mapping, UUID/nonce-bound strict responses and fresh PostgreSQL lookups. Workers
+  receive no DB credential. Role/user/tenant revocation and medical downgrade
+  fail before delivery across network membership checks. See
+  [membership evidence/limits](../architecture/p2-worker-membership.md).
 - [ ] Implement private peer-authenticated transport and asymmetric assertion
   issuer lifecycle in separately packaged workers. Loopback mTLS now passes;
   container/private addressing, signing/CA custody, rotation/revocation, production
   server/timeout handling and network/mount isolation remain unimplemented.
-- [ ] Implement authoritative membership adapter and before-delivery checks at
-  read workers, including medical response downgrade. Broker, relay and validator
-  now exercise a database-backed adapter in disposable local tests. No private
-  remote membership protocol or distributed revocation behaviour is established;
-  separate workers must not receive general operational database credentials.
+- [ ] Package the authoritative membership service separately with reviewed DB
+  access policy/private networking. Loopback remote checks now pass, including
+  medical downgrade after validator return; deployed isolation, consistency,
+  production deadlines and cross-service acceptance remain open. Separate workers
+  must not receive general operational database credentials.
 - [ ] Replace process-local replay state with a reviewed atomic shared strategy
   before multi-process/restart-capable use. The optional SQLite candidate now
   passes same-host multiprocess/restart tests; the default remains process-local.
@@ -102,8 +108,8 @@ clinical prose, financial lines or persisted projection is introduced.
 
 ## Verification
 
-278 API tests passed, including disposable PostgreSQL tests and the
-133 boundary/broker/replay/delegation/transport tests. Eleven replay tests include spawned processes,
+312 API tests passed, including disposable PostgreSQL tests and the
+167 boundary/broker/replay/delegation/transport/membership tests. Eleven replay tests include spawned processes,
 restart/capacity/storage failures and expiry during consumption.
 The delegation increment adds 32 focused tests and 16 existing broker scenarios
 rerun through the delegated route. Both tenant scopes/all roles and SAVED/MISSING

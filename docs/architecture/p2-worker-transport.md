@@ -49,8 +49,9 @@ No real service keys, certificate installation or persistent source identities.
 
 Still open before activation:
 
-1. Authoritative remote membership protocol (workers must not get general DB
-   credentials); network-hop freshness/revocation and medical-delivery tests.
+1. The [narrow remote membership candidate](p2-worker-membership.md) now passes
+   loopback freshness/revocation/medical-delivery tests without worker DB credentials.
+   Production service placement, database privilege policy and isolation remain open.
 2. Separate worker packages/containers, private addressing, mount/network tests,
    validated production server/deadlines/backpressure and startup/shutdown handling.
 3. Exact approved CA/signing-key custody, encrypted store/unlock, least-privilege
