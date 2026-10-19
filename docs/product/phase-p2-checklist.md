@@ -5,6 +5,15 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Architecture approved; metadata preflight prepared — 19 October
+
+Rushikesh explicitly approved the [isolation architecture](p2-isolation-proposal.md).
+Prepared the [24-statement/five-minute metadata preflight](p2-isolation-preflight.md)
+and a short CoCo prompt. Execution is not approved or performed by this checkpoint.
+Hosting/credential custody, exact implementation, provisioning and functional
+acceptance remain separate gates. No Snowflake/AI calls, runtime changes, push or
+deployment. Documentation whitespace checks only; runtime suites not rerun.
+
 ### Corrected isolation implementation proposal — 19 October
 
 Received the owner's full CoCo follow-up (28 metadata statements reported, no

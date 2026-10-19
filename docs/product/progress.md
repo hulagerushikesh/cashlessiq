@@ -103,10 +103,13 @@ demo-video work is not part of this product plan.
   calculation/citation display; the current v2 contract deliberately omits prose.
 - [ ] Bounded live API/UI parity after those security gates, then review P2 exit.
 
-The owner approved preparing the corrected isolation/authentication proposal
-locally, not applying it. It separates tenant projections, clinical validation,
-service authentication and human login changes, with staged approval packets and
-negative tests. No new SQL, credentials, source activation or account changes.
+Rushikesh approved the corrected architecture on 19 October. It separates tenant
+projections, clinical validation, service authentication and human login changes.
+The [bounded metadata preflight plan](p2-isolation-preflight.md) is prepared,
+not executed; its execution needs separate approval. Validation hosting and
+credential custody must be settled before the implementation package. Architecture
+approval is not provisioning approval. No new SQL, credentials, source activation
+or account changes.
 
 The website must remain unchanged per Rushikesh's latest instruction. Completing
 offline tests does not waive these gates or authorise P3, public deployment,

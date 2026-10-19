@@ -1,8 +1,14 @@
 # P2 source isolation: review-only implementation proposal
 
-Date: 19 October 2026. Status: **draft for approval, not executable or applied**.
+Date: 19 October 2026. Status: **architecture approved by Rushikesh; not executable or applied**.
 Scope: three synthetic cases, two TPAs, read-only P2. Website deployment and P3
 are excluded. Approval to prepare this document is not approval to provision.
+
+Rushikesh explicitly approved the architecture on 19 October 2026. This approves
+the tenant/disclosure/validation boundaries below, not provisioning, credential
+creation, authentication-policy changes or functional reads. Next is the
+[bounded metadata preflight plan](p2-isolation-preflight.md), requiring separate
+execution approval. Validation hosting and credential custody remain unresolved.
 
 ## Recommendation
 
@@ -150,7 +156,8 @@ defaults and masking changes require separate named targets/approvals.
 
 ## Ordered implementation and approval packets
 
-1. **Review now:** approve or revise this architecture only. Nothing applied.
+1. **Architecture approved:** Rushikesh approved this architecture on 19 October.
+   Nothing applied; implementation and execution gates below remain open.
 2. **Preflight proposal:** CoCo reconciles the report's count/policy/definition
    gaps with a separately bounded metadata plan. No compute or mutation implied.
 3. **DDL/auth package:** after validation-host and credential decisions, prepare
