@@ -16,6 +16,11 @@ dependencies = [
   "uvicorn>=0.35,<1",
 ]
 
+[project.optional-dependencies]
+snowflake = [
+    "snowflake-connector-python>=3.18,<5",
+]
+
 [dependency-groups]
 dev = [
     "httpx>=0.28,<1",

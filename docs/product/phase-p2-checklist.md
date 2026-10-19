@@ -47,6 +47,18 @@ are disabled outside local/test environments. No data ingestion path exists.
 
 ## Later P2 integration — not required for first local slice
 
+19 October increment: an optional, bounded source gateway and dedicated reader
+role SQL are prepared with nine offline tests. Unknown tenants make no network
+call; queries bind the server-owned TPA mapping and allowlist three golden IDs.
+The existing auditor role is not reused because it inherits runtime writes.
+Local authentication did not complete during this increment, so no live parity
+or cost measurement is claimed. The gateway is not wired to HTTP/UI yet. See
+[operator steps](../architecture/snowflake-read-integration.md).
+
+Increment verification: 62 root tests and 45 API/PostgreSQL/gateway tests passed;
+API Ruff and git whitespace checks passed. OAuth connection test timed out before
+authentication; no source SQL, grants, warehouse activation or AI call ran.
+
 - [ ] Governed Snowflake read adapter behind the repository interface.
 - [ ] Approved economical integration verification and view parity.
 
