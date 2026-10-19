@@ -5,12 +5,11 @@ role must pass before replacing the offline snapshots.
 """
 
 from collections.abc import Callable, Mapping
-from datetime import date
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
-
+from ciq_api.source_models import SourceCase as SourceCase
+from ciq_api.source_models import SourceReadUnavailable as SourceReadUnavailable
 from ciq_api.source_scopes import SyntheticSourceScopes
 
 READ_SQL = """
@@ -25,24 +24,6 @@ WHERE P.TPA_ID = %s AND R.REQUEST_ID IN (%s, %s, %s)
 ORDER BY R.REQUEST_ID
 LIMIT 4
 """
-
-
-class SourceReadUnavailable(RuntimeError):
-    """Safe boundary error; never expose connector details or credentials."""
-
-
-class SourceCase(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-    request_id: str
-    policy_id: str
-    tpa_id: str
-    product_id: str
-    product_name: str
-    policy_version: str
-    continuous_cover_since: date
-    admission_date: date
-    estimated_total_inr: int = Field(ge=0)
 
 
 class SnowflakeCaseSource:

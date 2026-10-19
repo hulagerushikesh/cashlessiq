@@ -14,7 +14,7 @@ from uuid import uuid4
 import jwt
 from pydantic import Field
 
-from ciq_api.source_cases import ALPHA_REFERENCES
+from ciq_api.source_identity import ALPHA_REFERENCES
 from ciq_api.source_scopes import SyntheticSourceScopes
 from ciq_api.validation_worker import OfflineValidationWorker, SummaryObservation
 from ciq_api.worker_authority import (

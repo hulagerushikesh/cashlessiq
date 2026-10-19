@@ -9,8 +9,8 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from uuid import UUID
 
-from ciq_api.seed import TENANT_ID
 from ciq_api.source_alpha import SOURCE_TENANTS
+from ciq_api.source_identity import TENANT_ID
 
 VERIFIED_ALPHA_OWNERSHIP = MappingProxyType({"TPA001": ("GOL001",), "TPA003": ("GOL024", "GOL027")})
 

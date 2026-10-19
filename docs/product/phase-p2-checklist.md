@@ -5,6 +5,22 @@ Last updated: 19 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Minimal worker artifact and disposable topology — latest
+
+Separate locked worker wheel/image now excludes API startup, DB/seed/broker modules
+and connectors. Default image refuses activation; only the explicit test target
+contains a TCP topology probe. Eight disposable containers over 14 internal pair
+networks passed permitted/forbidden hostname/direct-IP and non-root/read-only/
+dummy-secret mount checks. No host ports, real credentials or normal startup.
+Resources cleaned up, existing product stack untouched. Details:
+[packaging checkpoint](../architecture/p2-worker-packaging.md).
+
+312 API/PostgreSQL and 145 root tests pass with lint/format/whitespace checks;
+OpenAPI comparison is unchanged.
+No browser/build/remote CI rerun. Container mTLS/application composition, trusted
+membership-service DB boundary, real secret/replay lifecycle and Snowflake/live
+acceptance gates remain open. Website deployment remains paused; no P3 or push.
+
 ### Authoritative membership over loopback mTLS — latest
 
 Workers now have a narrow pinned membership client instead of requiring general

@@ -17,8 +17,10 @@ peer-policy checks initially used an injected test identity. An explicit loopbac
 mTLS adapter now tests certificate-derived identities on both worker hops, with
 required certificates, pinned leaf/URI identities and server hostname checks.
 See [transport evidence and remaining gates](p2-worker-transport.md).
-Container/private-network transport, secret delivery and database isolation are
-not implemented by this local composition; the design below remains the target.
+A minimal separate worker artifact and disposable network/dummy-mount topology
+now pass [packaging tests](p2-worker-packaging.md). Actual container mTLS/service
+wiring, real secret delivery and database isolation are not implemented by those
+test probes; the design below remains the target.
 An optional same-host SQLite replay candidate now passes atomic multiprocess and
 retained-state restart tests. It is not activated; shared-file custody, mount and
 lifecycle review remain required, and the default ledger is still process-local.

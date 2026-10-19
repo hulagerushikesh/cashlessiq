@@ -1,9 +1,8 @@
 """Opt-in synthetic repository adapter. No connector creation or snapshot fallback."""
 
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from decimal import Decimal
-from types import MappingProxyType
 from typing import Any, Protocol
 from uuid import UUID
 
@@ -23,24 +22,9 @@ from ciq_api.source_contracts import (
     SourceClauseReference,
     SourceMemberHistory,
 )
+from ciq_api.source_identity import ALPHA_REFERENCES as ALPHA_REFERENCES
+from ciq_api.source_identity import AlphaReference as AlphaReference
 from ciq_api.source_scopes import SyntheticSourceScopes
-
-
-@dataclass(frozen=True)
-class AlphaReference:
-    policy_id: str
-    member_id: str
-    product_id: str = "AS_NIA_V02_2425"
-
-
-# Independently inspected synthetic references, not financial results or tenant entitlements.
-ALPHA_REFERENCES = MappingProxyType(
-    {
-        "GOL001": AlphaReference("POL0001", "MEM0001"),
-        "GOL024": AlphaReference("POL0024", "MEM0024"),
-        "GOL027": AlphaReference("POL0027", "MEM0027"),
-    }
-)
 
 
 class MetadataSource(Protocol):

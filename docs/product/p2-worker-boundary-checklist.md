@@ -74,6 +74,12 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   receive no DB credential. Role/user/tenant revocation and medical downgrade
   fail before delivery across network membership checks. See
   [membership evidence/limits](../architecture/p2-worker-membership.md).
+- [x] Separate minimal locked worker wheel/image, canonical code allowlist and
+  no API/DB/connector dependencies. Default image refuses activation. Explicit
+  test target passes eight-container/14-private-pair-network and read-only dummy
+  mount checks, including forbidden peers by direct IP. This is not a running
+  application or mTLS-in-container proof. See
+  [packaging evidence/limits](../architecture/p2-worker-packaging.md).
 - [ ] Implement private peer-authenticated transport and asymmetric assertion
   issuer lifecycle in separately packaged workers. Loopback mTLS now passes;
   container/private addressing, signing/CA custody, rotation/revocation, production
@@ -92,8 +98,11 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   mount/access/capacity configuration, clock discipline and lifecycle/backup
   handling still need review and tests; no live wiring is approved. Do not expose
   consume/before_delivery as independent HTTP endpoints or accept client claims.
-- [ ] Package workers separately and test secret/network/mount isolation. Current
-  API code location is a development scaffold, not credential/process separation.
+- [ ] Compose actual separately packaged application workers over private mTLS,
+  plus trusted membership DB boundary. Minimal worker artifact and dummy topology/
+  mount smoke now pass; live handlers, real secret custody/rotation and retained
+  replay volumes remain gated. No actual Snowflake credential/process separation
+  is claimed by test probes.
 - [ ] Exact approved secret-store/key delivery mechanism, rotation and revocation.
 - [ ] Coherent Snowflake input query, duplicates/ownership/version evidence, exact
   view/role/principal/rollback package and CoCo review. Fake ValidationInputs do

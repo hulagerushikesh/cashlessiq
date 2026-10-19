@@ -10,9 +10,9 @@ from cashlessiq_domain.source_recommendation import (
 )
 from pydantic import BaseModel, ConfigDict
 
-from ciq_api.snowflake_reads import SourceCase, SourceReadUnavailable
-from ciq_api.source_cases import ALPHA_REFERENCES
 from ciq_api.source_contracts import MissingSourceRecommendation, SavedSourceRecommendation
+from ciq_api.source_identity import ALPHA_REFERENCES
+from ciq_api.source_models import SourceCase, SourceReadUnavailable
 from ciq_api.source_scopes import SourceScope
 from ciq_api.worker_authority import SummaryAuthority, WorkerDenied
 

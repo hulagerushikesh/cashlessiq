@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Loopback mTLS and fresh remote membership pass; still need private container transport, membership-service DB policy, retained replay/key lifecycle, separate packages and tested secret/network mounts |
+| Worker security | Loopback mTLS/membership and minimal worker image + dummy network/mount tests pass; still need container mTLS/service wiring, membership DB boundary and real replay/key lifecycle |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -349,6 +349,21 @@ ordinary startup or deployment. See [evidence/limits](../architecture/p2-worker-
 Next: separate worker/membership packaging, private network and mount-isolation
 tests, then reviewed secret/replay lifecycle and exact Snowflake package. P2 is
 not complete; the live product path and public website remain unchanged.
+
+## Latest packaging checkpoint
+
+A separate minimal worker artifact now builds without API startup, DB modules or
+Snowflake connector. The default image refuses activation. An explicit test-only
+image passed eight-container/14-private-network checks: permitted edges work;
+forbidden peers fail by hostname/direct IP; non-root/read-only/dummy-secret mount
+boundaries hold. All disposable resources were cleaned up; normal local stack and
+website are untouched. See [packaging evidence/limits](../architecture/p2-worker-packaging.md).
+
+312 API/PostgreSQL and 145 root tests remain green. No Snowflake/AI, real keys,
+service provisioning, live source activation, push or deployment. Deployment is
+paused again at the owner's request. Next: actual container mTLS using temporary
+PKI, trusted membership-service packaging/DB policy and secret/replay lifecycle.
+The topology probes are not application handlers; P2 remains incomplete.
 
 ## Spend guardrails
 

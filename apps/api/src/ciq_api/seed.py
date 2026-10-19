@@ -7,8 +7,8 @@ from ciq_api.config import Settings
 from ciq_api.database import make_engine, session_for
 from ciq_api.models import AppUser, Membership, Tenant
 from ciq_api.source_alpha import SOURCE_TENANTS
+from ciq_api.source_identity import TENANT_ID as TENANT_ID
 
-TENANT_ID = UUID("00000000-0000-4000-8000-000000000001")
 PROFILES = {
     "processor": ("00000000-0000-4000-8000-000000000011", "Asha Deshmukh"),
     "medical_officer": ("00000000-0000-4000-8000-000000000012", "Dr. Neel Shah"),

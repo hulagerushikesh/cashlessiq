@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cashlessiq-worker-candidate"
+version = "0.1.0"
+requires-python = ">=3.11,<3.12"
+dependencies = ["cashlessiq-domain==0.1.0", "pydantic>=2.10,<3", "pyjwt[crypto]>=2.10,<3"]
+
+[tool.uv.sources]
+cashlessiq-domain = { path = "../../packages/domain" }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ciq_worker_runtime"]
+
+# Repackage the canonical files; never fork implementations or include API startup.
+[tool.hatch.build.targets.wheel.force-include]
+"../api/src/ciq_api/__init__.py" = "ciq_api/__init__.py"
+"../api/src/ciq_api/contracts.py" = "ciq_api/contracts.py"
+"../api/src/ciq_api/source_contracts.py" = "ciq_api/source_contracts.py"
+"../api/src/ciq_api/source_identity.py" = "ciq_api/source_identity.py"
+"../api/src/ciq_api/source_models.py" = "ciq_api/source_models.py"
+"../api/src/ciq_api/source_alpha.py" = "ciq_api/source_alpha.py"
+"../api/src/ciq_api/source_scopes.py" = "ciq_api/source_scopes.py"
+"../api/src/ciq_api/validation_worker.py" = "ciq_api/validation_worker.py"
+"../api/src/ciq_api/worker_authority.py" = "ciq_api/worker_authority.py"
+"../api/src/ciq_api/worker_delegation.py" = "ciq_api/worker_delegation.py"
+"../api/src/ciq_api/worker_replay.py" = "ciq_api/worker_replay.py"
+"../api/src/ciq_api/worker_transport.py" = "ciq_api/worker_transport.py"
+"../api/src/ciq_api/worker_membership.py" = "ciq_api/worker_membership.py"
