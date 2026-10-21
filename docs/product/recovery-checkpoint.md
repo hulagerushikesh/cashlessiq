@@ -103,3 +103,20 @@ remaining USD balance and expiry time remain unverified.
 The temporary restored tree and private bundle remain local. No encrypted or
 off-device copy has been made. Full raw recovery/live definitions and all existing
 P2 isolation/credential/clinical-projection/live API/UI gates remain open.
+
+## Offline preservation recheck — 21 October 2026
+
+Both existing archives (`recovery-20261021` and `replay-rebuild-20261021`)
+passed offline integrity verification again. Both private replay-input stages
+also passed canonical replay without source access or printing their payloads.
+A new private ignored archive at `output/rebuild-offline-2b8c0ea` preserves the
+committed code/documentation at `2b8c0ea`, including the later worker-security
+increments. Its manifest verification passed; it contains no new live capture.
+The current working-tree root suite passes all **175 tests**.
+
+This recheck is not a fresh extracted-tree restore, dependency installation,
+full product regression, encrypted/off-device backup or live acceptance. All
+bundles remain local and private. No Snowflake connection, AI call, deployment,
+credential change or source recapture occurred. Exact remaining trial balance
+and expiry still require current owner evidence. Clock-safety implementation
+remains pending approval of its design.
