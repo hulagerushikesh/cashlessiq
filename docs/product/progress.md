@@ -470,8 +470,13 @@ and written: staged GOL001 then GOL024/GOL027, 14 source SELECTs total, private
 latest-decision JSON/condition inputs only after explicit persistence approval.
 No new source reads or exports ran for this review. Live definitions/rules/grants
 are excluded; the current reader does not have POLICY_RULE access. Exporter
-implementation, payload guards, capture and offline replay remain to be done
-after approval; no P2 exit or full backup claim.
+implementation, payload guards, capture and offline replay were subsequently
+completed after approval: **175 root tests pass**, including 20 exporter tests.
+Stage A (12.698s) and B (9.136s) used 14 source SELECTs / 38 explicit statements;
+GOL001 SAVED and GOL024/GOL027 MISSING independently replay successfully offline.
+Restricted inputs are private/ignored, not committed or publicly uploaded.
+See [evidence and limitations](recovery-inputs-evidence.md). No AI, grants,
+source writes, runtime activation, deployment or push; P2 remains open.
 
 21 October live checkpoint: the explicit reader/NONE connection works; eight
 metadata statements confirm 13 direct grants/eight visible source tables and

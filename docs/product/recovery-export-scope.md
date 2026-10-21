@@ -1,6 +1,8 @@
 # Bounded synthetic replay-input export — approval package
 
-21 October 2026. **Reviewed proposal; not export approval or execution evidence.**
+21 October 2026. **Approved and executed within the bounds below.** See the
+[capture/replay evidence](recovery-inputs-evidence.md). The original approval
+package follows for audit context; it is not permission for repeated captures.
 Current metadata checkpoint is complete. P2 remains open. This proposal expands
 local persistence beyond metadata; obtain the owner's explicit approval below
 before reading/exporting the additional payloads. No runtime activation.
@@ -104,7 +106,7 @@ rebuild inputs, not proof of the current live rule registry. Live DDL, grants,
 masking definitions and six runtime principals need their own exact review;
 GET_DDL/admin access is not included here.
 
-## Owner approval requested
+## Original owner approval request — subsequently accepted
 
 Approve **private persistence of the three known synthetic cases' existing
 inspection fields, including latest decision JSON and condition rows**, through
