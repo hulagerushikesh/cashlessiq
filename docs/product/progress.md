@@ -552,9 +552,19 @@ failure and corrected successful run are recorded in the
 All owned test resources were removed; **175 root / 55 factory / 362 API/DB**
 tests and lint/format/whitespace checks pass. No normal activation, real secrets,
 Snowflake, website deployment or remote CI claim.
-Next: explicit key-generation/lost-state recovery acceptance and clock-safety
-design/negative tests, then secret-delivery/readiness/deadline gates. Live
-isolation/evidence/P2 exit remain open.
+Offline signing-generation acceptance now adds **18 cases**, covering both
+tenants/all three roles and healthy/missing/corrupt ledgers. Unused, unexpired
+old parent/child signatures deny after new-key construction; absent replacement
+state denies even fresh signatures until explicit test-only provisioning.
+Damaged state is preserved; healthy ledgers are retained; fresh new-generation
+requests and restart replay rejection pass. **380 API/DB and 175 root tests**
+pass, with lint/format/whitespace checks. See the
+[scope and operational limits](../architecture/p2-runtime-lifecycle.md#offline-signing-generation-recovery-acceptance--21-october).
+This is an offline primitive test, not container rotation, a recovery controller
+or clock-safety implementation. No Snowflake, real secrets, runtime/website
+activation or remote CI claims. Next: container-level signing-generation
+acceptance and clock-safety design/negative tests, then secret-delivery/readiness/
+deadline gates. Live isolation/evidence/P2 exit remain open.
 
 ## References
 

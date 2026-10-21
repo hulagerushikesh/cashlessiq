@@ -211,3 +211,35 @@ trusted; this is not tamper-proof storage.
 This document closes the **written review proposal**, not the implementation or
 production security gate. No new source reads, AI, spend, persistent credentials,
 normal service startup, public contract change, push or deployment are required.
+
+## Offline signing-generation recovery acceptance — 21 October
+
+`apps/api/tests/test_worker_generation_recovery.py` adds 18 acceptance cases:
+two synthetic tenants, three reviewer roles and healthy/missing/corrupt ledgers.
+The real signing/verification and retained SQLite authorities are exercised;
+membership, source input and peer identity are offline fixtures. Time is fixed
+at 1000, with old and new tokens unexpired. No private key is persisted.
+
+Each case consumes a valid old-generation request, then discards the old test
+authority instances. Healthy rotation preserves existing ledger files. Lost or
+corrupt state denies unused old capabilities without recreating or modifying
+the damaged files. Replacement authority instances receive only a new public
+key; fresh-generation requests still deny while replacement ledgers are absent.
+Only the explicit test initializer creates NEW files, never overwrites evidence.
+Afterward, unused old parent and child capabilities deny independently before
+source reads, while fresh new-generation requests return truthful SAVED/MISSING.
+Reconstructed authorities with the same new key/files reject consumed tokens
+and still reject the old signatures; another fresh request succeeds.
+
+This proves the cryptographic/ledger primitives under an explicit offline
+sequence, **not an enforced operational recovery mechanism**. Discarding Python
+objects models stopping workers; it does not prove shutdown, no stale replica,
+atomic generation inventory, issuance disablement, transport certificate
+rotation, or live mount replacement. The new test is NOT composed with the
+container TLS test yet. Trusted fixed time cannot prove clock health or rollback
+protection. Host-file tampering, production secret custody and the actual
+recovery controller remain unresolved; normal startup stays disabled.
+
+Next: container-level old/new signing-generation acceptance without resetting
+healthy replay state, plus a reviewed durable clock-discontinuity design before
+implementing automatic clock controls. No source/AI calls, deployment or P3.

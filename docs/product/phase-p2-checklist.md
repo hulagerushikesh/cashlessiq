@@ -770,11 +770,19 @@ that proposal checkpoint.
 - [x] Certificate/trust, membership/disclosure, grant-loss and outage denials
   remain enforced; final missing-ledger delivery/startup refuse without repair.
 - [x] Exact invocation cleanup; 175 root, 55 factory and 362 API/DB tests pass.
-- [ ] Old-key rejection/new-generation lost-state recovery and clock safety.
+- [x] Offline primitives: old-key rejection/new-generation acceptance across
+  healthy/missing/corrupt retained state, two tenants and three roles (18 cases).
+- [ ] Container-level generation transition, enforced lost-state recovery and
+  clock safety (offline tests do not close this operational gate).
 - [ ] Secret custody/delivery, readiness, deadlines/shutdown and live isolation.
 
 See [scope and failed-first-run correction](../architecture/p2-worker-replay-lifecycle.md).
 Normal runtime, public site and source activation remain unchanged; P2 is open.
+
+The subsequent [offline generation checkpoint](../architecture/p2-runtime-lifecycle.md#offline-signing-generation-recovery-acceptance--21-october)
+passes in the **380-test API/DB suite**; 175 root tests and repository lint pass.
+No container rotation, live shutdown/issuance gate, automatic provisioning or
+clock-safety implementation is claimed. Browser/build/remote CI not rerun.
 
 Documentation/link/whitespace checks only; no runtime code changed or test suites
 rerun. Next: offline fixed factory/configuration tests, without entry-point/source
