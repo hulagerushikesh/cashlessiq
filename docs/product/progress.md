@@ -457,10 +457,21 @@ metadata statements confirm 13 direct grants/eight visible source tables and
 suspended CIQ_WH/two visible pools. The reader reports `resource_monitor=null`,
 unlike the historical CIQ_RM baseline. Source reads/exports are paused pending
 targeted administrative confirmation, not an automatic monitor/grant repair.
-Search returned no visible rows, not proof of absence/suspension. See the
+The subsequent owner-supplied ACCOUNTADMIN/NONE report resolves this discrepancy:
+CIQ_RM exists and is attached; quota 10 warehouse credits/month, 2.27 used,
+notifications 50/75%, suspend 90%. No repair was made. Search returned no visible
+rows, not proof of absence/suspension. See the
 [inventory, limitations and bounded CoCo prompt](snowflake-expiry-inventory.md).
 No source-row reads, AI, account changes or deployment ran. Exact expiry/balance
 and incremental cost remain unverified; no recovery export is yet claimed.
+
+After that confirmation, a local reader/NONE batch ran three bounded source
+SELECTs: case metadata, saved-row counts and clause-reference counts for exactly
+GOL001/TPA001 and GOL024/GOL027/TPA003. All expected pairs were returned;
+GOL001 has two saved rows, the other cases zero, and all have 35 clause refs.
+No raw decision/clinical data was read and no new canonical validation pass is
+claimed. See [captured observations and limits](snowflake-expiry-source-evidence.md).
+This is supervised evidence, not a coherent snapshot or API/UI/service acceptance.
 
 Latest planning baseline: **$195 remaining and two days until expiry**, reported
 by Rushikesh on 21 October, not independently verified. There is no budget for

@@ -82,6 +82,22 @@ needs a separately approved exact package. Source-read/export batch stays paused
 
 ## Statement ledger and limitations
 
+### Administrative discrepancy resolved — owner-supplied follow-up
+
+The owner subsequently supplied explicit ACCOUNTADMIN/NONE results: CIQ_RM
+**exists and is attached to CIQ_WH**. The previous reader output was incomplete
+visibility, not evidence of a missing attachment. No repair is needed; the
+source-read pause for this discrepancy is lifted. This administrative result
+is attributed to CoCo, not independently rerun locally, and has no supplied
+query IDs. CIQ_WH was suspended with no running clusters/queued work.
+
+CIQ_RM reports a 10-credit monthly warehouse quota, 2.27 used and 7.73 remaining;
+notification triggers at 50/75%, suspend at 90%, no immediate-suspend trigger
+and no named notify users. The monthly period began 29 September. Notification
+delivery is not established by these results. No monitor or recipient change is
+authorized here. Warehouse credits are not the $195 trial balance; this monitor
+does not establish an all-service dollar cap. Exact trial expiry remains open.
+
 Executed in this order:
 
 1. SELECT current user/role/secondary roles/account/region.

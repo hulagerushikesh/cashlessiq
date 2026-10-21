@@ -87,6 +87,13 @@ provide contingency, not an instruction to schedule unattended work.
 
 ## After-expiry operating mode
 
+21 October checkpoint: owner-supplied ACCOUNTADMIN/NONE evidence confirms
+CIQ_RM attached to CIQ_WH, 10 monthly warehouse credits, 2.27 used, notification
+50/75% and suspend 90%. Reader-visible null was incomplete visibility, not a
+missing monitor. A subsequent local bounded three-case metadata/presence capture
+ran without AI or raw clinical data; see [source evidence](snowflake-expiry-source-evidence.md).
+Incremental cost/current trial balance and exact expiry were not measured.
+
 - Keep the public static demo and local synthetic fixture development independent
   of Snowflake. Test domain/API/UI and disposable PostgreSQL locally; this is not
   a replacement for live Snowflake isolation acceptance.
