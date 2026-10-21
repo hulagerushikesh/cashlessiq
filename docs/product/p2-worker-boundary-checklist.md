@@ -107,6 +107,14 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   mount/access/capacity configuration, clock discipline and lifecycle/backup
   handling still need review and tests; no live wiring is approved. Do not expose
   consume/before_delivery as independent HTTP endpoints or accept client claims.
+- [x] Disposable membership/DB container acceptance with a real restricted test
+  login. Required point lookup succeeds; 18 forbidden operations deny by DB
+  grants, independently of read-only transactions. Fresh deactivation/downgrade,
+  required-grant revocation and DB outage fail closed. Exact own read-only secret
+  mount, private pair networks and worker DB credential/driver/reachability
+  exclusions pass. Temporary DB/credentials/resources removed. Not production
+  provisioning, DB TLS or mTLS-handler composition; see
+  [evidence/limits](../architecture/p2-membership-container-db.md).
 - [x] Offline retained per-authority Docker volume candidate: actual reader and
   validator container restarts reject previously consumed **unexpired** tokens;
   fresh requests succeed. Exact mounts/modes and hash/expiry-only storage checked;
@@ -132,7 +140,7 @@ clinical prose, financial lines or persisted projection is introduced.
 
 ## Verification
 
-342 API tests passed, including 30 new private-endpoint configuration tests,
+362 API tests passed, including 20 narrow DB-adapter tests and 30 private-endpoint configuration tests,
 disposable PostgreSQL tests and the
 167 boundary/broker/replay/delegation/transport/membership tests. Eleven replay tests include spawned processes,
 restart/capacity/storage failures and expiry during consumption.

@@ -82,6 +82,13 @@ backend suite: 362 passed; root rules: 145 passed.
 
 ## Next bounded checkpoint
 
+The subsequent [disposable container/DB acceptance](p2-membership-container-db.md)
+now passes: restricted synthetic principal, column/write/DDL denials, fresh
+deactivation/downgrade, missing privileges/outage and per-service network/mount
+isolation. This does not apply the production policy or prove DB TLS/secret
+custody/mTLS-server composition. The original next-step scope below is retained
+as context; actual next work is composition with the pinned membership transport.
+
 Package the membership container with only its DB identity mount and test it
 against a separately disposable database/principal over private networks. Prove
 allowed point lookups and forbidden columns/writes/DDL/other tables, fresh

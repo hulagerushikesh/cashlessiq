@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Private mTLS/delegation, retained-volume container restart/replay and image/network/mount tests pass; still need trusted membership DB boundary, production replay/key recovery/custody and service wiring |
+| Worker security | Private mTLS/delegation, retained replay, package/network/mount and disposable restricted membership DB tests pass; still need actual membership mTLS/DB composition, production DB TLS/secret/replay/key lifecycle and service wiring |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -412,6 +412,24 @@ credential, source activation, Snowflake/AI, deployment or P3. Next: separately
 package the membership container and verify column-grant/DB-network denial in a
 disposable environment; exact production provisioning stays separately gated.
 No push or remote CI is claimed.
+
+## Latest membership container/DB checkpoint — 21 October
+
+The membership image and disposable PostgreSQL restricted-principal test pass.
+Real point lookup succeeds; 18 forbidden reads/writes/DDL/admin/function actions
+fail by grants even in read-write transactions. Committed role downgrade and
+user/tenant/membership deactivation are observed; required-grant revocation and
+DB outage deny without missing-state fallback. Private pair networks and exact
+per-service read-only secret mounts exclude DB drivers/credentials/reachability
+from reader/validator containers. Default membership image refuses startup and
+excludes its probe. All test resources/data/credentials are discarded; normal DB
+and website unchanged. See [scope/evidence/limits](../architecture/p2-membership-container-db.md).
+
+This is a disposable mirrored schema, not production grant acceptance. DB TLS,
+real secret custody and actual mTLS-server/DB composition remain open. Next:
+compose pinned membership transport with the restricted DB lookup, then continue
+the remaining P2 security/source/evidence gates. No Snowflake/AI, persistent
+provisioning, deployment, push or P3.
 
 ## Spend guardrails
 

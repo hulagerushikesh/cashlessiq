@@ -700,3 +700,19 @@ not a dedicated restricted DB principal. The column-grant policy remains a
 of DB-enforced privilege isolation. Next: disposable membership-container/DB
 permission and network/mount acceptance. No persistent roles/grants, Snowflake/AI,
 live activation, push, website deployment or P3. P2 remains in progress.
+
+## Disposable membership DB isolation checkpoint — 21 October
+
+Membership container/DB acceptance now passes with a real restricted synthetic
+principal in an ephemeral tmpfs PostgreSQL cluster. The point lookup succeeds;
+18 forbidden operations fail with insufficient_privilege under read-write
+transactions. Role downgrade/deactivations are observed; required-grant loss and
+DB outage deny. Per-service mount and private pair-network inspection excludes
+DB credentials/drivers/reachability from workers. Default membership image omits
+the probe and refuses activation. All disposable resources were cleaned up;
+normal operational DB and public website remain untouched.
+
+See [scope/evidence/limits](../architecture/p2-membership-container-db.md). This
+does not provision production roles or prove DB TLS/secret custody/real membership
+mTLS-handler composition. Next is that bounded composition; P2 remains open.
+No Snowflake/AI, persistent account changes, push, deployment or P3.
