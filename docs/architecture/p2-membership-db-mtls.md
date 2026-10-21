@@ -79,7 +79,9 @@ deadlines/load handling. Docker owner/host and permitted services remain trusted
 The retained-replay variant is a separate test mode, not combined with DB mode.
 No service discovery, retries, fallback or normal application startup is added.
 
-Next: verified PostgreSQL TLS and negative certificate acceptance in this same
-disposable boundary; then exact secret/key/replay lifecycle and service wiring
-review. Snowflake views/service principals, governed evidence, local live API/UI
+The subsequent [verified database TLS variant](p2-membership-db-tls.md) now adds
+TLS 1.3, explicit CA/hostname checks and bad/missing-trust denials. This page
+records the original plaintext-DB composition; no production factory is activated.
+Next: exact secret/key/replay lifecycle and service wiring review.
+Snowflake views/service principals, governed evidence, local live API/UI
 acceptance and final P2 exit remain separate gates. No P3 or website deployment.

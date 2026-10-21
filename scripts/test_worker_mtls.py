@@ -121,7 +121,8 @@ def fixture():
     )
 
 
-def main(*, retained_replay=False, restricted_db=False):
+def main(*, retained_replay=False, restricted_db=False, verified_db_tls=False):
+    restricted_db = restricted_db or verified_db_tls
     prefix = f"ciq-mtls-{uuid4().hex[:12]}"
     image = f"{prefix}:test"
     membership_image = f"{prefix}:membership"
@@ -217,6 +218,7 @@ def main(*, retained_replay=False, restricted_db=False):
                     network=network,
                     label=f"cashlessiq.mtls-test={prefix}",
                     directory=root,
+                    verified_tls=verified_db_tls,
                 )
                 database.start()
             for role in ROLES:
@@ -393,6 +395,7 @@ def main(*, retained_replay=False, restricted_db=False):
                             "listen": listen,
                             "retained_replay": retained_replay and role in volumes,
                             "restricted_db": restricted_db,
+                            "verified_db_tls": verified_db_tls,
                         }
                     ),
                 )
@@ -530,6 +533,43 @@ def main(*, retained_replay=False, restricted_db=False):
                 capture=False,
             )
             if database:
+                if verified_db_tls:
+
+                    def db_probe(action):
+                        docker(
+                            "exec",
+                            containers["membership"],
+                            "python",
+                            "-m",
+                            "ciq_membership_runtime.db_probe",
+                            action,
+                            capture=False,
+                        )
+
+                    db_probe("tls-check")
+                    db_probe("tls-hostname")
+                    db_probe("plaintext-denied")
+                    ca_path = root / "membership" / "db-ca.pem"
+                    # Existing engine and server remain running. Each new libpq
+                    # connection must reload/verify the explicitly mounted CA.
+                    for certificate, action in (
+                        (database.wrong_ca_pem, "tls-ca"),
+                        (None, "tls-missing-ca"),
+                    ):
+                        if certificate is None:
+                            ca_path.unlink()
+                        else:
+                            ca_path.chmod(0o600)
+                            ca_path.write_bytes(certificate)
+                            ca_path.chmod(0o444)
+                        db_probe(action)
+                        check("deny")
+                        if ca_path.exists():
+                            ca_path.chmod(0o600)
+                        write(ca_path, database.ca_pem)
+                        db_probe("tls-check")
+                        check("fresh")
+                    print("PASS: bad/missing DB trust denies delegated delivery; restore succeeds")
                 # Same running membership service/engine; every check opens a fresh connection.
                 database.sql("UPDATE ops.tenant_membership SET role='medical_officer';")
                 check("deny")  # Old nonclinical capability cannot cross disclosure boundaries.
@@ -586,5 +626,10 @@ if __name__ == "__main__":
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--retained-replay", action="store_true")
     modes.add_argument("--restricted-db", action="store_true")
+    modes.add_argument("--verified-db-tls", action="store_true")
     args = parser.parse_args()
-    main(retained_replay=args.retained_replay, restricted_db=args.restricted_db)
+    main(
+        retained_replay=args.retained_replay,
+        restricted_db=args.restricted_db,
+        verified_db_tls=args.verified_db_tls,
+    )

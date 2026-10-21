@@ -15,16 +15,86 @@ TENANT = UUID("10000000-0000-0000-0000-000000000001")
 USER = "20000000-0000-0000-0000-000000000001"
 
 
-def test_engine():
-    """Disposable plaintext DB only; never a production connection factory."""
+def test_engine(*, verified_tls=False, hostname=None):
+    """Explicit test factory only; fixed verify-full policy in the TLS variant."""
     config = json.loads(Path("/run/ciq/db.json").read_text())
+    if hostname is not None:
+        assert verified_tls
+        config["host"] = hostname  # Explicit hostname-negative test only.
+    options = {"connect_timeout": 2, "sslmode": "disable"}
+    if verified_tls:
+        options.update(
+            sslmode="verify-full",
+            sslrootcert="/run/ciq/db-ca.pem",
+            ssl_min_protocol_version="TLSv1.3",
+            gssencmode="disable",
+        )
     return create_engine(
         URL.create("postgresql+psycopg", **config),
         poolclass=NullPool,
-        # Ephemeral isolated test DB only; NOT production TLS acceptance.
-        connect_args={"connect_timeout": 2, "sslmode": "disable"},
+        connect_args=options,
         hide_parameters=True,
     )
+
+
+def tls_check(action):
+    """Check actual libpq verification errors without emitting connection details."""
+    engine = test_engine(
+        verified_tls=True,
+        hostname="wrong-membership-db.test" if action == "tls-hostname" else None,
+    )
+    try:
+        if action == "tls-check":
+            with engine.connect() as connection:
+                row = connection.execute(
+                    text("SELECT ssl,version FROM pg_stat_ssl WHERE pid=pg_backend_pid()")
+                ).one()
+                assert row.ssl is True and row.version == "TLSv1.3"
+            print("PASS: restricted DB session uses verified TLS 1.3")
+            return
+        expected = {
+            "tls-hostname": "does not match host name",
+            "tls-ca": "certificate verify failed",
+            "tls-missing-ca": "does not exist",
+        }[action]
+        try:
+            with engine.connect():
+                pass
+        except DBAPIError as error:
+            assert expected in str(error.orig), "Expected precise TLS verification failure"
+        else:
+            raise AssertionError("Bad TLS configuration connected")
+        store = RestrictedMembershipStore(engine.connect, schema="ops")
+        try:
+            store.lookup(
+                "00000000-0000-4000-8000-000000000111", UUID("00000000-0000-4000-8000-000000000101")
+            )
+        except WorkerDenied:
+            pass
+        else:
+            raise AssertionError("TLS failure became membership absence or fallback")
+        print(f"PASS: {action} fails verification and canonical membership denies")
+    finally:
+        engine.dispose()
+
+
+def plaintext_denied():
+    import psycopg
+
+    config = json.loads(Path("/run/ciq/db.json").read_text())
+    config["user"] = config.pop("username")
+    config["dbname"] = config.pop("database")
+    config.update(config.pop("query"))
+    try:
+        with psycopg.connect(**config, sslmode="disable", gssencmode="disable", connect_timeout=2):
+            pass
+    except psycopg.Error as error:
+        # libpq may omit SQLSTATE for connection-establishment failures.
+        assert error.sqlstate in {None, "28000"}
+        assert "pg_hba.conf rejects connection" in str(error) and "no encryption" in str(error)
+        print("PASS: database rejects explicit plaintext connection")
+    else:
+        raise AssertionError("Database allowed plaintext")
 
 
 def main(action):
@@ -108,4 +178,10 @@ def main(action):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    action = sys.argv[1]
+    if action == "plaintext-denied":
+        plaintext_denied()
+    elif action.startswith("tls-"):
+        tls_check(action)
+    else:
+        main(action)

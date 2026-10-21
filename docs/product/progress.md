@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted membership DB-to-mTLS composition tests pass; still need verified DB TLS, production secret/replay/key lifecycle and service wiring ([latest evidence](../architecture/p2-membership-db-mtls.md)) |
+| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted DB composition/verified TLS tests pass; production connection factory, secret/replay/key lifecycle and service wiring remain ([latest evidence](../architecture/p2-membership-db-tls.md)) |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |

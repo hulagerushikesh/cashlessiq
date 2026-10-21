@@ -2,22 +2,120 @@
 
 The caller owns network/container cleanup, including partial startup failures.
 Passwords stay in private temporary files or psql stdin, not argv/environment/logs.
-Database TLS is deliberately disabled on this isolated disposable test network.
+Optional disposable server PKI enables verify-full acceptance, not production custody.
 """
 
 import json
 import secrets
 import subprocess
 import time
+from datetime import UTC, datetime, timedelta
+
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
+
+DB_HOSTNAME = "ciq-membership-db.test"
+
+
+def test_ca(name):
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, name)])
+    now = datetime.now(UTC)
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(subject)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(minutes=1))
+        .not_valid_after(now + timedelta(hours=1))
+        .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
+        .add_extension(
+            x509.KeyUsage(False, False, False, False, False, True, True, False, False), True
+        )
+        .sign(key, hashes.SHA256())
+    )
+    return key, certificate
 
 
 class DisposableMembershipDB:
-    def __init__(self, docker, *, name, network, label, directory):
+    def __init__(self, docker, *, name, network, label, directory, verified_tls=False):
         self.docker = docker
         self.name = name
         self.network = network
         self.label = label
         self.directory = directory
+        self.verified_tls = verified_tls
+
+    def tls_files(self):
+        """Test-only CA stays in host memory; server alone receives its leaf key."""
+        key, ca = test_ca("Disposable membership DB CA")
+        _, wrong = test_ca("Untrusted disposable DB CA")
+        self.ca_pem = ca.public_bytes(serialization.Encoding.PEM)
+        self.wrong_ca_pem = wrong.public_bytes(serialization.Encoding.PEM)
+        server_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        now = datetime.now(UTC)
+        certificate = (
+            x509.CertificateBuilder()
+            .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, DB_HOSTNAME)]))
+            .issuer_name(ca.subject)
+            .public_key(server_key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now - timedelta(minutes=1))
+            .not_valid_after(now + timedelta(hours=1))
+            .add_extension(x509.BasicConstraints(ca=False, path_length=None), True)
+            .add_extension(x509.SubjectAlternativeName([x509.DNSName(DB_HOSTNAME)]), False)
+            .add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), True)
+            .sign(key, hashes.SHA256())
+        )
+        directory = self.directory / "db-server"
+        directory.mkdir(mode=0o755)
+        for name, data in (
+            ("server.pem", certificate.public_bytes(serialization.Encoding.PEM)),
+            (
+                "server.key",
+                server_key.private_bytes(
+                    serialization.Encoding.PEM,
+                    serialization.PrivateFormat.PKCS8,
+                    serialization.NoEncryption(),
+                ),
+            ),
+            (
+                "pg_hba.conf",
+                b"local all all trust\n"
+                b"hostnossl all all 0.0.0.0/0 reject\n"
+                b"hostssl synthetic membership_test 0.0.0.0/0 scram-sha-256\n"
+                b"host all all ::/0 reject\n",
+            ),
+        ):
+            path = directory / name
+            path.write_bytes(data)
+            path.chmod(0o444)
+        return [
+            "--mount",
+            f"type=bind,src={directory},dst=/run/db-server,readonly",
+            "--entrypoint",
+            "sh",
+        ], [
+            "-c",
+            "set -eu; umask 077; cp /run/db-server/server.key /tmp/server.key; "
+            "chmod 600 /tmp/server.key; "
+            'exec docker-entrypoint.sh "$@"',
+            "--",
+            "postgres",
+            "-c",
+            "ssl=on",
+            "-c",
+            "ssl_cert_file=/run/db-server/server.pem",
+            "-c",
+            "ssl_key_file=/tmp/server.key",
+            "-c",
+            "ssl_min_protocol_version=TLSv1.3",
+            "-c",
+            "hba_file=/run/db-server/pg_hba.conf",
+        ]
 
     def sql(self, statement):
         return self.docker(
@@ -36,6 +134,7 @@ class DisposableMembershipDB:
         )
 
     def start(self):
+        tls_mounts, command = self.tls_files() if self.verified_tls else ([], ["postgres"])
         admin = self.directory / "admin-password"
         admin.write_text(secrets.token_hex(32))
         admin.chmod(0o444)
@@ -66,15 +165,16 @@ class DisposableMembershipDB:
             "--tmpfs",
             "/var/run/postgresql:rw,noexec,nosuid,uid=999,gid=999",
             "--tmpfs",
-            "/tmp:rw,noexec,nosuid,size=8m",
+            "/tmp:rw,noexec,nosuid,size=8m,mode=1777",
             "--mount",
             f"type=bind,src={admin},dst=/run/admin-password,readonly",
             "-e",
             "POSTGRES_PASSWORD_FILE=/run/admin-password",
             "-e",
             "POSTGRES_DB=synthetic",
+            *tls_mounts,
             "postgres:17-bookworm",
-            "postgres",
+            *command,
             "-c",
             "shared_buffers=16MB",
             "-c",
@@ -131,6 +231,15 @@ GRANT SELECT(user_id,tenant_id,role,active) ON ops.tenant_membership TO membersh
         assert len(attached) == 1 and attached[0]["NetworkID"] == self.network
         self.address = attached[0]["IPAddress"]
         assert not config["HostConfig"]["PortBindings"]
+        if self.verified_tls:
+            assert (
+                self.docker("exec", self.name, "stat", "-c", "%u:%g:%a", "/tmp/server.key")
+                == "999:999:600"
+            )
+            mounts = {mount["Destination"]: mount for mount in config["Mounts"]}
+            assert set(mounts) == {"/run/admin-password", "/run/db-server"}
+            assert all(not mount["RW"] for mount in mounts.values())
+            assert mounts["/run/db-server"]["Source"] == str(self.directory / "db-server")
         self.credential = dict(
             username="membership_test",
             password=password,
@@ -140,5 +249,12 @@ GRANT SELECT(user_id,tenant_id,role,active) ON ops.tenant_membership TO membersh
         )
 
     def write_credential(self, path):
-        path.write_text(json.dumps(self.credential))
+        credential = dict(self.credential)
+        if self.verified_tls:
+            credential["host"] = DB_HOSTNAME
+            credential["query"] = {"hostaddr": self.address}
+            ca = path.parent / "db-ca.pem"
+            ca.write_bytes(self.ca_pem)
+            ca.chmod(0o444)
+        path.write_text(json.dumps(credential))
         path.chmod(0o444)

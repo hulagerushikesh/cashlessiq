@@ -734,3 +734,18 @@ retained replay with DB mode, or activate an HTTP/source application route.
 Next: bounded verified DB TLS/certificate-negative acceptance, then key/secret/
 replay lifecycle and service wiring review. P2 remains open; no Snowflake/AI,
 persistent grants/identities, push, public deployment or P3.
+
+## Disposable database TLS checkpoint — 21 October
+
+The private membership composition now has an explicit verified-TLS test mode.
+Actual restricted sessions report TLS 1.3; wrong hostname and plaintext deny.
+Wrong/missing CA files deny delegated worker requests; correct CA restoration
+permits fresh requests without restarting the membership service. Disclosure,
+deactivation, grant-loss and outage checks remain enforced under TLS. Only the
+DB has its leaf private key; workers still have no DB identity or direct path.
+
+See [TLS evidence/limits](../architecture/p2-membership-db-tls.md). No production
+connection factory, actual secret store, rotation/recovery or source activation
+is approved by this disposable test. Next: exact lifecycle/configuration review
+before live wiring; Snowflake isolation/evidence/live UI gates remain open.
+No Snowflake/AI, account changes, push, public deployment or P3.

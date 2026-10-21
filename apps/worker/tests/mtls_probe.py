@@ -101,7 +101,7 @@ def serve(config, role):
             from ciq_api.worker_membership_store import RestrictedMembershipStore
             from ciq_membership_runtime.db_probe import test_engine
 
-            engine = test_engine()
+            engine = test_engine(verified_tls=config.get("verified_db_tls", False))
             lookup = RestrictedMembershipStore(engine.connect, schema="ops").lookup
         else:
 
@@ -232,7 +232,11 @@ def check(config, action):
         return
     if action == "fresh":
         assert client.summary(issue()).recommendation.payable_inr == 95_000
-        print("PASS: fresh capability succeeds with retained ledgers after restart")
+        print(
+            "PASS: fresh capability succeeds with retained ledgers after restart"
+            if config.get("retained_replay")
+            else "PASS: fresh capability succeeds after membership trust restoration"
+        )
         return
     if action in {"deny", "deny-storage"}:
         try:
@@ -296,6 +300,8 @@ if __name__ == "__main__":
         if role == "validator"
         else set()
     )
+    if role == "membership" and config.get("verified_db_tls"):
+        expected.add("db-ca.pem")
     assert {path.name for path in ROOT.iterdir()} == expected
     try:
         (ROOT / "identity.key").open("wb")

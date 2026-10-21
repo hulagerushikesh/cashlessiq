@@ -134,6 +134,11 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   replay volumes remain gated. No actual Snowflake credential/process separation
   is claimed by test probes.
 - [ ] Exact approved secret-store/key delivery mechanism, rotation and revocation.
+- [x] Disposable DB TLS acceptance: verify-full with explicit CA/DNS identity and
+  fixed private hostaddr, TLS 1.3 session evidence, plaintext/hostname rejection,
+  bad/missing trust denial through delegated hops and restore without membership
+  restart. Separate from production connection-factory/secret lifecycle approval.
+  See [scope and limits](../architecture/p2-membership-db-tls.md).
 - [ ] Coherent Snowflake input query, duplicates/ownership/version evidence, exact
   view/role/principal/rollback package and CoCo review. Fake ValidationInputs do
   not prove a database snapshot or actual entitlement enforcement.
