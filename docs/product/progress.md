@@ -452,6 +452,16 @@ deployment, push or P3.
 
 ## Spend guardrails
 
+21 October live checkpoint: the explicit reader/NONE connection works; eight
+metadata statements confirm 13 direct grants/eight visible source tables and
+suspended CIQ_WH/two visible pools. The reader reports `resource_monitor=null`,
+unlike the historical CIQ_RM baseline. Source reads/exports are paused pending
+targeted administrative confirmation, not an automatic monitor/grant repair.
+Search returned no visible rows, not proof of absence/suspension. See the
+[inventory, limitations and bounded CoCo prompt](snowflake-expiry-inventory.md).
+No source-row reads, AI, account changes or deployment ran. Exact expiry/balance
+and incremental cost remain unverified; no recovery export is yet claimed.
+
 Latest planning baseline: **$195 remaining and two days until expiry**, reported
 by Rushikesh on 21 October, not independently verified. There is no budget for
 purchasing credits afterward. Prioritize bounded source verification and private
