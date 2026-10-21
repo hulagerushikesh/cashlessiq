@@ -56,10 +56,14 @@ def pki():
         credentials = {}
         for name, audience, usage in [
             ("reader", "reader:0:nonclinical", ExtendedKeyUsageOID.CLIENT_AUTH),
+            ("reader1", "reader:1:nonclinical", ExtendedKeyUsageOID.CLIENT_AUTH),
+            ("reader_medical", "reader:0:medical", ExtendedKeyUsageOID.CLIENT_AUTH),
+            ("reader1_medical", "reader:1:medical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("broker", "broker", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("foreign", "reader:1:nonclinical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("medical", "reader:0:medical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("validator", "validator:0", ExtendedKeyUsageOID.SERVER_AUTH),
+            ("validator1", "validator:1", ExtendedKeyUsageOID.SERVER_AUTH),
             ("membership", "membership:0", ExtendedKeyUsageOID.SERVER_AUTH),
             ("wrong_uri", "other-validator", ExtendedKeyUsageOID.SERVER_AUTH),
             ("expired", "validator:0", ExtendedKeyUsageOID.SERVER_AUTH),
@@ -82,7 +86,7 @@ def pki():
                 .add_extension(
                     x509.ExtendedKeyUsage(
                         [ExtendedKeyUsageOID.CLIENT_AUTH, ExtendedKeyUsageOID.SERVER_AUTH]
-                        if name == "reader"
+                        if name in {"reader", "reader1", "reader_medical", "reader1_medical"}
                         else [usage]
                     ),
                     critical=True,

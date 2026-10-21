@@ -228,3 +228,31 @@ The rerun changed no code, timeout or security assertion. Keep this intermittent
 failure recorded for further diagnosis if reproduced; it is not proof that a
 timing problem was fixed. That existing harness still uses the legacy authority
 clock/ledger, not the new clock-checked adapters or full guarded mTLS composition.
+
+## Signed two-hop loopback mTLS composition — 21 October
+
+`apps/api/tests/test_worker_clock_mtls.py` adds **42 cases**: both synthetic
+tenants, all three roles, healthy behavior and unsafe clock samples at broker,
+reader or validator authorization/delivery. Actual RS256 parent/child signatures,
+guarded SQLite replay, clock-checked pre-bind listeners and both TLS hops are
+composed together. Disposable certificates pin the matching tenant/disclosure
+reader and validator identities; the reader endpoint accepts only the broker
+certificate and the validator endpoint accepts only the configured reader.
+
+Each case first proves a healthy request returns GOL001 SAVED/INR 95,000 or
+GOL024 MISSING. Reusing consumed unexpired parent/child capabilities through
+their legitimate TLS clients denies without another source read. Healthy fresh
+capabilities still succeed. Unsafe authorization prevents input access; an
+injected failure during source work prevents delivery at the selected hop.
+Apparently healthy samples cannot clear the committed latch while TLS listeners
+remain up or after guard reconstruction following listener shutdown.
+
+The shared disposable PKI fixture now supplies both tenant/disclosure identities.
+No application source or startup behavior changes in this increment. TLS uses
+the actual system certificate clock; assertion time and health are deterministic
+test values. Browser/session identity, membership and source inputs remain fake.
+This proves loopback transport composition, not process/container secret
+isolation, real synchronization, suspend safety or private target-host behavior.
+Threads/listeners and temporary PKI are closed by fixtures; pytest may retain
+its temporary hash/time-only guard files under its normal retention policy.
+No Snowflake/AI, runtime activation, account changes, deployment, push or P3.

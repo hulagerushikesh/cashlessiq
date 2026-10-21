@@ -661,6 +661,19 @@ in the [clock checkpoint](../architecture/p2-clock-safety.md#opt-in-pre-bind-clo
 not represented as a diagnosed/fixed defect. It does not prove guarded private
 clock/mTLS composition. No security check or timeout was relaxed.
 
+The subsequent [guarded two-hop loopback mTLS checkpoint](../architecture/p2-clock-safety.md#signed-two-hop-loopback-mtls-composition--21-october)
+adds **42 cases** across both tenants/all roles. Actual signed parent/child,
+clock-checked listeners, durable guard/replay and both TLS hops now compose in
+one test. Truthful SAVED/MISSING and replay denial pass; unsafe clocks prevent
+reads or delivery at the selected broker/reader/validator boundary. A healthy
+sample cannot clear the retained latch. **509 API/DB** and **175 root** tests,
+lint/format/whitespace checks pass. Normal startup/runtime code did not change;
+only the shared disposable test PKI was expanded. Health, app identity/membership
+and source data are still fake. This closes the loopback composition test gap,
+not real host health/suspend or private-container/custody/controller/live-source
+acceptance. No container/browser/build/remote CI rerun, Snowflake/AI, deployment,
+push or P3 for this increment. P2 remains open.
+
 - [Migration sequence](../architecture/migration-plan.md)
 - [P0 decisions](phase-p0-checklist.md)
 - [P1 evidence and research deferral](phase-p1-checklist.md)

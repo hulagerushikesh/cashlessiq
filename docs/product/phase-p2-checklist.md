@@ -832,6 +832,10 @@ for this recovery test increment. P2 remains in progress.
 - [x] Record [host-health/provider requirements](../architecture/p2-clock-health-review.md),
   including Linux suspend and synchronization-evidence limitations. Real provider,
   operational tolerances, custody and target-host acceptance remain open.
+- [x] Compose actual signed broker/reader/validator clock guards, retained replay
+  and clock-checked listeners over both loopback mTLS hops: 42 cases, both
+  tenants/all roles, truthful results, replay and unsafe authorization/delivery
+  denial. Real health, private container wiring and operational controls remain open.
 
 Latest implementation evidence is in the [clock-safety checkpoint](../architecture/p2-clock-safety.md#offline-implementation-checkpoint--21-october).
 Authority/broker composition is now tested offline; actual host/container clocks,

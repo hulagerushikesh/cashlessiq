@@ -274,3 +274,10 @@ normal startup and membership lookup behavior are unchanged. Actual credential
 custody/readiness, signed/private clock composition and multi-listener rollback
 remain separate. The [health review](p2-clock-health-review.md) documents why the
 current monotonic/boot probe is not suspend detection or synchronization proof.
+
+The next [signed two-hop loopback checkpoint](p2-clock-safety.md#signed-two-hop-loopback-mtls-composition--21-october)
+composes guarded broker/reader/validator time and replay with the clock-checked
+listeners over both actual TLS hops. Both tenants/all roles are covered by 42
+cases. Health, application identity/membership and source inputs remain fake;
+the real provider/suspend, private container wiring, custody and controllers
+are not closed by this test composition.
