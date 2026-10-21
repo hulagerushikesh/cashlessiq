@@ -121,7 +121,10 @@ def fixture():
     )
 
 
-def main(*, retained_replay=False, restricted_db=False, verified_db_tls=False):
+def main(
+    *, retained_replay=False, restricted_db=False, verified_db_tls=False, signing_generation=False
+):
+    assert not signing_generation or (retained_replay and verified_db_tls)
     restricted_db = restricted_db or verified_db_tls
     prefix = f"ciq-mtls-{uuid4().hex[:12]}"
     image = f"{prefix}:test"
@@ -261,6 +264,22 @@ def main(*, retained_replay=False, restricted_db=False, verified_db_tls=False):
 
             # Bootstrap sleeps reserve actual engine addresses; no listener exists yet.
             inspected = {role: json.loads(docker("inspect", containers[role]))[0] for role in ROLES}
+            if signing_generation:
+                # Simultaneously stopping two dynamic endpoints can swap their
+                # leases on start. Reserve the observed addresses explicitly
+                # before generating pinned certificates or starting listeners.
+                for role in ("reader", "validator"):
+                    for network, endpoint in inspected[role]["NetworkSettings"]["Networks"].items():
+                        docker("network", "disconnect", network, containers[role])
+                        docker(
+                            "network",
+                            "connect",
+                            "--ip",
+                            endpoint["IPAddress"],
+                            network,
+                            containers[role],
+                        )
+                    inspected[role] = json.loads(docker("inspect", containers[role]))[0]
             for role, config in inspected.items():
                 host = config["HostConfig"]
                 assert host["ReadonlyRootfs"] and host["CapDrop"] == ["ALL"]
@@ -441,6 +460,81 @@ def main(*, retained_replay=False, restricted_db=False, verified_db_tls=False):
                     "broker",
                     capture=False,
                 )
+
+            if signing_generation:
+                check("fresh")  # Establish working old trust before negative acceptance.
+                check("prepare-generation")
+
+                def replay_digest(role):
+                    return docker(
+                        "exec",
+                        containers[role],
+                        "python",
+                        "-m",
+                        "ciq_worker_runtime.mtls_probe",
+                        "replay-digest",
+                        role,
+                    )
+
+                digests = {role: replay_digest(role) for role in ("reader", "validator")}
+                # Broker is an idle test container, not a serving issuer. The
+                # sequencer issues nothing until both authorities are restarted.
+                # Stop both before changing their mounted verification material.
+                for role in ("reader", "validator"):
+                    docker("stop", "--time", "1", containers[role])
+                assert all(
+                    not json.loads(docker("inspect", containers[role]))[0]["State"]["Running"]
+                    for role in ("reader", "validator")
+                )
+                replacement = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+                public = replacement.public_key().public_bytes(
+                    serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
+                )
+                for role in ("broker", "reader", "validator"):
+                    path = root / role / "verify.pem"
+                    path.chmod(0o600)
+                    write(path, public)
+                path = root / "broker" / "signing.key"
+                path.chmod(0o600)
+                write(path, private_bytes(replacement))
+                for role in ("validator", "reader"):
+                    docker("start", containers[role])
+                    current = json.loads(docker("inspect", containers[role]))[0]
+                    assert current["Mounts"] == inspected[role]["Mounts"]
+                    for network, previous in inspected[role]["NetworkSettings"]["Networks"].items():
+                        actual = current["NetworkSettings"]["Networks"][network]
+                        assert actual["IPAddress"] == previous["IPAddress"]
+                        assert actual["NetworkID"] == previous["NetworkID"]
+                    docker(
+                        "exec",
+                        "-d",
+                        containers[role],
+                        "python",
+                        "-m",
+                        "ciq_worker_runtime.mtls_probe",
+                        "serve",
+                        role,
+                    )
+                    ready(role)
+                    assert replay_digest(role) == digests[role]
+                check("fresh")  # Rules out unavailable membership/listeners/TLS.
+                check("reject-old-parent")
+                # Capabilities stay off logs/argv; only this test controller
+                # transports the old child from broker tmpfs to reader stdin.
+                child = docker("exec", containers["broker"], "cat", "/tmp/old-child")
+                docker(
+                    "exec",
+                    "-i",
+                    containers["reader"],
+                    "python",
+                    "-m",
+                    "ciq_worker_runtime.mtls_probe",
+                    "reject-old-child",
+                    "reader",
+                    input=child,
+                )
+                del child
+                print("PASS: stopped-authority signing transition with retained replay volumes")
 
             if retained_replay:
                 check("prepare-restart")
@@ -650,9 +744,15 @@ if __name__ == "__main__":
     modes.add_argument("--restricted-db", action="store_true")
     modes.add_argument("--verified-db-tls", action="store_true")
     modes.add_argument("--retained-replay-tls", action="store_true")
+    modes.add_argument("--signing-generation-tls", action="store_true")
     args = parser.parse_args()
     main(
-        retained_replay=args.retained_replay or args.retained_replay_tls,
+        retained_replay=args.retained_replay
+        or args.retained_replay_tls
+        or args.signing_generation_tls,
         restricted_db=args.restricted_db,
-        verified_db_tls=args.verified_db_tls or args.retained_replay_tls,
+        verified_db_tls=args.verified_db_tls
+        or args.retained_replay_tls
+        or args.signing_generation_tls,
+        signing_generation=args.signing_generation_tls,
     )

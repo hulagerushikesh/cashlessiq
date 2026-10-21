@@ -131,3 +131,44 @@ old-key rejection/new-generation recovery, trusted-clock discontinuity controls,
 host-power-loss durability, production secret delivery, whole-request deadlines
 or normal service activation. Those remain gates before live operation. No
 real credentials, Snowflake reads/AI, deployment or public UI changes.
+
+## Healthy signing-generation transition — 21 October
+
+Reproduce with `make product-worker-generation-tls`. This opt-in test extends
+the combined retained-replay/DB-TLS harness, not normal service startup:
+
+1. Establish an old-key SAVED response and issue another parent/child pair that
+   neither authority has consumed. Keep those tokens only in broker test tmpfs;
+   the child passes through controller memory/stdin, not logs or command arguments.
+2. Digest both healthy replay files. Stop both authority containers and verify
+   they are not running before replacing the disposable broker signing key and
+   both verification keys. No ledger initializer or replacement runs.
+3. Restart the same authorities with the same volumes, fixed private addresses
+   and unchanged mTLS identities. Verify both ledger digests are unchanged before
+   issuing a fresh request; a new-generation SAVED response must succeed.
+4. Reject the unused old parent over broker-to-reader mTLS and the unused old
+   child independently over reader-to-validator mTLS. Each check asserts the
+   token is still unexpired, so neither expiry nor prior consumption explains denial.
+5. Continue the existing restart replay, ledger audit, DB-TLS/trust, revocation,
+   paused-DB outage/resume and final missing-file denial sequence under the new key.
+
+The first run (`ciq-mtls-58037c68792e`) failed the explicit address invariant:
+Docker dynamically reassigned endpoints after both authorities stopped. Cleanup
+succeeded. The harness now reserves the observed reader/validator private
+addresses explicitly **before** certificates/listeners are created. It does not
+weaken certificate identities, peer pins or endpoint checks to pass rotation.
+
+Corrected run `ciq-mtls-63f0e1664f1a` passes the entire sequence and removes its
+exact owned containers, networks, replay volumes and image tags. Root **175**,
+API/PostgreSQL **380** and offline connection-factory **55** tests pass; repository
+Ruff, changed-file formatting and whitespace checks pass. No browser/frontend-build or
+remote CI acceptance is claimed; normal product containers remain untouched.
+
+Scope remains one synthetic tenant, nonclinical processor and SAVED flow; the
+separate 18 offline generation tests cover both tenants/all roles and lost/corrupt
+state. This container sequence tests healthy signing-key replacement only, not
+mTLS leaf rotation or container lost-state recovery. The test broker is idle
+between explicit probe invocations; this is not an implemented issuance-disable,
+drain/deadline, stale-replica inventory or operator recovery controller. No
+clock discontinuity protection, production secret custody or runtime activation
+is claimed. P2 remains open.

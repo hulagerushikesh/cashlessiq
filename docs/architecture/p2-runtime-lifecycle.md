@@ -235,11 +235,13 @@ This proves the cryptographic/ledger primitives under an explicit offline
 sequence, **not an enforced operational recovery mechanism**. Discarding Python
 objects models stopping workers; it does not prove shutdown, no stale replica,
 atomic generation inventory, issuance disablement, transport certificate
-rotation, or live mount replacement. The new test is NOT composed with the
-container TLS test yet. Trusted fixed time cannot prove clock health or rollback
+rotation, or live mount replacement. That offline test itself is not composed
+with container TLS; the separate healthy-transition test is described below.
+Trusted fixed time cannot prove clock health or rollback
 protection. Host-file tampering, production secret custody and the actual
 recovery controller remain unresolved; normal startup stays disabled.
 
-Next: container-level old/new signing-generation acceptance without resetting
-healthy replay state, plus a reviewed durable clock-discontinuity design before
-implementing automatic clock controls. No source/AI calls, deployment or P3.
+The next container checkpoint covers healthy old/new signing transitions without
+resetting replay state. Lost-state container recovery and a reviewed durable
+clock-discontinuity design remain separate gates. No source/AI calls, deployment
+or P3.

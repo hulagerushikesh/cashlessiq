@@ -7,6 +7,7 @@ image can instead inject its restricted, disposable DB adapter; no DB imports
 or credentials are added to the reader/validator artifacts.
 """
 
+import hashlib
 import json
 import sqlite3
 import sys
@@ -224,6 +225,20 @@ def check(config, action):
         )
 
     client = transport(config, "reader")
+    if action == "prepare-generation":
+        # Never send this unused pair to either authority under the old key.
+        token = issue()
+        child = jwt.decode(token, options={"verify_signature": False})["summary_token"]
+        for name, value in (("old-parent", token), ("old-child", child)):
+            path = Path("/tmp") / name
+            path.touch(mode=0o600, exist_ok=False)
+            path.write_text(value)
+        print("PASS: unused old-generation pair retained only in broker test tmpfs")
+        return
+    if action == "reject-old-parent":
+        deny_unexpired(client, Path("/tmp/old-parent").read_text())
+        print("PASS: unused unexpired old parent denied after signing-key transition")
+        return
     if action == "prepare-restart":
         token = issue()
         assert client.summary(token).recommendation.payable_inr == 95_000
@@ -323,9 +338,16 @@ if __name__ == "__main__":
         assert role == "reader" and config["retained_replay"]
         deny_unexpired(transport(config, "validator"), Path("/tmp/consumed-child").read_text())
         print("PASS: unexpired child rejected after validator container restart")
+    elif action == "reject-old-child":
+        assert role == "reader" and config["retained_replay"]
+        deny_unexpired(transport(config, "validator"), sys.stdin.read())
+        print("PASS: unused unexpired old child denied after signing-key transition")
     elif action == "remove-replay":
         assert role == "reader" and config["retained_replay"]
         REPLAY.unlink()
+    elif action == "replay-digest":
+        assert role in {"reader", "validator"} and config["retained_replay"]
+        print(hashlib.sha256(REPLAY.read_bytes()).hexdigest())
     elif action == "audit-replay":
         assert role in {"reader", "validator"} and config["retained_replay"]
         with closing(sqlite3.connect(REPLAY.as_uri() + "?mode=ro", uri=True)) as connection:

@@ -772,8 +772,10 @@ that proposal checkpoint.
 - [x] Exact invocation cleanup; 175 root, 55 factory and 362 API/DB tests pass.
 - [x] Offline primitives: old-key rejection/new-generation acceptance across
   healthy/missing/corrupt retained state, two tenants and three roles (18 cases).
-- [ ] Container-level generation transition, enforced lost-state recovery and
-  clock safety (offline tests do not close this operational gate).
+- [x] Healthy container signing-generation transition with unchanged retained
+  ledger digests, unused/unexpired old-parent/child denial and fresh success.
+- [ ] Enforced lost-state container recovery and clock safety (healthy rotation
+  and offline tests do not close this operational gate).
 - [ ] Secret custody/delivery, readiness, deadlines/shutdown and live isolation.
 
 See [scope and failed-first-run correction](../architecture/p2-worker-replay-lifecycle.md).
@@ -783,6 +785,14 @@ The subsequent [offline generation checkpoint](../architecture/p2-runtime-lifecy
 passes in the **380-test API/DB suite**; 175 root tests and repository lint pass.
 No container rotation, live shutdown/issuance gate, automatic provisioning or
 clock-safety implementation is claimed. Browser/build/remote CI not rerun.
+
+The subsequent [healthy container transition](../architecture/p2-worker-replay-lifecycle.md#healthy-signing-generation-transition--21-october)
+adds a dedicated `make product-worker-generation-tls` acceptance mode. It stops
+both disposable authorities, replaces test signing trust without resetting healthy
+ledgers, and continues the combined replay/DB-TLS negatives. This is not a live
+shutdown/issuance controller, mTLS certificate rotation or lost-state recovery.
+The corrected full container run passes with exact cleanup; **175 root / 380
+API/DB / 55 factory** tests, lint, changed-file format and whitespace checks pass.
 
 Documentation/link/whitespace checks only; no runtime code changed or test suites
 rerun. Next: offline fixed factory/configuration tests, without entry-point/source

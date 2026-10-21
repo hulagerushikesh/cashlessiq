@@ -566,6 +566,22 @@ activation or remote CI claims. Next: container-level signing-generation
 acceptance and clock-safety design/negative tests, then secret-delivery/readiness/
 deadline gates. Live isolation/evidence/P2 exit remain open.
 
+The subsequent healthy container signing-transition increment adds
+`make product-worker-generation-tls`: both authorities stop before test signing
+trust changes, healthy replay files remain byte-identical, unused/unexpired old
+parent and child deny independently, and new-key requests succeed. Existing
+new-key restart replay, DB-TLS, trust, revocation, outage/resume and missing-state
+checks are composed in the same disposable environment. See
+[evidence and limitations](../architecture/p2-worker-replay-lifecycle.md#healthy-signing-generation-transition--21-october).
+The initial dynamic-address invariant failure was corrected by explicitly
+reserving test addresses before certificates/listeners, not weakening trust.
+The corrected full container run passes and cleans up; **175 root / 380 API/DB /
+55 factory** tests and lint/format/whitespace checks pass. Browser/frontend-build/remote
+CI were not rerun. This increment is committed locally, not deployed or pushed.
+Next: lost-state container recovery and reviewed clock-safety design, followed
+by custody/readiness/deadline controls. P2 remains open; no normal/public
+activation, Snowflake/AI, real credentials or P3.
+
 ## References
 
 - [Migration sequence](../architecture/migration-plan.md)
