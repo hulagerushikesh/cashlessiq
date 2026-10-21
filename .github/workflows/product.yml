@@ -32,6 +32,8 @@ jobs:
           npm ci
       - name: Isolated domain wheel boundary
         run: uv run python scripts/check_domain_package.py
+      - name: Offline membership connection policy
+        run: PYTHONPATH=apps/membership/src:apps/api/src uv run --project apps/api pytest apps/membership/tests/test_connection.py
       - name: Contract drift, types and build
         run: |
           make product-contracts

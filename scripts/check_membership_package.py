@@ -12,8 +12,11 @@ from pathlib import Path
 import sys
 import ciq_api.worker_membership_store as store
 from ciq_api.worker_membership import PrivateMembershipServer
+import ciq_membership_runtime.connection as factory
 assert Path(store.__file__).is_relative_to(Path(sys.prefix))
 assert Path(store.__file__).read_bytes() == Path(sys.argv[1]).read_bytes()
+assert Path(factory.__file__).is_relative_to(Path(sys.prefix))
+assert Path(factory.__file__).read_bytes() == Path(sys.argv[2]).read_bytes()
 for name in ('fastapi', 'alembic', 'uvicorn', 'snowflake', 'ciq_api.main',
              'ciq_api.models', 'ciq_api.auth', 'ciq_api.worker_broker'):
     assert importlib.util.find_spec(name) is None, name
@@ -26,7 +29,17 @@ def main():
         environment = os.environ | {"UV_PROJECT_ENVIRONMENT": str(Path(temporary) / "venv")}
         environment.pop("VIRTUAL_ENV", None)
         subprocess.run(
-            ["uv", "sync", "--project", "apps/membership", "--frozen", "--no-editable"],
+            # Build from current sources, not a cached local-project wheel whose
+            # default invalidation may miss a newly added module.
+            [
+                "uv",
+                "sync",
+                "--project",
+                "apps/membership",
+                "--frozen",
+                "--no-editable",
+                "--no-cache",
+            ],
             cwd=ROOT,
             env=environment,
             check=True,
@@ -39,6 +52,7 @@ def main():
                 "-c",
                 PROBE,
                 str(ROOT / "apps/api/src/ciq_api/worker_membership_store.py"),
+                str(ROOT / "apps/membership/src/ciq_membership_runtime/connection.py"),
             ],
             check=True,
         )
