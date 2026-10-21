@@ -259,3 +259,9 @@ broker/reader/validator tests across both tenants/all roles. It is explicitly
 injected in tests only. Actual host health/thresholds, worker artifact/container
 clock-domain composition, custody/readiness and service activation remain open;
 neither the old ledger nor normal startup was silently switched to this candidate.
+
+Subsequent [clock-domain/artifact acceptance](p2-clock-safety.md#disposable-linux-clock-domainartifact-checkpoint--21-october)
+packages the canonical guard without activating it. Two network-free disposable
+containers retain replay/latch state across restart and share a Linux boot/
+monotonic domain. The probe fabricates health; it does not close actual health,
+suspend, deployment-host, signed/mTLS composition or readiness/custody gates.

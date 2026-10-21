@@ -634,6 +634,16 @@ acceptance, then custody/readiness/deadlines. Snowflake isolation, governed
 evidence and live API/UI acceptance remain open. No Snowflake/AI, secrets,
 deployment or P3; completion estimate remains P2 ~60%, overall 35–40%.
 
+The subsequent [clock-domain/artifact probe](../architecture/p2-clock-safety.md#disposable-linux-clock-domainartifact-checkpoint--21-october)
+passes in two disposable network-free Linux containers with retained state:
+shared boot/monotonic domain, restart replay rejection and sticky unsafe latch.
+The normal artifact includes the exact guard source, excludes the test probe/API
+startup and still refuses activation. Health is explicitly fake; this is not
+signed/mTLS clock composition or deployment-host synchronization/suspend proof.
+Both successful test runs cleaned up their owned containers/volume. Root **175**,
+API/DB **449**, lint/format/whitespace checks pass. No source/AI spend, normal
+runtime activation, public change, browser/build/remote CI, deployment or P3.
+
 - [Migration sequence](../architecture/migration-plan.md)
 - [P0 decisions](phase-p0-checklist.md)
 - [P1 evidence and research deferral](phase-p1-checklist.md)

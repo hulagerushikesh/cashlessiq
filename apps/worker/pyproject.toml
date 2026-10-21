@@ -27,5 +27,6 @@ packages = ["src/ciq_worker_runtime"]
 "../api/src/ciq_api/worker_authority.py" = "ciq_api/worker_authority.py"
 "../api/src/ciq_api/worker_delegation.py" = "ciq_api/worker_delegation.py"
 "../api/src/ciq_api/worker_replay.py" = "ciq_api/worker_replay.py"
+"../api/src/ciq_api/worker_clock.py" = "ciq_api/worker_clock.py"
 "../api/src/ciq_api/worker_transport.py" = "ciq_api/worker_transport.py"
 "../api/src/ciq_api/worker_membership.py" = "ciq_api/worker_membership.py"

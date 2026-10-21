@@ -159,3 +159,38 @@ trusted-host snapshot rollback and power-loss recovery remain outside this test.
 No new credentials, Snowflake/AI spend, public deployment, push or P3.
 Completion estimate remains 35–40% overall, P2 approximately 60% until the
 remaining operational/live gates pass.
+
+## Disposable Linux clock-domain/artifact checkpoint — 21 October
+
+`make product-worker-clock` builds the canonical guard into the restricted
+worker wheel/image and a separate `clock-test` target. The normal artifact
+contains no clock probe or API startup; its packaged guard hash matches the
+repository file and its default executable still refuses activation. The Docker
+build bypasses local wheel caches to avoid stale repackaged canonical modules.
+No runtime imports or defaults select this guard automatically.
+
+The probe reads Linux wall/monotonic nanoseconds and the kernel boot identifier
+but **fabricates health synchronization/error evidence**. It is not a host-health
+provider. Test limits (two-second drift, 120-second gap) are solely disposable
+test configuration, not approved deployment thresholds. No system clock is set.
+
+Two non-root/read-only/no-capability/no-new-privilege containers with no network
+or host ports share only one invocation-owned authority state volume. They
+observe matching boot identities and nondecreasing wall/monotonic samples.
+An unexpired consumed nonce denies in the second container and after restart of
+the first. An injected backward wall sample latches unsafe; normal samples in
+both containers, including another restart, cannot clear it. Initialization is
+explicit and network-free, using root/CHOWN only to provision disposable owned
+state; request processes use UID 10001 without capabilities.
+
+Final run `ciq-clock-12356d1b1bac` passed, including exact source-hash/default
+artifact checks. Earlier run `ciq-clock-a548d137565e` passed the initial probe.
+Both removed their exact test containers and state volume; build cache may
+remain. No normal product resources were removed or restarted.
+
+This establishes a bounded clock-domain/restart property on the current Docker
+Linux VM, **not** real synchronization, host suspend/reboot safety, a deployment
+host guarantee, signed/mTLS clock composition, encrypted custody, integrity-
+checked service readiness or an issuance/recovery controller. Production health
+provider, tolerance policy and broker mounts still need review before activation.
+No network time lookup, Snowflake/AI, real secret, deployment, push or P3.

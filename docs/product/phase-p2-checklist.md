@@ -822,6 +822,10 @@ for this recovery test increment. P2 remains in progress.
   signed broker/parent/child composition have 69 deterministic offline tests.
 - [ ] Select/prove host-health provider, operational thresholds, boot/suspend
   semantics and broker custody; compose actual authorities and containers.
+- [x] Package the inactive canonical guard and run a network-free disposable
+  Linux clock-domain/restart/latch probe. Normal artifact excludes the probe,
+  matches the guard source hash and still refuses activation. Health is fake;
+  signed/mTLS composition and deployment-host policy remain unproven.
 
 Latest implementation evidence is in the [clock-safety checkpoint](../architecture/p2-clock-safety.md#offline-implementation-checkpoint--21-october).
 Authority/broker composition is now tested offline; actual host/container clocks,

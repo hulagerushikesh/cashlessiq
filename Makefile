@@ -10,6 +10,10 @@ SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql 
 .PHONY: product-membership-check
 .PHONY: product-membership-db product-membership-mtls product-membership-tls
 .PHONY: product-worker-replay-tls product-worker-generation-tls product-worker-recovery-tls
+.PHONY: product-worker-clock
+
+product-worker-clock:
+	$(PYTHON) scripts/test_worker_clock_container.py
 
 product-worker-generation-tls:
 	uv run --project apps/worker --frozen python scripts/test_worker_mtls.py --signing-generation-tls

@@ -1,0 +1,177 @@
+"""Bounded, network-free clock-domain/restart test; never real clock-health acceptance."""
+
+import hashlib
+import json
+import subprocess
+from contextlib import suppress
+from pathlib import Path
+from uuid import uuid4
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def docker(*arguments, timeout=60):
+    return subprocess.run(
+        ["docker", *arguments],
+        cwd=ROOT,
+        check=True,
+        text=True,
+        capture_output=True,
+        timeout=timeout,
+    ).stdout.strip()
+
+
+def main():
+    prefix = f"ciq-clock-{uuid4().hex[:12]}"
+    image = f"{prefix}:test"
+    candidate = f"{prefix}:candidate"
+    volume = f"{prefix}-state"
+    expected_hash = hashlib.sha256(
+        (ROOT / "apps/api/src/ciq_api/worker_clock.py").read_bytes()
+    ).hexdigest()
+    containers = [f"{prefix}-one", f"{prefix}-two"]
+    created = []
+    volume_created = False
+
+    def probe(container, operation):
+        return docker(
+            "exec", container, "python", "-m", "ciq_worker_runtime.clock_probe", operation
+        )
+
+    try:
+        for target, tag in (("clock-test", image), ("candidate", candidate)):
+            docker(
+                "build",
+                "--target",
+                target,
+                "-f",
+                "apps/worker/Dockerfile",
+                "-t",
+                tag,
+                ".",
+                timeout=300,
+            )
+        docker("volume", "create", "--label", f"cashlessiq.clock-test={prefix}", volume)
+        volume_created = True
+        docker(
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--read-only",
+            "--user",
+            "0:0",
+            "--cap-drop",
+            "ALL",
+            "--cap-add",
+            "CHOWN",
+            "--security-opt",
+            "no-new-privileges",
+            "--mount",
+            f"type=volume,src={volume},dst=/state",
+            "--entrypoint",
+            "python",
+            image,
+            "-m",
+            "ciq_worker_runtime.clock_probe",
+            "initialize",
+        )
+        for name in containers:
+            created.append(name)  # Register before creation; cleanup is exact, never broad prune.
+            docker(
+                "run",
+                "-d",
+                "--name",
+                name,
+                "--network",
+                "none",
+                "--read-only",
+                "--user",
+                "10001:10001",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                "--memory",
+                "128m",
+                "--cpus",
+                "0.5",
+                "--pids-limit",
+                "32",
+                "--tmpfs",
+                "/tmp:rw,noexec,nosuid,size=8m",
+                "--mount",
+                f"type=volume,src={volume},dst=/state",
+                "--entrypoint",
+                "sleep",
+                image,
+                "240",
+            )
+            inspect = json.loads(docker("inspect", name))[0]
+            assert inspect["HostConfig"]["NetworkMode"] == "none"
+            assert inspect["HostConfig"]["ReadonlyRootfs"] is True
+            assert inspect["Config"]["User"] == "10001:10001"
+            assert not inspect["HostConfig"]["PortBindings"]
+        first = json.loads(probe(containers[0], "consume"))
+        second = json.loads(probe(containers[1], "replay"))
+        docker("restart", containers[0])
+        third = json.loads(probe(containers[0], "replay"))
+        assert first["boot"] == second["boot"] == third["boot"]
+        assert first["mono_ns"] <= second["mono_ns"] <= third["mono_ns"]
+        assert first["wall_ns"] <= second["wall_ns"] <= third["wall_ns"]
+        assert probe(containers[1], "latch") == "Guard denied as required"
+        docker("restart", containers[0])
+        assert probe(containers[0], "deny") == "Guard denied as required"
+        assert probe(containers[1], "deny") == "Guard denied as required"
+        # Inspect the normal artifact without activating any service or mounting state.
+        docker(
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--read-only",
+            "--cap-drop",
+            "ALL",
+            "--entrypoint",
+            "python",
+            candidate,
+            "-c",
+            "import importlib.util,hashlib,sys; from pathlib import Path; "
+            "import ciq_api.worker_clock as clock; "
+            "assert hashlib.sha256(Path(clock.__file__).read_bytes()).hexdigest()==sys.argv[1]; "
+            "assert importlib.util.find_spec('ciq_worker_runtime.clock_probe') is None; "
+            "assert importlib.util.find_spec('ciq_api.main') is None",
+            expected_hash,
+        )
+        try:
+            docker("run", "--rm", "--network", "none", "--read-only", candidate)
+        except subprocess.CalledProcessError as error:
+            assert error.returncode == 1
+            assert "Worker activation unavailable" in error.stderr
+        else:
+            raise AssertionError("Default worker unexpectedly activated")
+        print(f"{prefix}: PASS clock-domain/restart/latch/artifact; fake health only")
+    finally:
+        failures = []
+        for name in created:
+            try:
+                docker("rm", "-f", name)
+            except subprocess.CalledProcessError:
+                # A failed create may not have made a container; inspect before reporting.
+                if docker("ps", "-a", "--filter", f"name=^{name}$", "--format", "{{.Names}}"):
+                    failures.append(name)
+        if volume_created:
+            try:
+                docker("volume", "rm", volume)
+            except subprocess.CalledProcessError:
+                failures.append(volume)
+        for tag in (image, candidate):
+            with suppress(subprocess.CalledProcessError):
+                docker("image", "rm", tag)
+        if failures:
+            raise RuntimeError(f"Review exact test cleanup failures: {failures}")
+        print(f"{prefix}: owned test containers/volume removed; build cache may remain")
+
+
+if __name__ == "__main__":
+    main()
