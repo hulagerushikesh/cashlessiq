@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted DB composition/verified TLS tests pass; production connection factory, secret/replay/key lifecycle and service wiring remain ([latest evidence](../architecture/p2-membership-db-tls.md)) |
+| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted DB composition/verified TLS tests pass; [lifecycle/configuration proposal](../architecture/p2-runtime-lifecycle.md) prepared, fixed connection factory, actual custody/clock controls and service wiring remain |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -430,6 +430,25 @@ real secret custody and actual mTLS-server/DB composition remain open. Next:
 compose pinned membership transport with the restricted DB lookup, then continue
 the remaining P2 security/source/evidence gates. No Snowflake/AI, persistent
 provisioning, deployment, push or P3.
+
+## Latest lifecycle/configuration review — 21 October
+
+The [runtime lifecycle proposal](../architecture/p2-runtime-lifecycle.md) now
+specifies the next offline fixed DB factory, material-by-service ownership,
+maintenance-window rotation and lost-replay-state recovery. It identifies a
+remaining clock-jump/rollback hazard: expiry pruning plus later backward time is
+not protected by the current ledger. Trusted clock enforcement/recovery must be
+implemented and negatively tested before activation; no automatic protection is
+claimed. Stop-and-restart rotation matches the current single-key/static-pin
+implementation; hot reload and zero-downtime renewal are not assumed.
+
+Next bounded implementation: strict membership-only connection configuration and
+fixed verified-TLS factory, with dummy inputs, no startup wiring and no real
+secrets or network calls. Then reuse disposable DB acceptance and combine it with
+retained replay. Exact encrypted secret-store/delivery and production readiness
+remain separate review/approval gates. This is a documentation checkpoint only;
+prior test counts are unchanged, not rerun. No Snowflake/AI, spend, provisioning,
+deployment, push or P3.
 
 ## Spend guardrails
 

@@ -749,3 +749,18 @@ connection factory, actual secret store, rotation/recovery or source activation
 is approved by this disposable test. Next: exact lifecycle/configuration review
 before live wiring; Snowflake isolation/evidence/live UI gates remain open.
 No Snowflake/AI, account changes, push, public deployment or P3.
+
+## Runtime lifecycle review proposal — 21 October
+
+Prepared the [configuration and lifecycle review](../architecture/p2-runtime-lifecycle.md):
+fixed TLS-only membership factory contract, service-specific secret ownership,
+maintenance-window rotation, healthy replay preservation and fail-closed loss
+recovery requiring old signing-key rejection before new ledger initialization.
+Clock forward/prune/backward risk is explicitly unresolved; the existing ledger
+is not claimed to detect it. Actual encrypted store/delivery, clock controls,
+production readiness and combined DB-TLS/retained-replay tests remain open.
+
+Documentation/link/whitespace checks only; no runtime code changed or test suites
+rerun. Next: offline fixed factory/configuration tests, without entry-point/source
+activation or actual secrets. No Snowflake/AI, spend, persistent changes, push,
+deployment or P3. P2 is still in progress.

@@ -134,6 +134,11 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   replay volumes remain gated. No actual Snowflake credential/process separation
   is claimed by test probes.
 - [ ] Exact approved secret-store/key delivery mechanism, rotation and revocation.
+  A [runtime lifecycle/configuration proposal](../architecture/p2-runtime-lifecycle.md)
+  now specifies material ownership, stop-and-restart rotation, lost-state recovery
+  and the next offline fixed DB factory. Actual store/delivery remains unselected;
+  clock discontinuity protection and combined DB-TLS/retained-replay acceptance
+  remain open. A written proposal is not operational acceptance or provisioning.
 - [x] Disposable DB TLS acceptance: verify-full with explicit CA/DNS identity and
   fixed private hostaddr, TLS 1.3 session evidence, plaintext/hostname rejection,
   bad/missing trust denial through delegated hops and restore without membership
