@@ -60,6 +60,26 @@ authorization to change account objects. If a change is needed, review its exact
 scope separately. Also ask the owner to confirm exact trial expiry/balance in
 the account UI; $195/two days remains owner-reported, not independently verified.
 
+## Owner-supplied CoCo follow-up
+
+The owner supplied the requested two-statement result: CIQ_WH remains suspended,
+`resource_monitor=null`, X-Small/single-cluster/60-second auto-suspend, query
+acceleration enabled with maximum scale factor 8. CIQ_RM returned no rows.
+CoCo reports completion under two minutes and no changes, but no query IDs.
+Its execution role was not supplied; the report itself recommends checking as
+ACCOUNTADMIN. This repeats the attachment observation but does not settle monitor
+existence/visibility. Do not record this as an ACCOUNTADMIN verification.
+
+Next requested check is explicitly administrative, still read-only: use
+ACCOUNTADMIN with secondary roles NONE; return actual current role/secondary
+roles, SHOW WAREHOUSES LIKE 'CIQ_WH' and SHOW RESOURCE MONITORS LIKE 'CIQ_RM'.
+Maximum three inspection statements plus the two session role-setting commands,
+two minutes; no data reads, changes, AI or warehouse resume. Return query IDs if
+the tool exposes them; never invent them. If the administrative role cannot be
+used, stop and report that rather than creating grants. This follow-up requires
+the owner/CoCo administrative context; it has not run here. Actual remediation
+needs a separately approved exact package. Source-read/export batch stays paused.
+
 ## Statement ledger and limitations
 
 Executed in this order:
