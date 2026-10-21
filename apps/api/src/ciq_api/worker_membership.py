@@ -1,9 +1,10 @@
-"""Loopback-only authoritative membership candidate; never normal API startup.
+"""Explicit offline membership transports; never normal API startup.
 
 Only the trusted membership service receives an injected database lookup.
 Workers receive a pinned mTLS client, not database credentials. Peer -> tenant
 configuration is trusted and immutable; no tenant or role is accepted on wire.
 This authenticates a narrow internal lookup, not a browser authorization API.
+Loopback is default; separate private adapters require trusted exact IP endpoints.
 """
 
 from collections.abc import Callable, Mapping
@@ -15,7 +16,11 @@ from pydantic import BaseModel, ConfigDict
 
 from ciq_api.worker_authority import Membership, WorkerDenied
 from ciq_api.worker_delegation import TransportPeer
-from ciq_api.worker_transport import LoopbackSummaryClient, LoopbackSummaryServer
+from ciq_api.worker_transport import (
+    LoopbackSummaryClient,
+    LoopbackSummaryServer,
+    PrivateEndpoint,
+)
 
 MEMBERSHIP_PATH = "/v1/current-membership"
 
@@ -118,3 +123,26 @@ class LoopbackMembershipClient(LoopbackSummaryClient):
             return Membership(self._tenant, result.role) if result.role is not None else None
         except Exception:
             raise WorkerDenied("Worker access denied") from None
+
+
+class PrivateMembershipServer(LoopbackMembershipServer):
+    """Same strict membership contract with explicit private endpoint configuration."""
+
+    def __init__(self, *, endpoint: PrivateEndpoint, **configuration):
+        if type(endpoint) is not PrivateEndpoint:
+            raise ValueError("Invalid private worker endpoint")
+        self._endpoint = endpoint
+        super().__init__(**configuration)
+
+    def _listen_address(self) -> tuple[str, int]:
+        return (self._endpoint.address, self._endpoint.port)
+
+
+class PrivateMembershipClient(LoopbackMembershipClient):
+    """Same nonce/tenant-bound lookup over an explicitly pinned private endpoint."""
+
+    def __init__(self, *, endpoint: PrivateEndpoint, **configuration):
+        if type(endpoint) is not PrivateEndpoint:
+            raise ValueError("Invalid private worker endpoint")
+        super().__init__(port=endpoint.port, **configuration)
+        self._host = endpoint.address

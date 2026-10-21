@@ -1,0 +1,372 @@
+"""Disposable four-container mTLS/delegation smoke; no real auth/source/deployment.
+
+Run: uv run --project apps/worker --frozen python scripts/test_worker_mtls.py
+Only invocation-owned Docker resources are removed; normal product stack is untouched.
+"""
+
+import ipaddress
+import json
+import subprocess
+import time
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from uuid import uuid4
+
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
+
+ROOT = Path(__file__).resolve().parents[1]
+ROLES = ("broker", "reader", "validator", "membership")
+EDGES = (
+    ("broker", "reader"),
+    ("reader", "validator"),
+    ("reader", "membership"),
+    ("validator", "membership"),
+)
+AUDIENCES = {
+    "broker": "broker",
+    "reader": "reader:0:nonclinical",
+    "validator": "validator:0",
+    "membership": "membership:0",
+}
+
+
+def docker(*arguments, capture=True, timeout=60):
+    result = subprocess.run(
+        ["docker", *arguments],
+        cwd=ROOT,
+        text=True,
+        check=True,
+        timeout=timeout,
+        stdout=subprocess.PIPE if capture else None,
+    )
+    return result.stdout.strip() if capture else None
+
+
+def write(path, data):
+    # Temporary test artifacts only; parent temporary directory remains mode 0700.
+    path.write_bytes(data if isinstance(data, bytes) else data.encode())
+    path.chmod(0o444)
+
+
+def private_bytes(key):
+    return key.private_bytes(
+        serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
+    )
+
+
+def fixture():
+    case = dict(
+        request_id="GOL001",
+        policy_id="POL0001",
+        tpa_id="TPA001",
+        product_id="AS_NIA_V02_2425",
+        product_name="Synthetic test product",
+        policy_version="TEST",
+        continuous_cover_since="2023-01-01",
+        admission_date="2026-10-02",
+        estimated_total_inr=100_000,
+    )
+    decision = dict(
+        request_id="GOL001",
+        outcome="APPROVE_WITH_DEDUCTIONS",
+        total_claimed_inr=100_000,
+        total_payable_inr=95_000,
+        lines=[
+            dict(
+                item="Synthetic test item",
+                claimed_inr=100_000,
+                payable_inr=95_000,
+                deduction_inr=5_000,
+                reason="Restricted synthetic prose",
+                calc="Saved trace",
+                citations=[{"type": "clause", "id": "COPAY"}],
+            )
+        ],
+        queries=[],
+        refer_reasons=[],
+        summary="Restricted synthetic narrative",
+        sla={"elapsed_min": 0, "state": "GREEN"},
+    )
+    return dict(
+        case=case,
+        decisions=[
+            dict(
+                request_id="GOL001",
+                tpa_id="TPA001",
+                outcome=decision["outcome"],
+                payable_inr=95_000,
+                decision_json=decision,
+            )
+        ],
+        evidence=[
+            dict(
+                request_id="GOL001",
+                tpa_id="TPA001",
+                product_id="AS_NIA_V02_2425",
+                clause_id="COPAY",
+                heading="Synthetic co-pay",
+                page=5,
+                source_url="https://example.com/policy.pdf",
+            )
+        ],
+    )
+
+
+def main():
+    prefix = f"ciq-mtls-{uuid4().hex[:12]}"
+    image = f"{prefix}:test"
+    containers, networks = {}, []
+    try:
+        docker(
+            "build",
+            "--target",
+            "mtls-test",
+            "-f",
+            "apps/worker/Dockerfile",
+            "-t",
+            image,
+            ".",
+            capture=False,
+            timeout=300,
+        )
+        links = {role: {} for role in ROLES}
+        for left, right in EDGES:
+            network = docker(
+                "network",
+                "create",
+                "--internal",
+                "--label",
+                f"cashlessiq.mtls-test={prefix}",
+                f"{prefix}-{left}-{right}",
+            )
+            networks.append(network)
+            links[left][right] = network
+            links[right][left] = network
+        with TemporaryDirectory(prefix="ciq-disposable-pki-") as directory:
+            root = Path(directory)
+            for role in ROLES:
+                mount = root / role
+                mount.mkdir(mode=0o755)
+                args = [
+                    "create",
+                    "--name",
+                    f"{prefix}-{role}",
+                    "--network",
+                    next(iter(links[role].values())),
+                    "--label",
+                    f"cashlessiq.mtls-test={prefix}",
+                    "--read-only",
+                    "--cap-drop",
+                    "ALL",
+                    "--security-opt",
+                    "no-new-privileges",
+                    "--user",
+                    "10001:10001",
+                    "--memory",
+                    "128m",
+                    "--cpus",
+                    "0.5",
+                    "--pids-limit",
+                    "32",
+                    "--tmpfs",
+                    "/tmp:rw,noexec,nosuid,size=8m,mode=1777",
+                    "--mount",
+                    f"type=bind,src={mount},dst=/run/ciq,readonly",
+                ]
+                args += ["--entrypoint", "python", image, "-c", "import time; time.sleep(300)"]
+                containers[role] = docker(*args)
+                for network in list(links[role].values())[1:]:
+                    docker("network", "connect", network, containers[role])
+                docker("start", containers[role])
+
+            # Bootstrap sleeps reserve actual engine addresses; no listener exists yet.
+            inspected = {
+                role: json.loads(docker("inspect", cid))[0] for role, cid in containers.items()
+            }
+            for role, config in inspected.items():
+                host = config["HostConfig"]
+                assert host["ReadonlyRootfs"] and host["CapDrop"] == ["ALL"]
+                assert "no-new-privileges" in host["SecurityOpt"]
+                assert config["Config"]["User"] == "10001:10001"
+                assert not host["PortBindings"] and not config["Config"].get("ExposedPorts")
+                binds = [mount for mount in config["Mounts"] if mount["Type"] == "bind"]
+                assert len(binds) == 1 and binds[0]["Source"] == str(root / role)
+                assert binds[0]["Destination"] == "/run/ciq" and not binds[0]["RW"]
+            assert all(
+                json.loads(docker("network", "inspect", net))[0]["Internal"] for net in networks
+            )
+
+            def address(role, peer):
+                network_id = links[role][peer]
+                return next(
+                    net["IPAddress"]
+                    for net in inspected[role]["NetworkSettings"]["Networks"].values()
+                    if net["NetworkID"] == network_id
+                )
+
+            ca_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+            signer = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+            now = datetime.now(UTC)
+            ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Disposable CIQ CA")])
+            ca = (
+                x509.CertificateBuilder()
+                .subject_name(ca_name)
+                .issuer_name(ca_name)
+                .public_key(ca_key.public_key())
+                .serial_number(x509.random_serial_number())
+                .not_valid_before(now - timedelta(minutes=1))
+                .not_valid_after(now + timedelta(hours=1))
+                .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
+                .add_extension(
+                    x509.KeyUsage(False, False, False, False, False, True, True, False, False),
+                    critical=True,
+                )
+                .sign(ca_key, hashes.SHA256())
+            )
+            pins = {}
+            for role in ROLES:
+                mount = root / role
+                key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+                ips = [address(role, peer) for peer in links[role]]
+                leaf = (
+                    x509.CertificateBuilder()
+                    .subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, role)]))
+                    .issuer_name(ca_name)
+                    .public_key(key.public_key())
+                    .serial_number(x509.random_serial_number())
+                    .not_valid_before(now - timedelta(minutes=1))
+                    .not_valid_after(now + timedelta(hours=1))
+                    .add_extension(x509.BasicConstraints(ca=False, path_length=None), True)
+                    .add_extension(
+                        x509.ExtendedKeyUsage(
+                            [ExtendedKeyUsageOID.CLIENT_AUTH, ExtendedKeyUsageOID.SERVER_AUTH]
+                        ),
+                        True,
+                    )
+                    .add_extension(
+                        x509.SubjectAlternativeName(
+                            [
+                                x509.UniformResourceIdentifier(
+                                    f"urn:cashlessiq:worker:{AUDIENCES[role]}"
+                                ),
+                                *[x509.IPAddress(ipaddress.ip_address(ip)) for ip in ips],
+                            ]
+                        ),
+                        False,
+                    )
+                    .sign(ca_key, hashes.SHA256())
+                )
+                pins[role] = leaf.fingerprint(hashes.SHA256()).hex()
+                write(mount / "ca.pem", ca.public_bytes(serialization.Encoding.PEM))
+                write(mount / "identity.pem", leaf.public_bytes(serialization.Encoding.PEM))
+                write(mount / "identity.key", private_bytes(key))
+                write(
+                    mount / "verify.pem",
+                    signer.public_key().public_bytes(
+                        serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
+                    ),
+                )
+            write(root / "broker" / "signing.key", private_bytes(signer))
+            write(root / "validator" / "fixture.json", json.dumps(fixture()))
+            state_path = root / "membership" / "state.json"
+            write(state_path, json.dumps({"role": "processor"}))
+            for role in ROLES:
+                targets = {peer: address(peer, role) for peer in links[role]}
+                if role == "broker":  # Negative direct-hop test: no broker/validator network.
+                    targets["validator"] = address("validator", "reader")
+                # Reader only listens on broker edge; outbound targets are independently fixed.
+                listen = (
+                    [address(role, peer) for peer in links[role]]
+                    if role == "membership"
+                    else [address(role, "broker" if role == "reader" else "reader")]
+                    if role != "broker"
+                    else []
+                )
+                write(
+                    root / role / "config.json",
+                    json.dumps({"pins": pins, "targets": targets, "listen": listen}),
+                )
+                if role != "broker":
+                    docker(
+                        "exec",
+                        "-d",
+                        containers[role],
+                        "python",
+                        "-m",
+                        "ciq_worker_runtime.mtls_probe",
+                        "serve",
+                        role,
+                    )
+            for role in ("membership", "validator", "reader"):
+                deadline = time.monotonic() + 15
+                while (
+                    docker(
+                        "exec",
+                        containers[role],
+                        "python",
+                        "-c",
+                        "from pathlib import Path; print(Path('/tmp/ready').exists())",
+                    )
+                    != "True"
+                ):
+                    if time.monotonic() > deadline:
+                        raise RuntimeError(f"Test listener readiness failed: {role}")
+                    time.sleep(0.1)
+
+            def check(action):
+                docker(
+                    "exec",
+                    containers["broker"],
+                    "python",
+                    "-m",
+                    "ciq_worker_runtime.mtls_probe",
+                    action,
+                    "broker",
+                    capture=False,
+                )
+
+            check("check")
+            docker(
+                "exec",
+                containers["reader"],
+                "python",
+                "-m",
+                "ciq_worker_runtime.mtls_probe",
+                "self-deny",
+                "reader",
+                capture=False,
+            )
+            # Deliberately change only this synthetic test membership file, same mount inode.
+            state_path.chmod(0o600)
+            state_path.write_text(json.dumps({"role": None}))
+            state_path.chmod(0o444)
+            check("deny")
+            state_path.chmod(0o600)
+            state_path.write_text(json.dumps({"role": "processor"}))
+            state_path.chmod(0o444)
+            check("check")  # Restoration succeeds before testing independent service outage.
+            docker("stop", "--time", "1", containers["membership"])
+            check("deny")
+            print("PASS: four private containers; real mTLS delegation/membership; synthetic only")
+    finally:
+        failures = []
+        for command in (
+            *[("rm", "-f", cid) for cid in reversed(list(containers.values()))],
+            *[("network", "rm", network) for network in reversed(networks)],
+            ("image", "rm", image),
+        ):
+            result = subprocess.run(
+                ["docker", *command], capture_output=True, text=True, timeout=30
+            )
+            if result.returncode and "No such" not in result.stderr:
+                failures.append(command[0])
+        if failures:
+            raise RuntimeError(f"Test cleanup incomplete for {prefix}: {failures}")
+
+
+if __name__ == "__main__":
+    main()

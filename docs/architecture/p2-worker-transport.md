@@ -1,13 +1,16 @@
 # P2 authenticated transport — local test candidate
 
-Status: implemented and tested on loopback only; **not activated or deployed**.
+Status: loopback and explicit private-container test candidates pass;
+**not activated or deployed**. Latest: [container mTLS checkpoint](p2-worker-container-mtls.md).
 Parent: [worker boundary](p2-validation-boundary.md).
 
 ## Implemented boundary
 
 `apps/api/src/ciq_api/worker_transport.py` provides explicitly constructed TLS
 listeners/clients for the broker -> read-relay and read-relay -> validator hops.
-Listeners bind only `127.0.0.1` on an ephemeral port. No ordinary API/Compose
+Default loopback listeners bind only `127.0.0.1` on an ephemeral port. Separate
+private adapters require a canonical RFC1918 IPv4/port, not DNS or caller URLs.
+No ordinary API/Compose
 startup imports or constructs them. No Snowflake connection is involved.
 
 - TLS 1.3 minimum, explicit CA trust, required client certificates; client also

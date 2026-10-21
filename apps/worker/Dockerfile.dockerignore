@@ -7,6 +7,7 @@
 !apps/worker/src/**
 !apps/worker/tests/
 !apps/worker/tests/isolation_probe.py
+!apps/worker/tests/mtls_probe.py
 !apps/api/
 !apps/api/src/
 !apps/api/src/ciq_api/

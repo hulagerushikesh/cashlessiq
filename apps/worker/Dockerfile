@@ -21,5 +21,10 @@ FROM runtime-base AS isolation-test
 COPY apps/worker/tests/isolation_probe.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/isolation_probe.py
 ENTRYPOINT ["python", "-m", "ciq_worker_runtime.isolation_probe"]
 
+# Disposable PKI + synthetic application handlers; never the default artifact.
+FROM runtime-base AS mtls-test
+COPY apps/worker/tests/mtls_probe.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/mtls_probe.py
+ENTRYPOINT ["python", "-m", "ciq_worker_runtime.mtls_probe"]
+
 # Default target contains no test listener or automatic service startup.
 FROM runtime-base AS candidate

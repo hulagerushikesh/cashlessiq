@@ -74,6 +74,7 @@ def main():
             "-c",
             "import importlib.util; from ciq_api import worker_membership; "
             "assert importlib.util.find_spec('ciq_worker_runtime.isolation_probe') is None; "
+            "assert importlib.util.find_spec('ciq_worker_runtime.mtls_probe') is None; "
             "assert importlib.util.find_spec('ciq_api.main') is None; "
             "assert importlib.util.find_spec('sqlalchemy') is None; "
             "assert importlib.util.find_spec('snowflake') is None",

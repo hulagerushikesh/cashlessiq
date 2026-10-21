@@ -1,16 +1,18 @@
-"""Explicitly constructed loopback mTLS candidate, never normal API startup.
+"""Explicitly constructed offline mTLS candidate, never normal API startup.
 
-No credential generation/discovery, proxy, redirects, retries or non-loopback
-binding. Certificate files must be explicitly supplied. Tests use temporary PKI;
-live secret custody/rotation, containers and remote membership remain gated.
+No credential generation/discovery, proxy, redirects or retries. Loopback remains
+the default; separate private adapters require a fixed RFC1918 IPv4 endpoint.
+Certificate files must be explicitly supplied; live custody/activation stays gated.
 """
 
 import json
 import ssl
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from hashlib import sha256
 from http.client import HTTPSConnection
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from ipaddress import IPv4Address, IPv4Network
 from pathlib import Path
 from threading import BoundedSemaphore
 from types import MappingProxyType
@@ -25,6 +27,35 @@ READ_PATH = "/v1/read-summary"
 Operation = Literal["validate_summary", "read_detail"]
 MAX_BODY = 8192
 TIMEOUT = 3
+
+
+@dataclass(frozen=True)
+class PrivateEndpoint:
+    """Trusted configuration only: exact RFC1918 IP/port, never a caller URL/DNS.
+
+    Private addressing is not authentication or egress policy. Operators must
+    isolate the network separately; TLS still checks IP SAN, URI identity and pin.
+    """
+
+    address: str
+    port: int
+
+    def __post_init__(self):
+        if type(self.address) is not str or type(self.port) is not int:
+            raise ValueError("Invalid private worker endpoint")
+        try:
+            address = IPv4Address(self.address)
+        except ValueError:
+            raise ValueError("Invalid private worker endpoint") from None
+        if (
+            str(address) != self.address
+            or not any(
+                address in IPv4Network(network)
+                for network in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")
+            )
+            or not 0 < self.port < 65536
+        ):
+            raise ValueError("Invalid private worker endpoint")
 
 
 def _path(operation: Operation) -> str:
@@ -137,7 +168,10 @@ class LoopbackSummaryServer(ThreadingHTTPServer):
         self._validate = validate
         self._path = _path(operation)
         self._slots = BoundedSemaphore(8)
-        super().__init__(("127.0.0.1", 0), _SummaryHandler)
+        super().__init__(self._listen_address(), _SummaryHandler)
+
+    def _listen_address(self) -> tuple[str, int]:
+        return ("127.0.0.1", 0)
 
     def get_request(self):
         connection, address = super().get_request()
@@ -233,6 +267,7 @@ class LoopbackSummaryClient:
         if type(port) is not int or not 0 < port < 65536:
             raise ValueError("Invalid worker endpoint")
         self._context = context
+        self._host = "127.0.0.1"
         self._port = port
         self._peers = _pins({server_pin: server_audience})
         self._path = _path(operation)
@@ -247,9 +282,7 @@ class LoopbackSummaryClient:
 
     def _exchange(self, message: dict) -> dict:
         """Shared framing/TLS only; subclasses must enforce their strict contract."""
-        connection = HTTPSConnection(
-            "127.0.0.1", self._port, timeout=TIMEOUT, context=self._context
-        )
+        connection = HTTPSConnection(self._host, self._port, timeout=TIMEOUT, context=self._context)
         try:
             body = json.dumps(message).encode()
             if len(body) > MAX_BODY:
@@ -271,3 +304,26 @@ class LoopbackSummaryClient:
             raise WorkerDenied("Worker access denied") from None
         finally:
             connection.close()
+
+
+class PrivateSummaryServer(LoopbackSummaryServer):
+    """Explicit private test adapter, not a production HTTP server/startup hook."""
+
+    def __init__(self, *, endpoint: PrivateEndpoint, **configuration):
+        if type(endpoint) is not PrivateEndpoint:
+            raise ValueError("Invalid private worker endpoint")
+        self._endpoint = endpoint
+        super().__init__(**configuration)
+
+    def _listen_address(self) -> tuple[str, int]:
+        return (self._endpoint.address, self._endpoint.port)
+
+
+class PrivateSummaryClient(LoopbackSummaryClient):
+    """One trusted exact IP/port; no DNS resolution, URLs or destination override."""
+
+    def __init__(self, *, endpoint: PrivateEndpoint, **configuration):
+        if type(endpoint) is not PrivateEndpoint:
+            raise ValueError("Invalid private worker endpoint")
+        super().__init__(port=endpoint.port, **configuration)
+        self._host = endpoint.address

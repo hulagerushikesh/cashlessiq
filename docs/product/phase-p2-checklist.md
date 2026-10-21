@@ -1,9 +1,25 @@
 # Product P2 — read-only case workspace
 
 Status: In progress — synthetic-only alpha  
-Last updated: 19 October 2026
+Last updated: 21 October 2026
 
 ## Latest checkpoint — authenticated inspection
+
+### Private container mTLS/delegation — latest
+
+Four disposable containers now run the canonical relay/validator/membership
+adapters over explicit private IPs with disposable pinned mTLS identities.
+Synthetic GOL001 returns only the validated INR 95,000 SAVED summary. Replay,
+tamper, wrong server/client identity, direct-hop/tenant bypass, revoked membership
+and independent membership outage deny. Exact per-role read-only test key mounts
+are checked; the default artifact excludes both test harnesses. Eight-container
+topology/direct-IP isolation smoke remains green. Details and limits:
+[container mTLS checkpoint](../architecture/p2-worker-container-mtls.md).
+
+342 backend and 145 root tests pass; public OpenAPI unchanged. No deployment,
+normal startup, real credentials, Snowflake spend, push or P3. This is one-tenant
+nonclinical SAVED acceptance with synthetic membership, not the final DB/runtime
+boundary. Retained replay lifecycle and trusted membership DB packaging are next.
 
 ### Minimal worker artifact and disposable topology — latest
 

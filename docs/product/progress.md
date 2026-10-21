@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 19 October 2026  
+Last updated: 21 October 2026
 Current phase: **P2 / M2 — synthetic-only, read-only case workspace**
 
 This is the current-status index. The migration plan defines sequence; phase
@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Loopback mTLS/membership and minimal worker image + dummy network/mount tests pass; still need container mTLS/service wiring, membership DB boundary and real replay/key lifecycle |
+| Worker security | Private container mTLS/delegation and synthetic membership smoke now pass, plus minimal image/network/mount tests; still need trusted membership DB boundary, retained replay/key lifecycle and production service wiring |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -364,6 +364,22 @@ service provisioning, live source activation, push or deployment. Deployment is
 paused again at the owner's request. Next: actual container mTLS using temporary
 PKI, trusted membership-service packaging/DB policy and secret/replay lifecycle.
 The topology probes are not application handlers; P2 remains incomplete.
+
+## Latest private-container transport checkpoint — 21 October
+
+Four disposable containers now exercise the canonical delegated relay/validator
+and remote membership adapters over exact private IPs with pinned temporary mTLS
+identities. The synthetic SAVED summary is correct; replay, wrong identity,
+cross-tenant/direct-hop access and revoked/unavailable membership deny. Per-role
+read-only test key mounts hold; the eight-container topology/package smoke also
+passes. See [scope/evidence/limits](../architecture/p2-worker-container-mtls.md).
+
+342 API/PostgreSQL and 145 root tests pass; lint/format/whitespace pass and public
+OpenAPI is unchanged. Disposable resources are removed. No website/normal startup,
+Snowflake/AI use, real keys/grants, push or P3. This supersedes the container-mTLS
+next action above, not the broader live-acceptance gates. Next: retained replay
+volume/restart lifecycle using disposable keys, then trusted membership-service
+packaging and narrow DB access review. P2 remains in progress.
 
 ## Spend guardrails
 

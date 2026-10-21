@@ -81,14 +81,17 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   application or mTLS-in-container proof. See
   [packaging evidence/limits](../architecture/p2-worker-packaging.md).
 - [ ] Implement private peer-authenticated transport and asymmetric assertion
-  issuer lifecycle in separately packaged workers. Loopback mTLS now passes;
-  container/private addressing, signing/CA custody, rotation/revocation, production
-  server/timeout handling and network/mount isolation remain unimplemented.
+  issuer lifecycle in separately packaged workers. Loopback and a one-tenant
+  private-container mTLS/delegation smoke now pass with disposable PKI and fresh
+  synthetic membership. Exact private endpoints and key mounts are checked; real
+  signing/CA custody, rotation/revocation and production server/deadlines remain
+  open. See [container evidence/limits](../architecture/p2-worker-container-mtls.md).
 - [ ] Package the authoritative membership service separately with reviewed DB
   access policy/private networking. Loopback remote checks now pass, including
   medical downgrade after validator return; deployed isolation, consistency,
   production deadlines and cross-service acceptance remain open. Separate workers
-  must not receive general operational database credentials.
+  must not receive general operational database credentials. A separate synthetic
+  membership container now passes mTLS/outage/revocation smoke; it has no DB access.
 - [ ] Replace process-local replay state with a reviewed atomic shared strategy
   before multi-process/restart-capable use. The optional SQLite candidate now
   passes same-host multiprocess/restart tests; the default remains process-local.
@@ -117,7 +120,8 @@ clinical prose, financial lines or persisted projection is introduced.
 
 ## Verification
 
-312 API tests passed, including disposable PostgreSQL tests and the
+342 API tests passed, including 30 new private-endpoint configuration tests,
+disposable PostgreSQL tests and the
 167 boundary/broker/replay/delegation/transport/membership tests. Eleven replay tests include spawned processes,
 restart/capacity/storage failures and expiry during consumption.
 The delegation increment adds 32 focused tests and 16 existing broker scenarios

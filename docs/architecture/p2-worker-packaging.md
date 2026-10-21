@@ -75,10 +75,12 @@ require operator cleanup of that exact prefix.
 
 ## What remains
 
-This proves a packaging and topology/mount candidate, **not running worker isolation**.
-The mTLS handlers currently bind loopback; no network-facing application listener
-was added. Next: strict private-address configuration and end-to-end container mTLS
-with disposable PKI, before any actual service bootstrapping. Separately package
+The original probe proves packaging/topology/mount configuration, not application
+authentication. Subsequently, strict private-address adapters and an explicit
+`mtls-test` image passed a [four-container mTLS smoke](p2-worker-container-mtls.md)
+with disposable PKI and synthetic membership. Neither test helper is present in
+the default candidate. No normal startup changed. Next: retained replay lifecycle;
+separately package
 the trusted broker/membership service with its reviewed PostgreSQL access boundary.
 Do not give general DB credentials to readers/validators.
 
