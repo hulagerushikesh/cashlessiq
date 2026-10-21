@@ -87,8 +87,9 @@ root/API Ruff, changed-file formatting and git whitespace checks pass. Public
 API/startup code is unchanged. Browser/build/remote CI were not rerun for this
 internal-only container test increment.
 
-Next: compose the canonical pinned membership mTLS server with this restricted
-DB adapter and exercise fresh revocation/outage across real delegated hops.
+The subsequent [private mTLS/DB composition](p2-membership-db-mtls.md) now passes
+fresh revocation/outage checks across real delegated hops. This page records the
+earlier independent database permission acceptance, not production activation.
 Production server/deadlines, private DB TLS, encrypted key/credential delivery,
 rotation/recovery, exact provisioning/rollback and the remaining Snowflake,
 governed evidence and live API/UI acceptance gates remain open. No persistent

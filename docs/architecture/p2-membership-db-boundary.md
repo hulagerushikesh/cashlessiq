@@ -87,7 +87,8 @@ now passes: restricted synthetic principal, column/write/DDL denials, fresh
 deactivation/downgrade, missing privileges/outage and per-service network/mount
 isolation. This does not apply the production policy or prove DB TLS/secret
 custody/mTLS-server composition. The original next-step scope below is retained
-as context; actual next work is composition with the pinned membership transport.
+as context. The subsequent [pinned mTLS/DB composition](p2-membership-db-mtls.md)
+also passes; verified production DB TLS and secret/lifecycle review remain open.
 
 Package the membership container with only its DB identity mount and test it
 against a separately disposable database/principal over private networks. Prove

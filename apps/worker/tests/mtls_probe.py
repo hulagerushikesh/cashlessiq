@@ -2,7 +2,9 @@
 
 No application login, operational source SQL, Snowflake or production listener.
 Optional same-host SQLite replay volumes and disposable keys are test-only.
-The synthetic membership file is not a database authorization implementation.
+Default membership uses a synthetic JSON file. The separate membership test
+image can instead inject its restricted, disposable DB adapter; no DB imports
+or credentials are added to the reader/validator artifacts.
 """
 
 import json
@@ -94,14 +96,22 @@ def serve(config, role):
         )
     }
     if role == "membership":
+        if config.get("restricted_db"):
+            # Imports exist only in the explicit membership test target.
+            from ciq_api.worker_membership_store import RestrictedMembershipStore
+            from ciq_membership_runtime.db_probe import test_engine
 
-        def lookup(subject, tenant):
-            state = json.loads((ROOT / "state.json").read_text())
-            return (
-                Membership(tenant, state["role"])
-                if subject == SUBJECT and state["role"] is not None
-                else None
-            )
+            engine = test_engine()
+            lookup = RestrictedMembershipStore(engine.connect, schema="ops").lookup
+        else:
+
+            def lookup(subject, tenant):
+                state = json.loads((ROOT / "state.json").read_text())
+                return (
+                    Membership(tenant, state["role"])
+                    if subject == SUBJECT and state["role"] is not None
+                    else None
+                )
 
         listeners = [
             PrivateMembershipServer(
@@ -280,7 +290,7 @@ if __name__ == "__main__":
     expected |= (
         {"signing.key"}
         if role == "broker"
-        else {"state.json"}
+        else ({"db.json"} if config.get("restricted_db") else {"state.json"})
         if role == "membership"
         else {"fixture.json"}
         if role == "validator"

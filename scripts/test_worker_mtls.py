@@ -1,6 +1,7 @@
-"""Disposable four-container mTLS/delegation smoke; no real auth/source/deployment.
+"""Disposable mTLS/delegation smoke; no real auth/source/deployment.
 
 Run: uv run --project apps/worker --frozen python scripts/test_worker_mtls.py
+Optional --restricted-db adds a fifth, ephemeral PostgreSQL container.
 Only invocation-owned Docker resources are removed; normal product stack is untouched.
 """
 
@@ -18,6 +19,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
+from disposable_membership_db import DisposableMembershipDB
 
 ROOT = Path(__file__).resolve().parents[1]
 ROLES = ("broker", "reader", "validator", "membership")
@@ -35,14 +37,16 @@ AUDIENCES = {
 }
 
 
-def docker(*arguments, capture=True, timeout=60):
+def docker(*arguments, capture=True, timeout=60, input=None):
     result = subprocess.run(
         ["docker", *arguments],
         cwd=ROOT,
         text=True,
+        input=input,
         check=True,
         timeout=timeout,
         stdout=subprocess.PIPE if capture else None,
+        stderr=subprocess.PIPE if input is not None else None,
     )
     return result.stdout.strip() if capture else None
 
@@ -117,9 +121,10 @@ def fixture():
     )
 
 
-def main(*, retained_replay=False):
+def main(*, retained_replay=False, restricted_db=False):
     prefix = f"ciq-mtls-{uuid4().hex[:12]}"
     image = f"{prefix}:test"
+    membership_image = f"{prefix}:membership"
     containers, networks, volumes = {}, [], {}
     try:
         docker(
@@ -134,6 +139,19 @@ def main(*, retained_replay=False):
             capture=False,
             timeout=300,
         )
+        if restricted_db:
+            docker(
+                "build",
+                "--target",
+                "mtls-test",
+                "-f",
+                "apps/membership/Dockerfile",
+                "-t",
+                membership_image,
+                ".",
+                capture=False,
+                timeout=300,
+            )
         if retained_replay:
             for role in ("reader", "validator"):
                 volume = docker(
@@ -179,6 +197,28 @@ def main(*, retained_replay=False):
             links[right][left] = network
         with TemporaryDirectory(prefix="ciq-disposable-pki-") as directory:
             root = Path(directory)
+            database = None
+            if restricted_db:
+                network = docker(
+                    "network",
+                    "create",
+                    "--internal",
+                    "--label",
+                    f"cashlessiq.mtls-test={prefix}",
+                    f"{prefix}-membership-db",
+                )
+                networks.append(network)
+                links["membership"]["db"] = network
+                # Register exact name BEFORE startup so partial failures are cleaned.
+                containers["db"] = f"{prefix}-db"
+                database = DisposableMembershipDB(
+                    docker,
+                    name=containers["db"],
+                    network=network,
+                    label=f"cashlessiq.mtls-test={prefix}",
+                    directory=root,
+                )
+                database.start()
             for role in ROLES:
                 mount = root / role
                 mount.mkdir(mode=0o755)
@@ -210,22 +250,24 @@ def main(*, retained_replay=False):
                 ]
                 if role in volumes:
                     args += ["--mount", f"type=volume,src={volumes[role]},dst=/var/lib/ciq-replay"]
-                args += ["--entrypoint", "python", image, "-c", "import time; time.sleep(300)"]
+                role_image = membership_image if restricted_db and role == "membership" else image
+                args += ["--entrypoint", "python", role_image, "-c", "import time; time.sleep(300)"]
                 containers[role] = docker(*args)
                 for network in list(links[role].values())[1:]:
                     docker("network", "connect", network, containers[role])
                 docker("start", containers[role])
 
             # Bootstrap sleeps reserve actual engine addresses; no listener exists yet.
-            inspected = {
-                role: json.loads(docker("inspect", cid))[0] for role, cid in containers.items()
-            }
+            inspected = {role: json.loads(docker("inspect", containers[role]))[0] for role in ROLES}
             for role, config in inspected.items():
                 host = config["HostConfig"]
                 assert host["ReadonlyRootfs"] and host["CapDrop"] == ["ALL"]
                 assert "no-new-privileges" in host["SecurityOpt"]
                 assert config["Config"]["User"] == "10001:10001"
                 assert not host["PortBindings"] and not config["Config"].get("ExposedPorts")
+                assert {
+                    net["NetworkID"] for net in config["NetworkSettings"]["Networks"].values()
+                } == set(links[role].values())
                 binds = [mount for mount in config["Mounts"] if mount["Type"] == "bind"]
                 assert len(binds) == 1 and binds[0]["Source"] == str(root / role)
                 assert binds[0]["Destination"] == "/run/ciq" and not binds[0]["RW"]
@@ -312,14 +354,31 @@ def main(*, retained_replay=False):
             write(root / "broker" / "signing.key", private_bytes(signer))
             write(root / "validator" / "fixture.json", json.dumps(fixture()))
             state_path = root / "membership" / "state.json"
-            write(state_path, json.dumps({"role": "processor"}))
+            if database:
+                database.write_credential(root / "membership" / "db.json")
+                for role in ("broker", "reader", "validator"):
+                    docker(
+                        "exec",
+                        containers[role],
+                        "python",
+                        "-c",
+                        "import socket,importlib.util; from pathlib import Path; "
+                        "assert not Path('/run/ciq/db.json').exists(); "
+                        "assert all(importlib.util.find_spec(x) is None for x in "
+                        "('sqlalchemy','psycopg','ciq_api.worker_membership_store')); "
+                        "s=socket.socket(); s.settimeout(1); "
+                        f"assert s.connect_ex(({database.address!r},5432)) != 0; s.close()",
+                    )
+                print("PASS: only membership has DB credential/driver/network; workers denied")
+            else:
+                write(state_path, json.dumps({"role": "processor"}))
             for role in ROLES:
-                targets = {peer: address(peer, role) for peer in links[role]}
+                targets = {peer: address(peer, role) for peer in links[role] if peer != "db"}
                 if role == "broker":  # Negative direct-hop test: no broker/validator network.
                     targets["validator"] = address("validator", "reader")
                 # Reader only listens on broker edge; outbound targets are independently fixed.
                 listen = (
-                    [address(role, peer) for peer in links[role]]
+                    [address(role, peer) for peer in links[role] if peer != "db"]
                     if role == "membership"
                     else [address(role, "broker" if role == "reader" else "reader")]
                     if role != "broker"
@@ -333,6 +392,7 @@ def main(*, retained_replay=False):
                             "targets": targets,
                             "listen": listen,
                             "retained_replay": retained_replay and role in volumes,
+                            "restricted_db": restricted_db,
                         }
                     ),
                 )
@@ -469,6 +529,27 @@ def main(*, retained_replay=False):
                 "reader",
                 capture=False,
             )
+            if database:
+                # Same running membership service/engine; every check opens a fresh connection.
+                database.sql("UPDATE ops.tenant_membership SET role='medical_officer';")
+                check("deny")  # Old nonclinical capability cannot cross disclosure boundaries.
+                database.sql("UPDATE ops.tenant_membership SET role='auditor';")
+                check("check")  # Auditor remains legitimately nonclinical for this read.
+                for table in ("app_user", "tenant", "tenant_membership"):
+                    database.sql(f"UPDATE ops.{table} SET active=false;")
+                    check("deny")
+                    database.sql(f"UPDATE ops.{table} SET active=true;")
+                    check("check")
+                database.sql("REVOKE SELECT(role) ON ops.tenant_membership FROM membership_test;")
+                check("deny")
+                database.sql("GRANT SELECT(role) ON ops.tenant_membership TO membership_test;")
+                check("check")
+                docker("stop", "--time", "1", containers["db"])
+                check("deny")
+                print(
+                    "PASS: restricted DB through pinned mTLS/delegated workers; no fixture fallback"
+                )
+                return
             # Deliberately change only this synthetic test membership file, same mount inode.
             state_path.chmod(0o600)
             state_path.write_text(json.dumps({"role": None}))
@@ -488,6 +569,7 @@ def main(*, retained_replay=False):
             *[("network", "rm", network) for network in reversed(networks)],
             *[("volume", "rm", volume) for volume in reversed(list(volumes.values()))],
             ("image", "rm", image),
+            *([("image", "rm", membership_image)] if restricted_db else []),
         ):
             result = subprocess.run(
                 ["docker", *command], capture_output=True, text=True, timeout=30
@@ -496,9 +578,13 @@ def main(*, retained_replay=False):
                 failures.append(command[0])
         if failures:
             raise RuntimeError(f"Test cleanup incomplete for {prefix}: {failures}")
+        print("PASS: invocation-owned mTLS containers/networks/volumes/image tags removed")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--retained-replay", action="store_true")
-    main(retained_replay=parser.parse_args().retained_replay)
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--retained-replay", action="store_true")
+    modes.add_argument("--restricted-db", action="store_true")
+    args = parser.parse_args()
+    main(retained_replay=args.retained_replay, restricted_db=args.restricted_db)

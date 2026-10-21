@@ -121,6 +121,13 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   missing ledger denies requests and listener startup without recreation. Test
   volumes/PKI cleaned up. Production custody/recovery and multi-host use remain
   gated. See [lifecycle evidence/limits](../architecture/p2-worker-replay-lifecycle.md).
+- [x] Join the restricted membership DB adapter to the canonical pinned private
+  mTLS server in disposable containers. Same running membership service observes
+  committed disclosure changes, all three active flags, grant revocation/restore
+  and DB outage through actual delegated reader/validator hops. Workers have no
+  DB credential, driver or direct network path. No fixture membership fallback;
+  production DB TLS/custody and service wiring remain open. See
+  [composition evidence/limits](../architecture/p2-membership-db-mtls.md).
 - [ ] Compose actual separately packaged application workers over private mTLS,
   plus trusted membership DB boundary. Minimal worker artifact and dummy topology/
   mount smoke now pass; live handlers, real secret custody/rotation and retained

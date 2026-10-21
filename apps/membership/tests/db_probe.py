@@ -15,15 +15,20 @@ TENANT = UUID("10000000-0000-0000-0000-000000000001")
 USER = "20000000-0000-0000-0000-000000000001"
 
 
-def main(action):
+def test_engine():
+    """Disposable plaintext DB only; never a production connection factory."""
     config = json.loads(Path("/run/ciq/db.json").read_text())
-    engine = create_engine(
+    return create_engine(
         URL.create("postgresql+psycopg", **config),
         poolclass=NullPool,
         # Ephemeral isolated test DB only; NOT production TLS acceptance.
         connect_args={"connect_timeout": 2, "sslmode": "disable"},
         hide_parameters=True,
     )
+
+
+def main(action):
+    engine = test_engine()
     try:
         store = RestrictedMembershipStore(engine.connect, schema="ops")
         if action == "denied":

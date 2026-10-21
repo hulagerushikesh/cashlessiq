@@ -716,3 +716,21 @@ See [scope/evidence/limits](../architecture/p2-membership-container-db.md). This
 does not provision production roles or prove DB TLS/secret custody/real membership
 mTLS-handler composition. Next is that bounded composition; P2 remains open.
 No Snowflake/AI, persistent account changes, push, deployment or P3.
+
+## Restricted DB/private membership composition checkpoint — 21 October
+
+The next offline composition now passes: the separately packaged membership
+container serves the canonical pinned mTLS protocol using the restricted DB
+adapter, not JSON membership state. The same running service observes committed
+user/tenant/membership deactivations, disclosure changes, grant revocation and
+restore. Actual delegated reader/validator requests deny on PostgreSQL outage;
+valid restored requests succeed. Broker/readers/validators have no DB driver,
+credential mount or direct DB reachability. Disposable resources are removed.
+
+See [composition evidence and limits](../architecture/p2-membership-db-mtls.md).
+Backend **362** and root **145** tests, Ruff/format/whitespace checks pass. This
+does not verify production PostgreSQL TLS or encrypted secret delivery, combine
+retained replay with DB mode, or activate an HTTP/source application route.
+Next: bounded verified DB TLS/certificate-negative acceptance, then key/secret/
+replay lifecycle and service wiring review. P2 remains open; no Snowflake/AI,
+persistent grants/identities, push, public deployment or P3.

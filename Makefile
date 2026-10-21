@@ -8,7 +8,10 @@ SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql 
 .PHONY: product-domain-check product-test-source-ui
 .PHONY: product-worker-isolation product-worker-mtls product-worker-replay
 .PHONY: product-membership-check
-.PHONY: product-membership-db
+.PHONY: product-membership-db product-membership-mtls
+
+product-membership-mtls:
+	uv run --project apps/worker --frozen python scripts/test_worker_mtls.py --restricted-db
 
 product-membership-db:
 	$(PYTHON) scripts/test_membership_db.py
