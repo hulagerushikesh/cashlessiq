@@ -1,12 +1,14 @@
 # Snowflake development budget
 
-Last updated: 19 October 2026
+Last updated: 21 October 2026
 
 ## Spending envelope
 
-Latest owner update: **$203 remaining, four days until expiry**, with useful
-Snowflake work to be concentrated into the **next two days**. This supersedes
-the earlier $205/18-day estimate and the calendar schedule below. The exact
+Latest owner update: **$195 remaining, two days until expiry**. There is **no
+budget for purchasing credits afterward**. Prioritize useful source evidence
+and recovery material now, not only after offline worker work finishes. This
+supersedes the earlier $203/four-day and $205/18-day estimates and the calendar
+schedule below. The exact
 expiry timestamp and balance have not been independently verified. Use relative
 Day 1/Day 2 rather than infer a new expiry date from the older document date.
 Necessary product-related Snowflake spend is authorised; exact service-user,
@@ -16,12 +18,12 @@ Aim to retain useful evidence before expiry, not to consume the entire balance.
 
 | Use | Maximum USD |
 | --- | ---: |
-| Day 1: inventory, reviewed isolation verification and bounded source tests | 60 |
-| Day 2: authenticated local parity and negative/regression tests | 55 |
+| Day 1: inventory, bounded source verification and evidence capture | 60 |
+| Day 2: reviewed isolation/local parity tests, only if their gates pass | 45 |
 | Synthetic evidence/recovery exports and restore checks | 25 |
-| Retry allowance after failure review | 13 |
+| Retry allowance after failure review | 15 |
 | Reserve | 50 |
-| Total | 203 |
+| Total | 195 |
 
 These are ceilings rather than forecasts or configured Snowflake budgets.
 Pause bulk AI work when measured daily usage exceeds $10. Stop ordinary work
@@ -30,8 +32,29 @@ views lag, restrict test batch size independently of historical spending.
 
 ## Priority two-day sprint — latest owner instruction
 
-**Day 1:** confirm trial expiry/balance and resource state; finish offline
-delegation/peer/replay prerequisites locally without Snowflake spend. Prepare
+**First priority today:** confirm the exact trial expiry/balance and resource
+state, using the account UI if billing history cannot establish them. Preserve
+existing useful evidence before doing more offline infrastructure work. Capture
+available project definitions and a redacted object/grant inventory; preserve
+canonical expected summaries and a bounded, private synthetic recovery fixture
+only where existing read authority and disclosure scope permit it. Exclude
+credentials/tokens and unnecessary clinical text; never commit raw export files
+by default. Local schema/generator/golden files already provide the starting
+rebuild path. An export is not proof that a new Snowflake account can be restored
+for free or that it will have the same features/grants.
+
+Proposed first execution batches: at most **12 metadata statements/five minutes**
+for targeted project inventory, then at most **20 source SELECTs/ten minutes**
+over the three known synthetic cases. These are new planning caps, not a reuse
+of the spent administrative preflight allowance. Review the exact statements and
+required role before execution; no account-wide scan, implicit admin escalation,
+new grants or AI. Stop on unexpected access/ownership differences and review
+before retry. Capture query IDs, statement counts, elapsed time, permitted
+outputs and final resource state. Billing lag means these caps cannot enforce
+an exact dollar ceiling.
+
+**Rest of Day 1:** finish remaining offline prerequisites without Snowflake spend.
+Prepare
 the exact tenant-view, six runtime-principal, key-custody and rollback package
 for CoCo review. Obtain that package's separate approval before provisioning.
 Only after approval, run bounded ownership/base-table/foreign-tenant denial and
@@ -39,7 +62,7 @@ coherent-input tests against the three existing synthetic cases. Start with one
 case and expand only after it passes. Record query IDs, statement counts, elapsed
 time, results and cost visibility limitations. No account-wide PUBLIC/auth changes.
 
-**Day 2:** if Day 1 security gates pass, exercise local authenticated API/UI
+**Day 2, before expiry:** if Day 1 security gates pass, exercise local authenticated API/UI
 parity for both tenants and all three roles; verify revocation/downgrade, masked
 or forbidden fields, unavailable input and true MISSING states. Preserve GOL001
 SAVED and GOL024/GOL027 MISSING without backfill or agent calls. Export a bounded
@@ -55,12 +78,33 @@ exports; label them supervised evidence, not isolated API/UI acceptance. Do not
 activate the existing raw API adapter as a shortcut or buy compute to bypass a
 security gate. The sprint can finish with P2 still open and credits unspent.
 
-The $153 usable envelope is a ceiling, not a spending target or a billing-enforced
+The $145 usable envelope is a ceiling, not a spending target or a billing-enforced
 hard stop. Each functional test batch still needs a statement/time/credit cap;
 USD forecasts must use observed account pricing, never a guessed universal rate.
 No AI/extraction/search/Streamlit budget is allocated in this sprint. Keep the
 $50 reserve unless the owner separately reallocates it. Remaining trial days
 provide contingency, not an instruction to schedule unattended work.
+
+## After-expiry operating mode
+
+- Keep the public static demo and local synthetic fixture development independent
+  of Snowflake. Test domain/API/UI and disposable PostgreSQL locally; this is not
+  a replacement for live Snowflake isolation acceptance.
+- Keep live source routes disabled. Connection failure/expired access remains
+  unavailable, never fabricated SAVED/MISSING results or an unlabeled demo fallback.
+- Retain reproducible numbered SQL, seeded generator, permitted synthetic fixture
+  bundle, exact dependency locks, query evidence and remaining-gate checklist.
+  Verify the recovery fixture can be validated locally with Snowflake disconnected.
+- Do not upgrade, attach a payment method, buy credits, migrate to another paid
+  service or assume another free trial. Further live work needs funded access
+  from a separately agreed source; otherwise its gates remain explicitly open.
+- Check resource state before expiry; suspend only project resources activated
+  by our sessions after checking for other workloads. Do not delete source data
+  or tear down shared objects merely because credits expire.
+
+Remaining balance is owner-reported, not independently checked on 21 October.
+No Snowflake call or spend was made to update this plan. Expiry does not require
+using the reserve or override credential/security/phase approval gates.
 
 ## Live baseline checked on 18 October
 

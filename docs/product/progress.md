@@ -452,15 +452,22 @@ deployment, push or P3.
 
 ## Spend guardrails
 
-Latest planning baseline: **$203 remaining and four days until expiry**, reported
-by Rushikesh, not independently verified. Concentrate useful Snowflake work into
-the next two days using the [revised sprint budget](snowflake-budget.md): maximum
-$153 ordinary work plus $50 reserve. This supersedes earlier $205/18-day estimates.
+Latest planning baseline: **$195 remaining and two days until expiry**, reported
+by Rushikesh on 21 October, not independently verified. There is no budget for
+purchasing credits afterward. Prioritize bounded source verification and private
+synthetic recovery/evidence capture before further offline infrastructure work;
+do not wait for every worker gate to close before preserving permitted evidence.
+Use the [revised sprint budget](snowflake-budget.md): maximum $145 ordinary work
+plus $50 reserve. This supersedes earlier $203/four-day and $205/18-day estimates.
 Necessary bounded reads are approved; service/credential/grant packages and live
 activation retain their separate exact approval gates.
 Do not upgrade or incur out-of-pocket charges. Do not start agents, extraction,
 search or Streamlit just to use expiring credits. Confirm exact expiry and
 balance before larger batches; historical billing lags.
+After expiry, continue local fixture/domain/API/UI development with live source
+routes disabled. Local tests do not close outstanding live isolation gates.
+No purchase, upgrade, real secret provisioning or deployment is authorized by
+this budget update. No Snowflake calls were made for the planning checkpoint.
 
 ## References
 
