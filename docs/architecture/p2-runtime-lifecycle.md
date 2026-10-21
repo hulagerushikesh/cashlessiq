@@ -252,3 +252,10 @@ and an explicit lost/corrupt-state recovery candidate; see
 Those tests do not implement an operational recovery controller. Enforced
 issuance/shutdown/generation inventory and a reviewed durable clock-discontinuity
 design remain gates. No source/AI calls, deployment or P3.
+
+The subsequently approved [offline clock candidate](p2-clock-safety.md#offline-implementation-checkpoint--21-october)
+now provides durable observations/latches and serialized replay, with signed
+broker/reader/validator tests across both tenants/all roles. It is explicitly
+injected in tests only. Actual host health/thresholds, worker artifact/container
+clock-domain composition, custody/readiness and service activation remain open;
+neither the old ledger nor normal startup was silently switched to this candidate.

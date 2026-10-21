@@ -818,9 +818,15 @@ for this recovery test increment. P2 remains in progress.
 - [x] Written [proposed durable clock guard](../architecture/p2-clock-safety.md),
   including broker/authority/delivery coverage, sticky failure, transaction
   rollback hazards, same-boot restart and explicit uncertain-time recovery.
-- [ ] Review/approve contract and implement deterministic offline guard tests.
+- [x] Owner approved contract and offline implementation. Durable guard and
+  signed broker/parent/child composition have 69 deterministic offline tests.
 - [ ] Select/prove host-health provider, operational thresholds, boot/suspend
   semantics and broker custody; compose actual authorities and containers.
+
+Latest implementation evidence is in the [clock-safety checkpoint](../architecture/p2-clock-safety.md#offline-implementation-checkpoint--21-october).
+Authority/broker composition is now tested offline; actual host/container clocks,
+health policy, service readiness and normal wiring are not established. Earlier
+documentation-only statements below are historical, not the current code status.
 
 Seven completed commits through `7c761e2` were pushed on owner request. This
 new checkpoint is documentation/characterization only; prior regression counts

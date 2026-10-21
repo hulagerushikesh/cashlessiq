@@ -1,6 +1,6 @@
-# P2 clock safety — proposed offline design
+# P2 clock safety — approved offline design and candidate
 
-21 October 2026. **Design for review, not implemented or activation approval.**
+21 October 2026. **Owner approved offline design/implementation; no activation approval.**
 Scope: single trusted host, synthetic workers and retained SQLite replay state.
 Parent: [runtime lifecycle](p2-runtime-lifecycle.md). No Snowflake, paid service,
 secret provisioning, public deployment or P3 is required for this design.
@@ -114,7 +114,48 @@ based recovery, overlapping old trust, active-volume restore or paid service.
    separately approved service wiring activate the guard. Existing default
    executables and live HTTP source path remain disabled throughout this work.
 
-**Exit now:** gap reproduced and proposed design written. **Still open:** design
-approval, every guard implementation/test above, real time-health integration,
-operational controller and P2 exit. Completion estimate remains 35–40% overall,
-P2 approximately 60%; documenting a design does not close an operational gate.
+## Offline implementation checkpoint — 21 October
+
+Owner explicitly approved the offline design and implementation. The inactive
+`apps/api/src/ciq_api/worker_clock.py` candidate uses explicit immutable sample,
+health and tolerance inputs and an existing-file SQLite guard. It binds one
+authority/signing-generation/boot identity; no default clock or health provider
+is installed. All numerical thresholds used in tests are fictional test policy.
+
+An immediate transaction lock precedes sampling. Durable high-water/unsafe
+observations and nonce cleanup/insertion share serialization; ordinary expired,
+duplicate, full or wrong-namespace denials commit clock observations first.
+Unsafe observations latch before denial without pruning/consuming. Missing,
+corrupt, legacy, mismatched-generation, locked and failed-write state denies
+without auto-reset or fallback. Integrity/version checks run on each guard call,
+not an implemented service readiness/bind controller. FULL synchronous SQLite
+configuration is not proof of power-loss durability on the eventual host.
+
+**69 offline tests** cover primitives and actual RS256 broker/parent/child
+composition. Separate broker, reader and validator files are explicitly injected
+as clock callbacks; authority files also implement the replay protocol. Both
+tenants/all three roles preserve GOL001 SAVED/INR 95,000 and GOL024 MISSING.
+Unsafe authorization denies before source access; jumps injected during source
+work deny delivery independently at validator, reader and broker. Reconstructing
+guard/authority/broker objects cannot clear a committed latch. Separate Python
+processes verify healthy retained replay/fresh use and sticky unsafe rejection.
+Identity, membership, peers, source inputs, boot identity and health remain fake;
+these tests do not establish HTTP authentication, mTLS or real host continuity.
+
+The first composition run used a nonexistent `status` field; corrected to the
+existing `state` contract rather than changing the contract or expected outcomes.
+The final complete regression results are recorded in the product progress log.
+
+No existing authority/broker constructor, legacy replay implementation, worker
+wheel, default executable, HTTP route or normal startup was changed. The legacy
+ledger alone still has the characterized gap; it must not be activated as a
+substitute for the guarded composition. The new candidate is not deployed.
+
+**Still open:** real host health/freshness/tolerance and suspend/boot review,
+broker storage/custody, worker packaging/container clock-domain acceptance,
+readiness/deadline/generation controllers, live source isolation and P2 exit.
+Latch-write failure guarantees denial, not persistence through failed storage;
+trusted-host snapshot rollback and power-loss recovery remain outside this test.
+No new credentials, Snowflake/AI spend, public deployment, push or P3.
+Completion estimate remains 35–40% overall, P2 approximately 60% until the
+remaining operational/live gates pass.

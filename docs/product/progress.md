@@ -616,13 +616,23 @@ live API/UI and P2 exit remain open. No deployment, source/AI spend or P3.
 
 ## References
 
-Latest checkpoint: the seven completed increments through `7c761e2` are pushed.
-The [clock-safety proposal](../architecture/p2-clock-safety.md) now records a
-reproduced temporary-ledger gap and the next bounded offline implementation/test
-contract. No clock guard is implemented; host health and operational thresholds
-remain unselected. This documentation-only checkpoint does not change the
-completion estimate or public UI. Review the contract before implementation;
-no live activation, Snowflake/AI or deployment occurred.
+Latest checkpoint: the seven increments through `7c761e2` are pushed; later
+local commits have not been pushed. The owner approved offline clock-safety
+design/implementation. The [inactive guard and signed-path tests](../architecture/p2-clock-safety.md#offline-implementation-checkpoint--21-october)
+now pass: **449 API/PostgreSQL tests (69 new clock cases)** and **175 root tests**,
+repository lint, changed-file formatting and whitespace checks. Separate broker/
+authority files preserve high-water and unsafe latches, serialize replay and
+deny unsafe authorization/delivery across both tenants/all roles. Healthy and
+unsafe separate-process restart cases pass with fake host time/health.
+
+No real health provider/operational thresholds, container clock-domain proof,
+worker packaging, readiness/recovery controller or service wiring is claimed.
+Default startup/public UI/contracts and legacy ledger are unchanged; no browser,
+frontend build, container or remote CI rerun in this increment. Next is the
+host-health/provider and boot/suspend contract plus bounded container packaging
+acceptance, then custody/readiness/deadlines. Snowflake isolation, governed
+evidence and live API/UI acceptance remain open. No Snowflake/AI, secrets,
+deployment or P3; completion estimate remains P2 ~60%, overall 35–40%.
 
 - [Migration sequence](../architecture/migration-plan.md)
 - [P0 decisions](phase-p0-checklist.md)
