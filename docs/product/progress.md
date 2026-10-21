@@ -465,6 +465,14 @@ Next: review the remaining raw recovery/live-definition disclosure scope before
 expanding exports; continue offline security prerequisites if that scope is not
 approved. Exact balance/expiry and live isolation gates remain unresolved.
 
+The [bounded replay-input export scope](recovery-export-scope.md) is now reviewed
+and written: staged GOL001 then GOL024/GOL027, 14 source SELECTs total, private
+latest-decision JSON/condition inputs only after explicit persistence approval.
+No new source reads or exports ran for this review. Live definitions/rules/grants
+are excluded; the current reader does not have POLICY_RULE access. Exporter
+implementation, payload guards, capture and offline replay remain to be done
+after approval; no P2 exit or full backup claim.
+
 21 October live checkpoint: the explicit reader/NONE connection works; eight
 metadata statements confirm 13 direct grants/eight visible source tables and
 suspended CIQ_WH/two visible pools. The reader reports `resource_monitor=null`,
