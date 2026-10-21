@@ -68,3 +68,8 @@ The following are engineering requirements/proposals, not implemented guarantees
 Current executable evidence remains explicitly fake-health/offline; see
 [clock safety and container limits](p2-clock-safety.md). This review does not
 close the real provider, suspend, encrypted custody or P2 exit gates.
+
+The next [specific offline prototype proposal](p2-clock-health-proposal.md)
+selects a candidate collection/trust approach for owner review, not deployment
+or daemon installation. Its approval is separate from the existing guard's
+offline implementation approval; no real health provider is implemented yet.

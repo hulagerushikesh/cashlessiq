@@ -674,6 +674,16 @@ not real host health/suspend or private-container/custody/controller/live-source
 acceptance. No container/browser/build/remote CI rerun, Snowflake/AI, deployment,
 push or P3 for this increment. P2 remains open.
 
+Next decision: review the [bounded host-health prototype](../architecture/p2-clock-health-proposal.md).
+The proposed Linux/Chrony collector and separately signed, boot/suspend-aware
+evidence require a new explicit contract and versioned state before integration.
+The earlier guard approval did not authorize operating a collector or creating
+real trust material. This proposal requests offline-only implementation with
+fake/recorded source input and temporary keys; no daemon installation, host
+purchase, production thresholds, Snowflake spend or deployment. Current tests
+remain **509 API/DB / 175 root**, not rerun for this documentation-only step.
+Completion estimate stays unchanged; no real provider is claimed.
+
 - [Migration sequence](../architecture/migration-plan.md)
 - [P0 decisions](phase-p0-checklist.md)
 - [P1 evidence and research deferral](phase-p1-checklist.md)
