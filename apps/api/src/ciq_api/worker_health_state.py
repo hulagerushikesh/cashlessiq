@@ -162,6 +162,9 @@ class RetainedHealthConsumer:
                 db.execute("BEGIN IMMEDIATE")
                 row = self._state(db)
                 try:
+                    # Measure freshness after delivery, never reuse a sample
+                    # taken before a potentially delayed evidence callback.
+                    delivered = token()
                     now = self._sample()
                     if not isinstance(now, HealthNow):
                         raise ValueError("Invalid sample")
@@ -177,7 +180,7 @@ class RetainedHealthConsumer:
                     ):
                         raise ValueError("Uncertain continuity")
                     checked = check_envelope(
-                        token(),
+                        delivered,
                         public_key=self._key,
                         binding=self._binding,
                         now=now,

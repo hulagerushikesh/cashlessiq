@@ -5,6 +5,19 @@ Last updated: 21 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Offline bounded health collection — 21 October
+
+Fixed candidate monitoring request, fake child processes, strict output/diagnostic
+and receive/wait bounds, process-group cleanup, bracketed clock-domain checks and
+explicit unsigned evidence are now tested. No actual Chrony execution, daemon,
+real clock/key, startup, worker packaging or host acceptance. Retained consumer
+now checks freshness after delivery rather than before a delayed callback.
+See [evidence and deadline/containment limits](../architecture/p2-clock-health-proposal.md).
+P2 remains open and about 60%; public UI/live routes unchanged. No Snowflake
+spend, deployment, push or P3.
+Verification: 26 new tests / 130 health tests, full API/PostgreSQL 639 and
+root 193 pass; Ruff/format/whitespace pass. Browser/build/container/CI not rerun.
+
 ### Offline retained host-health continuity — 21 October
 
 Approved offline prototype now retains health generation/epoch/sequence/digest,

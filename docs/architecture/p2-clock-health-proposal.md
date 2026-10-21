@@ -193,3 +193,55 @@ Verification: **23 new retained-state tests / 104 health tests** pass; full
 API/PostgreSQL **613** and root **193** pass, with repository Ruff,
 changed-file formatting and whitespace checks. Browser/build/container/remote
 CI suites were not rerun for this offline Python increment.
+
+## Bounded collection checkpoint — 21 October
+
+`worker_health_collect.py` adds an inactive **offline-test-only collector**.
+It requires explicit injected fake launcher and clock samplers; there is no
+default `Popen`, real clock, signing key, startup path or CLI. Tests assert the
+fixed candidate tracking request and substitute a disposable isolated Python
+child emitting synthetic CSV. No Chrony binary, daemon or time service is used.
+
+The fixed candidate request is `/usr/bin/chronyc -n -c -h 127.0.0.1 -p 323 tracking`.
+It is a design candidate, **not an accepted installed path/version or operating
+policy**. The [Chrony 4.7 manual](https://chrony-project.org/doc/4.7/chronyc.html)
+documents tracking as monitoring, CSV/no-DNS options, explicit host/port and
+the distinction between network monitoring and full-control Unix sockets.
+The candidate specifies one literal loopback endpoint with no fallback; workers
+receive neither that endpoint nor a daemon socket. Real host collection remains
+separately gated, including version/binary custody and monitoring permissions.
+
+The collector requests a separate process session, closed inherited descriptors,
+null stdin, two pipes, no shell, fixed cwd and a minimal locale-only environment.
+Nonblocking bounded reads retain at most the 2,048-byte permitted response plus
+one overflow sentinel. Any stderr byte, oversized/empty/malformed/multiple CSV
+records, non-zero exit, missing pipe or receive/wait timeout denies generically.
+There is no retry or fallback, and diagnostics are not returned or logged.
+One explicit fictional timeout (at most five seconds) is further capped by the
+injected collection policy. Cleanup targets the test process's dedicated group,
+closes both pipes and uses a bounded wait for the direct child. Tests cover a
+descendant retaining pipes after its parent exits, plus a child closing pipes
+while continuing to run. This is not a general subprocess sandbox: injected
+launchers are trusted test code, escaped descendants and blocked OS operations
+require real containment, and grandchild reaping is not established here.
+
+Explicit samples bracket collection and cleanup. Boot changes, backward time,
+observed suspend skew, excessive collection interval and missing samples deny
+before a claim is returned. Collection returns unsigned validated evidence;
+signing is a separate explicit step. An offline composition checks that such
+signed evidence passes the retained consumer. A delivery-order regression also
+fixes the consumer to sample **after** receiving evidence, not before a possibly
+delayed callback; stale-on-delivery now latches rather than using an old sample.
+
+Receive time includes completed launch duration and checks the end sample
+against the deadline, but synchronous launcher/sampler calls cannot be forcibly
+preempted here. Thus this is **not a hard end-to-end host deadline**. No operational
+tolerances, real host health, replay authorization, v1 migration, worker wiring,
+deployment or source activation are implied. Remaining gates include host
+containment, unified health/clock/nonce lifecycle, stopped recovery, custody and
+broker/authority/pre-bind/mTLS composition.
+
+Verification: **26 new tests / 130 health tests**, full API/PostgreSQL **639**
+and root **193** pass; repository Ruff, changed-file formatting and whitespace
+checks pass. Browser/build/container/remote CI were not rerun. No Snowflake call,
+account change, real credential, push or public deployment.

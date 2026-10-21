@@ -82,7 +82,7 @@ exact expiry timestamp; retain the stricter owner-stated 30-hour planning window
 Remaining live work must not bypass security
 gates just to exhaust credits; preserve useful evidence and avoid paid purchase.
 
-**Latest offline increment:** the approved host-health prototype now retains
+**Retained-state checkpoint:** the approved host-health prototype now retains
 versioned epoch/sequence/digest and clock/measurement high-water marks in its
 own explicit test-only SQLite state. Unsafe evidence latches across new
 connections and separate Python processes; no silent v1 migration/reset.
@@ -91,6 +91,18 @@ See [continuity checkpoint](../architecture/p2-clock-health-proposal.md).
 Verification: **104 health tests** (23 new), full API/PostgreSQL **613** and
 root **193** pass; Ruff/format/whitespace pass. No browser/build/container/CI rerun.
 P2 remains about 60%; public UI and disabled source routes are unchanged.
+
+**Latest offline increment:** bounded collection now checks a fixed monitoring
+request with injected fake subprocesses only. It limits output/time, rejects
+diagnostics and failed exits, and cleans up disposable process groups/pipes.
+Bracketed clock/boot checks precede returning unsigned evidence. A retained-
+consumer regression now samples after delivery to reject evidence that becomes
+stale during delivery. Real daemon/version/host custody, hard synchronous-call
+deadlines and worker authorization/wiring remain unaccepted. See the
+[collection checkpoint](../architecture/p2-clock-health-proposal.md).
+Verification: **130 health tests** (26 new), full API/PostgreSQL **639** and
+root **193** pass, with Ruff/format/whitespace. No browser/build/container/CI rerun.
+No Snowflake calls, grants, real credentials, deployment, push or P3.
 
 No website deployment or P3 is included. User interviews/customer rollout and
 real-data operational gates remain separate; synthetic-alpha permission does

@@ -4,6 +4,7 @@ import json
 import sqlite3
 import subprocess
 import sys
+import time
 from dataclasses import replace
 from fractions import Fraction
 from unittest.mock import Mock
@@ -26,12 +27,195 @@ from ciq_api.worker_health import (
     parse_tracking,
     sign_for_offline_test,
 )
+from ciq_api.worker_health_collect import TRACKING_REQUEST, collect_for_offline_test
 from ciq_api.worker_health_state import RetainedHealthConsumer
 
 CSV = (
     b"C633640F,198.51.100.15,3,995.000000000,0.000000001,-0.000000002,"
     b"0.000000003,-1.000,0.001,0.001,0.000000001,0.000000001,1.0,Normal\n"
 )
+
+
+FAKE_COLLECTOR = """
+import base64, os, subprocess, sys, time
+mode, payload = sys.argv[1], base64.b64decode(sys.argv[2])
+if mode == 'stall':
+    time.sleep(10)
+elif mode == 'flood':
+    while True:
+        os.write(1, b'x' * 4096)
+elif mode == 'stderr':
+    while True:
+        os.write(2, b'private diagnostic' * 256)
+elif mode == 'closed-pipes':
+    os.close(1)
+    os.close(2)
+    time.sleep(10)
+elif mode == 'descendant':
+    subprocess.Popen([sys.executable, '-I', '-c', 'import time; time.sleep(10)'])
+    sys.exit(0)
+elif mode == 'empty':
+    sys.exit(0)
+elif mode == 'error':
+    os.write(1, payload)
+    sys.exit(1)
+else:
+    os.write(1, payload)
+"""
+
+
+@pytest.fixture
+def collector(setup, policy):
+    import base64
+
+    binding, evidence, _now = setup
+    start = HealthNow(
+        boot_id=binding.boot_id,
+        wall_ns=evidence.window.start_wall_ns,
+        monotonic_ns=evidence.window.start_monotonic_ns,
+        boottime_ns=evidence.window.start_boottime_ns,
+    )
+    samples = [start, setup_now(evidence)]
+    launched = []
+    attempts = []
+
+    def run(mode="ok", payload=CSV, **overrides):
+        def launch(command, **options):
+            attempts.append(command)
+            assert command == TRACKING_REQUEST
+            assert options == dict(
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=False,
+                close_fds=True,
+                start_new_session=True,
+                cwd="/",
+                env={"LANG": "C", "LC_ALL": "C"},
+            )
+            child = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-I",
+                    "-c",
+                    FAKE_COLLECTOR,
+                    mode,
+                    base64.b64encode(payload).decode(),
+                ],
+                **options,
+            )
+            launched.append(child)
+            return child
+
+        config = dict(
+            launch=launch,
+            sample=Mock(side_effect=samples),
+            binding=binding,
+            policy=policy,
+            sequence=1,
+            timeout_ns=SECOND,
+        )
+        config.update(overrides)
+        return collect_for_offline_test(**config)
+
+    yield run, samples, attempts, launched
+    # Fail test if the candidate leaked a direct fake child or either pipe.
+    for child in launched:
+        try:
+            assert child.poll() is not None
+            assert child.stdout.closed and child.stderr.closed
+        finally:
+            if child.poll() is None:
+                child.kill()
+                child.wait(timeout=1)
+
+
+def test_bounded_collection_builds_unsigned_claim(collector, setup, policy, key):
+    run, _samples, attempts, _launched = collector
+    evidence = run()
+    binding, expected, now = setup
+    assert evidence == expected
+    assert attempts == [TRACKING_REQUEST]
+    # Explicit independent signing is still required after collection.
+    assert (
+        check_envelope(
+            sign_for_offline_test(evidence, key),
+            public_key=key.public_key(),
+            binding=binding,
+            now=now,
+            policy=policy,
+        ).evidence
+        == evidence
+    )
+
+
+def test_collected_signed_claim_passes_retained_consumer(collector, retained, key):
+    run, _samples, attempts, _launched = collector
+    _path, _clock, reopen, expected = retained
+    checked = reopen().accept(lambda: sign_for_offline_test(run(), key))
+    assert checked.evidence == expected
+    assert attempts == [TRACKING_REQUEST]
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "stall",
+        "flood",
+        "stderr",
+        "closed-pipes",
+        "descendant",
+        "empty",
+        "error",
+    ],
+)
+def test_bounded_collection_denies_and_reaps_without_retry(collector, mode):
+    run, _samples, attempts, _launched = collector
+    started = time.monotonic()
+    with pytest.raises(HealthDenied, match=r"^Health evidence denied$"):
+        run(mode=mode, timeout_ns=150_000_000)
+    assert len(attempts) == 1
+    assert time.monotonic() - started < 3  # Scheduling allowance, not a host SLA.
+
+
+@pytest.mark.parametrize("payload", [b"x" * 2048, b"x" * 2049, b"\xff", CSV + CSV])
+def test_bounded_collection_invalid_output(collector, payload):
+    run, _samples, attempts, _launched = collector
+    with pytest.raises(HealthDenied):
+        run(payload=payload)
+    assert len(attempts) == 1
+
+
+@pytest.mark.parametrize("timeout", [True, 0, -1, 5_000_000_001, 0.5, None])
+def test_bounded_collection_configuration_denied_before_launch(collector, timeout):
+    run, _samples, attempts, _launched = collector
+    with pytest.raises(HealthDenied):
+        run(timeout_ns=timeout)
+    assert attempts == []
+
+
+@pytest.mark.parametrize("failure", ["boot", "rollback", "suspend", "long", "sample"])
+def test_bounded_collection_bracket_denial(collector, failure):
+    run, samples, _attempts, _launched = collector
+    end = samples[1]
+    changes = {
+        "boot": {"boot_id": "00000000-0000-0000-0000-000000000099"},
+        "rollback": {"wall_ns": samples[0].wall_ns - 1},
+        "suspend": {"boottime_ns": end.boottime_ns + SECOND},
+        "long": {"wall_ns": end.wall_ns + 2 * SECOND},
+    }
+    samples[1] = None if failure == "sample" else end.model_copy(update=changes[failure])
+    with pytest.raises(HealthDenied):
+        run()
+
+
+def test_bounded_collection_spawn_failure_is_generic(collector):
+    run, _samples, attempts, _launched = collector
+    launch = Mock(side_effect=OSError("private executable/path detail"))
+    with pytest.raises(HealthDenied, match=r"^Health evidence denied$") as error:
+        run(launch=launch)
+    assert error.value.__suppress_context__ is True
+    assert launch.call_count == 1 and attempts == []
 
 
 @pytest.fixture
@@ -259,6 +443,32 @@ def test_retained_lock_contention_denies_without_sampling_or_state_change(retain
         assert path.read_bytes() == before
     sample.assert_not_called()
     token.assert_not_called()
+
+
+def test_retained_samples_after_evidence_delivery_not_before(retained, key):
+    path, clock, reopen, evidence = retained
+    signed = sign_for_offline_test(evidence, key)
+    events = []
+
+    def delivery():
+        events.append("delivery")
+        clock[0] = clock[0].model_copy(
+            update={
+                field: getattr(clock[0], field) + 3 * SECOND
+                for field in ("wall_ns", "monotonic_ns", "boottime_ns")
+            }
+        )
+        return signed
+
+    def sample():
+        events.append("sample")
+        return clock[0]
+
+    with pytest.raises(HealthDenied):
+        reopen(sample=sample).accept(delivery)
+    assert events == ["delivery", "sample"]
+    with sqlite3.connect(path) as db:
+        assert db.execute("SELECT sequence,unsafe FROM health_state").fetchone() == (0, 1)
 
 
 @pytest.fixture
