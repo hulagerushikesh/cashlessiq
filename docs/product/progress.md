@@ -77,8 +77,20 @@ offline code archive also passed integrity verification; it is not a DB backup.
 This verifies the operator query shape, not the governed runtime/service boundary;
 all five gates above remain open. Backend stays at its prior **590** result, not
 rerun here. Completion estimate and public UI unchanged. Exact balance/expiry
-still require owner UI evidence. Remaining live work must not bypass security
+now have owner screenshot evidence of **$194 / trial ends in two days**, but no
+exact expiry timestamp; retain the stricter owner-stated 30-hour planning window.
+Remaining live work must not bypass security
 gates just to exhaust credits; preserve useful evidence and avoid paid purchase.
+
+**Latest offline increment:** the approved host-health prototype now retains
+versioned epoch/sequence/digest and clock/measurement high-water marks in its
+own explicit test-only SQLite state. Unsafe evidence latches across new
+connections and separate Python processes; no silent v1 migration/reset.
+This is not integrated clock/nonce authorization or stopped-generation recovery.
+See [continuity checkpoint](../architecture/p2-clock-health-proposal.md).
+Verification: **104 health tests** (23 new), full API/PostgreSQL **613** and
+root **193** pass; Ruff/format/whitespace pass. No browser/build/container/CI rerun.
+P2 remains about 60%; public UI and disabled source routes are unchanged.
 
 No website deployment or P3 is included. User interviews/customer rollout and
 real-data operational gates remain separate; synthetic-alpha permission does

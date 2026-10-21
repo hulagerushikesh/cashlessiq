@@ -5,6 +5,19 @@ Last updated: 21 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Offline retained host-health continuity — 21 October
+
+Approved offline prototype now retains health generation/epoch/sequence/digest,
+source/measurement and local-clock high-water marks in explicit v2 test state.
+Invalid continuity/freshness latches across connections and separate Python
+processes; missing/corrupt/legacy/configuration-mismatched state is not rebuilt.
+No v1 migration, nonce adapter, real provider, runtime wiring or live acceptance.
+See [scope and remaining gates](../architecture/p2-clock-health-proposal.md).
+No Snowflake call/spend, deployment, push or P3. Owner screenshot updates the
+budget baseline to $194, preserving the $50 reserve and stricter 30-hour plan.
+Verification: 23 new tests / 104 health tests, full API/PostgreSQL 613 and
+root 193 pass; Ruff/format/whitespace pass. Browser/build/container/CI not rerun.
+
 ### Pre-expiry single-statement operator acceptance — 21 October
 
 Owner requested useful live testing with 30 hours of trial access remaining.

@@ -1,6 +1,9 @@
 """Offline synthetic Chrony CSV and independent temporary RSA keys only."""
 
 import json
+import sqlite3
+import subprocess
+import sys
 from dataclasses import replace
 from fractions import Fraction
 from unittest.mock import Mock
@@ -8,6 +11,7 @@ from unittest.mock import Mock
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from pydantic import ValidationError
 
 from ciq_api.worker_health import (
@@ -22,11 +26,239 @@ from ciq_api.worker_health import (
     parse_tracking,
     sign_for_offline_test,
 )
+from ciq_api.worker_health_state import RetainedHealthConsumer
 
 CSV = (
     b"C633640F,198.51.100.15,3,995.000000000,0.000000001,-0.000000002,"
     b"0.000000003,-1.000,0.001,0.001,0.000000001,0.000000001,1.0,Normal\n"
 )
+
+
+@pytest.fixture
+def retained(tmp_path, setup, policy, key):
+    binding, evidence, now = setup
+    path = tmp_path / "health.sqlite"
+    RetainedHealthConsumer.initialize_for_offline_test(path, binding=binding, initial=now)
+    clock = [now]
+
+    def reopen(**overrides):
+        config = dict(
+            binding=binding,
+            policy=policy,
+            public_key=key.public_key(),
+            sample=lambda: clock[0],
+            max_gap_ns=10 * SECOND,
+        )
+        config.update(overrides)
+        return RetainedHealthConsumer(path, **config)
+
+    return path, clock, reopen, evidence
+
+
+def test_retained_repeat_and_new_sequence_across_restart(retained, key):
+    path, clock, reopen, evidence = retained
+    signed = sign_for_offline_test(evidence, key)
+    first = reopen().accept(lambda: signed)
+    clock[0] = clock[0].model_copy(
+        update={
+            "wall_ns": clock[0].wall_ns + 100,
+            "monotonic_ns": clock[0].monotonic_ns + 100,
+            "boottime_ns": clock[0].boottime_ns + 100,
+        }
+    )
+    assert reopen().accept(lambda: signed).content_sha256 == first.content_sha256
+    newer = sign_for_offline_test(evidence.model_copy(update={"sequence": 2}), key)
+    assert reopen().accept(lambda: newer).evidence.sequence == 2
+    assert path.stat().st_mode & 0o777 == 0o600
+    with sqlite3.connect(path) as db:
+        assert db.execute("SELECT version,sequence,unsafe FROM health_state").fetchone() == (
+            2,
+            2,
+            0,
+        )
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "older",
+        "conflict",
+        "stale",
+        "unavailable",
+        "signature",
+        "epoch",
+        "generation",
+        "boot",
+        "rollback",
+        "suspend",
+        "gap",
+        "bad-sample",
+        "collection-regression",
+    ],
+)
+def test_retained_denial_latches_across_restart(retained, key, failure):
+    path, clock, reopen, evidence = retained
+    initial = evidence.model_copy(update={"sequence": 2})
+    signed = sign_for_offline_test(initial, key)
+    reopen().accept(lambda: signed)
+    candidate = initial
+    if failure == "older":
+        candidate = initial.model_copy(update={"sequence": 1})
+    elif failure == "conflict":
+        candidate = initial.model_copy(update={"base_error_ns": initial.base_error_ns + 1})
+    elif failure in {"epoch", "generation", "boot"}:
+        field = {"epoch": "collector_epoch", "generation": "health_generation", "boot": "boot_id"}[
+            failure
+        ]
+        candidate = initial.model_copy(update={field: "00000000-0000-0000-0000-000000000099"})
+    elif failure in {"stale", "gap"}:
+        step = (3 if failure == "stale" else 11) * SECOND
+        clock[0] = clock[0].model_copy(
+            update={
+                "wall_ns": clock[0].wall_ns + step,
+                "monotonic_ns": clock[0].monotonic_ns + step,
+                "boottime_ns": clock[0].boottime_ns + step,
+            }
+        )
+    elif failure == "rollback":
+        clock[0] = clock[0].model_copy(update={"wall_ns": clock[0].wall_ns - 1})
+    elif failure == "suspend":
+        clock[0] = clock[0].model_copy(update={"boottime_ns": clock[0].boottime_ns + SECOND})
+    elif failure == "bad-sample":
+        clock[0] = None
+    elif failure == "collection-regression":
+        window = initial.window.model_copy(
+            update={
+                "end_wall_ns": initial.window.end_wall_ns - 1,
+                "end_monotonic_ns": initial.window.end_monotonic_ns - 1,
+                "end_boottime_ns": initial.window.end_boottime_ns - 1,
+            }
+        )
+        candidate = initial.model_copy(update={"sequence": 3, "window": window})
+    bad = "invalid" if failure == "signature" else sign_for_offline_test(candidate, key)
+
+    def get_token():
+        if failure == "unavailable":
+            raise RuntimeError("private provider details")
+        return bad
+
+    with pytest.raises(HealthDenied, match=r"^Health evidence denied$"):
+        reopen().accept(get_token)
+    with sqlite3.connect(path) as db:
+        assert db.execute("SELECT sequence,unsafe FROM health_state").fetchone() == (2, 1)
+    with pytest.raises(HealthDenied):
+        reopen(sample=lambda: setup_now(initial)).accept(lambda: signed)
+
+
+def setup_now(evidence):
+    return HealthNow(
+        boot_id=evidence.boot_id,
+        wall_ns=evidence.window.end_wall_ns,
+        monotonic_ns=evidence.window.end_monotonic_ns,
+        boottime_ns=evidence.window.end_boottime_ns,
+    )
+
+
+@pytest.mark.parametrize("failure", ["missing", "corrupt", "legacy", "version", "binding"])
+def test_retained_invalid_state_never_provisions_or_reads_provider(retained, failure):
+    path, _clock, reopen, _evidence = retained
+    if failure == "missing":
+        path.unlink()
+    elif failure == "corrupt":
+        path.write_bytes(b"not sqlite")
+    elif failure == "legacy":
+        with sqlite3.connect(path) as db:
+            db.execute("DROP TABLE health_state")
+            db.execute("CREATE TABLE clock_state (version INTEGER)")
+    elif failure == "version":
+        with sqlite3.connect(path) as db:
+            db.execute("UPDATE health_state SET version=1")
+    before = path.read_bytes() if path.exists() else None
+    sample, token = Mock(side_effect=AssertionError("must not sample")), Mock()
+    overrides = {"sample": sample}
+    if failure == "binding":
+        overrides["binding"] = HealthBinding(
+            host_id="different-host",
+            boot_id="00000000-0000-0000-0000-000000000001",
+            health_generation="00000000-0000-0000-0000-000000000002",
+            collector_epoch="00000000-0000-0000-0000-000000000003",
+        )
+    with pytest.raises(HealthDenied):
+        reopen(**overrides).accept(token)
+    sample.assert_not_called()
+    token.assert_not_called()
+    assert (path.read_bytes() if path.exists() else None) == before
+
+
+def test_retained_test_provisioning_never_overwrites(retained, setup):
+    path, _clock, _reopen, _evidence = retained
+    before = path.read_bytes()
+    binding, _, now = setup
+    with pytest.raises(FileExistsError):
+        RetainedHealthConsumer.initialize_for_offline_test(path, binding=binding, initial=now)
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("latched", [False, True])
+def test_retained_state_survives_separate_python_process(retained, policy, key, latched):
+    path, clock, reopen, evidence = retained
+    signed = sign_for_offline_test(evidence, key)
+    reopen().accept(lambda: signed)
+    if latched:
+        with pytest.raises(HealthDenied):
+            reopen().accept(lambda: "invalid")
+    child = """
+import json, sys
+from pathlib import Path
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+from ciq_api.worker_health import HealthBinding, HealthNow, HealthPolicy, HealthDenied
+from ciq_api.worker_health_state import RetainedHealthConsumer
+data = json.load(sys.stdin)
+consumer = RetainedHealthConsumer(
+    Path(data['path']), binding=HealthBinding.model_validate(data['binding']),
+    policy=HealthPolicy.model_validate_json(data['policy']),
+    public_key=load_pem_public_key(data['public'].encode()),
+    sample=lambda: HealthNow.model_validate(data['now']), max_gap_ns=10000000000)
+try:
+    consumer.accept(lambda: data['token'])
+    print('accepted')
+except HealthDenied:
+    print('denied')
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", child],
+        input=json.dumps(
+            {
+                "path": str(path),
+                "binding": evidence.model_dump(include=set(HealthBinding.model_fields)),
+                "policy": policy.model_dump_json(),
+                "now": clock[0].model_dump(),
+                "token": signed,
+                "public": key.public_key()
+                .public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
+                .decode(),
+            }
+        ),
+        text=True,
+        capture_output=True,
+        timeout=5,
+        check=True,
+    )
+    assert result.stdout.strip() == ("denied" if latched else "accepted")
+    assert result.stderr == ""
+
+
+def test_retained_lock_contention_denies_without_sampling_or_state_change(retained):
+    path, _clock, reopen, _evidence = retained
+    sample, token = Mock(), Mock()
+    with sqlite3.connect(path) as db:
+        db.execute("BEGIN IMMEDIATE")
+        before = path.read_bytes()
+        with pytest.raises(HealthDenied):
+            reopen(sample=sample).accept(token)
+        assert path.read_bytes() == before
+    sample.assert_not_called()
+    token.assert_not_called()
 
 
 @pytest.fixture

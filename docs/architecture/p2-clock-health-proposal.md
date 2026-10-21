@@ -154,3 +154,42 @@ guards. Repeated/older evidence can pass this stateless layer; retained sequence
 digest/latch enforcement is the next prerequisite, not waived by these tests.
 Default routes/startup and existing guard/replay formats remain unchanged.
 No Snowflake/AI, real credential, daemon installation, deployment, push or P3.
+
+## Retained continuity checkpoint — 21 October
+
+The inactive `worker_health_state.py` now adds a **separate version-2 SQLite
+health-state prototype**, not a migration or replacement for the v1 nonce/clock
+guard. Explicit test provisioning creates a new private file; normal acceptance
+only opens existing state. It pins host, boot, health generation and collector
+epoch, retaining sequence, canonical evidence digest, source-reference/collection
+high-water marks and wall/monotonic/boottime observations. Assertion generation
+and nonce state remain separate and unchanged.
+
+An immediate transaction precedes sampling and signature/freshness checking.
+Identical evidence is reusable only within its original freshness bounds.
+Older sequence, conflicting content, regressing measurement timestamps, source
+reference regression, observed clock rollback/suspend skew, excessive gaps and
+unavailable/invalid evidence deny and commit a persistent unsafe latch before
+raising. Subsequent connections cannot clear that latch. Wrong configuration,
+legacy/incomplete/corrupt/missing state denies without attempting replacement.
+Lock contention denies without sampling or reading evidence; there is no retry.
+
+Tests exercise real temporary SQLite files, temporary RSA signatures and injected
+fictional clocks. Reopened consumers and **separate Python processes** verify
+that healthy repeated evidence and latched denial survive process boundaries.
+This is not power-loss or filesystem custody acceptance. A trusted administrator
+restoring the entire old file is still outside this prototype's protection.
+Failed durable writes deny the current operation but cannot guarantee persistence
+of a latch on broken storage. No automatic recovery/reset/migration is exposed.
+
+This component still does **not** authorize tokens or adapt to `ClockHealth`.
+Collector subprocess/stream/time bounds, unified clock/nonce-state design,
+stopped-generation recovery integration, broker/authority/pre-bind/mTLS wiring,
+packaging, trusted host policy and key/mount custody remain open. Injected
+callbacks are not bounded host collection. No daemon, real key, runtime startup,
+Snowflake call, deployment, push or P3 is included.
+
+Verification: **23 new retained-state tests / 104 health tests** pass; full
+API/PostgreSQL **613** and root **193** pass, with repository Ruff,
+changed-file formatting and whitespace checks. Browser/build/container/remote
+CI suites were not rerun for this offline Python increment.

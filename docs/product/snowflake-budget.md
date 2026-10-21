@@ -4,13 +4,15 @@ Last updated: 21 October 2026
 
 ## Spending envelope
 
-Latest owner update: **30 hours until expiry**; the most recent supplied balance
-remains **$195**, not independently refreshed. There is **no
+Latest owner screenshot: **$194 remaining**, with **trial ends in two days**.
+The preceding owner instruction gives a stricter **30-hour planning window**;
+the screenshot does not establish an exact expiry timestamp or refresh that
+countdown. This is owner-supplied UI evidence, not a local billing query. There is **no
 budget for purchasing credits afterward**. Prioritize useful source evidence
 and recovery material now, not only after offline worker work finishes. This
 supersedes the earlier $203/four-day and $205/18-day estimates and the calendar
 schedule below. The exact
-expiry timestamp and balance have not been independently verified. Use relative
+expiry timestamp has not been verified. Use relative
 Day 1/Day 2 rather than infer a new expiry date from the older document date.
 Necessary product-related Snowflake spend is authorised; exact service-user,
 credential, grant and live-activation packages still need separate approval.
@@ -26,12 +28,12 @@ credentials, grants, AI budget or deployment was authorized or performed.
 
 | Use | Maximum USD |
 | --- | ---: |
-| Day 1: inventory, bounded source verification and evidence capture | 60 |
+| Day 1: inventory, bounded source verification and evidence capture | 59 |
 | Day 2: reviewed isolation/local parity tests, only if their gates pass | 45 |
 | Synthetic evidence/recovery exports and restore checks | 25 |
 | Retry allowance after failure review | 15 |
 | Reserve | 50 |
-| Total | 195 |
+| Total | 194 |
 
 These are ceilings rather than forecasts or configured Snowflake budgets.
 Pause bulk AI work when measured daily usage exceeds $10. Stop ordinary work
@@ -86,7 +88,7 @@ exports; label them supervised evidence, not isolated API/UI acceptance. Do not
 activate the existing raw API adapter as a shortcut or buy compute to bypass a
 security gate. The sprint can finish with P2 still open and credits unspent.
 
-The $145 usable envelope is a ceiling, not a spending target or a billing-enforced
+The $144 usable envelope is a ceiling, not a spending target or a billing-enforced
 hard stop. Each functional test batch still needs a statement/time/credit cap;
 USD forecasts must use observed account pricing, never a guessed universal rate.
 No AI/extraction/search/Streamlit budget is allocated in this sprint. Keep the
@@ -117,7 +119,7 @@ Incremental cost/current trial balance and exact expiry were not measured.
   by our sessions after checking for other workloads. Do not delete source data
   or tear down shared objects merely because credits expire.
 
-Remaining balance is owner-reported, not independently checked on 21 October.
+Remaining balance is owner-supplied screenshot evidence ($194), not independently queried.
 No Snowflake call or spend was made to update this plan. Expiry does not require
 using the reserve or override credential/security/phase approval gates.
 
