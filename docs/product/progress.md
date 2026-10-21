@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted DB composition/verified TLS tests pass; [lifecycle/configuration proposal](../architecture/p2-runtime-lifecycle.md) prepared, fixed connection factory, actual custody/clock controls and service wiring remain |
+| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted DB composition/verified TLS tests pass; fixed connection factory passes offline tests; disposable TLS acceptance with that factory, actual custody/clock controls and service wiring remain |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -515,6 +515,27 @@ After expiry, continue local fixture/domain/API/UI development with live source
 routes disabled. Local tests do not close outstanding live isolation gates.
 No purchase, upgrade, real secret provisioning or deployment is authorized by
 this budget update. No Snowflake calls were made for the planning checkpoint.
+
+## Latest local delivery — 21 October
+
+The prior 51 commits were pushed with owner approval; remote/local `main` matched
+`1f81e76` at that checkpoint. No remote CI success is claimed for that push.
+
+The next offline P2 increment implements the inactive fixed membership DB
+connection factory: immutable/redacted configuration, single private endpoint,
+fixed TLS policy, fresh connections and generic denial. Ambient `PG*` settings
+deny before connection rather than being silently interpreted. **55 new offline
+tests and 175 root tests pass**, with an added CI step for the new suite.
+Repository Ruff, changed-file formatting and whitespace checks pass. A fresh
+non-editable membership wheel includes the exact factory source and preserves
+API/auth/Snowflake exclusions; the default executable still refuses activation.
+The packaging check now bypasses cached local wheels after detecting one that
+omitted the newly added module. Full API/DB/browser and remote CI were not rerun.
+See [implementation limitations and next acceptance](../architecture/p2-runtime-lifecycle.md).
+Normal startup, public UI and API contracts are unchanged. No Snowflake spend,
+real credential reads, service/grant changes, deployment or P3 work.
+Next: disposable restricted PostgreSQL/TLS acceptance using this factory, then
+combined replay/TLS lifecycle controls. Live isolation/evidence/P2 exit remain open.
 
 ## References
 

@@ -59,6 +59,37 @@ timeouts are not a whole-operation deadline; server/deadline work remains open.
 
 ## 2. Secret ownership and delivery requirements
 
+### Offline factory implementation checkpoint — 21 October
+
+The fixed factory now exists in
+`apps/membership/src/ciq_membership_runtime/connection.py`; normal startup does
+not import or construct it. Strict frozen configuration, redacted representations,
+URL-object construction, fixed verify-full/TLS-1.3 minimum/GSS-disabled options,
+two-second connect timeout and NullPool are implemented. Connection, body and
+disposal exceptions are converted to generic denial without displayed chaining.
+The engine is private by interface convention, not a sandbox against trusted
+Python code inspecting attributes or exception context.
+
+Ambient `PG*` environment variables are **rejected before connecting**, including
+otherwise harmless ones; they are not consumed as configuration or temporarily
+removed. This avoids claiming that explicit options override every libpq service
+file/default. The dedicated process must keep its environment immutable: the
+check is not a defence against trusted code mutating it concurrently. Explicit
+`/dev/null` password-file path and `sslcertmode=disable` prevent default password
+file fallback and sending a client certificate for this password-only Linux
+candidate. An empty search path is explicitly requested. CA path validation is syntactic,
+not file ownership, symlink, existence or certificate-readiness verification.
+
+This choice follows libpq's documented environment/default behaviour and its
+requirement to disable GSS encryption to force TLS:
+[PostgreSQL connection parameters](https://www.postgresql.org/docs/17/libpq-connect.html).
+Fifty-five offline tests pass, including actual SQLAlchemy dialect parameter
+assembly with a fake psycopg connector that stops before any libpq I/O. This is
+not an actual TLS handshake, certificate-file check, runtime principal acceptance
+or whole-operation deadline. Reuse of the disposable DB/TLS harness with this
+factory is the exact next implementation step. The old test-only factory is
+unchanged. No real credentials, source access, deployment or activation.
+
 | Material | Only permitted runtime recipient |
 | --- | --- |
 | Broker capability signing private key | Broker |
