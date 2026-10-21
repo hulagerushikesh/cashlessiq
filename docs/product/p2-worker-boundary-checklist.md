@@ -92,6 +92,12 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   production deadlines and cross-service acceptance remain open. Separate workers
   must not receive general operational database credentials. A separate synthetic
   membership container now passes mTLS/outage/revocation smoke; it has no DB access.
+- [x] Separate locked membership wheel and narrow schema-qualified point-lookup
+  adapter. Fresh read-only transactions, bounded queries and role changes tested
+  in disposable schemas; fail-closed entry point and artifact exclusions verified.
+  Column-grant proposal prepared, **not applied**. Test admin DB access is not
+  dedicated-principal isolation proof. Container/DB negative acceptance remains
+  open. See [DB boundary](../architecture/p2-membership-db-boundary.md).
 - [ ] Replace process-local replay state with a reviewed atomic shared strategy
   before multi-process/restart-capable use. The optional SQLite candidate now
   passes same-host multiprocess/restart tests; the default remains process-local.

@@ -7,6 +7,10 @@ SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql 
 .PHONY: product-up product-down product-status product-logs product-test product-contracts
 .PHONY: product-domain-check product-test-source-ui
 .PHONY: product-worker-isolation product-worker-mtls product-worker-replay
+.PHONY: product-membership-check
+
+product-membership-check:
+	$(PYTHON) scripts/check_membership_package.py
 
 product-worker-replay:
 	uv run --project apps/worker --frozen python scripts/test_worker_mtls.py --retained-replay

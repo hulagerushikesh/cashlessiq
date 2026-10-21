@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cashlessiq-membership-candidate"
+version = "0.1.0"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "cashlessiq-worker-candidate==0.1.0",
+  "psycopg[binary]>=3.2,<4",
+  "sqlalchemy>=2.0,<3",
+]
+
+[tool.uv.sources]
+cashlessiq-worker-candidate = { path = "../worker" }
+cashlessiq-domain = { path = "../../packages/domain" }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ciq_membership_runtime"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"../api/src/ciq_api/worker_membership_store.py" = "ciq_api/worker_membership_store.py"

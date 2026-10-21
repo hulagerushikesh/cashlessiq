@@ -682,3 +682,21 @@ Verification: 207 API/PostgreSQL tests and 145 root tests pass, with 11 new repl
 tests including spawned processes. Root/API lint, API formatting and whitespace
 checks pass. No Snowflake/AI calls, credentials, grants, push, website deployment
 or P3. Next: offline read-worker delegation and authenticated peer transport.
+
+## Narrow membership package checkpoint — 21 October
+
+The separately locked membership wheel now includes a canonical point-lookup DB
+adapter without API startup/auth/broker/ORM models/Snowflake. Worker packages do
+not gain DB dependencies. Default membership startup refuses activation. Queries
+read only the required role/ID/active columns under fresh read-only transactions
+with statement/lock timeouts and fixed qualified schema; no secret discovery or
+normal service wiring is enabled.
+
+Twenty new disposable-schema/mocked tests pass; full backend **362**, root **145**,
+artifact isolation/byte identity/default refusal, Ruff and whitespace checks pass.
+Public OpenAPI is unchanged. Tests use the existing local test admin connection,
+not a dedicated restricted DB principal. The column-grant policy remains a
+[review-only proposal](../architecture/p2-membership-db-boundary.md), not evidence
+of DB-enforced privilege isolation. Next: disposable membership-container/DB
+permission and network/mount acceptance. No persistent roles/grants, Snowflake/AI,
+live activation, push, website deployment or P3. P2 remains in progress.

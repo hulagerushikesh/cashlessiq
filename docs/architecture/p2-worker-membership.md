@@ -46,6 +46,12 @@ Test CA/key files and listeners are removed by fixtures; no real credentials exi
 
 ## Limits / next gate
 
+Subsequent checkpoint: a [separate membership wheel and narrow DB adapter](p2-membership-db-boundary.md)
+now build and pass disposable-schema tests. The
+column-grant policy is review-only; dedicated-principal/container isolation and
+live service composition remain unproven. The older broker membership adapter is
+not packaged into this service candidate.
+
 Fresh checks are point-in-time observations, not atomic authorization across
 PostgreSQL and Snowflake. A change after the last check is not retroactively
 prevented. Membership-service consistency/availability, overall deadlines,

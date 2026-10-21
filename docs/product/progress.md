@@ -397,6 +397,22 @@ offline container restart test, **not** production replay/key recovery policy.
 Next: separately packaged trusted membership service and narrow DB policy, using
 bounded disposable tests; retain the remaining P2 live/isolation/evidence gates.
 
+## Latest membership package checkpoint — 21 October
+
+Separate locked membership wheel and narrow DB adapter are implemented locally.
+The adapter uses only role/ID/active columns in a fresh schema-qualified read-only
+transaction with statement/lock timeouts. Artifact checks exclude API/auth/broker/
+models/Snowflake and default startup refuses activation. Twenty new disposable-
+schema/mocked tests pass; backend **362**, root **145**. See
+[DB boundary and review proposal](../architecture/p2-membership-db-boundary.md).
+
+This is not dedicated-principal privilege or container DB isolation acceptance:
+tests use the existing local test admin connection. No persistent role/grant,
+credential, source activation, Snowflake/AI, deployment or P3. Next: separately
+package the membership container and verify column-grant/DB-network denial in a
+disposable environment; exact production provisioning stays separately gated.
+No push or remote CI is claimed.
+
 ## Spend guardrails
 
 Latest planning baseline: **$203 remaining and four days until expiry**, reported
