@@ -452,6 +452,19 @@ deployment, push or P3.
 
 ## Spend guardrails
 
+Latest recovery checkpoint, 21 October: a private ignored metadata/rebuild bundle
+has been captured and integrity-verified. Eleven explicit bounded statements
+(three source SELECTs) completed in 25.062 seconds with five retained query IDs.
+Counts remain 2/0/0 saved rows and 35 clause references per case. The archived
+canonical code passed 127 tests from a separate restored tree with no Snowflake
+calls; working-tree root regression is now 155 passed. Final warehouse check is
+SUSPENDED/zero clusters/running/queued. See [scope and evidence](recovery-checkpoint.md).
+This is not raw-source/full database recovery, fresh decision validation or P2
+exit. No runtime/API/UI activation, new credentials/grants, deployment or push.
+Next: review the remaining raw recovery/live-definition disclosure scope before
+expanding exports; continue offline security prerequisites if that scope is not
+approved. Exact balance/expiry and live isolation gates remain unresolved.
+
 21 October live checkpoint: the explicit reader/NONE connection works; eight
 metadata statements confirm 13 direct grants/eight visible source tables and
 suspended CIQ_WH/two visible pools. The reader reports `resource_monitor=null`,

@@ -66,3 +66,40 @@ and exact tenant isolation need review on the eventual target. New funded access
 is not assumed. Future raw recovery inputs/live definitions require a separately
 reviewed bounded disclosure scope; this checkpoint intentionally cannot restore
 all historical decisions, source documents, account definitions or grants.
+
+## Completed checkpoint — 21 October 2026
+
+Tool/rebuild revision: `d81838f`. Private ignored bundle:
+`output/recovery-20261021` (not pushed). Eleven explicit statements completed in
+25.062 seconds; exactly three bounded source SELECTs. No raw source payloads,
+AI, writes, grants, deployment or runtime activation. Saved-row counts remain
+2/0/0 for GOL001/GOL024/GOL027; each case has 35 clause references.
+
+Captured query IDs, in query order (context, metadata, saved counts, clause counts,
+warehouse):
+
+- `01c7df9b-0009-4ef4-0002-055a005694aa`
+- `01c7df9b-0009-a597-0002-055a00574262`
+- `01c7df9b-0009-4832-0002-055a005732f6`
+- `01c7df9b-0009-4843-0002-055a00575182`
+- `01c7df9b-0009-4ef4-0002-055a005694ae`
+
+Offline manifest/evidence/archive verification passed. The verified archive was
+extracted into a new mode-0700 temporary directory; imports were confirmed from
+that restored `src` tree, not the working checkout. **127 canonical schema/rules/
+source-decision/history/recommendation tests passed**, using the already installed
+Python 3.11 environment without any Snowflake call or dependency installation.
+This is not a clean-machine dependency install, complete application rebuild,
+new-account restore or validation of fresh raw saved decisions.
+
+Full working-tree root regression: **155 passed**, including ten checkpoint
+tests; targeted lint/format and whitespace passed. No API/browser/container/remote
+CI rerun for this operator-tool increment. The first metadata-only follow-up
+found STARTED/idle; the subsequent follow-up confirmed **SUSPENDED**, zero started
+clusters/running/queued. Total thirteen explicit SQL statements including those
+two follow-ups; follow-up query IDs were not collected. Exact incremental cost,
+remaining USD balance and expiry time remain unverified.
+
+The temporary restored tree and private bundle remain local. No encrypted or
+off-device copy has been made. Full raw recovery/live definitions and all existing
+P2 isolation/credential/clinical-projection/live API/UI gates remain open.
