@@ -5,6 +5,19 @@ Last updated: 21 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Pre-expiry single-statement operator acceptance — 21 October
+
+Owner requested useful live testing with 30 hours of trial access remaining.
+One scoped source statement for GOL001 passed canonical SAVED, followed by one
+for GOL024/GOL027 passing truthful MISSING. Existing private replay captures were
+validated first; new reports retain only statuses/hashes/provenance, not raw
+clinical data. No retry, AI, source write, new identity/grant, activation or deploy.
+See [exact scope/query IDs/limits](single-statement-source-evidence.md).
+Eighteen new offline tests / **193 root tests** pass, with lint/format/whitespace.
+Backend 590 remains the prior result, not rerun; no browser/container/build/CI.
+This is operator SQL acceptance, not tenant isolation or authenticated runtime
+acceptance. P2 stays open; clock-health retained-state work remains next offline.
+
 ### Retained replay volume/restart candidate — latest
 
 Both reader and validator now pass actual container restart acceptance with their

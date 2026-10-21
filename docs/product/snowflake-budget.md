@@ -4,7 +4,8 @@ Last updated: 21 October 2026
 
 ## Spending envelope
 
-Latest owner update: **$195 remaining, two days until expiry**. There is **no
+Latest owner update: **30 hours until expiry**; the most recent supplied balance
+remains **$195**, not independently refreshed. There is **no
 budget for purchasing credits afterward**. Prioritize useful source evidence
 and recovery material now, not only after offline worker work finishes. This
 supersedes the earlier $203/four-day and $205/18-day estimates and the calendar
@@ -15,6 +16,13 @@ Necessary product-related Snowflake spend is authorised; exact service-user,
 credential, grant and live-activation packages still need separate approval.
 Do not upgrade the account or incur out-of-pocket charges.
 Aim to retain useful evidence before expiry, not to consume the entire balance.
+
+The owner explicitly requested live testing now rather than postponing all
+source work behind offline infrastructure. The next bounded operator acceptance
+has passed: one source statement per stage over the same three permitted cases,
+canonical validation in memory, redacted reports only. See
+[single-statement results](single-statement-source-evidence.md). No new runtime
+credentials, grants, AI budget or deployment was authorized or performed.
 
 | Use | Maximum USD |
 | --- | ---: |

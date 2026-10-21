@@ -64,3 +64,48 @@ Exact governed views, six runtime principals and approvals, PUBLIC/effective
 privileges, enforced custody/clock/recovery/lifecycle controls, financial/clinical
 display and authenticated API/UI acceptance remain open. This test alone does
 not activate the raw adapter, complete P2, authorize P3 or deploy the website.
+
+## Executed results
+
+Code revision `a5a028e2ffc7b04c713ef66cb8de0dea6f342b65`. Both stages passed
+without a retry; original private A/B captures also passed offline replay first.
+
+| Stage | Cases / canonical result | CLI elapsed | Source query ID |
+| --- | --- | ---: | --- |
+| A | GOL001 SAVED | 8.792 s | `01c7e12e-0009-ac27-0002-055a0057b022` |
+| B | GOL024 / GOL027 MISSING | 6.348 s | `01c7e12e-0009-a843-0002-055a0057a09a` |
+
+The SAVED result passed existing schema/arithmetic/stored amount/outcome and
+independent clause-citation validation, ignoring the stored schema flag as proof.
+Record-ID evidence remains an empty fail-closed registry. MISSING follows
+successful complete scoped reads, not a failure or demo substitution. No fresh
+rules recomputation, financial-trace display or clinical disclosure acceptance.
+
+Each result is one source statement containing bounded subqueries, not one
+table read or proof of concurrent-writer behavior. Separate A/B stages are not
+a shared snapshot. Reports remain private in ignored `output/statement-20261021-a`
+and `output/statement-20261021-b`; no raw inputs were persisted by this tool.
+
+**18 new offline tests; full root suite 193 passing**, repository Ruff,
+changed-file formatting and whitespace checks pass. Backend/browser/build,
+containers and remote CI were not rerun for this operator-only increment.
+Both immediate warehouse observations were STARTED/idle pending auto-suspend;
+the independent final state check is recorded separately below. Current exact
+USD balance/expiry and incremental cost remain unmeasured; no paid purchase.
+
+The first independent follow-up SHOW still reported STARTED with zero running/
+queued queries. No administrative suspension or account changes were made;
+a second bounded metadata-only check follows the idle auto-suspend interval.
+
+The second and final independent SHOW confirmed **SUSPENDED**, zero started
+clusters/running/queued. Total: **14 explicit statements, two source statements**;
+connection setup is CLI-managed and separate. Follow-up SHOW query IDs were not
+captured. No further source reads, explicit suspension or account mutation.
+
+A new private offline rebuild archive at
+`output/rebuild-offline-source-a5a028e` preserves committed revision `a1fbd77`
+(including the acceptance tool and initial result documentation). Its integrity
+verification passed, without a Snowflake call. The name identifies the tested
+tool revision, not the archive HEAD. It is a code checkpoint, not a fresh source
+export, complete DB restore or encrypted/off-device backup. Existing raw replay
+bundles remain local/private. The original unrelated submission video is untouched.

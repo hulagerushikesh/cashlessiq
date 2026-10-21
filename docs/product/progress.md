@@ -67,6 +67,19 @@ operator's credentials or raw-input API adapter.
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
 | Final delivery verification | Full regression/browser/build/contract checks, separately authorised push, remote CI and P2 exit review |
 
+**30-hour trial priority:** the owner requested immediate useful live tests.
+The [bounded single-statement operator check](single-statement-source-evidence.md)
+now passes GOL001 SAVED, then GOL024/GOL027 MISSING with canonical validation.
+Two source statements total, no retries/AI/new grants/credentials or activation;
+redacted reports only. Eighteen new offline controls and **193 root tests** pass.
+Final CIQ_WH check confirmed SUSPENDED/zero running/queued. A fresh private
+offline code archive also passed integrity verification; it is not a DB backup.
+This verifies the operator query shape, not the governed runtime/service boundary;
+all five gates above remain open. Backend stays at its prior **590** result, not
+rerun here. Completion estimate and public UI unchanged. Exact balance/expiry
+still require owner UI evidence. Remaining live work must not bypass security
+gates just to exhaust credits; preserve useful evidence and avoid paid purchase.
+
 No website deployment or P3 is included. User interviews/customer rollout and
 real-data operational gates remain separate; synthetic-alpha permission does
 not waive them. Detailed evidence and next actions are below.
