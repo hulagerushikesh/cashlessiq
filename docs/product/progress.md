@@ -684,6 +684,19 @@ purchase, production thresholds, Snowflake spend or deployment. Current tests
 remain **509 API/DB / 175 root**, not rerun for this documentation-only step.
 Completion estimate stays unchanged; no real provider is claimed.
 
+The owner subsequently approved the offline host-health prototype. Its first
+[parser/signature checkpoint](../architecture/p2-clock-health-proposal.md#first-implementation-checkpoint--21-october)
+adds **81 offline cases** using fake pinned-format daemon responses and temporary
+independent keys. Strict bounds/source allowlists, exact upward uncertainty
+rounding, signature/header/duplicate-key and domain/freshness checks pass.
+Full **590 API/DB** and **175 root** tests, lint/format/whitespace checks pass.
+No process/clock/file/key discovery or source access is implemented. The result
+is explicitly stateless and has no v1 guard-health adapter; persisted epoch/
+sequence/conflict/latch handling, bounded collection and provider/TLS integration
+are next. Real host/daemon/policy/custody and activation remain separate. No
+worker packaging/container/browser/build/remote CI rerun, Snowflake/AI,
+deployment, push or P3. P2 remains open; completion estimate unchanged.
+
 - [Migration sequence](../architecture/migration-plan.md)
 - [P0 decisions](phase-p0-checklist.md)
 - [P1 evidence and research deferral](phase-p1-checklist.md)

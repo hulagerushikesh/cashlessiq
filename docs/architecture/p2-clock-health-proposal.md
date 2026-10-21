@@ -1,13 +1,14 @@
-# P2 host-health prototype — approval proposal
+# P2 host-health prototype — approved offline scope
 
-21 October 2026. **Proposed, not approved or implemented.** This is the next
+21 October 2026. **Owner approved offline prototype implementation.** This is the next
 provider contract required by the [health review](p2-clock-health-review.md).
-The owner approved the earlier offline guard, not installing or operating a
-time daemon, a host collector, new trust material or a deployment host.
+The owner approved the earlier offline guard and now the offline prototype below,
+not installing or operating a time daemon, a host collector, real trust material
+or a deployment host.
 
 ## Recommended next scope
 
-Approve an **offline Linux/Chrony collector + independently signed evidence
+Implement an **offline Linux/Chrony collector + independently signed evidence
 prototype**. Use recorded/fake daemon responses, injected clock readings,
 temporary signing keys and private temporary state. No daemon installation,
 privileged container, host-clock change, real credential, new server, Snowflake
@@ -97,8 +98,59 @@ legacy interfaces must not become an operational fallback.
    key custody, evidence delivery and stopped recovery before requesting any
    real host acceptance or deployment. Offline success is not that approval.
 
-**Decision requested:** approve the offline prototype above, or change its source/
-trust approach before implementation. No live hosting decision is required now.
+**Decision received:** owner approved the offline prototype above. No live
+hosting decision or activation approval is implied.
 The existing public website, source credentials, trial credits and normal stack
 remain untouched. P2 stays open; no completion percentage increases for this
 proposal.
+
+## First implementation checkpoint — 21 October
+
+The inactive `apps/api/src/ciq_api/worker_health.py` implements bounded daemon
+response parsing, explicit policy/binding/window models, temporary-key RS256
+signing and strict stateless signature/domain/freshness/uncertainty checks.
+All data and keys in tests are synthetic. No actual Chrony response was captured.
+
+The pinned 4.7 CSV layout has fourteen fields, including both reference ID and
+address. Layout/format behavior was checked against the upstream
+[Chrony 4.7 client source](https://raw.githubusercontent.com/mlichvar/chrony/4.7/client.c),
+not assumed from human-readable output. The source's
+[tracking documentation](https://chrony-project.org/doc/4.7/chronyc.html)
+defines the offset/delay/dispersion accuracy relationship and its reference-clock
+assumption. The independent parser executes no upstream code or daemon command.
+Future real collection still needs exact executable/version/transport acceptance;
+a CSV field or signed format label does not prove the running binary's version.
+
+The parser permits only configured canonical IP/refid pairs, normal leap status
+and valid bounded fields. Local/unspecified/unapproved sources, multiple records,
+oversized/non-ASCII output, malformed/non-finite/exponential numeric forms and
+negative uncertainty deny. Exact rational arithmetic computes a ceiling of
+absolute system offset + dispersion + half delay, with two additional ns for
+the pinned seconds-format rounding, and rounds the reported skew upward. The
+explicit fictional policy adds a conservative holdover rate; age and accumulated
+uncertainty cannot be refreshed simply by re-signing the original old reference.
+This is conditional processing of trusted measurements, not proof of UTC accuracy.
+
+The envelope binds configured host/boot/health generation/collector epoch and
+source, collection wall/monotonic/boottime intervals, reference age/error and
+sequence. Signature verification uses the JWS layer, not ambient JWT expiry
+time; issuer/audience and all fields are independently strict. Fixed RS256/header
+shape, no key discovery, duplicate-key rejection, bounded message size and
+canonical content hashing are tested. Collection/freshness comparisons include
+suspend-aware timestamps and sampling-skew limits, but cannot establish retained
+continuity or detect every physical suspend below measurement uncertainty.
+
+**81 new tests pass; full API/DB 590 and root 175 pass**, with repository lint,
+changed-file formatting and whitespace checks. A test-only ambient-clock mock
+initially interfered with JWT signing; corrected by signing before installing
+the verification clock trap, which now explicitly asserts no ambient-clock use.
+
+**Not implemented/claimed:** executable collection/stream/time bounds, persisted
+epoch/sequence conflict/replay rejection, versioned guard-state integration,
+actual synchronization/host suspend policy, key/evidence delivery custody,
+worker packaging or signed/mTLS integration with this provider. The checked
+envelope deliberately has no `ClockHealth` adapter and must not authorize v1
+guards. Repeated/older evidence can pass this stateless layer; retained sequence/
+digest/latch enforcement is the next prerequisite, not waived by these tests.
+Default routes/startup and existing guard/replay formats remain unchanged.
+No Snowflake/AI, real credential, daemon installation, deployment, push or P3.

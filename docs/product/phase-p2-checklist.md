@@ -836,6 +836,9 @@ for this recovery test increment. P2 remains in progress.
   and clock-checked listeners over both loopback mTLS hops: 42 cases, both
   tenants/all roles, truthful results, replay and unsafe authorization/delivery
   denial. Real health, private container wiring and operational controls remain open.
+- [x] Owner approved offline host-health prototype. First bounded CSV/parser and
+  independent RS256 envelope checks pass 81 tests. This is stateless validation,
+  not epoch/sequence replay protection, executable collection or guard integration.
 
 Latest implementation evidence is in the [clock-safety checkpoint](../architecture/p2-clock-safety.md#offline-implementation-checkpoint--21-october).
 Authority/broker composition is now tested offline; actual host/container clocks,

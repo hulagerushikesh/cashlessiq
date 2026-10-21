@@ -69,7 +69,8 @@ Current executable evidence remains explicitly fake-health/offline; see
 [clock safety and container limits](p2-clock-safety.md). This review does not
 close the real provider, suspend, encrypted custody or P2 exit gates.
 
-The next [specific offline prototype proposal](p2-clock-health-proposal.md)
-selects a candidate collection/trust approach for owner review, not deployment
-or daemon installation. Its approval is separate from the existing guard's
-offline implementation approval; no real health provider is implemented yet.
+The [specific offline prototype](p2-clock-health-proposal.md) is now owner-approved
+for local implementation, not deployment or daemon installation. Its first
+bounded parser/signature candidate is implemented with fake responses and keys;
+retained continuity, real collection, operational host policy and activation
+remain unimplemented. It is not an installed real health provider.
