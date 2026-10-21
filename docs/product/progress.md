@@ -542,8 +542,19 @@ factory **55** and API/PostgreSQL **362** tests pass; lint/format/whitespace che
 pass. [Evidence and limits](../architecture/p2-membership-db-tls.md) record the
 initial assertion-format correction and successful rerun. No Snowflake, normal
 runtime activation, browser/build/remote CI, push or deployment for this step.
-Next: combined retained replay/TLS lifecycle controls. Live isolation/evidence/
-P2 exit remain open.
+The combined retained replay/fixed-factory TLS test now passes using
+`make product-worker-replay-tls`: unexpired restart replay rejection, restored
+trust, disclosure/deactivation/grant changes, paused-DB outage/resume and
+missing-ledger delivery/startup denial in one disposable environment. No reset
+under an old signing key is attempted. The initial tmpfs DB stop/start harness
+failure and corrected successful run are recorded in the
+[replay lifecycle evidence](../architecture/p2-worker-replay-lifecycle.md).
+All owned test resources were removed; **175 root / 55 factory / 362 API/DB**
+tests and lint/format/whitespace checks pass. No normal activation, real secrets,
+Snowflake, website deployment or remote CI claim.
+Next: explicit key-generation/lost-state recovery acceptance and clock-safety
+design/negative tests, then secret-delivery/readiness/deadline gates. Live
+isolation/evidence/P2 exit remain open.
 
 ## References
 

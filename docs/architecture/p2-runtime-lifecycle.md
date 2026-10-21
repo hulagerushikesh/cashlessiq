@@ -8,8 +8,9 @@ a production secret-store product, supply credentials or change normal startup.
 ## Current evidence versus missing implementation
 
 The private mTLS, restricted membership DB, verified DB TLS and retained replay
-tests pass separately. Retained replay is not yet composed with DB TLS in one
-test. Test keys/passwords are disposable; test bootstrap files are not a secret
+tests pass separately. A combined replay/DB-TLS test is now available as
+`make product-worker-replay-tls` (acceptance evidence below). Test keys/passwords
+are disposable; test bootstrap files are not a secret
 delivery design. The membership entry point still refuses activation.
 
 There is one assertion verification key per authority instance, immutable peer
@@ -91,7 +92,8 @@ or whole-operation deadline. Subsequent
 factory inside the running test membership service, including failed trust,
 restored trust, disclosure/deactivation/grant changes and DB outage. The old
 test-only factory is unchanged for diagnostics/legacy plaintext tests. Combined
-retained replay/TLS lifecycle acceptance is next; actual custody, durable clock
+retained replay/TLS composition is recorded in the replay lifecycle document;
+actual custody, key-generation recovery, durable clock
 controls and normal service wiring remain open. No real credentials, source
 access, deployment or activation.
 

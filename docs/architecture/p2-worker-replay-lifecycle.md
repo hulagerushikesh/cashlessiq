@@ -92,8 +92,42 @@ monitoring, production request deadlines/backpressure and backup handling remain
 open. SQLite initialization in this test is not authorization to implement those
 account/runtime changes.
 
-Next: separately package the trusted membership service with a narrow DB access
-policy and bounded disposable integration tests. No general operational DB
+The separately packaged membership service and restricted DB/TLS fixture are now
+implemented as inactive candidates. No general operational DB
 credentials in read/validator workers. Snowflake isolation/query/grant review,
 governed evidence display and approved live acceptance remain P2 gates. No P3,
 website deployment, real credential provisioning, push or Snowflake/AI spend.
+
+## Combined replay and DB TLS checkpoint — 21 October
+
+Reproduce with `make product-worker-replay-tls`. This explicit mode composes
+both retained authority volumes with the actual fixed membership connection
+factory and a fifth disposable TLS PostgreSQL container. Existing individual
+test modes remain available; normal startup and Compose are unchanged.
+
+Restart replay rejection (while the original tokens are unexpired), fresh
+success, ledger-content inspection and refusal to reinitialize run first.
+The same restarted authorities then exercise certificate/CA/missing-CA and
+plaintext rejection, ambient-setting denial, trust restoration, role disclosure,
+user/tenant/membership deactivation and lost/restored column grants.
+For the combined mode the DB outage is a pause/unpause of the same cluster,
+not stop/reseed: stopping the tmpfs-only DB would destroy its source state.
+After outage denial, verified TLS and a fresh delegated request must succeed
+before deleting the reader's test ledger. Missing-state delivery and startup
+must then deny without silently recreating storage. Keeping this destructive
+step last prevents it from masking independent earlier denial checks.
+
+Acceptance run `ciq-mtls-729cc45feccd` passed this sequence and removed its exact
+owned containers/networks/volumes/image tags. The initial run
+`ciq-mtls-58102b227a0c` correctly failed after the test attempted stop/start of
+the tmpfs DB (its newly initialized cluster lacked the synthetic login); it also
+cleaned up. The harness was corrected to pause/resume, not to reseed credentials
+or weaken the fixed factory. Root **175**, factory **55** and API/PostgreSQL
+**362** tests pass; repository Ruff, changed-file format and whitespace checks
+pass. Browser/build/remote CI were not rerun.
+
+This is composition/restart evidence only. It does **not** implement or prove
+old-key rejection/new-generation recovery, trusted-clock discontinuity controls,
+host-power-loss durability, production secret delivery, whole-request deadlines
+or normal service activation. Those remain gates before live operation. No
+real credentials, Snowflake reads/AI, deployment or public UI changes.

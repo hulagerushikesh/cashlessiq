@@ -487,6 +487,11 @@ def main(*, retained_replay=False, restricted_db=False, verified_db_tls=False):
                         role,
                         capture=False,
                     )
+
+            def missing_replay_denied():
+                # Destructive check is last: do not let missing replay state mask
+                # an independent trust, membership, grant or database failure.
+                check("fresh")
                 docker(
                     "exec",
                     containers["reader"],
@@ -520,6 +525,9 @@ def main(*, retained_replay=False, restricted_db=False, verified_db_tls=False):
                 print(
                     "PASS: retained per-authority volumes; restart replay and missing-file denial"
                 )
+
+            if retained_replay and not database:
+                missing_replay_denied()
                 return
             check("check")
             docker(
@@ -585,8 +593,21 @@ def main(*, retained_replay=False, restricted_db=False, verified_db_tls=False):
                 check("deny")
                 database.sql("GRANT SELECT(role) ON ops.tenant_membership TO membership_test;")
                 check("check")
-                docker("stop", "--time", "1", containers["db"])
-                check("deny")
+                if retained_replay:
+                    # Pause rather than stop: stopping this tmpfs-only database
+                    # destroys its cluster. Resume the same state, never reseed
+                    # it to simulate recovery or let ledger loss mask outage.
+                    docker("pause", containers["db"])
+                    try:
+                        check("deny")
+                    finally:
+                        docker("unpause", containers["db"])
+                    db_probe("tls-check")
+                    missing_replay_denied()
+                    print("PASS: combined retained replay and fixed-factory DB TLS lifecycle")
+                else:
+                    docker("stop", "--time", "1", containers["db"])
+                    check("deny")
                 print(
                     "PASS: restricted DB through pinned mTLS/delegated workers; no fixture fallback"
                 )
@@ -628,9 +649,10 @@ if __name__ == "__main__":
     modes.add_argument("--retained-replay", action="store_true")
     modes.add_argument("--restricted-db", action="store_true")
     modes.add_argument("--verified-db-tls", action="store_true")
+    modes.add_argument("--retained-replay-tls", action="store_true")
     args = parser.parse_args()
     main(
-        retained_replay=args.retained_replay,
+        retained_replay=args.retained_replay or args.retained_replay_tls,
         restricted_db=args.restricted_db,
-        verified_db_tls=args.verified_db_tls,
+        verified_db_tls=args.verified_db_tls or args.retained_replay_tls,
     )

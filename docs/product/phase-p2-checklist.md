@@ -758,7 +758,23 @@ maintenance-window rotation, healthy replay preservation and fail-closed loss
 recovery requiring old signing-key rejection before new ledger initialization.
 Clock forward/prune/backward risk is explicitly unresolved; the existing ledger
 is not claimed to detect it. Actual encrypted store/delivery, clock controls,
-production readiness and combined DB-TLS/retained-replay tests remain open.
+production readiness and combined DB-TLS/retained-replay tests remained open at
+that proposal checkpoint.
+
+## Combined replay/TLS acceptance — 21 October
+
+- [x] Retained reader/validator replay volumes compose with the fixed membership
+  factory over verified DB TLS in the private disposable mTLS harness.
+- [x] Unexpired replay rejection survives both worker restarts; fresh requests
+  succeed before independent failure checks and after DB pause/resume.
+- [x] Certificate/trust, membership/disclosure, grant-loss and outage denials
+  remain enforced; final missing-ledger delivery/startup refuse without repair.
+- [x] Exact invocation cleanup; 175 root, 55 factory and 362 API/DB tests pass.
+- [ ] Old-key rejection/new-generation lost-state recovery and clock safety.
+- [ ] Secret custody/delivery, readiness, deadlines/shutdown and live isolation.
+
+See [scope and failed-first-run correction](../architecture/p2-worker-replay-lifecycle.md).
+Normal runtime, public site and source activation remain unchanged; P2 is open.
 
 Documentation/link/whitespace checks only; no runtime code changed or test suites
 rerun. Next: offline fixed factory/configuration tests, without entry-point/source
