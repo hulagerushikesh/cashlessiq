@@ -774,8 +774,11 @@ that proposal checkpoint.
   healthy/missing/corrupt retained state, two tenants and three roles (18 cases).
 - [x] Healthy container signing-generation transition with unchanged retained
   ledger digests, unused/unexpired old-parent/child denial and fresh success.
-- [ ] Enforced lost-state container recovery and clock safety (healthy rotation
-  and offline tests do not close this operational gate).
+- [x] Disposable lost/corrupt-state recovery sequence: deny original failed
+  storage, retire both old verification keys, refuse absent replacement files,
+  explicitly provision NEW files and preserve original damaged evidence.
+- [ ] Enforced operational recovery controller and clock safety (prescribed
+  container sequences and offline tests do not close this operational gate).
 - [ ] Secret custody/delivery, readiness, deadlines/shutdown and live isolation.
 
 See [scope and failed-first-run correction](../architecture/p2-worker-replay-lifecycle.md).
@@ -794,7 +797,16 @@ shutdown/issuance controller, mTLS certificate rotation or lost-state recovery.
 The corrected full container run passes with exact cleanup; **175 root / 380
 API/DB / 55 factory** tests, lint, changed-file format and whitespace checks pass.
 
-Documentation/link/whitespace checks only; no runtime code changed or test suites
-rerun. Next: offline fixed factory/configuration tests, without entry-point/source
-activation or actual secrets. No Snowflake/AI, spend, persistent changes, push,
-deployment or P3. P2 is still in progress.
+The subsequent [lost/corrupt-state container candidate](../architecture/p2-worker-replay-lifecycle.md#lostcorrupt-state-container-recovery-candidate--21-october)
+also passes with exact cleanup. New test filenames, stopped-authority trust
+replacement and explicit no-capability initialization preserve original damaged
+state. The same regression counts pass. This does not close automatic clock,
+corrupt-content readiness, issuance/shutdown/generation-controller, custody or
+live isolation gates. Public site and default source startup stay unchanged.
+
+Historical proposal-only checkpoint (superseded by the implementation evidence
+above): documentation/link/whitespace checks only; runtime suites were not rerun
+at that checkpoint. Its next step was the offline fixed factory. The CURRENT
+next step is reviewed durable clock safety, followed by custody/readiness and
+deadline/generation controls. No Snowflake/AI, account changes, deployment or P3
+for this recovery test increment. P2 remains in progress.

@@ -48,6 +48,9 @@ AUDIENCES = {
     "membership": "membership:0",
 }
 REPLAY = Path("/var/lib/ciq-replay/used.sqlite")
+ORIGINAL_REPLAY = REPLAY
+RECOVERED_REPLAY = Path("/var/lib/ciq-replay/recovered.sqlite")
+DAMAGED_TEST_STATE = b"disposable corrupt replay evidence"
 
 
 def deny_unexpired(client, token):
@@ -57,7 +60,7 @@ def deny_unexpired(client, token):
         client.summary(token)
     except WorkerDenied:
         return
-    raise AssertionError("Consumed capability accepted after restart")
+    raise AssertionError("Rejected capability unexpectedly accepted")
 
 
 def context(server=False):
@@ -301,16 +304,27 @@ def check(config, action):
 
 if __name__ == "__main__":
     action, role = sys.argv[1:]
-    if action == "initialize-replay":
+    if action in {"initialize-replay", "initialize-recovered-replay"}:
         # Explicit offline provisioning only, never service startup recovery.
         import os
 
-        REPLAY.parent.chmod(0o700)
+        assert role in {"reader", "validator"}
+        if action == "initialize-recovered-replay":
+            REPLAY = RECOVERED_REPLAY
+            assert os.getuid() == 10001
+            state = REPLAY.parent.stat()
+            assert state.st_uid == 10001 and state.st_mode & 0o777 == 0o700
+        else:
+            REPLAY.parent.chmod(0o700)
         SqliteReplayLedger.initialize_for_offline_test(REPLAY)
-        os.chown(REPLAY, 10001, 10001)
-        os.chown(REPLAY.parent, 10001, 10001)
+        if action == "initialize-replay":
+            os.chown(REPLAY, 10001, 10001)
+            os.chown(REPLAY.parent, 10001, 10001)
         raise SystemExit(0)
     config = json.loads((ROOT / "config.json").read_text())
+    if config.get("recovered_replay"):
+        assert role in {"reader", "validator"} and config["retained_replay"]
+        REPLAY = RECOVERED_REPLAY  # Fixed test path, never request-selected.
     expected = {"identity.key", "identity.pem", "ca.pem", "verify.pem", "config.json"}
     expected |= (
         {"signing.key"}
@@ -342,6 +356,24 @@ if __name__ == "__main__":
         assert role == "reader" and config["retained_replay"]
         deny_unexpired(transport(config, "validator"), sys.stdin.read())
         print("PASS: unused unexpired old child denied after signing-key transition")
+    elif action == "damage-replay":
+        assert role in {"reader", "validator"} and config["retained_replay"]
+        assert REPLAY == ORIGINAL_REPLAY
+        if role == "reader":
+            REPLAY.unlink()
+        else:
+            REPLAY.write_bytes(DAMAGED_TEST_STATE)
+    elif action == "deny-damaged-child":
+        assert role == "reader" and config["retained_replay"]
+        deny_unexpired(transport(config, "validator"), sys.stdin.read())
+        print("PASS: corrupt validator replay state denies unexpired child")
+    elif action == "assert-damaged-evidence":
+        assert role in {"reader", "validator"} and config["retained_replay"]
+        if role == "reader":
+            assert not ORIGINAL_REPLAY.exists()
+        else:
+            assert ORIGINAL_REPLAY.read_bytes() == DAMAGED_TEST_STATE
+        print(f"PASS: {role} original missing/corrupt replay evidence unchanged")
     elif action == "remove-replay":
         assert role == "reader" and config["retained_replay"]
         REPLAY.unlink()
@@ -374,7 +406,8 @@ if __name__ == "__main__":
             raise AssertionError("Existing retained ledger replaced")
         print(f"PASS: {role} ledger has only hashes/expiry; reinitialization refused")
     elif action == "assert-missing-startup":
-        assert role == "reader" and config["retained_replay"] and not REPLAY.exists()
+        assert role in {"reader", "validator"} and config["retained_replay"]
+        assert not REPLAY.exists()
         try:
             serve(config, role)
         except FileNotFoundError:

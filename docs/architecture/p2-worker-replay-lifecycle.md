@@ -172,3 +172,59 @@ between explicit probe invocations; this is not an implemented issuance-disable,
 drain/deadline, stale-replica inventory or operator recovery controller. No
 clock discontinuity protection, production secret custody or runtime activation
 is claimed. P2 remains open.
+
+## Lost/corrupt state container recovery candidate — 21 October
+
+Reproduce with `make product-worker-recovery-tls`. This separate opt-in mode
+uses the same disposable mTLS/restricted DB-TLS topology and fixed private
+addresses. No default executable, Compose file or runtime code is activated.
+
+After an old-key SAVED response, retain an unused old parent/child pair. Delete
+only the reader's original test ledger and corrupt only the validator's original
+test ledger with fixed dummy bytes. Parent delivery denies because the reader
+file is absent; independent reader-to-validator child delivery denies on corrupt
+storage. Neither operation repairs the original state. These request denials do
+not prove that the current startup preflight detects corrupt SQLite content;
+that readiness gap remains open.
+
+Stop both authorities and verify their containers are stopped before replacing
+broker signing trust and both authority verification files. Start only idle
+container PID 1 processes, verify both mounted public-key digests match the new
+generation, and explicitly select the fixed NEW test filename `recovered.sqlite`.
+Listener-start attempts refuse its absence in both authorities and create no file.
+Only then does the harness invoke an explicit no-network/no-PKI/no-credential
+initializer, as UID 10001 with all capabilities dropped. It verifies the existing
+directory ownership/mode and refuses existing files; it does not chmod/chown the
+old directory or replace old evidence.
+
+Restarted listeners must return a new-key SAVED response before rejecting old
+parent and child independently while unexpired. The child was attempted against
+corrupt storage earlier, not successfully consumed; expiry and prior consumption
+cannot substitute for new-signature rejection. New-key restart replay rejection,
+ledger audit, DB trust/revocation/outage/resume and final missing-new-file denial
+then run as before. Original reader absence and validator dummy bytes are checked
+before initialization, after recovery and after the independent failure sequence.
+
+Initial run `ciq-mtls-2fb0b8ce968b` failed at the permission boundary:
+the reused root/CAP_CHOWN initializer could not chmod the already UID-10001-owned
+directory. Exact cleanup succeeded. The recovery-specific initializer now runs
+as the existing owner with **no added capability**, rather than gaining FOWNER,
+DAC override or changing directory permissions.
+
+Corrected recovery run `ciq-mtls-1b7aacf92461` passes the entire sequence, including
+original-evidence checks after the final independent failures, and removes its
+exact owned containers/networks/volumes/image tags. Root **175**, API/PostgreSQL
+**380** and factory **55** tests pass, with repository Ruff/changed-file format/
+whitespace checks. No browser/frontend-build or remote CI claim.
+The healthy-transition mode was rerun as `ciq-mtls-5b57cc06bfec` after the shared
+initializer refactor; its full sequence and exact cleanup also pass.
+
+This is a prescribed test recovery sequence for one synthetic nonclinical SAVED
+flow, not enforced operational recovery. The test controller controls issuance
+and knows its complete two-authority inventory; no production issuance-stop,
+stale-replica inventory, generation journal, clock health, shutdown deadline,
+power-loss handling or secret-store mechanism is implemented. All old-state
+evidence is disposable and removed with the test volumes after acceptance; this
+is not an ordinary backup/restore path. Other roles/tenants and symmetric loss/
+corruption combinations are covered only by the separate offline tests. No
+normal/live route, real credentials, Snowflake/AI or deployment is authorized.

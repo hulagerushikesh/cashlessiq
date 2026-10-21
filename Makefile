@@ -9,10 +9,13 @@ SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql 
 .PHONY: product-worker-isolation product-worker-mtls product-worker-replay
 .PHONY: product-membership-check
 .PHONY: product-membership-db product-membership-mtls product-membership-tls
-.PHONY: product-worker-replay-tls product-worker-generation-tls
+.PHONY: product-worker-replay-tls product-worker-generation-tls product-worker-recovery-tls
 
 product-worker-generation-tls:
 	uv run --project apps/worker --frozen python scripts/test_worker_mtls.py --signing-generation-tls
+
+product-worker-recovery-tls:
+	uv run --project apps/worker --frozen python scripts/test_worker_mtls.py --lost-replay-recovery-tls
 
 product-worker-replay-tls:
 	uv run --project apps/worker --frozen python scripts/test_worker_mtls.py --retained-replay-tls

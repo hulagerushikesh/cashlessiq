@@ -241,7 +241,9 @@ Trusted fixed time cannot prove clock health or rollback
 protection. Host-file tampering, production secret custody and the actual
 recovery controller remain unresolved; normal startup stays disabled.
 
-The next container checkpoint covers healthy old/new signing transitions without
-resetting replay state. Lost-state container recovery and a reviewed durable
-clock-discontinuity design remain separate gates. No source/AI calls, deployment
-or P3.
+The subsequent container checkpoints cover healthy old/new signing transitions
+and an explicit lost/corrupt-state recovery candidate; see
+[container evidence and limits](p2-worker-replay-lifecycle.md).
+Those tests do not implement an operational recovery controller. Enforced
+issuance/shutdown/generation inventory and a reviewed durable clock-discontinuity
+design remain gates. No source/AI calls, deployment or P3.

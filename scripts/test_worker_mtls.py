@@ -6,6 +6,7 @@ Only invocation-owned Docker resources are removed; normal product stack is unto
 """
 
 import argparse
+import hashlib
 import ipaddress
 import json
 import subprocess
@@ -122,14 +123,43 @@ def fixture():
 
 
 def main(
-    *, retained_replay=False, restricted_db=False, verified_db_tls=False, signing_generation=False
+    *,
+    retained_replay=False,
+    restricted_db=False,
+    verified_db_tls=False,
+    signing_generation=False,
+    lost_replay_recovery=False,
 ):
+    assert not lost_replay_recovery or signing_generation
     assert not signing_generation or (retained_replay and verified_db_tls)
     restricted_db = restricted_db or verified_db_tls
     prefix = f"ciq-mtls-{uuid4().hex[:12]}"
     image = f"{prefix}:test"
     membership_image = f"{prefix}:membership"
     containers, networks, volumes = {}, [], {}
+
+    def initialize_replay(role, *, recovered=False):
+        # Explicit test provisioning has no network, PKI or credential mount.
+        docker(
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--read-only",
+            "--user",
+            "10001:10001" if recovered else "0:0",
+            "--cap-drop",
+            "ALL",
+            *([] if recovered else ["--cap-add", "CHOWN"]),
+            "--security-opt",
+            "no-new-privileges",
+            "--mount",
+            f"type=volume,src={volumes[role]},dst=/var/lib/ciq-replay",
+            image,
+            "initialize-recovered-replay" if recovered else "initialize-replay",
+            role,
+        )
+
     try:
         docker(
             "build",
@@ -166,26 +196,7 @@ def main(
                     f"{prefix}-{role}-replay",
                 )
                 volumes[role] = volume
-                docker(
-                    "run",
-                    "--rm",
-                    "--network",
-                    "none",
-                    "--read-only",
-                    "--user",
-                    "0:0",
-                    "--cap-drop",
-                    "ALL",
-                    "--cap-add",
-                    "CHOWN",
-                    "--security-opt",
-                    "no-new-privileges",
-                    "--mount",
-                    f"type=volume,src={volume},dst=/var/lib/ciq-replay",
-                    image,
-                    "initialize-replay",
-                    role,
-                )
+                initialize_replay(role)
         links = {role: {} for role in ROLES}
         for left, right in EDGES:
             network = docker(
@@ -264,6 +275,24 @@ def main(
 
             # Bootstrap sleeps reserve actual engine addresses; no listener exists yet.
             inspected = {role: json.loads(docker("inspect", containers[role]))[0] for role in ROLES}
+
+            def probe(role, action, *, input=None):
+                return docker(
+                    "exec",
+                    *(["-i"] if input is not None else []),
+                    containers[role],
+                    "python",
+                    "-m",
+                    "ciq_worker_runtime.mtls_probe",
+                    action,
+                    role,
+                    input=input,
+                )
+
+            def damaged_evidence():
+                for role in ("reader", "validator"):
+                    probe(role, "assert-damaged-evidence")
+
             if signing_generation:
                 # Simultaneously stopping two dynamic endpoints can swap their
                 # leases on start. Reserve the observed addresses explicitly
@@ -477,6 +506,14 @@ def main(
                     )
 
                 digests = {role: replay_digest(role) for role in ("reader", "validator")}
+                if lost_replay_recovery:
+                    for role in ("reader", "validator"):
+                        probe(role, "damage-replay")
+                    check("deny-storage")
+                    child = docker("exec", containers["broker"], "cat", "/tmp/old-child")
+                    probe("reader", "deny-damaged-child", input=child)
+                    del child
+                    damaged_evidence()
                 # Broker is an idle test container, not a serving issuer. The
                 # sequencer issues nothing until both authorities are restarted.
                 # Stop both before changing their mounted verification material.
@@ -497,6 +534,32 @@ def main(
                 path = root / "broker" / "signing.key"
                 path.chmod(0o600)
                 write(path, private_bytes(replacement))
+                if lost_replay_recovery:
+                    for role in ("reader", "validator"):
+                        path = root / role / "config.json"
+                        configuration = json.loads(path.read_text())
+                        configuration["recovered_replay"] = True
+                        path.chmod(0o600)
+                        write(path, json.dumps(configuration))
+                    # Both original authority processes are dead. Inspect their
+                    # mounted new trust before any replacement file is created.
+                    for role in ("reader", "validator"):
+                        docker("start", containers[role])  # Idle PID 1 only, no listener.
+                        actual = docker(
+                            "exec",
+                            containers[role],
+                            "python",
+                            "-c",
+                            "from pathlib import Path; import hashlib; "
+                            "print(hashlib.sha256(Path('/run/ciq/verify.pem').read_bytes()).hexdigest())",
+                        )
+                        assert actual == hashlib.sha256(public).hexdigest()
+                        probe(role, "assert-missing-startup")
+                    damaged_evidence()
+                    # No automatic repair. Only this explicit offline test step
+                    # initializes NEW filenames after both old keys are retired.
+                    for role in ("reader", "validator"):
+                        initialize_replay(role, recovered=True)
                 for role in ("validator", "reader"):
                     docker("start", containers[role])
                     current = json.loads(docker("inspect", containers[role]))[0]
@@ -516,7 +579,8 @@ def main(
                         role,
                     )
                     ready(role)
-                    assert replay_digest(role) == digests[role]
+                    if not lost_replay_recovery:
+                        assert replay_digest(role) == digests[role]
                 check("fresh")  # Rules out unavailable membership/listeners/TLS.
                 check("reject-old-parent")
                 # Capabilities stay off logs/argv; only this test controller
@@ -534,7 +598,11 @@ def main(
                     input=child,
                 )
                 del child
-                print("PASS: stopped-authority signing transition with retained replay volumes")
+                if lost_replay_recovery:
+                    damaged_evidence()
+                    print("PASS: explicit new-key recovery preserves original replay evidence")
+                else:
+                    print("PASS: stopped-authority signing transition with retained replay volumes")
 
             if retained_replay:
                 check("prepare-restart")
@@ -698,6 +766,8 @@ def main(
                         docker("unpause", containers["db"])
                     db_probe("tls-check")
                     missing_replay_denied()
+                    if lost_replay_recovery:
+                        damaged_evidence()
                     print("PASS: combined retained replay and fixed-factory DB TLS lifecycle")
                 else:
                     docker("stop", "--time", "1", containers["db"])
@@ -745,14 +815,18 @@ if __name__ == "__main__":
     modes.add_argument("--verified-db-tls", action="store_true")
     modes.add_argument("--retained-replay-tls", action="store_true")
     modes.add_argument("--signing-generation-tls", action="store_true")
+    modes.add_argument("--lost-replay-recovery-tls", action="store_true")
     args = parser.parse_args()
     main(
         retained_replay=args.retained_replay
         or args.retained_replay_tls
-        or args.signing_generation_tls,
+        or args.signing_generation_tls
+        or args.lost_replay_recovery_tls,
         restricted_db=args.restricted_db,
         verified_db_tls=args.verified_db_tls
         or args.retained_replay_tls
-        or args.signing_generation_tls,
-        signing_generation=args.signing_generation_tls,
+        or args.signing_generation_tls
+        or args.lost_replay_recovery_tls,
+        signing_generation=args.signing_generation_tls or args.lost_replay_recovery_tls,
+        lost_replay_recovery=args.lost_replay_recovery_tls,
     )

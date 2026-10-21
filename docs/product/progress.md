@@ -20,6 +20,23 @@ demo-video work is not part of this product plan.
 | P5 / M5 — ingestion and policy management | Not started | Secure ingestion; second supported policy onboarded through approval/regression gates |
 | P6 / M6 — prototype retirement | Not started | Parallel reconciliation passes; no operational dependency on Streamlit/user credentials |
 
+### Completion estimate — 21 October
+
+Owner-facing planning estimate: **35–40% of the full P0–P6 migration; P2 about
+60%**. P0 is complete, P1 engineering is complete under the explicitly deferred
+research gate, and P3–P6 have not started. As a transparent, rough phase indicator,
+equal weighting gives `(100 + 100 + 60 + 0 + 0 + 0 + 0) / 7 ≈ 37%`.
+Phases are not equal in effort or risk, so this is **not** an earned-effort,
+time-remaining, customer-readiness or production-security percentage. Counting
+historical checklist entries or passing tests would exaggerate completion.
+
+P2's implemented local workspace/contracts, bounded operator reads and extensive
+offline boundary tests explain the partial estimate. Remaining acceptance is
+substantial: lifecycle/clock/custody/readiness, exact Snowflake isolation and
+service identities, governed financial/clinical evidence, live authenticated
+API/UI parity and final remote verification. Current backend-only increments
+do not change the public website or make the disabled live route available.
+
 ## Completed foundations
 
 - [x] Approved Indian TPA / hybrid deployment / PostgreSQL / Next.js + FastAPI direction.
@@ -44,7 +61,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted DB composition/verified TLS tests pass; fixed factory passes offline and disposable TLS acceptance; combined replay/TLS lifecycle, actual custody/clock controls and service wiring remain |
+| Worker security | Private mTLS/delegation, retained replay, package/network/mount, restricted DB/TLS and healthy container signing transition tests pass; enforced recovery, custody/clock/readiness/deadline controls and service wiring remain |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -581,6 +598,21 @@ CI were not rerun. This increment is committed locally, not deployed or pushed.
 Next: lost-state container recovery and reviewed clock-safety design, followed
 by custody/readiness/deadline controls. P2 remains open; no normal/public
 activation, Snowflake/AI, real credentials or P3.
+
+The next disposable recovery acceptance adds `make product-worker-recovery-tls`.
+Reader loss and validator corruption deny independently under old trust; both
+authority processes stop before the new signing generation is installed. New
+fixed-path ledger absence refuses startup; explicit UID-10001/no-capability
+provisioning creates new files only, after mounted new trust is verified.
+Fresh SAVED and unexpired old-parent/child rejection, restart replay, DB-TLS/
+revocation/outage and unchanged original damaged evidence all pass. The first
+initializer permission failure and corrected passing run are recorded in
+[recovery evidence](../architecture/p2-worker-replay-lifecycle.md#lostcorrupt-state-container-recovery-candidate--21-october).
+Root **175**, API/DB **380**, factory **55**, lint/format/whitespace pass. No
+production recovery controller or corrupt-content startup detection is claimed.
+Next is reviewed durable clock safety, followed by actual custody, readiness,
+deadlines/shutdown and generation control. Snowflake isolation, governed evidence,
+live API/UI and P2 exit remain open. No deployment, source/AI spend or P3.
 
 ## References
 
