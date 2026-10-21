@@ -265,3 +265,12 @@ packages the canonical guard without activating it. Two network-free disposable
 containers retain replay/latch state across restart and share a Linux boot/
 monotonic domain. The probe fabricates health; it does not close actual health,
 suspend, deployment-host, signed/mTLS composition or readiness/custody gates.
+
+The next [opt-in clock readiness](p2-clock-safety.md#opt-in-pre-bind-clock-readiness--21-october)
+candidate calls the explicit guard before summary-listener socket construction.
+Eighteen tests prove unsafe retained state/health never reaches socket bind;
+healthy loopback binding is checked without source work. Default constructors,
+normal startup and membership lookup behavior are unchanged. Actual credential
+custody/readiness, signed/private clock composition and multi-listener rollback
+remain separate. The [health review](p2-clock-health-review.md) documents why the
+current monotonic/boot probe is not suspend detection or synchronization proof.

@@ -826,6 +826,12 @@ for this recovery test increment. P2 remains in progress.
   Linux clock-domain/restart/latch probe. Normal artifact excludes the probe,
   matches the guard source hash and still refuses activation. Health is fake;
   signed/mTLS composition and deployment-host policy remain unproven.
+- [x] Opt-in clock-checked summary listener variants reject unsafe retained
+  state before socket binding (18 offline tests); default constructors/startup
+  unchanged. This is not full readiness or private clock/mTLS composition.
+- [x] Record [host-health/provider requirements](../architecture/p2-clock-health-review.md),
+  including Linux suspend and synchronization-evidence limitations. Real provider,
+  operational tolerances, custody and target-host acceptance remain open.
 
 Latest implementation evidence is in the [clock-safety checkpoint](../architecture/p2-clock-safety.md#offline-implementation-checkpoint--21-october).
 Authority/broker composition is now tested offline; actual host/container clocks,

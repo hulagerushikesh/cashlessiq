@@ -644,6 +644,23 @@ Both successful test runs cleaned up their owned containers/volume. Root **175**
 API/DB **449**, lint/format/whitespace checks pass. No source/AI spend, normal
 runtime activation, public change, browser/build/remote CI, deployment or P3.
 
+The next opt-in pre-bind clock-readiness candidate adds **18 tests**: both
+summary listener variants deny missing/corrupt/legacy/version/generation/latch/
+health/rollback failures before socket binding. Healthy loopback bind/close
+requires a successful clock check and performs no source work. Full **467
+API/DB** and **175 root** tests, lint/format/whitespace and isolated membership
+wheel/activation-refusal checks pass. Membership Docker now copies the clock
+module required by its canonical worker dependency. No normal startup change.
+The [provider review](../architecture/p2-clock-health-review.md) records Linux
+suspend and synchronization-evidence limits; real host-health/delivery policy,
+full custody/readiness/deadlines and private signed-clock composition remain
+open. No real provider, threshold, paid service, deployment or P3 is selected.
+Existing combined replay/DB-TLS regression passed on sequential rerun with exact
+cleanup; the first run's unexplained initial delegated-request denial is retained
+in the [clock checkpoint](../architecture/p2-clock-safety.md#opt-in-pre-bind-clock-readiness--21-october),
+not represented as a diagnosed/fixed defect. It does not prove guarded private
+clock/mTLS composition. No security check or timeout was relaxed.
+
 - [Migration sequence](../architecture/migration-plan.md)
 - [P0 decisions](phase-p0-checklist.md)
 - [P1 evidence and research deferral](phase-p1-checklist.md)

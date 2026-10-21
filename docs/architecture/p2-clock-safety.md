@@ -194,3 +194,37 @@ host guarantee, signed/mTLS clock composition, encrypted custody, integrity-
 checked service readiness or an issuance/recovery controller. Production health
 provider, tolerance policy and broker mounts still need review before activation.
 No network time lookup, Snowflake/AI, real secret, deployment, push or P3.
+
+## Opt-in pre-bind clock readiness — 21 October
+
+`ClockCheckedSummaryServer` and `ClockCheckedPrivateSummaryServer` require an
+explicit canonical guard and call it before constructing/binding their socket.
+No legacy constructor/default/startup is changed. Their callback still must use
+the same guard for authorization/replay/delivery; startup is not a cached grant.
+This is clock readiness only, not complete file/certificate/custody/deadline or
+multi-listener startup/rollback control.
+
+Eighteen new offline tests verify both adapter variants deny missing, corrupt,
+legacy, wrong-version/generation, latched, unhealthy and rollback state before
+`server_bind` is reached, with no source work or implicit repair. A healthy
+case binds/closes an actual loopback socket after sample/health checks. The
+private negative tests never bind a private interface; no private clock/mTLS
+composition or real host-health acceptance is inferred.
+
+The [host-health review](p2-clock-health-review.md) records verified Linux suspend
+semantics and Chrony evidence/control limitations. It defines the remaining
+provider/host/delivery requirements, not an installed or approved time daemon.
+In particular, boot ID plus ordinary monotonic time is not a suspend detector.
+Membership Docker packaging now includes the canonical clock source required by
+its worker dependency and bypasses stale local wheels. No service is activated.
+
+Full API/DB **467**, root **175**, isolated membership packaging/activation-refusal,
+lint/format/whitespace checks pass. The existing combined retained-replay/DB-TLS
+regression passed on a bounded sequential rerun (`ciq-mtls-4bdccccb5697`) and
+removed its owned resources. An initial run (`ciq-mtls-66eb51aa34e2`) denied the
+first `prepare-restart` delegated request and cleaned up. Its generic denial did
+not establish the cause; no fixed cause or concurrency explanation is claimed.
+The rerun changed no code, timeout or security assertion. Keep this intermittent
+failure recorded for further diagnosis if reproduced; it is not proof that a
+timing problem was fixed. That existing harness still uses the legacy authority
+clock/ledger, not the new clock-checked adapters or full guarded mTLS composition.

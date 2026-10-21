@@ -20,6 +20,7 @@ from typing import Literal
 
 from ciq_api.validation_worker import SummaryObservation
 from ciq_api.worker_authority import WorkerDenied
+from ciq_api.worker_clock import SqliteClockGuard
 from ciq_api.worker_delegation import TransportPeer
 
 SUMMARY_PATH = "/v1/validate-summary"
@@ -327,3 +328,34 @@ class PrivateSummaryClient(LoopbackSummaryClient):
             raise ValueError("Invalid private worker endpoint")
         super().__init__(port=endpoint.port, **configuration)
         self._host = endpoint.address
+
+
+class ClockCheckedSummaryServer(LoopbackSummaryServer):
+    """Opt-in offline clock readiness BEFORE socket construction/bind.
+
+    Not a full custody/certificate/deadline readiness check. The callback's
+    authorities must independently use the same guard before reads/delivery;
+    startup success is never a cached authorization or clock-health grant.
+    """
+
+    def __init__(self, *, clock_guard: SqliteClockGuard, **configuration):
+        try:
+            if type(clock_guard) is not SqliteClockGuard:
+                raise WorkerDenied("Worker access denied")
+            clock_guard.check()
+        except Exception:
+            raise WorkerDenied("Worker access denied") from None
+        super().__init__(**configuration)
+
+
+class ClockCheckedPrivateSummaryServer(ClockCheckedSummaryServer):
+    """Same pre-bind clock gate with an explicit private test endpoint."""
+
+    def __init__(self, *, endpoint: PrivateEndpoint, **configuration):
+        if type(endpoint) is not PrivateEndpoint:
+            raise ValueError("Invalid private worker endpoint")
+        self._endpoint = endpoint
+        super().__init__(**configuration)
+
+    def _listen_address(self) -> tuple[str, int]:
+        return (self._endpoint.address, self._endpoint.port)
