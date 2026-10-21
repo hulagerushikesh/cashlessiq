@@ -810,3 +810,19 @@ at that checkpoint. Its next step was the offline fixed factory. The CURRENT
 next step is reviewed durable clock safety, followed by custody/readiness and
 deadline/generation controls. No Snowflake/AI, account changes, deployment or P3
 for this recovery test increment. P2 remains in progress.
+
+## Clock-safety design checkpoint — 21 October
+
+- [x] Reproduced forward-prune/backward nonce reuse with the current ledger in
+  an automatically removed temporary directory; no source/network/runtime I/O.
+- [x] Written [proposed durable clock guard](../architecture/p2-clock-safety.md),
+  including broker/authority/delivery coverage, sticky failure, transaction
+  rollback hazards, same-boot restart and explicit uncertain-time recovery.
+- [ ] Review/approve contract and implement deterministic offline guard tests.
+- [ ] Select/prove host-health provider, operational thresholds, boot/suspend
+  semantics and broker custody; compose actual authorities and containers.
+
+Seven completed commits through `7c761e2` were pushed on owner request. This
+new checkpoint is documentation/characterization only; prior regression counts
+are unchanged, not rerun. No runtime fix, remote CI result, source/AI spend or
+deployment is claimed. P2 stays approximately 60%, overall estimate 35–40%.

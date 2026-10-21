@@ -616,6 +616,14 @@ live API/UI and P2 exit remain open. No deployment, source/AI spend or P3.
 
 ## References
 
+Latest checkpoint: the seven completed increments through `7c761e2` are pushed.
+The [clock-safety proposal](../architecture/p2-clock-safety.md) now records a
+reproduced temporary-ledger gap and the next bounded offline implementation/test
+contract. No clock guard is implemented; host health and operational thresholds
+remain unselected. This documentation-only checkpoint does not change the
+completion estimate or public UI. Review the contract before implementation;
+no live activation, Snowflake/AI or deployment occurred.
+
 - [Migration sequence](../architecture/migration-plan.md)
 - [P0 decisions](phase-p0-checklist.md)
 - [P1 evidence and research deferral](phase-p1-checklist.md)

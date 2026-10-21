@@ -193,6 +193,11 @@ implemented automatic clock protection. No activation until that control is
 defined, implemented and negatively tested. Host/Docker administrators remain
 trusted; this is not tamper-proof storage.
 
+The subsequent [clock-safety design](p2-clock-safety.md) reproduces the current
+forward-prune/backward gap and specifies a proposed durable guard, transaction
+semantics, host-health boundary and acceptance sequence. It is not implemented;
+host-health integration and operational thresholds remain unselected.
+
 ## 5. Bounded acceptance order
 
 1. Offline fixed factory: strict configuration, hostile ambient settings,
