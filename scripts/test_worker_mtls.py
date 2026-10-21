@@ -4,6 +4,7 @@ Run: uv run --project apps/worker --frozen python scripts/test_worker_mtls.py
 Only invocation-owned Docker resources are removed; normal product stack is untouched.
 """
 
+import argparse
 import ipaddress
 import json
 import subprocess
@@ -116,10 +117,10 @@ def fixture():
     )
 
 
-def main():
+def main(*, retained_replay=False):
     prefix = f"ciq-mtls-{uuid4().hex[:12]}"
     image = f"{prefix}:test"
-    containers, networks = {}, []
+    containers, networks, volumes = {}, [], {}
     try:
         docker(
             "build",
@@ -133,6 +134,36 @@ def main():
             capture=False,
             timeout=300,
         )
+        if retained_replay:
+            for role in ("reader", "validator"):
+                volume = docker(
+                    "volume",
+                    "create",
+                    "--label",
+                    f"cashlessiq.mtls-test={prefix}",
+                    f"{prefix}-{role}-replay",
+                )
+                volumes[role] = volume
+                docker(
+                    "run",
+                    "--rm",
+                    "--network",
+                    "none",
+                    "--read-only",
+                    "--user",
+                    "0:0",
+                    "--cap-drop",
+                    "ALL",
+                    "--cap-add",
+                    "CHOWN",
+                    "--security-opt",
+                    "no-new-privileges",
+                    "--mount",
+                    f"type=volume,src={volume},dst=/var/lib/ciq-replay",
+                    image,
+                    "initialize-replay",
+                    role,
+                )
         links = {role: {} for role in ROLES}
         for left, right in EDGES:
             network = docker(
@@ -177,6 +208,8 @@ def main():
                     "--mount",
                     f"type=bind,src={mount},dst=/run/ciq,readonly",
                 ]
+                if role in volumes:
+                    args += ["--mount", f"type=volume,src={volumes[role]},dst=/var/lib/ciq-replay"]
                 args += ["--entrypoint", "python", image, "-c", "import time; time.sleep(300)"]
                 containers[role] = docker(*args)
                 for network in list(links[role].values())[1:]:
@@ -196,6 +229,12 @@ def main():
                 binds = [mount for mount in config["Mounts"] if mount["Type"] == "bind"]
                 assert len(binds) == 1 and binds[0]["Source"] == str(root / role)
                 assert binds[0]["Destination"] == "/run/ciq" and not binds[0]["RW"]
+                replay_mounts = [mount for mount in config["Mounts"] if mount["Type"] == "volume"]
+                assert len(replay_mounts) == (1 if role in volumes else 0)
+                if role in volumes:
+                    assert replay_mounts[0]["Name"] == volumes[role]
+                    assert replay_mounts[0]["Destination"] == "/var/lib/ciq-replay"
+                    assert replay_mounts[0]["RW"]
             assert all(
                 json.loads(docker("network", "inspect", net))[0]["Internal"] for net in networks
             )
@@ -288,7 +327,14 @@ def main():
                 )
                 write(
                     root / role / "config.json",
-                    json.dumps({"pins": pins, "targets": targets, "listen": listen}),
+                    json.dumps(
+                        {
+                            "pins": pins,
+                            "targets": targets,
+                            "listen": listen,
+                            "retained_replay": retained_replay and role in volumes,
+                        }
+                    ),
                 )
                 if role != "broker":
                     docker(
@@ -301,7 +347,8 @@ def main():
                         "serve",
                         role,
                     )
-            for role in ("membership", "validator", "reader"):
+
+            def ready(role):
                 deadline = time.monotonic() + 15
                 while (
                     docker(
@@ -317,6 +364,9 @@ def main():
                         raise RuntimeError(f"Test listener readiness failed: {role}")
                     time.sleep(0.1)
 
+            for role in ("membership", "validator", "reader"):
+                ready(role)
+
             def check(action):
                 docker(
                     "exec",
@@ -329,6 +379,85 @@ def main():
                     capture=False,
                 )
 
+            if retained_replay:
+                check("prepare-restart")
+                for role, action, caller in (
+                    ("validator", "replay-child", "reader"),
+                    ("reader", "replay-parent", "broker"),
+                ):
+                    docker("restart", "--time", "1", containers[role])
+                    current = json.loads(docker("inspect", containers[role]))[0]
+                    for network, previous in inspected[role]["NetworkSettings"]["Networks"].items():
+                        actual = current["NetworkSettings"]["Networks"][network]
+                        assert actual["IPAddress"] == previous["IPAddress"]
+                        assert actual["NetworkID"] == previous["NetworkID"]
+                    docker(
+                        "exec",
+                        "-d",
+                        containers[role],
+                        "python",
+                        "-m",
+                        "ciq_worker_runtime.mtls_probe",
+                        "serve",
+                        role,
+                    )
+                    ready(role)
+                    docker(
+                        "exec",
+                        containers[caller],
+                        "python",
+                        "-m",
+                        "ciq_worker_runtime.mtls_probe",
+                        action,
+                        caller,
+                        capture=False,
+                    )
+                check("fresh")
+                for role in volumes:
+                    docker(
+                        "exec",
+                        containers[role],
+                        "python",
+                        "-m",
+                        "ciq_worker_runtime.mtls_probe",
+                        "audit-replay",
+                        role,
+                        capture=False,
+                    )
+                docker(
+                    "exec",
+                    containers["reader"],
+                    "python",
+                    "-m",
+                    "ciq_worker_runtime.mtls_probe",
+                    "remove-replay",
+                    "reader",
+                )
+                check("deny-storage")
+                docker(
+                    "exec",
+                    containers["reader"],
+                    "python",
+                    "-m",
+                    "ciq_worker_runtime.mtls_probe",
+                    "assert-missing-startup",
+                    "reader",
+                    capture=False,
+                )
+                docker(
+                    "exec",
+                    containers["reader"],
+                    "python",
+                    "-m",
+                    "ciq_worker_runtime.mtls_probe",
+                    "assert-missing-replay",
+                    "reader",
+                    capture=False,
+                )
+                print(
+                    "PASS: retained per-authority volumes; restart replay and missing-file denial"
+                )
+                return
             check("check")
             docker(
                 "exec",
@@ -357,6 +486,7 @@ def main():
         for command in (
             *[("rm", "-f", cid) for cid in reversed(list(containers.values()))],
             *[("network", "rm", network) for network in reversed(networks)],
+            *[("volume", "rm", volume) for volume in reversed(list(volumes.values()))],
             ("image", "rm", image),
         ):
             result = subprocess.run(
@@ -369,4 +499,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--retained-replay", action="store_true")
+    main(retained_replay=parser.parse_args().retained_replay)

@@ -79,8 +79,9 @@ The original probe proves packaging/topology/mount configuration, not applicatio
 authentication. Subsequently, strict private-address adapters and an explicit
 `mtls-test` image passed a [four-container mTLS smoke](p2-worker-container-mtls.md)
 with disposable PKI and synthetic membership. Neither test helper is present in
-the default candidate. No normal startup changed. Next: retained replay lifecycle;
-separately package
+the default candidate. No normal startup changed. The optional
+[retained-volume restart test](p2-worker-replay-lifecycle.md) now also passes;
+production recovery policy stays gated. Next: separately package
 the trusted broker/membership service with its reviewed PostgreSQL access boundary.
 Do not give general DB credentials to readers/validators.
 

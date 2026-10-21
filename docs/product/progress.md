@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Private container mTLS/delegation and synthetic membership smoke now pass, plus minimal image/network/mount tests; still need trusted membership DB boundary, retained replay/key lifecycle and production service wiring |
+| Worker security | Private mTLS/delegation, retained-volume container restart/replay and image/network/mount tests pass; still need trusted membership DB boundary, production replay/key recovery/custody and service wiring |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -380,6 +380,22 @@ Snowflake/AI use, real keys/grants, push or P3. This supersedes the container-mT
 next action above, not the broader live-acceptance gates. Next: retained replay
 volume/restart lifecycle using disposable keys, then trusted membership-service
 packaging and narrow DB access review. P2 remains in progress.
+
+## Latest retained replay checkpoint — 21 October
+
+The disposable private-mTLS harness now has an explicit retained-volume variant.
+Both validator and reader container restarts reject their original consumed
+capabilities while still unexpired; fresh capabilities succeed afterward. Exact
+per-authority mounts, file ownership/modes, hash/expiry-only contents and refused
+reinitialization are checked. Missing state denies requests and listener startup
+without recreating the file or falling back to memory. All test volumes are
+removed after the run. See [evidence/limits](../architecture/p2-worker-replay-lifecycle.md).
+
+342 backend and 145 root tests remain green. No production code/API/startup,
+real credentials, Snowflake/AI, push, deployment or P3 changes. This closes the
+offline container restart test, **not** production replay/key recovery policy.
+Next: separately packaged trusted membership service and narrow DB policy, using
+bounded disposable tests; retain the remaining P2 live/isolation/evidence gates.
 
 ## Spend guardrails
 

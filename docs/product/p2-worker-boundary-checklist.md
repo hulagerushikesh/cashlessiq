@@ -101,6 +101,12 @@ Transport tests temporarily start loopback listeners; no normal startup changes.
   mount/access/capacity configuration, clock discipline and lifecycle/backup
   handling still need review and tests; no live wiring is approved. Do not expose
   consume/before_delivery as independent HTTP endpoints or accept client claims.
+- [x] Offline retained per-authority Docker volume candidate: actual reader and
+  validator container restarts reject previously consumed **unexpired** tokens;
+  fresh requests succeed. Exact mounts/modes and hash/expiry-only storage checked;
+  missing ledger denies requests and listener startup without recreation. Test
+  volumes/PKI cleaned up. Production custody/recovery and multi-host use remain
+  gated. See [lifecycle evidence/limits](../architecture/p2-worker-replay-lifecycle.md).
 - [ ] Compose actual separately packaged application workers over private mTLS,
   plus trusted membership DB boundary. Minimal worker artifact and dummy topology/
   mount smoke now pass; live handlers, real secret custody/rotation and retained

@@ -1,12 +1,15 @@
 """TEST TARGET ONLY: actual delegated mTLS handlers with synthetic input/membership.
 
-No application login, SQL, Snowflake, live credentials or production listener.
+No application login, operational source SQL, Snowflake or production listener.
+Optional same-host SQLite replay volumes and disposable keys are test-only.
 The synthetic membership file is not a database authorization implementation.
 """
 
 import json
+import sqlite3
 import sys
 import time
+from contextlib import closing
 from pathlib import Path
 from threading import Thread
 
@@ -24,6 +27,7 @@ from ciq_api.worker_delegation import (
     issue_detail_assertion,
 )
 from ciq_api.worker_membership import PrivateMembershipClient, PrivateMembershipServer
+from ciq_api.worker_replay import SqliteReplayLedger
 from ciq_api.worker_transport import (
     PrivateEndpoint,
     PrivateSummaryClient,
@@ -40,6 +44,17 @@ AUDIENCES = {
     "validator": "validator:0",
     "membership": "membership:0",
 }
+REPLAY = Path("/var/lib/ciq-replay/used.sqlite")
+
+
+def deny_unexpired(client, token):
+    # An expired token is not evidence of retained replay protection.
+    assert int(time.time()) < jwt.decode(token, options={"verify_signature": False})["exp"]
+    try:
+        client.summary(token)
+    except WorkerDenied:
+        return
+    raise AssertionError("Consumed capability accepted after restart")
 
 
 def context(server=False):
@@ -106,6 +121,11 @@ def serve(config, role):
             membership=transport(config, "membership", membership=True).lookup,
             clock=lambda: int(time.time()),
         )
+        if config.get("retained_replay"):
+            state = REPLAY.stat()  # No implicit creation/recovery at listener startup.
+            assert state.st_uid == 10001 and state.st_mode & 0o777 == 0o600
+            assert REPLAY.parent.stat().st_mode & 0o777 == 0o700
+            common["replay"] = SqliteReplayLedger(REPLAY, capacity=1000)
         if role == "reader":
             authority = DetailAuthority(
                 **common,
@@ -121,7 +141,14 @@ def serve(config, role):
 
             def callback(token, *, peer):
                 assert peer.audience == "broker"
-                return relay.summary(token)
+                result = relay.summary(token)
+                if config.get("retained_replay"):
+                    # Test-only capture on ephemeral tmpfs, not a ledger/log/API field.
+                    child = jwt.decode(token, options={"verify_signature": False})["summary_token"]
+                    path = Path("/tmp/consumed-child")
+                    path.touch(mode=0o600, exist_ok=True)
+                    path.write_text(child)
+                return result
         else:
             authority = DelegatedSummaryAuthority(
                 **common,
@@ -181,11 +208,31 @@ def check(config, action):
         )
 
     client = transport(config, "reader")
-    if action == "deny":
+    if action == "prepare-restart":
+        token = issue()
+        assert client.summary(token).recommendation.payable_inr == 95_000
+        path = Path("/tmp/consumed-parent")
+        path.touch(mode=0o600, exist_ok=True)
+        path.write_text(token)
+        print("PASS: consumed parent/child recorded only in test tmpfs")
+        return
+    if action == "replay-parent":
+        deny_unexpired(client, Path("/tmp/consumed-parent").read_text())
+        print("PASS: unexpired parent rejected after reader container restart")
+        return
+    if action == "fresh":
+        assert client.summary(issue()).recommendation.payable_inr == 95_000
+        print("PASS: fresh capability succeeds with retained ledgers after restart")
+        return
+    if action in {"deny", "deny-storage"}:
         try:
             client.summary(issue())
         except WorkerDenied:
-            print("PASS: membership unavailable/revoked denies delivery")
+            print(
+                "PASS: missing replay storage denies delivery"
+                if action == "deny-storage"
+                else "PASS: membership unavailable/revoked denies delivery"
+            )
             return
         raise AssertionError("Membership denial bypassed")
     token = issue()
@@ -219,6 +266,15 @@ def check(config, action):
 
 if __name__ == "__main__":
     action, role = sys.argv[1:]
+    if action == "initialize-replay":
+        # Explicit offline provisioning only, never service startup recovery.
+        import os
+
+        REPLAY.parent.chmod(0o700)
+        SqliteReplayLedger.initialize_for_offline_test(REPLAY)
+        os.chown(REPLAY, 10001, 10001)
+        os.chown(REPLAY.parent, 10001, 10001)
+        raise SystemExit(0)
     config = json.loads((ROOT / "config.json").read_text())
     expected = {"identity.key", "identity.pem", "ca.pem", "verify.pem", "config.json"}
     expected |= (
@@ -241,6 +297,51 @@ if __name__ == "__main__":
         assert role != "broker" and not (ROOT / "signing.key").exists()
         assert not (ROOT / "state.json").exists() or role == "membership"
         serve(config, role)
+    elif action == "replay-child":
+        assert role == "reader" and config["retained_replay"]
+        deny_unexpired(transport(config, "validator"), Path("/tmp/consumed-child").read_text())
+        print("PASS: unexpired child rejected after validator container restart")
+    elif action == "remove-replay":
+        assert role == "reader" and config["retained_replay"]
+        REPLAY.unlink()
+    elif action == "audit-replay":
+        assert role in {"reader", "validator"} and config["retained_replay"]
+        with closing(sqlite3.connect(REPLAY.as_uri() + "?mode=ro", uri=True)) as connection:
+            assert [row[1] for row in connection.execute("PRAGMA table_info(used_assertion)")] == [
+                "namespace",
+                "nonce",
+                "expiry",
+            ]
+            rows = connection.execute(
+                "SELECT namespace, nonce, expiry FROM used_assertion"
+            ).fetchall()
+            assert rows
+            for namespace, nonce, expiry in rows:
+                assert all(
+                    len(value) == 64 and all(c in "0123456789abcdef" for c in value)
+                    for value in (namespace, nonce)
+                )
+                assert type(expiry) is int and expiry > 0
+        try:
+            SqliteReplayLedger.initialize_for_offline_test(REPLAY)
+        except FileExistsError:
+            pass
+        else:
+            raise AssertionError("Existing retained ledger replaced")
+        print(f"PASS: {role} ledger has only hashes/expiry; reinitialization refused")
+    elif action == "assert-missing-startup":
+        assert role == "reader" and config["retained_replay"] and not REPLAY.exists()
+        try:
+            serve(config, role)
+        except FileNotFoundError:
+            pass
+        else:
+            raise AssertionError("Startup accepted missing replay state")
+        assert not REPLAY.exists()
+        print("PASS: missing retained ledger refuses listener startup")
+    elif action == "assert-missing-replay":
+        assert role == "reader" and config["retained_replay"] and not REPLAY.exists()
+        print("PASS: missing retained ledger was not recreated")
     elif action == "self-deny":
         assert role == "reader"
         config["targets"]["reader"] = config["listen"][0]

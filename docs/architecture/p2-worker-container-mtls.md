@@ -83,10 +83,11 @@ This smoke covers **one tenant, nonclinical SAVED flow**; it does not establish
 all-role/all-tenant container acceptance, medical downgrade during processing,
 MISSING behavior in containers, production broker identity or database isolation.
 Those broader authorization behaviors have earlier unit/integration coverage,
-not this container proof. Replay is still process-local in this harness.
+not this container proof. The default variant uses process-local replay; a separate
+[retained-volume variant](p2-worker-replay-lifecycle.md) now passes container
+restart, unexpired-token replay and missing-store denial checks.
 
-Next: retained replay-volume/restart lifecycle tests with disposable keys, then
-separately packaged trusted membership service and its narrow DB policy. Real
+Next: separately packaged trusted membership service and its narrow DB policy. Real
 CA/signing-key custody/unlock/rotation/revocation, production deadlines and
 backpressure, exact Snowflake query/views/principals/grants/rollback review,
 separately approved live acceptance and governed evidence display remain open.

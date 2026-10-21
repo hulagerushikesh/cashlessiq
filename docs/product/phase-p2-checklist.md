@@ -5,6 +5,19 @@ Last updated: 21 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Retained replay volume/restart candidate — latest
+
+Both reader and validator now pass actual container restart acceptance with their
+own retained local ledger volume: consumed unexpired parent/child capabilities
+deny, fresh capabilities succeed. Hash/expiry-only storage, mount isolation,
+refused reinitialization and missing-state request/startup denial are checked.
+No automatic reset or memory fallback; disposable volumes removed afterward.
+See [scope/evidence/recovery limits](../architecture/p2-worker-replay-lifecycle.md).
+
+342 backend and 145 root tests remain green. No production code/public API/startup
+changes, real keys, deployment, Snowflake use or push. Next is trusted membership
+service packaging/narrow DB policy; production ledger/key recovery stays gated.
+
 ### Private container mTLS/delegation — latest
 
 Four disposable containers now run the canonical relay/validator/membership
