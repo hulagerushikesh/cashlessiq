@@ -44,7 +44,7 @@ operator's credentials or raw-input API adapter.
 
 | Remaining gate | What closes it |
 | --- | --- |
-| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted DB composition/verified TLS tests pass; fixed connection factory passes offline tests; disposable TLS acceptance with that factory, actual custody/clock controls and service wiring remain |
+| Worker security | Private mTLS/delegation, retained replay, package/network/mount and restricted DB composition/verified TLS tests pass; fixed factory passes offline and disposable TLS acceptance; combined replay/TLS lifecycle, actual custody/clock controls and service wiring remain |
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
@@ -534,8 +534,16 @@ omitted the newly added module. Full API/DB/browser and remote CI were not rerun
 See [implementation limitations and next acceptance](../architecture/p2-runtime-lifecycle.md).
 Normal startup, public UI and API contracts are unchanged. No Snowflake spend,
 real credential reads, service/grant changes, deployment or P3 work.
-Next: disposable restricted PostgreSQL/TLS acceptance using this factory, then
-combined replay/TLS lifecycle controls. Live isolation/evidence/P2 exit remain open.
+Subsequent disposable restricted PostgreSQL/TLS acceptance now uses the fixed
+factory inside the running membership service. TLS-1.3/empty-search-path,
+hostname/CA/missing-CA, hostile ambient configuration, trust restoration,
+disclosure/deactivation/grant changes and outage checks pass. Root **175**,
+factory **55** and API/PostgreSQL **362** tests pass; lint/format/whitespace checks
+pass. [Evidence and limits](../architecture/p2-membership-db-tls.md) record the
+initial assertion-format correction and successful rerun. No Snowflake, normal
+runtime activation, browser/build/remote CI, push or deployment for this step.
+Next: combined retained replay/TLS lifecycle controls. Live isolation/evidence/
+P2 exit remain open.
 
 ## References
 

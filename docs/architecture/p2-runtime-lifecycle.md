@@ -86,9 +86,14 @@ requirement to disable GSS encryption to force TLS:
 Fifty-five offline tests pass, including actual SQLAlchemy dialect parameter
 assembly with a fake psycopg connector that stops before any libpq I/O. This is
 not an actual TLS handshake, certificate-file check, runtime principal acceptance
-or whole-operation deadline. Reuse of the disposable DB/TLS harness with this
-factory is the exact next implementation step. The old test-only factory is
-unchanged. No real credentials, source access, deployment or activation.
+or whole-operation deadline. Subsequent
+[disposable DB/TLS acceptance](p2-membership-db-tls.md) now passes with this
+factory inside the running test membership service, including failed trust,
+restored trust, disclosure/deactivation/grant changes and DB outage. The old
+test-only factory is unchanged for diagnostics/legacy plaintext tests. Combined
+retained replay/TLS lifecycle acceptance is next; actual custody, durable clock
+controls and normal service wiring remain open. No real credentials, source
+access, deployment or activation.
 
 | Material | Only permitted runtime recipient |
 | --- | --- |

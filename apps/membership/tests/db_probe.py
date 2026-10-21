@@ -1,18 +1,82 @@
 """Explicit test image only: synthetic restricted-principal DB acceptance."""
 
 import json
+import os
 import sys
 from pathlib import Path
 from uuid import UUID
 
 from ciq_api.worker_authority import WorkerDenied
 from ciq_api.worker_membership_store import RestrictedMembershipStore
+from ciq_membership_runtime.connection import (
+    MembershipConnectionFactory,
+    MembershipDatabaseConfig,
+)
 from sqlalchemy import URL, create_engine, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.pool import NullPool
 
 TENANT = UUID("10000000-0000-0000-0000-000000000001")
 USER = "20000000-0000-0000-0000-000000000001"
+
+
+def fixed_factory(*, hostname=None):
+    """Test-only credential injection into the actual inactive candidate."""
+    config = json.loads(Path("/run/ciq/db.json").read_text())
+    address = config.pop("query")["hostaddr"]
+    return MembershipConnectionFactory(
+        MembershipDatabaseConfig(
+            **(config | {"host": hostname or config["host"]}),
+            hostaddr=address,
+            ca_file="/run/ciq/db-ca.pem",
+        )
+    )
+
+
+def factory_tls_check(action):
+    """Actual factory over disposable TLS; no raw driver errors may escape."""
+    factory = fixed_factory(
+        hostname="wrong-membership-db.test" if action == "tls-hostname" else None
+    )
+    try:
+        if action == "factory-ambient":
+            for name, value in (("PGSSLMODE", "disable"), ("PGSERVICE", "untrusted")):
+                os.environ[name] = value
+                try:
+                    with factory.connect():
+                        raise AssertionError("Ambient libpq setting was accepted")
+                except WorkerDenied as error:
+                    assert str(error) == "Worker access denied"
+                finally:
+                    del os.environ[name]
+            action = "tls-check"  # Same factory succeeds after contamination is removed.
+        if action == "tls-check":
+            with factory.connect() as connection:
+                row = connection.execute(
+                    text("SELECT ssl,version FROM pg_stat_ssl WHERE pid=pg_backend_pid()")
+                ).one()
+                schemas = connection.scalar(text("SELECT current_schemas(false)"))
+            # Assert outside the redacting context so a probe assertion is not
+            # mistaken for a connection denial. No raw connection data emitted.
+            assert row.ssl is True and row.version == "TLSv1.3"
+            assert schemas == []
+            print("PASS: fixed factory uses verified TLS 1.3 and empty search path")
+            return
+        try:
+            with factory.connect():
+                raise AssertionError("Bad TLS configuration connected")
+        except WorkerDenied as error:
+            assert str(error) == "Worker access denied"
+        store = RestrictedMembershipStore(factory.connect, schema="ops")
+        try:
+            store.lookup(USER, TENANT)
+        except WorkerDenied:
+            pass
+        else:
+            raise AssertionError("Factory failure became absent membership")
+        print(f"PASS: fixed factory {action} denies without fallback")
+    finally:
+        factory.close()
 
 
 def test_engine(*, verified_tls=False, hostname=None):
@@ -183,5 +247,8 @@ if __name__ == "__main__":
         plaintext_denied()
     elif action.startswith("tls-"):
         tls_check(action)
+        factory_tls_check(action)
+    elif action == "factory-ambient":
+        factory_tls_check(action)
     else:
         main(action)

@@ -1,6 +1,7 @@
 # P2 disposable membership database TLS acceptance
 
-21 October 2026. Offline test target only; no production factory or service activation.
+21 October 2026. Offline test target only; fixed candidate factory tested,
+no normal service activation.
 
 ## Reproduce
 
@@ -69,6 +70,41 @@ The test-only factory still supports an explicit plaintext mode for the older
 isolated DB harness; that is **not an approved production configuration switch**.
 
 ## Next gate
+
+### Fixed factory acceptance — latest 21 October checkpoint
+
+TLS-mode membership now injects the actual
+`ciq_membership_runtime.connection.MembershipConnectionFactory` into
+`RestrictedMembershipStore`. Only the explicit disposable test target reads its
+synthetic credential fixture; default runtime startup remains disabled. The
+legacy test engine is retained for the older plaintext harness and precise
+driver-error diagnostic probes, not TLS-mode membership authorization.
+
+The real factory connection independently reports TLS 1.3 and an empty resolved
+search path. Its wrong-hostname, unrelated-CA and missing-CA probes return only
+generic denial. The diagnostic engine separately verifies the precise libpq
+failure causes; no driver error is exposed through the factory. Hostile
+`PGSSLMODE=disable` and `PGSERVICE` deny in a separate probe process; removing
+those settings allows the same factory to connect again. This is not a claim
+against concurrent mutation by trusted process code.
+
+The running TLS-mode membership service uses this factory throughout the
+delegated request, bad/missing CA and restored-trust checks, disclosure change,
+all three active-flag revocations, grant loss/restoration and DB outage. No
+service replacement or fixture fallback is used to make recovery succeed.
+Explicit plaintext is rejected by the DB independently, never attempted by
+the fixed factory. Retained replay is still a separate test mode.
+
+The first run stopped at a test assertion expecting a particular textual
+representation of empty `search_path`; the delegated factory connection had
+already succeeded. The probe now checks `current_schemas(false) = []` outside
+the redacting context, so assertion errors are not confused with DB denial.
+The rerun passed. Both invocations clean up their exact disposable resources.
+Latest regression: **175 root**, **55 offline factory**, **362 API/PostgreSQL**
+tests pass; repository Ruff, changed-file formatting and whitespace checks pass.
+Browser/build and remote CI were not rerun. No Snowflake calls or spend.
+
+### Earlier diagnostic-engine checkpoint (historical)
 
 Verification: backend **362** and root rules **145** tests pass, along with Ruff,
 changed-file formatting and git whitespace checks. The independent restricted-DB

@@ -549,6 +549,7 @@ def main(*, retained_replay=False, restricted_db=False, verified_db_tls=False):
                     db_probe("tls-check")
                     db_probe("tls-hostname")
                     db_probe("plaintext-denied")
+                    db_probe("factory-ambient")
                     ca_path = root / "membership" / "db-ca.pem"
                     # Existing engine and server remain running. Each new libpq
                     # connection must reload/verify the explicitly mounted CA.

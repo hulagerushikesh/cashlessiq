@@ -99,10 +99,14 @@ def serve(config, role):
         if config.get("restricted_db"):
             # Imports exist only in the explicit membership test target.
             from ciq_api.worker_membership_store import RestrictedMembershipStore
-            from ciq_membership_runtime.db_probe import test_engine
+            from ciq_membership_runtime.db_probe import fixed_factory, test_engine
 
-            engine = test_engine(verified_tls=config.get("verified_db_tls", False))
-            lookup = RestrictedMembershipStore(engine.connect, schema="ops").lookup
+            if config.get("verified_db_tls"):
+                factory = fixed_factory()
+                lookup = RestrictedMembershipStore(factory.connect, schema="ops").lookup
+            else:
+                engine = test_engine()
+                lookup = RestrictedMembershipStore(engine.connect, schema="ops").lookup
         else:
 
             def lookup(subject, tenant):
@@ -198,6 +202,8 @@ def serve(config, role):
         for listener in listeners:
             listener.shutdown()
             listener.server_close()
+        if role == "membership" and config.get("verified_db_tls"):
+            factory.close()
 
 
 def check(config, action):
