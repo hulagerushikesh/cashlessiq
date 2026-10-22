@@ -1,5 +1,6 @@
 """Bounded, network-free clock-domain/restart test; never real clock-health acceptance."""
 
+import argparse
 import hashlib
 import json
 import subprocess
@@ -21,25 +22,28 @@ def docker(*arguments, timeout=60):
     ).stdout.strip()
 
 
-def main():
+def main(*, unified=False):
     prefix = f"ciq-clock-{uuid4().hex[:12]}"
     image = f"{prefix}:test"
     candidate = f"{prefix}:candidate"
     volume = f"{prefix}-state"
+    module = "worker_guard_authority" if unified else "worker_clock"
     expected_hash = hashlib.sha256(
-        (ROOT / "apps/api/src/ciq_api/worker_clock.py").read_bytes()
+        (ROOT / f"apps/api/src/ciq_api/{module}.py").read_bytes()
     ).hexdigest()
+    probe_name = "guard_probe" if unified else "clock_probe"
     containers = [f"{prefix}-one", f"{prefix}-two"]
     created = []
     volume_created = False
 
     def probe(container, operation):
         return docker(
-            "exec", container, "python", "-m", "ciq_worker_runtime.clock_probe", operation
+            "exec", container, "python", "-m", f"ciq_worker_runtime.{probe_name}", operation
         )
 
     try:
-        for target, tag in (("clock-test", image), ("candidate", candidate)):
+        test_target = "guard-test" if unified else "clock-test"
+        for target, tag in ((test_target, image), ("candidate", candidate)):
             docker(
                 "build",
                 "--target",
@@ -73,7 +77,7 @@ def main():
             "python",
             image,
             "-m",
-            "ciq_worker_runtime.clock_probe",
+            f"ciq_worker_runtime.{probe_name}",
             "initialize",
         )
         for name in containers:
@@ -119,6 +123,9 @@ def main():
         assert first["boot"] == second["boot"] == third["boot"]
         assert first["mono_ns"] <= second["mono_ns"] <= third["mono_ns"]
         assert first["wall_ns"] <= second["wall_ns"] <= third["wall_ns"]
+        if unified:
+            assert first["boottime_ns"] <= second["boottime_ns"] <= third["boottime_ns"]
+            assert all(value["boottime_ns"] >= value["mono_ns"] for value in (first, second, third))
         assert probe(containers[1], "latch") == "Guard denied as required"
         docker("restart", containers[0])
         assert probe(containers[0], "deny") == "Guard denied as required"
@@ -137,11 +144,16 @@ def main():
             candidate,
             "-c",
             "import importlib.util,hashlib,sys; from pathlib import Path; "
-            "import ciq_api.worker_clock as clock; "
+            "import importlib; clock=importlib.import_module('ciq_api.'+sys.argv[2]); "
             "assert hashlib.sha256(Path(clock.__file__).read_bytes()).hexdigest()==sys.argv[1]; "
             "assert importlib.util.find_spec('ciq_worker_runtime.clock_probe') is None; "
-            "assert importlib.util.find_spec('ciq_api.main') is None",
+            "assert importlib.util.find_spec('ciq_worker_runtime.guard_probe') is None; "
+            "assert importlib.util.find_spec('ciq_api.main') is None; "
+            "assert all(importlib.util.find_spec(n) is None for n in "
+            "('sqlalchemy','psycopg','fastapi','snowflake','ciq_api.worker_guard_broker')); "
+            "import ciq_api.worker_guard_health,ciq_api.worker_guard_transport",
             expected_hash,
+            module,
         )
         try:
             docker("run", "--rm", "--network", "none", "--read-only", candidate)
@@ -150,7 +162,8 @@ def main():
             assert "Worker activation unavailable" in error.stderr
         else:
             raise AssertionError("Default worker unexpectedly activated")
-        print(f"{prefix}: PASS clock-domain/restart/latch/artifact; fake health only")
+        label = "v3 " if unified else ""
+        print(f"{prefix}: PASS {label}clock-domain/restart/latch/artifact; fake health only")
     finally:
         failures = []
         for name in created:
@@ -174,4 +187,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--unified-guard", action="store_true")
+    main(unified=parser.parse_args().unified_guard)

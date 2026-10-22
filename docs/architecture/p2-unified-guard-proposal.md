@@ -257,8 +257,9 @@ account changes, deployment or P3 are included.
 
 ## Unified offline authority/transport checkpoint — 22 October
 
-`worker_guard_authority.py` introduces separate explicitly constructed v3 broker,
-reader and delegated validator boundaries. They do not wrap the legacy clock or
+`worker_guard_authority.py` and the API-only `worker_guard_broker.py` introduce
+separate explicitly constructed v3 broker, reader and delegated validator
+boundaries. They do not wrap the legacy clock or
 replay API or change normal startup. Existing source validation and TLS framing
 are reused; health/time/nonce acceptance uses the one v3 database per authority.
 

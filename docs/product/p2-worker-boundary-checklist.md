@@ -3,6 +3,15 @@
 Date: 19 October 2026. Design approved by Rushikesh; provisioning not approved.
 Design: [validation/credential boundary](../architecture/p2-validation-boundary.md).
 
+Latest 22 October checkpoint: canonical v3 authorities are now in the minimal
+worker wheel/image, separate from the API-only broker; isolated imports have no
+API/DB/Snowflake/collector dependencies. Real two-hop loopback TLS passes across
+two tenants/all roles. A separate network-free Linux two-container probe retains
+v3 replay/latch state across restart with fabricated signed health. Neither is a
+combined v3 private-container/membership-DB-TLS or real-host/custody acceptance.
+See the current [P2 checklist](phase-p2-checklist.md); older counts below are
+historical, not the latest status. Default startup and public site remain unchanged.
+
 ## Implemented slice
 
 - [x] Explicit broker-issued RS256 assertions using injected signing key;

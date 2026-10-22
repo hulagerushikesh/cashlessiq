@@ -31,8 +31,8 @@ from ciq_api.worker_delegation import OfflineDelegatedValidator, TransportPeer
 from ciq_api.worker_guard_authority import (
     GuardedAuthority,
     GuardedReadRelay,
-    GuardedSummaryBroker,
 )
+from ciq_api.worker_guard_broker import GuardedSummaryBroker
 from ciq_api.worker_guard_health import OfflineHealthGuard
 from ciq_api.worker_guard_state import GuardStateConfig, GuardStateDenied, OfflineGuardState
 from ciq_api.worker_guard_transport import GuardedPrivateSummaryServer, GuardedSummaryServer

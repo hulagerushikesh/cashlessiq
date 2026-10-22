@@ -156,6 +156,17 @@ Latest verification: **94 new integration tests; backend 886, root 193**, lint,
 changed-Python formatting and whitespace pass. Existing negative-model serializer
 warning remains; no browser/build/container/remote CI rerun in this milestone.
 
+**Latest artifact checkpoint:** v3 broker was split into an API-only module to
+remove accidental API/SQLAlchemy imports from workers. The minimal wheel/image
+now packages and imports the canonical v3 authority/guard/health/transport only,
+with no broker/DB/Snowflake/collector dependencies. A network-free two-container
+Linux probe verifies still-unexpired replay and retained denial across restart;
+default startup remains disabled. See [packaging evidence and limits](../architecture/p2-worker-packaging.md#latest-v3-artifactdomain-checkpoint--22-october).
+Verification: **backend 886, root 200**, isolated worker package checks and both
+v3/legacy Linux container probes pass. Lint/format/whitespace pass; invocation-owned
+resources removed. Existing negative-model warning remains. No full private
+mTLS/DB-TLS topology, browser/frontend build or remote CI rerun this milestone.
+
 Next remaining P2 work is operational, not more primitive nonce increments:
 review real-host lifecycle/health-provider/custody/readiness/deadline/fencing and
 service wiring; independently complete approved Snowflake governance/service

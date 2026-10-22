@@ -8,6 +8,8 @@
 !apps/worker/tests/
 !apps/worker/tests/isolation_probe.py
 !apps/worker/tests/mtls_probe.py
+!apps/worker/tests/clock_probe.py
+!apps/worker/tests/guard_probe.py
 !apps/api/
 !apps/api/src/
 !apps/api/src/ciq_api/
@@ -22,6 +24,12 @@
 !apps/api/src/ciq_api/worker_authority.py
 !apps/api/src/ciq_api/worker_delegation.py
 !apps/api/src/ciq_api/worker_replay.py
+!apps/api/src/ciq_api/worker_clock.py
+!apps/api/src/ciq_api/worker_health.py
+!apps/api/src/ciq_api/worker_guard_state.py
+!apps/api/src/ciq_api/worker_guard_health.py
+!apps/api/src/ciq_api/worker_guard_authority.py
+!apps/api/src/ciq_api/worker_guard_transport.py
 !apps/api/src/ciq_api/worker_transport.py
 !apps/api/src/ciq_api/worker_membership.py
 !packages/

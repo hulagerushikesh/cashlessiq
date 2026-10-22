@@ -5,6 +5,28 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Isolated v3 artifact and disposable Linux restart acceptance — 22 October
+
+- [x] Split API-only v3 broker from worker-safe authorities; workers do not acquire
+  broker/auth/models or SQLAlchemy dependencies through the new module.
+- [x] Exact canonical v3 wheel/build-context allowlists; isolated non-editable
+  imports and source-byte checks pass without API/DB/Snowflake/collector/probes.
+- [x] Explicit network-free `guard-test` target exercises two disposable Linux
+  containers sharing one retained authority file: consume, still-unexpired replay
+  from another container and restart, then persistent rollback latch across restart.
+- [x] Default candidate remains probe-free, non-root and activation-refusing;
+  real host/provider, keys, source startup and website remain unchanged.
+
+See [artifact evidence/limits](../architecture/p2-worker-packaging.md#latest-v3-artifactdomain-checkpoint--22-october).
+This is fabricated signed health with actual Linux clock-domain samples, not
+synchronization/suspend proof or real custody/readiness acceptance. No Snowflake
+spend, account change, real credential, deployment or P3.
+Verification: **7 new package regressions; root 200, backend 886**. Isolated
+non-editable package/import/refusal and v3/legacy Linux container probes pass;
+owned test resources removed. Lint/changed-Python format/whitespace pass. Existing
+negative-model serializer warning remains. No browser/frontend build/full
+private-container mTLS/DB-TLS topology or remote CI rerun in this milestone.
+
 ### Unified v3 broker, authority, TLS and stopped recovery — 22 October
 
 - [x] Explicit offline v3 broker signs generation-bound parent/child capabilities
