@@ -282,6 +282,7 @@ API/PostgreSQL **681** and root **193** pass; Ruff/format/whitespace pass.
 Browser/build/container/remote CI not rerun. No Snowflake call, real credential,
 account change, runtime activation, push or deployment; P2 remains open.
 
-The next [unified v3 state/lifecycle design](p2-unified-guard-proposal.md) is drafted
-for owner review. It is **not approved or implemented** and does not expand the
-existing offline prototype approval into runtime provisioning or activation.
+The next [unified v3 state/lifecycle design](p2-unified-guard-proposal.md) is now
+approved for inactive offline implementation; its first state-foundation
+checkpoint is recorded there. This does not expand approval into real host
+provisioning, credentials or runtime activation.

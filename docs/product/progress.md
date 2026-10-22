@@ -118,9 +118,17 @@ rerun, Snowflake call, deployment or push. P2 remains about 60%.
 The [unified state/lifecycle proposal](../architecture/p2-unified-guard-proposal.md)
 is now drafted for owner review: one transaction, fresh conservative time bounds,
 explicit claim interface, retained denial and stopped-generation recovery.
-**Implementation approval is pending.** This design-only increment changes no
-runtime behavior or completion estimate; prior test counts above are unchanged,
-not rerun for the proposal. No Snowflake spend or deployment.
+**Offline implementation approved:** the owner directed pushing the completed
+commits and continuing. All 14 prior commits were pushed through `baf7849`.
+The v3 state foundation now implements strict configuration, explicit new-file
+test provisioning and bounded exact-schema/row inspection with no repair or
+reset. It intentionally exposes no health/authorization/nonce-consumption method.
+Verification: 44 new state tests, full backend 725, root 193 and
+Ruff/format/whitespace pass; no browser/build/container/remote CI rerun locally.
+No Snowflake spend, live credential, startup change or deployment. P2 remains
+about 60%. Next: unified evidence observation and latch primitive.
+Owner permits pushing completed verified commits without another prompt;
+deployment/live account changes remain separate gates.
 
 No website deployment or P3 is included. User interviews/customer rollout and
 real-data operational gates remain separate; synthetic-alpha permission does

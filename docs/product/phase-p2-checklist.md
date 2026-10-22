@@ -5,14 +5,27 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
-### Unified guard design — 22 October, approval pending
+### Unified guard state foundation — 22 October
+
+Owner approved continuing the offline prototype and pushing verified commits.
+Strict v3 configuration/canonical binding, explicit test-only new-file
+provisioning and bounded existing-file/schema/row inspection are implemented.
+No health or authorization methods are exposed; sequence-zero/unlatched state
+is not readiness. Legacy/corrupt/mismatched state never triggers repair or reset.
+See [checkpoint and remaining scope](../architecture/p2-unified-guard-proposal.md).
+Verification: 44 new state tests, backend 725, root 193; Ruff/format/whitespace
+pass. No browser/build/container/remote CI rerun locally. No Snowflake spend,
+deployment, live credential or P3. P2 remains about 60%.
+
+### Unified guard design — 22 October, historical review checkpoint
 
 The [v3 offline proposal](../architecture/p2-unified-guard-proposal.md) specifies
 one health/clock/nonce transaction, post-verification freshness, conservative
 integer time bounds, claim-consumption interface changes, restart/latch behavior
 and explicit stopped-generation recovery tests. This is a design, not an
 implemented guard or permission to change state, keys, host services or startup.
-Owner approval is required before the new offline implementation. No code/tests
+Owner approval was required before the new offline implementation (received in
+the checkpoint above). At this earlier design-only checkpoint, no code/tests
 changed or rerun, Snowflake spend, push or deployment. P2 remains about 60%.
 
 ### Signed retained health in worker tests — 22 October

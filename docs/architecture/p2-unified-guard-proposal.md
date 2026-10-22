@@ -1,13 +1,15 @@
-# P2 unified health, clock and replay guard — proposed, not approved
+# P2 unified health, clock and replay guard — approved offline prototype scope
 
-22 October 2026. Design-only follow-up to the
+22 October 2026. Follow-up to the
 [signed health composition](p2-clock-health-proposal.md#signed-worker-composition-checkpoint--22-october).
-No implementation, migration, provisioning or activation is authorized by this
-document. The existing test-local bridge must not become the runtime adapter.
+Owner directed “push the commits … and go next” after the offline implementation
+approval request. This authorizes the bounded offline prototype below, not real
+host provisioning, migration or runtime activation. The existing test-local
+bridge must not become the runtime adapter.
 
-## Decision requested
+## Approved implementation boundary
 
-Approve an **inactive, offline v3 guard prototype** with one existing-file SQLite
+Implement an **inactive, offline v3 guard prototype** with one existing-file SQLite
 transaction per observation/nonce consumption, independently signed fake health,
 injected clock samples and disposable test keys/state. No real daemon, host,
 credentials, Snowflake calls, network deployment, purchases or default startup.
@@ -125,11 +127,11 @@ generation/epoch as an explicit coordinated test operation, and provision new
 absent paths with matching configuration. Start only after all bindings agree.
 Old unused parent/child capabilities and old health envelopes must fail. New
 healthy capabilities may pass; old state files remain unchanged. No production
-recovery CLI/controller or real key rotation is included in this approval request.
+recovery CLI/controller or real key rotation is included in this offline scope.
 Whole-file rollback by a trusted administrator and stolen trusted keys cannot be
 detected solely by SQLite/signatures; external custody/fencing remains necessary.
 
-## Ordered offline acceptance if approved
+## Ordered offline acceptance
 
 1. Strict models/schema and explicit new-file provisioning; reject v1/v2, missing,
    corrupt, mismatched policy/key/authority/generation and unexpected schema.
@@ -148,3 +150,35 @@ detected solely by SQLite/signatures; external custody/fencing remains necessary
 Real provider, packaging/secret mounts, target-host policy, governance/service
 identities and authenticated live acceptance stay in the P2 checklist. No P3,
 deployment or completion-percentage increase follows from this proposal.
+
+## First implementation checkpoint — state foundation, 22 October
+
+`worker_guard_state.py` implements only item 1's inactive state foundation.
+Explicit strict/frozen configuration binds authority, assertion generation,
+health key fingerprint, health host/boot/generation/epoch, full canonical health
+policy and fictional capacity/size/gap/step limits. Canonical source ordering
+makes the configuration fingerprint deterministic. Fingerprints are bindings,
+not evidence that a private key exists or that the host is healthy.
+
+Explicit new-file test provisioning creates exact v3 singleton and nonce schemas.
+The stored canonical configuration includes the complete policy, not just its
+hash. Existing-file inspection checks ownership/mode, regular file/symlink/hardlink
+shape and byte size, DELETE journal mode, integrity, exact schema SQL including
+constraints and indexes/triggers, row counts, strict numerical/continuity shapes,
+configuration identity, unsafe latch and bounded hashed nonce/expiry rows.
+Missing/legacy/invalid state is denied without repair, pruning or row mutations.
+Lock acquisition is bounded; no retry/fallback exists. Read-only inspection takes
+the planned write lock then rolls back; it is **not** health or authorization.
+
+This module exposes no `check`, `consume`, evidence callback, live provider,
+collector, clock, authority wiring or recovery operation. A freshly provisioned
+sequence-zero state is data, not readiness. It has no effect on the old v1/v2
+prototypes, worker package, API startup or website. File checks are preliminary:
+parent-directory custody, path races, malicious storage and whole-file rollback
+are not solved; hardware power-loss and hard deadlines remain unproven.
+
+Next: item 2, the unified signed-evidence observation/latch and conservative time
+interval primitive, before nonce authorization and any transport integration.
+Verification: **44 new state tests**, full API/PostgreSQL **725**, root **193**,
+Ruff/format/whitespace pass. Browser/build/container/remote CI not rerun locally.
+No Snowflake calls, real credentials, account changes, deployment or P3.
