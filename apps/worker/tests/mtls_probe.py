@@ -53,9 +53,11 @@ RECOVERED_REPLAY = Path("/var/lib/ciq-replay/recovered.sqlite")
 DAMAGED_TEST_STATE = b"disposable corrupt replay evidence"
 
 
-def deny_unexpired(client, token):
+def deny_unexpired(client, token, *, now=None):
     # An expired token is not evidence of retained replay protection.
-    assert int(time.time()) < jwt.decode(token, options={"verify_signature": False})["exp"]
+    assert (int(time.time()) if now is None else now) < jwt.decode(
+        token, options={"verify_signature": False}
+    )["exp"]
     try:
         client.summary(token)
     except WorkerDenied:
@@ -139,23 +141,43 @@ def serve(config, role):
             membership=transport(config, "membership", membership=True).lookup,
             clock=lambda: int(time.time()),
         )
-        if config.get("retained_replay"):
+        guard_options = {}
+        if config.get("unified_guard"):
+            from ciq_api.worker_guard_authority import GuardedAuthority, GuardedReadRelay
+            from ciq_api.worker_guard_transport import GuardedPrivateSummaryServer
+            from ciq_worker_runtime.guard_mtls_fixture import GENERATION, load
+            from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
+            guard, evidence = load()
+            common.pop("clock")
+            common["public_key"] = load_pem_public_key(common["public_key"])
+            common.update(generation=GENERATION, guard=guard, evidence=evidence)
+            guard_options = dict(guard=guard, evidence=evidence)
+        elif config.get("retained_replay"):
             state = REPLAY.stat()  # No implicit creation/recovery at listener startup.
             assert state.st_uid == 10001 and state.st_mode & 0o777 == 0o600
             assert REPLAY.parent.stat().st_mode & 0o777 == 0o700
             common["replay"] = SqliteReplayLedger(REPLAY, capacity=1000)
         if role == "reader":
-            authority = DetailAuthority(
+            authority_class = GuardedAuthority if config.get("unified_guard") else DetailAuthority
+            authority = authority_class(
                 **common,
                 audience=AUDIENCES[role],
                 disclosure="nonclinical",
             )
-            relay = OfflineReadRelay(
-                authority=authority,
-                public_key=common["public_key"],
-                validator_audience=AUDIENCES["validator"],
-                invoke_validator=transport(config, "validator").summary,
-            )
+            if config.get("unified_guard"):
+                relay = GuardedReadRelay(
+                    authority=authority,
+                    validator_audience=AUDIENCES["validator"],
+                    invoke=transport(config, "validator").summary,
+                )
+            else:
+                relay = OfflineReadRelay(
+                    authority=authority,
+                    public_key=common["public_key"],
+                    validator_audience=AUDIENCES["validator"],
+                    invoke_validator=transport(config, "validator").summary,
+                )
 
             def callback(token, *, peer):
                 assert peer.audience == "broker"
@@ -168,7 +190,10 @@ def serve(config, role):
                     path.write_text(child)
                 return result
         else:
-            authority = DelegatedSummaryAuthority(
+            authority_class = (
+                GuardedAuthority if config.get("unified_guard") else DelegatedSummaryAuthority
+            )
+            authority = authority_class(
                 **common,
                 audience=AUDIENCES[role],
                 readers={AUDIENCES["reader"]: "nonclinical"},
@@ -185,8 +210,12 @@ def serve(config, role):
                 read_inputs=lambda _: inputs,
             )
             callback = OfflineDelegatedValidator(authority, worker).validate
+        server_class = (
+            GuardedPrivateSummaryServer if config.get("unified_guard") else PrivateSummaryServer
+        )
         listeners = [
-            PrivateSummaryServer(
+            server_class(
+                **guard_options,
                 endpoint=PrivateEndpoint(address, 8443),
                 context=context(True),
                 peers=peers,
@@ -216,7 +245,7 @@ def check(config, action):
     key = (ROOT / "signing.key").read_bytes()
 
     def issue():
-        return issue_detail_assertion(
+        token = issue_detail_assertion(
             key,
             subject=SUBJECT,
             membership=Membership(TENANT, "processor"),
@@ -224,8 +253,17 @@ def check(config, action):
             validator_audience=AUDIENCES["validator"],
             request_id="GOL001",
             scopes=source_alpha_scopes(),
-            now=int(time.time()),
+            now=1000 if config.get("unified_guard") else int(time.time()),
         )
+        if config.get("unified_guard"):
+            from ciq_worker_runtime.guard_mtls_fixture import GENERATION
+
+            parent = jwt.decode(token, options={"verify_signature": False})
+            child = jwt.decode(parent["summary_token"], options={"verify_signature": False})
+            child["assertion_generation"] = parent["assertion_generation"] = GENERATION
+            parent["summary_token"] = jwt.encode(child, key, algorithm="RS256")
+            token = jwt.encode(parent, key, algorithm="RS256")
+        return token
 
     client = transport(config, "reader")
     if action == "prepare-generation":
@@ -251,7 +289,11 @@ def check(config, action):
         print("PASS: consumed parent/child recorded only in test tmpfs")
         return
     if action == "replay-parent":
-        deny_unexpired(client, Path("/tmp/consumed-parent").read_text())
+        deny_unexpired(
+            client,
+            Path("/tmp/consumed-parent").read_text(),
+            now=1000 if config.get("unified_guard") else None,
+        )
         print("PASS: unexpired parent rejected after reader container restart")
         return
     if action == "fresh":
@@ -304,6 +346,11 @@ def check(config, action):
 
 if __name__ == "__main__":
     action, role = sys.argv[1:]
+    if action == "initialize-guard":
+        from ciq_worker_runtime.guard_mtls_fixture import initialize
+
+        initialize(role)
+        raise SystemExit(0)
     if action in {"initialize-replay", "initialize-recovered-replay"}:
         # Explicit offline provisioning only, never service startup recovery.
         import os
@@ -350,7 +397,11 @@ if __name__ == "__main__":
         serve(config, role)
     elif action == "replay-child":
         assert role == "reader" and config["retained_replay"]
-        deny_unexpired(transport(config, "validator"), Path("/tmp/consumed-child").read_text())
+        deny_unexpired(
+            transport(config, "validator"),
+            Path("/tmp/consumed-child").read_text(),
+            now=1000 if config.get("unified_guard") else None,
+        )
         print("PASS: unexpired child rejected after validator container restart")
     elif action == "reject-old-child":
         assert role == "reader" and config["retained_replay"]
@@ -382,6 +433,18 @@ if __name__ == "__main__":
         print(hashlib.sha256(REPLAY.read_bytes()).hexdigest())
     elif action == "audit-replay":
         assert role in {"reader", "validator"} and config["retained_replay"]
+        if config.get("unified_guard"):
+            from ciq_worker_runtime.guard_mtls_fixture import load
+
+            guard, evidence = load()
+            interval = guard.observe(evidence)
+            snapshot, nonces = guard.inspect()
+            assert snapshot.unsafe == 0 and snapshot.sequence == 1 and nonces
+            assert all(
+                len(n.nonce) == 64 and n.expiry * 1_000_000_000 > interval.upper_ns for n in nonces
+            )
+            print(f"PASS: {role} v3 retained state healthy; hashed unexpired nonces only")
+            raise SystemExit(0)
         with closing(sqlite3.connect(REPLAY.as_uri() + "?mode=ro", uri=True)) as connection:
             assert [row[1] for row in connection.execute("PRAGMA table_info(used_assertion)")] == [
                 "namespace",
@@ -410,12 +473,35 @@ if __name__ == "__main__":
         assert not REPLAY.exists()
         try:
             serve(config, role)
-        except FileNotFoundError:
+        except (FileNotFoundError, WorkerDenied):
             pass
         else:
             raise AssertionError("Startup accepted missing replay state")
         assert not REPLAY.exists()
         print("PASS: missing retained ledger refuses listener startup")
+    elif action in {"latch-guard", "assert-latched-startup"}:
+        assert config.get("unified_guard") and role in {"reader", "validator"}
+        from ciq_api.worker_guard_state import GuardStateDenied
+        from ciq_worker_runtime.guard_mtls_fixture import load
+
+        if action == "latch-guard":
+            guard, evidence = load(unsafe=True)
+            try:
+                guard.observe(evidence)
+            except GuardStateDenied:
+                pass
+            else:
+                raise AssertionError("Unsafe fictional clock accepted")
+        else:
+            try:
+                serve(config, role)
+            except WorkerDenied:
+                pass
+            else:
+                raise AssertionError("Latched guard bound a listener")
+        with closing(sqlite3.connect(REPLAY.as_uri() + "?mode=ro", uri=True)) as db:
+            assert db.execute("SELECT unsafe FROM guard_state").fetchone() == (1,)
+        print("PASS: retained v3 denial; no startup repair or listener bind")
     elif action == "assert-missing-replay":
         assert role == "reader" and config["retained_replay"] and not REPLAY.exists()
         print("PASS: missing retained ledger was not recreated")

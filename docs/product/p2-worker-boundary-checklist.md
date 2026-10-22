@@ -7,8 +7,11 @@ Latest 22 October checkpoint: canonical v3 authorities are now in the minimal
 worker wheel/image, separate from the API-only broker; isolated imports have no
 API/DB/Snowflake/collector dependencies. Real two-hop loopback TLS passes across
 two tenants/all roles. A separate network-free Linux two-container probe retains
-v3 replay/latch state across restart with fabricated signed health. Neither is a
-combined v3 private-container/membership-DB-TLS or real-host/custody acceptance.
+v3 replay/latch state across restart with fabricated signed health. A subsequent
+[combined v3 private-container/membership-DB-TLS checkpoint](../architecture/p2-unified-container-acceptance.md)
+now passes one tenant/nonclinical SAVED flow, restart replay, DB trust/revocation/
+outage and retained denial. It freezes fictional time and does not establish a
+real-host/provider/custody boundary or authenticated API-broker activation.
 See the current [P2 checklist](phase-p2-checklist.md); older counts below are
 historical, not the latest status. Default startup and public site remain unchanged.
 

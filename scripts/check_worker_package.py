@@ -55,7 +55,8 @@ for name in ('fastapi','sqlalchemy','alembic','uvicorn','psycopg','snowflake',
              'ciq_api.main','ciq_api.auth','ciq_api.models','ciq_api.worker_broker',
              'ciq_api.worker_guard_broker','ciq_api.worker_health_collect',
              'ciq_worker_runtime.guard_probe','ciq_worker_runtime.clock_probe',
-             'ciq_worker_runtime.mtls_probe','ciq_worker_runtime.isolation_probe'):
+             'ciq_worker_runtime.mtls_probe','ciq_worker_runtime.guard_mtls_fixture',
+             'ciq_worker_runtime.isolation_probe'):
     assert importlib.util.find_spec(name) is None, name
 print('PASS: canonical v3 worker modules, no broker/API/DB/collector/test probes')
 """

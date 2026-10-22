@@ -5,6 +5,31 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Combined v3 workers, private mTLS and restricted DB TLS — 22 October
+
+- [x] Canonical v3 authorities/pre-bind listeners in the five-container private
+  membership/DB-TLS topology, with isolated keys, mounts and authority volumes.
+- [x] Still-valid parent/child replay after respective container restarts, fresh
+  success and strict summary-only SAVED result.
+- [x] Independent DB trust, disclosure, activation, grant and outage denials;
+  restoration succeeds without membership/factory restart.
+- [x] Retained fictional-health rollback latch rejects delivery and startup after
+  restart; missing reader state refuses startup without repair.
+- [x] Membership Docker build context now includes required canonical worker files;
+  default artifacts remain inactive and exclude topology helpers.
+
+See [combined acceptance and explicit limits](../architecture/p2-unified-container-acceptance.md).
+This uses frozen fictional time/health and a test signing driver, not a real
+provider or API broker. One container tenant/nonclinical SAVED flow only;
+two-tenant/all-role/MISSING evidence remains separate. Verification: **12 new
+fixture + 2 package regressions; backend 898, root 202**. Combined v3 run and
+isolated worker package checks pass. No source/AI spend, live account/credential
+changes, deployment or P3. Operational and live-source P2 gates remain open.
+The legacy combined replay/DB-TLS path, actual-Linux v3 clock/artifact probe,
+isolated membership package/default-refusal and lint/format/whitespace checks
+also pass. Owned Docker test resources removed. One existing negative-model
+serializer warning remains; no browser/frontend build or remote CI rerun here.
+
 ### Isolated v3 artifact and disposable Linux restart acceptance — 22 October
 
 - [x] Split API-only v3 broker from worker-safe authorities; workers do not acquire

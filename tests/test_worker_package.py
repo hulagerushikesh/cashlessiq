@@ -64,3 +64,20 @@ def test_docker_context_includes_every_canonical_module_but_not_broker():
     dockerfile = (ROOT / "apps/worker/Dockerfile").read_text()
     assert dockerfile.rstrip().endswith("FROM runtime-base AS candidate")
     assert "worker_guard_broker.py" not in dockerfile
+
+
+def test_membership_docker_context_keeps_worker_dependency_buildable():
+    ignore = (ROOT / "apps/membership/Dockerfile.dockerignore").read_text().splitlines()
+    assert all(f"!apps/api/src/ciq_api/{name}.py" in ignore for name in MODULES)
+    assert "!apps/api/src/ciq_api/worker_guard_broker.py" not in ignore
+    assert "!apps/worker/tests/guard_mtls_fixture.py" not in ignore
+    dockerfile = (ROOT / "apps/membership/Dockerfile").read_text()
+    assert dockerfile.rstrip().endswith("FROM runtime-base AS candidate")
+
+
+def test_frozen_health_helper_is_only_in_explicit_worker_test_target():
+    dockerfile = (ROOT / "apps/worker/Dockerfile").read_text()
+    before, test = dockerfile.split("FROM runtime-base AS mtls-test", 1)
+    test, after = test.split("FROM runtime-base AS clock-test", 1)
+    assert "guard_mtls_fixture.py" not in before + after
+    assert "guard_mtls_fixture.py" in test

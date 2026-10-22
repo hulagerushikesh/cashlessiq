@@ -25,6 +25,7 @@ ENTRYPOINT ["python", "-m", "ciq_worker_runtime.isolation_probe"]
 # Disposable PKI + synthetic application handlers; never the default artifact.
 FROM runtime-base AS mtls-test
 COPY apps/worker/tests/mtls_probe.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/mtls_probe.py
+COPY apps/worker/tests/guard_mtls_fixture.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/guard_mtls_fixture.py
 ENTRYPOINT ["python", "-m", "ciq_worker_runtime.mtls_probe"]
 
 # Network-free clock-domain probe; fabricated health is test-only.

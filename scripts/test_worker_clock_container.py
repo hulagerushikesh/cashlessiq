@@ -148,6 +148,7 @@ def main(*, unified=False):
             "assert hashlib.sha256(Path(clock.__file__).read_bytes()).hexdigest()==sys.argv[1]; "
             "assert importlib.util.find_spec('ciq_worker_runtime.clock_probe') is None; "
             "assert importlib.util.find_spec('ciq_worker_runtime.guard_probe') is None; "
+            "assert importlib.util.find_spec('ciq_worker_runtime.guard_mtls_fixture') is None; "
             "assert importlib.util.find_spec('ciq_api.main') is None; "
             "assert all(importlib.util.find_spec(n) is None for n in "
             "('sqlalchemy','psycopg','fastapi','snowflake','ciq_api.worker_guard_broker')); "

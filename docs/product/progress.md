@@ -167,6 +167,22 @@ v3/legacy Linux container probes pass. Lint/format/whitespace pass; invocation-o
 resources removed. Existing negative-model warning remains. No full private
 mTLS/DB-TLS topology, browser/frontend build or remote CI rerun this milestone.
 
+**Latest combined container checkpoint:** canonical v3 reader/validator guards now
+pass in the five-container private mTLS + restricted membership DB-TLS topology,
+including still-valid restart replay, DB trust/revocation/outage, retained unsafe
+denial and pre-bind refusal. The membership image build context was corrected for
+the newly packaged canonical modules. Explicit frozen fictional health/time and
+a test signing driver are used; this is not actual host health or API activation.
+See [acceptance scope and limits](../architecture/p2-unified-container-acceptance.md).
+Twelve fixture and two package regressions added; **backend 898, root 202** pass.
+Worker isolated package/default-refusal check and combined v3 container run pass.
+Legacy combined replay/DB TLS, actual-Linux v3 clock/artifact, membership isolated
+package/default-refusal and lint/format/whitespace also pass; owned test resources
+removed. Existing negative-model warning remains; browser/build/remote CI not
+rerun in this internal-only milestone.
+No Snowflake/AI calls, live credential/account changes or deployment. P2 estimate
+remains about 60% because the operational/live gates are not closed by test counts.
+
 Next remaining P2 work is operational, not more primitive nonce increments:
 review real-host lifecycle/health-provider/custody/readiness/deadline/fencing and
 service wiring; independently complete approved Snowflake governance/service

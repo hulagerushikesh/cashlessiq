@@ -129,7 +129,10 @@ def main(
     verified_db_tls=False,
     signing_generation=False,
     lost_replay_recovery=False,
+    unified_guard=False,
 ):
+    # New mode composes canonical v3 authorities with DB TLS, not legacy recovery.
+    assert not unified_guard or (retained_replay and verified_db_tls and not signing_generation)
     assert not lost_replay_recovery or signing_generation
     assert not signing_generation or (retained_replay and verified_db_tls)
     restricted_db = restricted_db or verified_db_tls
@@ -156,7 +159,11 @@ def main(
             "--mount",
             f"type=volume,src={volumes[role]},dst=/var/lib/ciq-replay",
             image,
-            "initialize-recovered-replay" if recovered else "initialize-replay",
+            "initialize-guard"
+            if unified_guard
+            else "initialize-recovered-replay"
+            if recovered
+            else "initialize-replay",
             role,
         )
 
@@ -444,6 +451,7 @@ def main(
                             "retained_replay": retained_replay and role in volumes,
                             "restricted_db": restricted_db,
                             "verified_db_tls": verified_db_tls,
+                            "unified_guard": unified_guard and role != "membership",
                         }
                     ),
                 )
@@ -765,7 +773,22 @@ def main(
                     finally:
                         docker("unpause", containers["db"])
                     db_probe("tls-check")
-                    missing_replay_denied()
+                    if unified_guard:
+                        # Keep every other trust/membership dependency healthy so
+                        # retained health failure is independently observable.
+                        check("fresh")
+                        probe("validator", "latch-guard")
+                        check("deny-storage")
+                        docker("restart", "--time", "1", containers["validator"])
+                        probe("validator", "assert-latched-startup")
+                        # Missing reader state is independently rejected before
+                        # binding, regardless of the stopped validator.
+                        probe("reader", "remove-replay")
+                        probe("reader", "assert-missing-startup")
+                        probe("reader", "assert-missing-replay")
+                        print("PASS: unified v3 private TLS/DB lifecycle and retained denial")
+                    else:
+                        missing_replay_denied()
                     if lost_replay_recovery:
                         damaged_evidence()
                     print("PASS: combined retained replay and fixed-factory DB TLS lifecycle")
@@ -816,17 +839,23 @@ if __name__ == "__main__":
     modes.add_argument("--retained-replay-tls", action="store_true")
     modes.add_argument("--signing-generation-tls", action="store_true")
     modes.add_argument("--lost-replay-recovery-tls", action="store_true")
+    modes.add_argument("--unified-guard-tls", action="store_true")
     args = parser.parse_args()
     main(
         retained_replay=args.retained_replay
         or args.retained_replay_tls
         or args.signing_generation_tls
-        or args.lost_replay_recovery_tls,
+        or args.lost_replay_recovery_tls
+        or args.unified_guard_tls,
+        # Frozen fictional health/time in this combined test; the separate Linux
+        # probe verifies actual host clock-domain restart behavior.
+        unified_guard=args.unified_guard_tls,
         restricted_db=args.restricted_db,
         verified_db_tls=args.verified_db_tls
         or args.retained_replay_tls
         or args.signing_generation_tls
-        or args.lost_replay_recovery_tls,
+        or args.lost_replay_recovery_tls
+        or args.unified_guard_tls,
         signing_generation=args.signing_generation_tls or args.lost_replay_recovery_tls,
         lost_replay_recovery=args.lost_replay_recovery_tls,
     )

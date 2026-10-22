@@ -3,6 +3,11 @@
 Status: local offline candidate tested; **no deployment or source activation**.
 Parent: [validation boundary](p2-validation-boundary.md).
 
+Subsequent [combined v3 container acceptance](p2-unified-container-acceptance.md)
+now passes the private worker/membership/DB-TLS topology with frozen fictional
+health/time. It supersedes the combined-topology gap below, not the real-host,
+custody, deadline or live-source gates. Earlier counts below are historical.
+
 ## Latest v3 artifact/domain checkpoint — 22 October
 
 The v3 authority initially imported the broker's API/SQLAlchemy types. That is
