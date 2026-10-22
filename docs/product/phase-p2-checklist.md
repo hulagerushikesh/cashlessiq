@@ -5,6 +5,40 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Unified v3 broker, authority, TLS and stopped recovery — 22 October
+
+- [x] Explicit offline v3 broker signs generation-bound parent/child capabilities
+  using conservative integer issue time, with fresh checks after signing and
+  after invocation. Signed expiry is never extended.
+- [x] Reader/validator authorities strictly verify bounded RS256 JWS, schema,
+  issuer/audience/tenant/scope/disclosure/generation before atomic nonce spend.
+  Membership is resolved outside the SQLite transaction and rechecked for delivery.
+- [x] Unchanged-child forwarding enforces parent identity, subject, scope, times
+  and generation; delegated validation checks transport-derived reader identity.
+- [x] Explicit v3 loopback/private pre-bind checks prevent binding on missing,
+  stale, bad-signature or latched state. No legacy clock/replay adapter is used.
+- [x] Real two-hop loopback TLS across two tenants/all three roles preserves
+  SAVED ₹95,000 / MISSING and excludes clinical/raw decision fields. Early denials
+  perform zero source reads; later failures do not deliver recommendations.
+- [x] Replay, invalid assertion/domain/child binding, unknown TLS certificate,
+  membership revocation/medical downgrade, foreign input and source failure deny.
+- [x] With old listeners stopped, rotate temporary assertion AND health keys,
+  assertion/health generations and epoch into absent paths. Unused old parent/child
+  tokens, old-generation claims signed by new keys and new-generation claims
+  signed by old keys deny; new capabilities pass; old files remain unchanged.
+
+This finishes the approved offline integration milestone, not production recovery
+or P2 exit. There is no runtime controller, real collector/provider, credential
+discovery, normal startup change, website deployment, Snowflake call or P3.
+External membership snapshots, hard deadlines, host/mount custody and rollback
+fencing remain unproven. Real-host/service activation still requires its separate
+review; no test count is being converted into production-readiness percentage.
+Verification: **94 new integration/configuration/pre-bind tests**, full
+backend/PostgreSQL **886 passed**, root **193 passed**, Ruff/changed-Python
+format/whitespace checks pass. The existing intentionally invalid copied-model
+test emits one serializer warning. No frontend/browser/container rerun or remote
+CI verification is claimed in this backend-only milestone.
+
 ### Bundled atomic consumption, process/fault and recovery tests — 22 October
 
 - [x] Explicit immutable already-verified claim contract; authority/generation,

@@ -140,8 +140,28 @@ Verification: 28 additional consumption/recovery tests; full backend 792, root
 by an intentionally invalid copied-model negative test.
 No browser/build/container/remote CI rerun locally.
 No Snowflake spend, live credential, startup change or deployment. P2 remains
-about 60%. Next: explicit offline broker/authority/pre-bind/two-hop wiring with
-assertion signature/generation rotation and current-membership delivery checks.
+about 60% pending the live/operational gates below.
+
+**Latest bundled integration:** explicit inactive v3 broker/reader/validator
+classes now use the unified guard directly, not a legacy seconds-clock/replay
+adapter. Generation-bound parent/child assertions are signature/schema/scope
+checked before nonce spend, with fresh membership and conservative health/time
+checks before delivery. Local two-hop TLS covers both tenants/all three roles,
+SAVED ₹95,000 / MISSING, replay, peer/domain/child binding, permission changes,
+source failure and retained health denial. Stopped offline recovery rotates both
+assertion/health keys and generations/epoch, rejects old UNUSED capabilities and
+preserves old files. Explicit v3 pre-bind checks deny before socket binding.
+See the [latest phase checkpoint](phase-p2-checklist.md#unified-v3-broker-authority-tls-and-stopped-recovery--22-october).
+Latest verification: **94 new integration tests; backend 886, root 193**, lint,
+changed-Python formatting and whitespace pass. Existing negative-model serializer
+warning remains; no browser/build/container/remote CI rerun in this milestone.
+
+Next remaining P2 work is operational, not more primitive nonce increments:
+review real-host lifecycle/health-provider/custody/readiness/deadline/fencing and
+service wiring; independently complete approved Snowflake governance/service
+identity provisioning and negative acceptance, then authenticated source UI and
+final regression/remote verification. No real-host provisioning or live activation
+is implied by completing these offline tests. Website/default startup unchanged.
 Owner permits pushing completed verified commits without another prompt;
 deployment/live account changes remain separate gates.
 

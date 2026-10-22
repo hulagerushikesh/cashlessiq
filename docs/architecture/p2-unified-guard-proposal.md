@@ -254,3 +254,61 @@ broker/pre-bind/two-hop integration and stopped issuer/listener recovery are nex
 Legacy v1/v2 interfaces and startup remain unchanged. This is not live readiness,
 a hard deadline, power-loss or whole-file rollback guarantee. No Snowflake calls,
 account changes, deployment or P3 are included.
+
+## Unified offline authority/transport checkpoint — 22 October
+
+`worker_guard_authority.py` introduces separate explicitly constructed v3 broker,
+reader and delegated validator boundaries. They do not wrap the legacy clock or
+replay API or change normal startup. Existing source validation and TLS framing
+are reused; health/time/nonce acceptance uses the one v3 database per authority.
+
+Strict bounded JWS verification rejects unsupported headers, duplicate JSON
+fields, invalid constants/signatures/schema, wrong issuer/audience/tenant/scope,
+disclosure or assertion generation. Application signature verification and fresh
+membership resolution precede `consume_verified`; the SQLite lock never wraps
+membership, source, collector or network operations. The parent/child capability
+pair binds generation, identity, disclosure, request, time window and parent nonce.
+The reader forwards the original child unchanged; validator peer authorization
+uses the TLS-derived reader identity. A consumed parent is never refunded when a
+child/downstream operation fails.
+
+Issuance takes `iat=floor(lower_ns/SECOND)` and the existing 30-second maximum,
+requires the entire uncertainty interval to fit, then reobserves AFTER signing
+without extending expiry. Broker session/membership are revalidated before worker
+invocation and before return. Every authority checks fresh membership and the
+same verified claims against a newly retained health interval before delivery.
+These checks are not an atomic external membership/SQLite snapshot or a hard
+deadline; synchronous identity/signature/storage/TLS work can still stall.
+
+`worker_guard_transport.py` adds explicit offline loopback/private pre-bind
+constructors. Missing/bad/stale/latched health denies before any bind. Success is
+not cached readiness: per-operation authorities still check their own guard.
+
+The new acceptance matrix uses actual two-hop loopback TLS, temporary keys/state
+and fake health/identity/source inputs across two tenants and three roles. It
+preserves truthful SAVED ₹95,000 / MISSING with no raw decision/clinical output;
+asserts zero reads on early denial, no delivery after source-time denial, parent
+and child replay, invalid generation/audience/tenant/timestamps/signature/child
+binding, wrong reader peer/certificate, revocation/medical downgrade, foreign
+case, source outage, delayed signing and state/configuration/pre-bind failures.
+
+Stopped recovery tests first close all old test listeners with no issuer tasks
+running, preserve old paths, rotate temporary assertion and health keys plus
+assertion/health generations and epoch, and provision absent matching paths.
+Old UNUSED parent/child capabilities deny, as do old-generation claims signed by
+new keys and new-generation claims signed by old keys. New healthy assertions
+pass; cryptographically valid new-key health with the old domain latches denial.
+Old state bytes remain unchanged. This is an explicit test operation, NOT a
+production recovery controller, automatic migration/reset, service fencing or
+hardware/whole-file rollback guarantee.
+
+The approved offline integration milestone is implemented. Real host provider,
+packaging/mount/secret custody, clock/readiness/deadline enforcement, governed
+service identities and live authenticated acceptance remain separate P2 gates.
+No real daemon/host provisioning, Snowflake/AI usage, account changes, website
+deployment or P3 follows from these tests.
+
+Verification: 94 additional integration/configuration/pre-bind tests; full
+backend/PostgreSQL 886, root 193, Ruff/changed-Python format/whitespace pass.
+One expected serializer warning remains from the prior copied-model negative
+test. No browser/frontend build/container or remote CI rerun in this milestone.
