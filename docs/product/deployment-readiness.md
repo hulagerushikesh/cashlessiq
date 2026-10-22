@@ -56,3 +56,39 @@ Optional owner/CoCo prompt for a final status check (not executed by this batch)
 An approved local fixture-only preview would be a different release scope from
 the governed Snowflake-backed product. It must be labeled honestly and reviewed
 for auth/hosting/secrets; it is not automatically authorized by this document.
+
+## Next approval package — 23 October
+
+The inactive supervisor commit `8b2ab24` passed remote product CI, run
+`39785213296`. This confirms its regression workflow, not production readiness.
+The next integration milestone requires **separate approval** because the prior
+approval explicitly allowed fake processes only.
+
+Recommended scope: implement and run a **test-only disposable Linux process
+containment harness** using the existing local Docker installation. No purchased
+host, actual service wiring or production secret-store selection is implied.
+
+- Use generated dummy material and newly created, task-owned state only; no
+  existing credentials, Snowflake profile, application database or host secrets.
+- Exercise the existing supervisor against actual owned test processes, not the
+  product services. Keep the harness outside normal API/worker entry points.
+- Verify full readiness, partial-start cleanup, deliberately stuck children,
+  bounded termination/escalation, closed delivery after stop/timeout and stale
+  completion denial. Confirm process exit rather than accepting a fake boolean.
+- Use a separate watchdog in the disposable Linux test environment; report its
+  same-host pause limitation. Do not claim an external availability guarantee.
+- Disable container networking; mount no Docker socket, repository root, home
+  directory or existing application volumes. A host test runner may create and
+  remove only its uniquely named test containers/volumes.
+- Bound the acceptance run to 15 minutes; on failure stop the run and report any
+  resources whose cleanup cannot be confirmed. Preserve diagnostic metadata only,
+  never dummy private keys or process payloads in committed evidence.
+- Finish as one coherent implementation/test/documentation batch; leave default
+  activation refusal, public website and governed source routes unchanged.
+
+This closes only disposable process-containment evidence if successful. Real
+encrypted custody/unlock, health-provider policy, durable external generation
+authority, source identities and deployment acceptance remain separate gates.
+No Snowflake/AI calls, account changes, purchase or deployment are requested.
+The prior screenshot is historical; current balance and exact expiry on
+23 October are **unknown**, and no continued trial access is assumed.

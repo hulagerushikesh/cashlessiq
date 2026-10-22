@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 22 October 2026
+Last updated: 23 October 2026
 Current phase: **P2 / M2 — synthetic-only, read-only case workspace**
 
 This is the current-status index. The migration plan defines sequence; phase
@@ -66,8 +66,8 @@ Verification: **105 focused supervisor tests; full backend/PostgreSQL 1,003;
 root 203**. Ruff/changed-Python format/whitespace and both isolated worker/
 membership package/default-refusal checks pass. One known intentional serializer
 warning remains. No frontend/browser/build or real container topology rerun
-locally. Prior `92ee894`/`c257389` remote CI passed; this new batch's CI is pending
-push, not claimed complete.
+locally. Remote product CI for `8b2ab24` passed (run `39785213296`), checked on
+23 October. This is regression evidence, not acceptance of real operational wiring.
 
 The [deployment checklist](deployment-readiness.md) groups remaining work into
 three coherent bundles: operational integration, governed live source, then
@@ -75,6 +75,11 @@ authenticated release acceptance/hosting. Avoid more isolated primitive guard
 increments unless integration reveals a concrete defect. Actual host/store,
 health-provider policy, durable fence, live identities/projection and acceptance
 remain open; no supported deployment date or P2 exit is claimed.
+
+Next proposed batch is the bounded disposable Linux process-containment harness
+in the deployment checklist. It needs separate approval because the implemented
+supervisor was approved for fake processes only. No further primitive refinements
+or actual host/custody/service activation are implicitly authorized.
 
 Latest owner evidence is **$193 remaining / trial ends in 1 day**, with today
 identified as the final usable day. No exact expiry/balance API refresh or

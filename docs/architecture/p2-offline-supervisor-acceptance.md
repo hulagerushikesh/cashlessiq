@@ -82,7 +82,7 @@ refusals pass. Existing intentional invalid-model serializer warning remains in
 one backend negative test. Real container topology, frontend/browser/build and
 contract generation were not rerun locally in this internal-only batch.
 
-Remote CI for prior commits `92ee894` and `c257389` is confirmed successful; this
-batch's CI is only triggered after push and is not claimed complete here.
+Remote product CI for `8b2ab24` is confirmed successful: run `39785213296`,
+checked on 23 October. This does not prove actual process containment or custody.
 This milestone does not itself close P2 or raise its rough completion estimate.
 See [release blockers](../product/deployment-readiness.md).

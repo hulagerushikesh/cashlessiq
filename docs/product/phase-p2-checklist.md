@@ -1,7 +1,7 @@
 # Product P2 — read-only case workspace
 
 Status: In progress — synthetic-only alpha  
-Last updated: 22 October 2026
+Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
@@ -23,8 +23,8 @@ Last updated: 22 October 2026
 Verification: **105 focused tests, backend/PostgreSQL 1,003, root 203**, Ruff,
 changed-Python format/whitespace and both isolated worker/membership package and
 default-refusal checks pass. One existing negative-model warning remains.
-No browser/build/container topology rerun locally. Prior two commits' CI passed;
-this batch's post-push CI is not yet verified.
+No browser/build/container topology rerun locally. Remote product CI for
+`8b2ab24` passed: run `39785213296`, independently checked on 23 October.
 See [three remaining deployment bundles](deployment-readiness.md), including
 trial-expiry priorities. No Snowflake calls, credential reads, account changes,
 new host, deployment or P3 in this implementation.
