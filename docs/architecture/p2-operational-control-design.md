@@ -1,7 +1,8 @@
 # P2 operational control contract
 
-22 October 2026. **Proposal only: not implementation, provisioning or activation
-approval.** Synthetic read-only P2; no purchases, deployment or P3.
+22 October 2026. **Offline model implementation explicitly approved and completed;
+real provisioning/wiring/activation remains unapproved.** Synthetic read-only P2;
+no purchases, deployment or P3. See [acceptance and limits](p2-offline-supervisor-acceptance.md).
 
 Next gate after [combined v3 container acceptance](p2-unified-container-acceptance.md).
 This consolidates [runtime lifecycle](p2-runtime-lifecycle.md) and
@@ -169,9 +170,9 @@ decision, not something fake tests can resolve.
 Stop after this milestone before real wiring. Mock acceptance is not production
 readiness and does not close P2 or increase its completion estimate on its own.
 
-## Approval requested
+## Approval boundary
 
-Approve **only the inactive offline supervisor prototype and bundled acceptance
-above**, with fake process/readiness/clock/delivery adapters and disposable state.
+The owner approved **only the inactive offline supervisor prototype and bundled
+acceptance above**, with fake process/readiness/clock/delivery adapters and disposable state.
 Not real secret delivery, service wiring, daemon/host changes, Snowflake provisioning
 or spend, deployment, or P2 exit.

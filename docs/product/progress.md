@@ -53,6 +53,35 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Latest implementation — inactive supervisor, 22 October
+
+The owner explicitly approved fake processes and disposable state only. The
+standalone offline controller now models exact eight-role/seven-state inventory,
+full readiness, partial startup cleanup, admission/capacity/deadline denial,
+shutdown fencing and externally approved stopped-generation recovery. It does
+not launch services or read credentials; no application or website wiring changed.
+See [acceptance and limits](../architecture/p2-offline-supervisor-acceptance.md).
+
+Verification: **105 focused supervisor tests; full backend/PostgreSQL 1,003;
+root 203**. Ruff/changed-Python format/whitespace and both isolated worker/
+membership package/default-refusal checks pass. One known intentional serializer
+warning remains. No frontend/browser/build or real container topology rerun
+locally. Prior `92ee894`/`c257389` remote CI passed; this new batch's CI is pending
+push, not claimed complete.
+
+The [deployment checklist](deployment-readiness.md) groups remaining work into
+three coherent bundles: operational integration, governed live source, then
+authenticated release acceptance/hosting. Avoid more isolated primitive guard
+increments unless integration reveals a concrete defect. Actual host/store,
+health-provider policy, durable fence, live identities/projection and acceptance
+remain open; no supported deployment date or P2 exit is claimed.
+
+Latest owner evidence is **$193 remaining / trial ends in 1 day**, with today
+identified as the final usable day. No exact expiry/balance API refresh or
+Snowflake/AI spend in this batch. Preserve verified recovery/source evidence;
+do not provision in haste or consume credits for their own sake. No purchase,
+trial extension, deployment or P3 is assumed. P2 estimate remains about 60%.
+
 ### Current completion gates (latest summary)
 
 The local application and bounded operator source checks are implemented. P2 is
@@ -191,10 +220,9 @@ eight-role/seven-state inventory, all-or-nothing readiness, bounded admission an
 late-result denial, partial-start cleanup, stopped recovery and an external
 generation fence. It explicitly distinguishes mock behavior from real process
 containment/hard deadlines and lists unresolved host/store/health choices.
-**Offline supervisor implementation awaits owner approval**; no host, daemon,
-secret store, provisioning or runtime wiring is selected/activated. This written
-proposal closes no operational acceptance gate; regression counts remain 898/202
-from the previous milestone, not rerun for documentation alone.
+**That design-only checkpoint is now superseded by the approved offline
+implementation above**; no host, daemon, secret store, provisioning or runtime
+wiring is selected/activated. The model does not close real operational gates.
 
 Remaining execution order: review real-host lifecycle/health-provider/custody/readiness/deadline/fencing and
 service wiring; independently complete approved Snowflake governance/service

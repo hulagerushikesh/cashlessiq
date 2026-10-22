@@ -81,3 +81,35 @@ def test_frozen_health_helper_is_only_in_explicit_worker_test_target():
     test, after = test.split("FROM runtime-base AS clock-test", 1)
     assert "guard_mtls_fixture.py" not in before + after
     assert "guard_mtls_fixture.py" in test
+
+
+def test_offline_supervisor_has_no_runtime_wiring_or_worker_packaging():
+    name = "offline_supervisor"
+    assert name not in MODULES
+    for project in ("worker", "membership"):
+        config = (ROOT / f"apps/{project}/pyproject.toml").read_text()
+        ignore = (ROOT / f"apps/{project}/Dockerfile.dockerignore").read_text()
+        assert name not in config + ignore
+    main = ast.parse((ROOT / "apps/api/src/ciq_api/main.py").read_text())
+    assert not any(
+        (isinstance(node, ast.ImportFrom) and name in (node.module or ""))
+        or (isinstance(node, ast.Import) and any(name in a.name for a in node.names))
+        for node in ast.walk(main)
+    )
+    tree = ast.parse((ROOT / f"apps/api/src/ciq_api/{name}.py").read_text())
+    modules = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            modules.append(node.module or "")
+        elif isinstance(node, ast.Import):
+            modules.extend(a.name for a in node.names)
+    assert set(modules) <= {
+        "__future__",
+        "re",
+        "collections",
+        "collections.abc",
+        "dataclasses",
+        "enum",
+        "hashlib",
+        "typing",
+    }

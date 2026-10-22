@@ -5,6 +5,30 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Inactive offline supervisor — 22 October
+
+- [x] Owner explicitly approved fake processes/disposable state only.
+- [x] Exact eight-role/seven-state inventory, one-use fake approval, complete
+  readiness barrier and partial-start cleanup with sticky uncertainty fencing.
+- [x] Bounded admission, exclusive deadlines, wrong-domain/rollback/gap/overflow
+  rejection, observed stop-grace checks, late-result suppression and no retries.
+- [x] Stopped recovery requires external retirement approval, new generation and
+  disjoint state identifiers; old evidence remains unchanged. Replacement stays
+  inactive without fresh external approval. No initializer or real adapter added.
+- [x] Worker/membership packaging and application startup remain unchanged.
+- [ ] Real custody/health provider, durable external fence, process/watchdog
+  containment and source identities; this fake model does not close those gates.
+
+[Acceptance and explicit limitations](../architecture/p2-offline-supervisor-acceptance.md).
+Verification: **105 focused tests, backend/PostgreSQL 1,003, root 203**, Ruff,
+changed-Python format/whitespace and both isolated worker/membership package and
+default-refusal checks pass. One existing negative-model warning remains.
+No browser/build/container topology rerun locally. Prior two commits' CI passed;
+this batch's post-push CI is not yet verified.
+See [three remaining deployment bundles](deployment-readiness.md), including
+trial-expiry priorities. No Snowflake calls, credential reads, account changes,
+new host, deployment or P3 in this implementation.
+
 ### Operational control design — 22 October
 
 - [x] Consolidate exact eight-role/seven-v3-state inventory and proposed
@@ -12,13 +36,14 @@ Last updated: 22 October 2026
   partial cleanup, stop/recovery and durable external-generation requirements.
 - [x] Explicitly retain unresolved real host, encrypted store/unlock/delivery,
   plaintext custody, health publisher/numeric policy and provisioning choices.
-- [ ] Owner approval for the inactive offline supervisor prototype and bundled
+- [x] Owner approval for the inactive offline supervisor prototype and bundled
   fake-adapter acceptance; no real wiring is requested by that approval.
-- [ ] Implement/verify that prototype, then separately review actual custody and
-  process/watchdog containment before provisioning or activation.
+- [x] Implement/verify the inactive fake-adapter prototype.
+- [ ] Separately review actual custody and process/watchdog containment before
+  provisioning or activation.
 
 [Design and requested scope](../architecture/p2-operational-control-design.md).
-Documentation only: no new runtime guarantees or test-count increase. Prior
+Historical design-only checkpoint: no new runtime guarantees or test-count increase. Prior
 898 backend / 202 root results remain historical verification, not rerun here.
 No source reads, spend, daemon/host/account changes, deployment or P3.
 
