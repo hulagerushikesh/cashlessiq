@@ -5,6 +5,22 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Unified signed observation and retained denial — 22 October
+
+Inactive offline v3 observation now brackets evidence delivery with strict
+three-clock samples, pins the RSA health key, and rechecks freshness after
+signature/continuity work. Valid observations commit clock/evidence high-water
+marks and return conservative inclusive integer time bounds. Unsafe observations
+commit only the denial latch; nonce rows and prior high-water marks remain
+unchanged, including after restart. State/lock failures precede callbacks.
+No application-token consumption, authority/transport integration, real clock
+provider, source activation or deployment. See the
+[checkpoint and limits](../architecture/p2-unified-guard-proposal.md).
+Verification: 39 additional tests, backend 764, root 193; lint/format/whitespace
+pass. Browser/build/container/remote CI not rerun. No Snowflake spend or P3.
+Next: verified-claim time/lifetime bounds and atomic nonce consumption before
+concurrency, stopped recovery and offline transport integration. P2 remains 60%.
+
 ### Unified guard state foundation — 22 October
 
 Owner approved continuing the offline prototype and pushing verified commits.

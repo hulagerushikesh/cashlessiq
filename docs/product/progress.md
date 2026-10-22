@@ -65,7 +65,7 @@ operator's credentials or raw-input API adapter.
 | Snowflake isolation | Exact tenant views/coherent validation query, six runtime identities, secret custody/rollback and relevant PUBLIC/MFA/live-definition gaps reviewed; separately approved provisioning and negative tests |
 | Governed evidence display | Approve the financial-trace/clinical projection and verify calculation/citation presentation; current source contract intentionally returns summary/reference metadata only |
 | Local live acceptance | Both tenants/all roles through authenticated API/UI; foreign/base-table denial, role revocation/downgrade, true missing states and source failure, with bounded spend/evidence |
-| Final delivery verification | Full regression/browser/build/contract checks, separately authorised push, remote CI and P2 exit review |
+| Final delivery verification | Full regression/browser/build/contract checks, push verified commits under standing approval, remote CI and P2 exit review |
 
 **30-hour trial priority:** the owner requested immediate useful live tests.
 The [bounded single-statement operator check](single-statement-source-evidence.md)
@@ -116,17 +116,22 @@ Verification: 84 composition/pre-bind tests (42 additional), full backend 681,
 root 193 and Ruff/format/whitespace pass. No browser/build/container/remote CI
 rerun, Snowflake call, deployment or push. P2 remains about 60%.
 The [unified state/lifecycle proposal](../architecture/p2-unified-guard-proposal.md)
-is now drafted for owner review: one transaction, fresh conservative time bounds,
+defines one transaction, fresh conservative time bounds,
 explicit claim interface, retained denial and stopped-generation recovery.
 **Offline implementation approved:** the owner directed pushing the completed
 commits and continuing. All 14 prior commits were pushed through `baf7849`.
 The v3 state foundation now implements strict configuration, explicit new-file
 test provisioning and bounded exact-schema/row inspection with no repair or
-reset. It intentionally exposes no health/authorization/nonce-consumption method.
-Verification: 44 new state tests, full backend 725, root 193 and
+reset. A separate inactive signed-health observation primitive now uses that
+same state boundary, with a pinned key, post-verification freshness, bounded
+integer uncertainty and retained denial. Invalid health never advances prior
+high-water marks or modifies nonce rows; reopening cannot clear its latch.
+No application-token authorization/consumption method exists yet.
+Verification: 44 state tests plus 39 observation tests, full backend 764, root 193 and
 Ruff/format/whitespace pass; no browser/build/container/remote CI rerun locally.
 No Snowflake spend, live credential, startup change or deployment. P2 remains
-about 60%. Next: unified evidence observation and latch primitive.
+about 60%. Next: verified-claim time bounds and atomic nonce consumption, then
+concurrency/commit-fault and stopped-recovery tests before offline transport wiring.
 Owner permits pushing completed verified commits without another prompt;
 deployment/live account changes remain separate gates.
 
@@ -181,11 +186,12 @@ not waive them. Detailed evidence and next actions are below.
    Fifteen browser integration tests pass; this is not live source parity.
    Normal local startup and production return 404 for these routes. No
    persistent source identities or live connections have been activated.
-7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, obtain push
-   authority, then verify remote CI. Review P2 exit evidence before starting P3.
+7. [ ] Run regression/API/PostgreSQL/browser/build/contract checks, push verified
+   commits under standing approval, then verify remote CI. Review P2 exit evidence before P3.
    - [x] Full local regression, API/PostgreSQL, client, offline source integration,
      web build/typecheck/lint, domain-wheel and contract-drift checks rerun.
-   - [ ] Push authority and remote CI for the resulting commits.
+   - [x] Standing owner approval to push completed verified local commits.
+   - [ ] Verify remote CI for the resulting commits.
    - [ ] Live security/source acceptance and full financial-trace/evidence gates.
 
 ## Remaining P2 blockers (not website deployment)

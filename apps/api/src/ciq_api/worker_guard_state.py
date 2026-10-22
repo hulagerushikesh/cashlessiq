@@ -8,7 +8,7 @@ import json
 import os
 import sqlite3
 import stat
-from contextlib import closing
+from contextlib import closing, contextmanager
 from hashlib import sha256
 from pathlib import Path
 from typing import Annotated
@@ -172,12 +172,9 @@ class OfflineGuardState:
                 (config.canonical(), initial.wall_ns, initial.monotonic_ns, initial.boottime_ns),
             )
 
-    def inspect(self) -> tuple[GuardStateSnapshot, tuple[StoredNonce, ...]]:
-        """Validate bounded existing state; never read evidence or modify rows.
-
-        BEGIN IMMEDIATE provides the future write boundary, not authorization.
-        Latched state denies; missing/legacy/invalid state is not rebuilt.
-        """
+    @contextmanager
+    def _transaction(self):
+        """Shared existing-state boundary; callers must explicitly acknowledge commit."""
         try:
             _file(self._path, self._config)
             uri = self._path.as_uri() + "?mode=rw"
@@ -211,7 +208,12 @@ class OfflineGuardState:
                     raise ValueError("Invalid capacity")
                 nonces = tuple(StoredNonce(nonce=nonce, expiry=expiry) for nonce, expiry in rows)
                 _file(self._path, self._config)
-                db.rollback()  # Read-only rows; never normalize or repair suspect data.
-                return state, nonces
+                yield db, state, nonces
+                db.rollback()  # Uncommitted work is never implicitly accepted.
         except Exception:
             raise GuardStateDenied("Guard state denied") from None
+
+    def inspect(self) -> tuple[GuardStateSnapshot, tuple[StoredNonce, ...]]:
+        """Inspect only; no evidence, readiness, normalization or repair."""
+        with self._transaction() as (_db, state, nonces):
+            return state, nonces

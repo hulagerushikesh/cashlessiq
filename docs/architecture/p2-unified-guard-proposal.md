@@ -182,3 +182,44 @@ interval primitive, before nonce authorization and any transport integration.
 Verification: **44 new state tests**, full API/PostgreSQL **725**, root **193**,
 Ruff/format/whitespace pass. Browser/build/container/remote CI not rerun locally.
 No Snowflake calls, real credentials, account changes, deployment or P3.
+
+## Second checkpoint — signed observation and retained denial, 22 October
+
+`worker_guard_health.py` adds an inactive `OfflineHealthGuard.observe` primitive
+over the exact existing v3 state transaction. Its explicit RSA public key must
+match SHA256 of DER SubjectPublicKeyInfo in the canonical stored configuration.
+State/schema/configuration/latch/lock checks precede clock and evidence callbacks.
+No key discovery, collector execution, network/source/membership operation,
+application token consumption or startup wiring is added.
+
+Injected strict wall/monotonic/boottime samples bracket immutable envelope delivery.
+The final sample follows signature and retained-evidence continuity work. All
+samples must remain in the pinned boot domain; rollback, suspend/read skew,
+excessive retained gap and whole-operation elapsed-step limits deny. The same
+verified immutable measurement is rechecked for original freshness and conservative
+error at the final sample, without a second signature callback outside the sample
+bracket. Sequence/content conflicts and regressing measurement/reference marks
+deny. Equal sequence/content is accepted only while still fresh.
+
+A successful observation commits its clock/evidence high-water marks and returns
+inclusive bounded integer nanoseconds `[wall-error, wall+error]`. Arithmetic
+underflow/overflow and non-integer inputs deny rather than clamp or round. Invalid
+health/time after valid state commits only `unsafe=1`; no high-water advance or
+nonce pruning/insertion occurs. Reopening with restored healthy input cannot clear
+the latch or invoke callbacks. Invalid existing state is never repaired. Storage
+failures deny; durable latch persistence cannot be promised if its commit fails.
+
+Verification: **39 additional tests**, full API/PostgreSQL **764**, root **193**,
+Ruff/format/whitespace pass. Tests cover final-time uncertainty, repeated and
+advancing measurements, callback/lock/state failures, bad signature/epoch, stale
+delivery and verification under a separately permissive elapsed budget, rollback,
+suspend/gap/step limits, sequence/reference regression, exact interval extremes,
+unchanged nonce rows and reopened denial. No browser/build/container/remote CI
+rerun; no Snowflake spend, deployment, live credentials or P3.
+
+Remaining ordered scope: verified-claim `iat`/`exp` interval and lifetime checks,
+atomic nonce consumption and conservative pruning (then concurrency/process and
+commit-fault tests), stopped recovery and explicit offline authority/transport
+integration. This observation API is not application authorization or cached
+readiness. Synchronous callbacks/verification/commit can still stall; real host,
+custody, hard deadlines, external fencing and activation remain unproven.
