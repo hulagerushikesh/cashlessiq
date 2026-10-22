@@ -126,12 +126,22 @@ reset. A separate inactive signed-health observation primitive now uses that
 same state boundary, with a pinned key, post-verification freshness, bounded
 integer uncertainty and retained denial. Invalid health never advances prior
 high-water marks or modifies nonce rows; reopening cannot clear its latch.
-No application-token authorization/consumption method exists yet.
-Verification: 44 state tests plus 39 observation tests, full backend 764, root 193 and
-Ruff/format/whitespace pass; no browser/build/container/remote CI rerun locally.
+The next bundled milestone adds explicit already-verified claim consumption:
+health/high-water marks and a single hashed nonce commit atomically. Whole
+uncertainty intervals must fit `iat`/exclusive `exp` and the existing 30-second
+lifetime. Safe pruning, capacity and ordinary rejection preserve truthful state;
+unsafe health never prunes. Fresh-process races/replay/latch, lock and write/commit
+fault tests cover conservative denial, including an ambiguous committed nonce.
+Stopped primitive recovery tests retain old files and reject old assertion
+generations/health trust. Assertion-signature rotation and full authority recovery
+remain integration work, not proven by constructing internal verified claims.
+Verification: 28 additional consumption/recovery tests; full backend 792, root
+193 and Ruff/format/whitespace pass. One expected serializer warning is emitted
+by an intentionally invalid copied-model negative test.
+No browser/build/container/remote CI rerun locally.
 No Snowflake spend, live credential, startup change or deployment. P2 remains
-about 60%. Next: verified-claim time bounds and atomic nonce consumption, then
-concurrency/commit-fault and stopped-recovery tests before offline transport wiring.
+about 60%. Next: explicit offline broker/authority/pre-bind/two-hop wiring with
+assertion signature/generation rotation and current-membership delivery checks.
 Owner permits pushing completed verified commits without another prompt;
 deployment/live account changes remain separate gates.
 

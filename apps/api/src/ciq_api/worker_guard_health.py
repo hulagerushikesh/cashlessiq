@@ -1,32 +1,51 @@
 """Inactive offline v3 observation primitive, NOT application authorization.
 
 Injected samples and immutable signed evidence only. No collector/network calls,
-nonce consumption, startup adapter or recovery. Elapsed checks are not a hard
+startup adapter or recovery controller. Elapsed checks are not a hard
 deadline: callbacks, signature verification and commit may stall.
 """
 
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
+from typing import Annotated
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
+from ciq_api.worker_authority import MAX_LIFETIME
 from ciq_api.worker_guard_state import (
+    Digest,
     GuardStateConfig,
     GuardStateDenied,
     GuardStateSnapshot,
+    Identity,
     OfflineGuardState,
 )
 from ciq_api.worker_health import (
     MAX_INTEGER,
+    SECOND,
     HealthNow,
     Integer,
     StrictModel,
     _check_measurement,
     check_envelope,
 )
+
+
+class VerifiedGuardClaims(StrictModel):
+    """Internal caller contract, NOT a signature verifier or public token parser.
+
+    Only an authority that already verified signature/schema/scope/membership may
+    supply these immutable fields. Constructing this object grants no access.
+    """
+
+    authority: Identity
+    assertion_generation: Identity
+    nonce: Digest
+    iat: Annotated[int, Field(ge=0, le=MAX_INTEGER // SECOND)]
+    exp: Annotated[int, Field(gt=0, le=MAX_INTEGER // SECOND)]
 
 
 class ObservedInterval(StrictModel):
@@ -52,6 +71,14 @@ class ObservedInterval(StrictModel):
         ):
             raise ValueError("Invalid interval arithmetic")
         return cls(lower_ns=wall_ns - error_ns, upper_ns=wall_ns + error_ns)
+
+    def permits(self, claims: VerifiedGuardClaims) -> bool:
+        """Whole inclusive interval must fit; expiry itself is exclusive."""
+        return (
+            0 < claims.exp - claims.iat <= MAX_LIFETIME
+            and claims.iat * SECOND <= self.lower_ns
+            and self.upper_ns < claims.exp * SECOND
+        )
 
 
 class OfflineHealthGuard(OfflineGuardState):
@@ -123,7 +150,29 @@ class OfflineHealthGuard(OfflineGuardState):
         No result is returned until commit acknowledgement. Failed storage denies
         without promising a durable latch or retrying an ambiguous commit.
         """
-        with self._transaction() as (db, state, _nonces):
+        return self._run(evidence, None)
+
+    def consume_verified(
+        self, evidence: Callable[[], str], claims: VerifiedGuardClaims
+    ) -> ObservedInterval:
+        """Atomically retain health and spend one already-verified capability.
+
+        No supplied now, raw JWT, membership lookup or legacy replay adapter.
+        Ordinary claim rejection retains healthy observation, never latches.
+        A downstream failure or ambiguous commit must never refund/retry a nonce.
+        """
+        if not isinstance(claims, VerifiedGuardClaims):
+            raise GuardStateDenied("Guard state denied")
+        try:
+            claims = VerifiedGuardClaims.model_validate(claims.model_dump())
+        except Exception:
+            raise GuardStateDenied("Guard state denied") from None
+        return self._run(evidence, claims)
+
+    def _run(
+        self, evidence: Callable[[], str], claims: VerifiedGuardClaims | None
+    ) -> ObservedInterval:
+        with self._transaction() as (db, state, nonces):
             try:
                 before = self._now()
                 self._since_state(state, before)
@@ -187,5 +236,24 @@ class OfflineHealthGuard(OfflineGuardState):
                     *ends,
                 ),
             )
+            accepted = claims is None
+            if claims is not None:
+                # Prune only definitely expired entries using the conservative
+                # lower bound. Invalid health never reaches this mutation.
+                retained = tuple(n for n in nonces if n.expiry * SECOND > interval.lower_ns)
+                for nonce in nonces:
+                    if nonce.expiry * SECOND <= interval.lower_ns:
+                        db.execute("DELETE FROM guard_nonce WHERE nonce=?", (nonce.nonce,))
+                accepted = (
+                    claims.authority == self._config.authority
+                    and claims.assertion_generation == self._config.assertion_generation
+                    and interval.permits(claims)
+                    and all(n.nonce != claims.nonce for n in retained)
+                    and len(retained) < self._config.max_nonces
+                )
+                if accepted:
+                    db.execute("INSERT INTO guard_nonce VALUES (?,?)", (claims.nonce, claims.exp))
             db.commit()
+            if not accepted:
+                raise GuardStateDenied("Guard state denied")
             return interval

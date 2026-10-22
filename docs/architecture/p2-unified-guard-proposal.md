@@ -223,3 +223,34 @@ commit-fault tests), stopped recovery and explicit offline authority/transport
 integration. This observation API is not application authorization or cached
 readiness. Synchronous callbacks/verification/commit can still stall; real host,
 custody, hard deadlines, external fencing and activation remain unproven.
+
+## Bundled consumption/process/fault/recovery checkpoint — 22 October
+
+`consume_verified` now takes a strict immutable internal `VerifiedGuardClaims`
+contract, not raw JWTs or supplied `now`. It is only for an authority that already
+verified signature, schema, scope and membership. Its name/type are not proof of
+verification, and no public route or default startup exposes it. Exact namespace
+and generation, bounded hashed nonce, integer timestamps, positive lifetime at
+most the existing 30 seconds and whole inclusive uncertainty bounds are checked.
+
+The same existing-file write transaction retains health/time marks, prunes only
+entries whose expiry is definitely past the lower bound, checks replay/capacity,
+and inserts at most one nonce. It acknowledges success only after commit. Ordinary
+claim denials still commit the valid observation; invalid health commits only the
+latch with no pruning. Database exceptions roll back uncommitted changes and
+return generic denial, never retry. A commit that succeeded but lost its
+acknowledgement may spend a nonce while returning denial; it is never refunded.
+
+28 added tests cover exact `iat`/exclusive-expiry/lifetime boundaries, final rather
+than pre-verification time, strict copied-model validation, safe pruning/capacity,
+unsafe preservation, real lock contention, three independently spawned processes
+racing one nonce, fresh-process replay/latch, observation/insert faults and both
+pre/post-commit failures. Stopped primitive tests preserve old files, explicitly
+provision absent paths and rotate health trust plus assertion generation. They
+reject old claims and old signed health and accept new already-verified claims.
+They do **not** prove assertion-signature/key rotation: full offline authority,
+broker/pre-bind/two-hop integration and stopped issuer/listener recovery are next.
+
+Legacy v1/v2 interfaces and startup remain unchanged. This is not live readiness,
+a hard deadline, power-loss or whole-file rollback guarantee. No Snowflake calls,
+account changes, deployment or P3 are included.

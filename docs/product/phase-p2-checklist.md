@@ -5,6 +5,31 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Bundled atomic consumption, process/fault and recovery tests — 22 October
+
+- [x] Explicit immutable already-verified claim contract; authority/generation,
+  hashed nonce, strict integer times, whole-interval validity and 30-second cap.
+- [x] One transaction commits healthy observation plus accepted consumption;
+  conservative expired-row pruning, replay/capacity rejection, no unsafe pruning.
+- [x] Three spawned processes race one nonce: exactly one success; a subsequent
+  fresh process denies replay. Unsafe latch also survives a fresh interpreter.
+- [x] Bounded real lock denial before callbacks; observation/insert write faults,
+  pre-commit failure and post-commit acknowledgement failure never return success.
+- [x] Stopped primitive recovery preserves old files, rotates health key/domain
+  and assertion generation, rejects old claims/health and accepts new claims.
+- [ ] Full assertion-key rotation and stopped listener/issuer recovery through
+  explicit offline authority/transport integration; no controller exists yet.
+
+This is an inactive internal guard, not a JWT verifier or public authorization
+endpoint. Signature/scope/membership verification must precede verified-claim
+construction; delivery must recheck current permissions. No default startup,
+real health provider, Snowflake usage, deployment or P3. Hard deadlines, hardware
+power-loss, hostile storage and real-host custody remain unproven. P2 stays ~60%.
+Verification: backend/PostgreSQL **792 passed**, root **193 passed**, Ruff,
+changed-Python format and whitespace checks pass. One serializer warning comes
+from the deliberately invalid copied-model negative test. Browser, containers,
+frontend build and remote CI were not rerun in this backend-only milestone.
+
 ### Unified signed observation and retained denial — 22 October
 
 Inactive offline v3 observation now brackets evidence delivery with strict
