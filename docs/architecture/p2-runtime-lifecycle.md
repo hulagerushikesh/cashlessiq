@@ -5,6 +5,15 @@ Scope: the single-host synthetic P2 candidate. This consolidates the next gate
 after [disposable DB TLS acceptance](p2-membership-db-tls.md); it does not select
 a production secret-store product, supply credentials or change normal startup.
 
+**Current review, 22 October:** the combined canonical v3 private-container and
+restricted DB-TLS checkpoint now passes with fictional health/time. The next
+[operational control proposal](p2-operational-control-design.md) consolidates the
+eight-role/seven-state inventory, startup barrier, admission/deadline, partial
+cleanup, external generation fence and unresolved real custody choices. Approval
+is requested for an inactive offline supervisor only, not real wiring. Earlier
+legacy clock-gap/proposal-only statements below are historical; v3 implements
+offline retained clock/health/replay, not an accepted real provider or supervisor.
+
 ## Current evidence versus missing implementation
 
 The private mTLS, restricted membership DB, verified DB TLS and retained replay

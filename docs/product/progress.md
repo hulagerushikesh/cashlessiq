@@ -183,8 +183,20 @@ rerun in this internal-only milestone.
 No Snowflake/AI calls, live credential/account changes or deployment. P2 estimate
 remains about 60% because the operational/live gates are not closed by test counts.
 
-Next remaining P2 work is operational, not more primitive nonce increments:
-review real-host lifecycle/health-provider/custody/readiness/deadline/fencing and
+Next remaining P2 work is operational, not more primitive nonce increments.
+
+The [operational control design](../architecture/p2-operational-control-design.md)
+now specifies the next bundled milestone: an inactive supervisor with exact
+eight-role/seven-state inventory, all-or-nothing readiness, bounded admission and
+late-result denial, partial-start cleanup, stopped recovery and an external
+generation fence. It explicitly distinguishes mock behavior from real process
+containment/hard deadlines and lists unresolved host/store/health choices.
+**Offline supervisor implementation awaits owner approval**; no host, daemon,
+secret store, provisioning or runtime wiring is selected/activated. This written
+proposal closes no operational acceptance gate; regression counts remain 898/202
+from the previous milestone, not rerun for documentation alone.
+
+Remaining execution order: review real-host lifecycle/health-provider/custody/readiness/deadline/fencing and
 service wiring; independently complete approved Snowflake governance/service
 identity provisioning and negative acceptance, then authenticated source UI and
 final regression/remote verification. No real-host provisioning or live activation

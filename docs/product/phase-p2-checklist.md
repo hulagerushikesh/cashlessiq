@@ -5,6 +5,23 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Operational control design — 22 October
+
+- [x] Consolidate exact eight-role/seven-v3-state inventory and proposed
+  all-or-nothing startup/readiness, admission/deadline, late-result suppression,
+  partial cleanup, stop/recovery and durable external-generation requirements.
+- [x] Explicitly retain unresolved real host, encrypted store/unlock/delivery,
+  plaintext custody, health publisher/numeric policy and provisioning choices.
+- [ ] Owner approval for the inactive offline supervisor prototype and bundled
+  fake-adapter acceptance; no real wiring is requested by that approval.
+- [ ] Implement/verify that prototype, then separately review actual custody and
+  process/watchdog containment before provisioning or activation.
+
+[Design and requested scope](../architecture/p2-operational-control-design.md).
+Documentation only: no new runtime guarantees or test-count increase. Prior
+898 backend / 202 root results remain historical verification, not rerun here.
+No source reads, spend, daemon/host/account changes, deployment or P3.
+
 ### Combined v3 workers, private mTLS and restricted DB TLS — 22 October
 
 - [x] Canonical v3 authorities/pre-bind listeners in the five-container private
