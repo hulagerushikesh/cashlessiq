@@ -92,3 +92,12 @@ authority, source identities and deployment acceptance remain separate gates.
 No Snowflake/AI calls, account changes, purchase or deployment are requested.
 The prior screenshot is historical; current balance and exact expiry on
 23 October are **unknown**, and no continued trial access is assumed.
+
+### Package outcome — 23 October
+
+Owner authorized proceeding. The five-scenario real-process harness now passes;
+see [acceptance and limits](../architecture/p2-process-containment-acceptance.md).
+It exercises the existing model with actual stubs and an independent watchdog,
+not actual product-service wiring. The uniquely named test resources were removed.
+Bundle 1 still requires actual custody/health/current-generation authority and
+service integration; bundles 2 and 3 remain open. No deployment date is claimed.

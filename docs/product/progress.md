@@ -53,6 +53,23 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Latest integration — disposable process containment, 23 October
+
+The owner authorized the bounded Linux process harness. Five actual-process
+scenarios now verify the supervisor model's readiness/partial cleanup, deadline
+and stop denial, confirmed escalation/reaping, sticky unconfirmed cancellation,
+and an independent watchdog killing a blocked launch actor plus its descendant.
+No actual product service, source route or secret is activated. Ten runner safety
+regressions bring root verification to **213**; backend remains **1,003 passed**
+(rerun), with the existing intentional serializer warning. Ruff/whitespace pass.
+The explicit CI containment step is added; its new remote result is pending.
+
+See [acceptance and limitations](../architecture/p2-process-containment-acceptance.md).
+Owned test resources were removed. Actual custody/health/activation authority,
+governed identities/projection, authenticated live acceptance and hosting remain
+the deployment blockers. No Snowflake/AI spend or website change; no trial
+availability assumed on 23 October. P2 remains in progress, not release-ready.
+
 ### Latest implementation — inactive supervisor, 22 October
 
 The owner explicitly approved fake processes and disposable state only. The
@@ -76,10 +93,8 @@ increments unless integration reveals a concrete defect. Actual host/store,
 health-provider policy, durable fence, live identities/projection and acceptance
 remain open; no supported deployment date or P2 exit is claimed.
 
-Next proposed batch is the bounded disposable Linux process-containment harness
-in the deployment checklist. It needs separate approval because the implemented
-supervisor was approved for fake processes only. No further primitive refinements
-or actual host/custody/service activation are implicitly authorized.
+The subsequently approved disposable Linux process-containment batch is recorded
+above. Actual host/custody/service activation is not implicitly authorized.
 
 Latest owner evidence is **$193 remaining / trial ends in 1 day**, with today
 identified as the final usable day. No exact expiry/balance API refresh or

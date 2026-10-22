@@ -4,6 +4,11 @@
 real provisioning/wiring/activation remains unapproved.** Synthetic read-only P2;
 no purchases, deployment or P3. See [acceptance and limits](p2-offline-supervisor-acceptance.md).
 
+23 October follow-up: the owner separately authorized the bounded disposable
+Linux process-containment harness. Actual stub termination/escalation, a blocked
+callback watchdog and cleanup now pass; [evidence and limits](p2-process-containment-acceptance.md).
+This does not approve real secret delivery, product-service wiring or activation.
+
 Next gate after [combined v3 container acceptance](p2-unified-container-acceptance.md).
 This consolidates [runtime lifecycle](p2-runtime-lifecycle.md) and
 [host health](p2-clock-health-review.md). Fixture acceptance cannot implicitly

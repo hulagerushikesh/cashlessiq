@@ -5,6 +5,23 @@ Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Disposable process containment — 23 October
+
+- [x] Owner authorized the bounded real-process test harness after its separate
+  approval request; no product service or credential activation.
+- [x] Network-free/non-root/read-only disposable Linux container: eight-process
+  readiness, partial launch cleanup, late/duplicate delivery denial, actual
+  SIGTERM/SIGKILL/reaping and sticky unknown-termination fencing.
+- [x] Independent test watchdog terminates an actor blocked inside the supervisor
+  launch callback and its same-group child; both exits confirmed.
+- [x] Ten runner safety regressions; root 213 and backend 1,003 pass. New bounded
+  CI step added; this batch's remote result is pending, not claimed green.
+- [ ] Actual host/custody, health policy, durable activation authority, runtime
+  wiring and governed source identities; test containment alone does not close P2.
+
+[Acceptance, cleanup and limits](../architecture/p2-process-containment-acceptance.md).
+No Snowflake/AI call, real secret, purchase, deployment or P3. Website unchanged.
+
 ### Inactive offline supervisor — 22 October
 
 - [x] Owner explicitly approved fake processes/disposable state only.

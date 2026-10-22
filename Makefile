@@ -13,6 +13,10 @@ SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql 
 .PHONY: product-worker-clock
 .PHONY: product-worker-guard product-worker-package
 .PHONY: product-worker-guard-tls
+.PHONY: product-supervisor-containment
+
+product-supervisor-containment:
+	$(PYTHON) scripts/test_supervisor_container.py
 
 product-worker-guard-tls:
 	uv run --project apps/worker --frozen python scripts/test_worker_mtls.py --unified-guard-tls
