@@ -281,3 +281,7 @@ Verification: **84 composition/pre-bind cases / 42 additional tests**, full
 API/PostgreSQL **681** and root **193** pass; Ruff/format/whitespace pass.
 Browser/build/container/remote CI not rerun. No Snowflake call, real credential,
 account change, runtime activation, push or deployment; P2 remains open.
+
+The next [unified v3 state/lifecycle design](p2-unified-guard-proposal.md) is drafted
+for owner review. It is **not approved or implemented** and does not expand the
+existing offline prototype approval into runtime provisioning or activation.

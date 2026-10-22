@@ -115,7 +115,12 @@ it does **not** establish atomic state, real host health or runtime readiness.
 Verification: 84 composition/pre-bind tests (42 additional), full backend 681,
 root 193 and Ruff/format/whitespace pass. No browser/build/container/remote CI
 rerun, Snowflake call, deployment or push. P2 remains about 60%.
-Next is the unified state/lifecycle design review, not automatic activation.
+The [unified state/lifecycle proposal](../architecture/p2-unified-guard-proposal.md)
+is now drafted for owner review: one transaction, fresh conservative time bounds,
+explicit claim interface, retained denial and stopped-generation recovery.
+**Implementation approval is pending.** This design-only increment changes no
+runtime behavior or completion estimate; prior test counts above are unchanged,
+not rerun for the proposal. No Snowflake spend or deployment.
 
 No website deployment or P3 is included. User interviews/customer rollout and
 real-data operational gates remain separate; synthetic-alpha permission does

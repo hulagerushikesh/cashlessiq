@@ -5,6 +5,16 @@ Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Unified guard design — 22 October, approval pending
+
+The [v3 offline proposal](../architecture/p2-unified-guard-proposal.md) specifies
+one health/clock/nonce transaction, post-verification freshness, conservative
+integer time bounds, claim-consumption interface changes, restart/latch behavior
+and explicit stopped-generation recovery tests. This is a design, not an
+implemented guard or permission to change state, keys, host services or startup.
+Owner approval is required before the new offline implementation. No code/tests
+changed or rerun, Snowflake spend, push or deployment. P2 remains about 60%.
+
 ### Signed retained health in worker tests — 22 October
 
 Broker/reader/validator test guards now consume independently signed synthetic
