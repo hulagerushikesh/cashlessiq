@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 21 October 2026
+Last updated: 22 October 2026
 Current phase: **P2 / M2 — synthetic-only, read-only case workspace**
 
 This is the current-status index. The migration plan defines sequence; phase
@@ -103,6 +103,19 @@ deadlines and worker authorization/wiring remain unaccepted. See the
 Verification: **130 health tests** (26 new), full API/PostgreSQL **639** and
 root **193** pass, with Ruff/format/whitespace. No browser/build/container/CI rerun.
 No Snowflake calls, grants, real credentials, deployment, push or P3.
+
+**Signed health composition — 22 October:** the two-hop mTLS test now checks
+independently signed synthetic health through a retained consumer for broker,
+reader and validator, rather than returning a constant healthy flag. Across both
+tenants/all three roles it preserves SAVED/MISSING, replay denial and rollback
+checks; new signature and stale-at-delivery failures deny and remain latched.
+Six additional loopback/private pre-bind checks deny without binding or source
+work. The bridge is test-local only, with separate health and clock/nonce files:
+it does **not** establish atomic state, real host health or runtime readiness.
+Verification: 84 composition/pre-bind tests (42 additional), full backend 681,
+root 193 and Ruff/format/whitespace pass. No browser/build/container/remote CI
+rerun, Snowflake call, deployment or push. P2 remains about 60%.
+Next is the unified state/lifecycle design review, not automatic activation.
 
 No website deployment or P3 is included. User interviews/customer rollout and
 real-data operational gates remain separate; synthetic-alpha permission does

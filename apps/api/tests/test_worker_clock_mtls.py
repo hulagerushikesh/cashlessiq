@@ -1,14 +1,16 @@
-"""Clock-checked signed two-hop loopback TLS; health/identity/source are fake.
+"""Clock-checked signed two-hop loopback TLS; host/identity/source are fake.
 
 Actual TLS peer identities, guard/replay files and RS256 assertions are used.
 No deployment host clock policy, HTTP login, process/container isolation or
 Snowflake source acceptance is implied.
 """
 
+import sqlite3
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import replace
 from hashlib import sha256
+from http.server import ThreadingHTTPServer
 from threading import Thread
 from unittest.mock import Mock
 from uuid import uuid4
@@ -17,6 +19,8 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from test_source_cases import build_test_sources
+from test_worker_health import policy as policy
+from test_worker_health import setup as setup
 from test_worker_transport import context
 from test_worker_transport import pki as pki
 
@@ -41,7 +45,19 @@ from ciq_api.worker_delegation import (
     OfflineReadRelay,
     TransportPeer,
 )
-from ciq_api.worker_transport import ClockCheckedSummaryServer, LoopbackSummaryClient
+from ciq_api.worker_health import HealthNow, sign_for_offline_test
+from ciq_api.worker_health_state import RetainedHealthConsumer
+from ciq_api.worker_transport import (
+    ClockCheckedPrivateSummaryServer,
+    ClockCheckedSummaryServer,
+    LoopbackSummaryClient,
+    PrivateEndpoint,
+)
+
+
+@pytest.fixture(scope="module")
+def health_key():
+    return rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
 
 @contextmanager
@@ -76,10 +92,16 @@ def listening(pki, name, guard, callback, peers, operation):
         "broker_delivery",
         "reader_delivery",
         "validator_delivery",
+        "broker_signature",
+        "reader_signature",
+        "validator_signature",
+        "broker_stale_delivery",
+        "reader_stale_delivery",
+        "validator_stale_delivery",
     ],
 )
 def test_clock_guard_composes_with_signed_two_hop_tls(
-    tmp_path, pki, index, request_id, role, failure
+    tmp_path, pki, setup, policy, health_key, index, request_id, role, failure
 ):
     tenant = SOURCE_TENANTS[index].tenant_id
     member = Membership(tenant, role)
@@ -91,8 +113,45 @@ def test_clock_guard_composes_with_signed_two_hop_tls(
         "_medical" if disclosure == "medical" else ""
     )
     validator_name = "validator" if index == 0 else "validator1"
-    initial = ClockSample(1000 * SECOND, 10 * SECOND, "test-boot")
+    binding, evidence, health_now = setup
+    initial = ClockSample(health_now.wall_ns, health_now.monotonic_ns, binding.boot_id)
     samples = {name: initial for name in ("broker", "reader", "validator")}
+    # Independent temporary key, not the assertion or TLS private key. This bridge
+    # exists ONLY in tests: two files/transactions are not unified authorization.
+    assert key.public_key().public_numbers() != health_key.public_key().public_numbers()
+    signed = sign_for_offline_test(evidence, health_key)
+    health_tokens = dict.fromkeys(samples, signed)
+    consumers = {}
+
+    def health_sample(name):
+        sample = samples[name]
+        return HealthNow(
+            boot_id=sample.boot_id,
+            wall_ns=sample.wall_ns,
+            monotonic_ns=sample.monotonic_ns,
+            boottime_ns=health_now.boottime_ns + sample.monotonic_ns - initial.monotonic_ns,
+        )
+
+    def consumer(name):
+        return RetainedHealthConsumer(
+            tmp_path / f"{name}-health.sqlite",
+            binding=binding,
+            policy=policy,
+            public_key=health_key.public_key(),
+            sample=lambda: health_sample(name),
+            max_gap_ns=60 * SECOND,
+        )
+
+    for name in samples:
+        RetainedHealthConsumer.initialize_for_offline_test(
+            tmp_path / f"{name}-health.sqlite", binding=binding, initial=health_now
+        )
+        consumers[name] = consumer(name)
+
+    def checked_health(name):
+        checked = consumers[name].accept(lambda: health_tokens[name])
+        return ClockHealth(True, checked.error_ns, checked.evidence.window.end_monotonic_ns)
+
     names = {
         name: sha256(f"{ISSUER}\0{audience}\0{tenant}".encode()).hexdigest()
         for name, audience in (("reader", reader_aud), ("validator", validator_aud))
@@ -110,7 +169,7 @@ def test_clock_guard_composes_with_signed_two_hop_tls(
             authority=names[name],
             generation="test-generation",
             sample=lambda: samples[name],
-            health=lambda: ClockHealth(True, 1, samples[name].monotonic_ns),
+            health=lambda: checked_health(name),
             limits=ClockLimits(100, SECOND, SECOND, 60 * SECOND),
         )
 
@@ -226,12 +285,22 @@ def test_clock_guard_composes_with_signed_two_hop_tls(
             if failure.endswith("_delivery"):
 
                 def fail_during_source(_):
-                    samples[failure.removesuffix("_delivery")] = replace(
-                        initial, wall_ns=initial.wall_ns - 1
-                    )
+                    if failure.endswith("_stale_delivery"):
+                        target = failure.removesuffix("_stale_delivery")
+                        samples[target] = replace(
+                            initial,
+                            wall_ns=initial.wall_ns + 3 * SECOND,
+                            monotonic_ns=initial.monotonic_ns + 3 * SECOND,
+                        )
+                    else:
+                        samples[failure.removesuffix("_delivery")] = replace(
+                            initial, wall_ns=initial.wall_ns - 1
+                        )
                     return inputs
 
                 read.side_effect = fail_during_source
+            elif failure.endswith("_signature"):
+                health_tokens[failure.removesuffix("_signature")] = "invalid"
             else:
                 samples[failure] = replace(initial, wall_ns=initial.wall_ns - 1)
             with pytest.raises(WorkerDenied, match=r"^Worker access denied$"):
@@ -239,10 +308,83 @@ def test_clock_guard_composes_with_signed_two_hop_tls(
             assert read.call_count == (1 if failure.endswith("_delivery") else 0)
             read.reset_mock(side_effect=True)
             samples.update(dict.fromkeys(samples, initial))
+            health_tokens.update(dict.fromkeys(health_tokens, signed))
+            consumers.update({name: consumer(name) for name in consumers})
             with pytest.raises(WorkerDenied):
                 broker.summary("fake-session", request_id)
             read.assert_not_called()
     # After TLS shutdown, a reconstructed guard cannot clear the offending latch.
-    failed = failure.removesuffix("_delivery")
+    failed = failure.split("_")[0]
     with pytest.raises(ClockDenied):
         guard(failed).check()
+    if "signature" in failure or "stale" in failure:
+        with sqlite3.connect(tmp_path / f"{failed}-health.sqlite") as db:
+            assert db.execute("SELECT sequence,unsafe FROM health_state").fetchone() == (1, 1)
+
+
+@pytest.mark.parametrize("private", [False, True])
+@pytest.mark.parametrize("failure", ["signature", "missing", "stale"])
+def test_signed_health_denies_before_any_listener_bind(
+    tmp_path, pki, setup, policy, health_key, monkeypatch, private, failure
+):
+    binding, evidence, now = setup
+    health_path, clock_path = tmp_path / "health.sqlite", tmp_path / "clock.sqlite"
+    RetainedHealthConsumer.initialize_for_offline_test(health_path, binding=binding, initial=now)
+    sample = ClockSample(now.wall_ns, now.monotonic_ns, now.boot_id)
+    SqliteClockGuard.initialize_for_offline_test(
+        clock_path, authority="validator", generation="test-generation", initial=sample
+    )
+    signed = sign_for_offline_test(evidence, health_key)
+    if failure == "signature":
+        signed = "invalid"
+    elif failure == "missing":
+        health_path.unlink()
+    else:
+        now = now.model_copy(
+            update={
+                field: getattr(now, field) + 3 * SECOND
+                for field in ("wall_ns", "monotonic_ns", "boottime_ns")
+            }
+        )
+        sample = ClockSample(now.wall_ns, now.monotonic_ns, now.boot_id)
+    consumer = RetainedHealthConsumer(
+        health_path,
+        binding=binding,
+        policy=policy,
+        public_key=health_key.public_key(),
+        sample=lambda: now,
+        max_gap_ns=60 * SECOND,
+    )
+
+    def health():
+        checked = consumer.accept(lambda: signed)
+        return ClockHealth(True, checked.error_ns, checked.evidence.window.end_monotonic_ns)
+
+    guard = SqliteClockGuard(
+        clock_path,
+        authority="validator",
+        generation="test-generation",
+        sample=lambda: sample,
+        health=health,
+        limits=ClockLimits(100, SECOND, SECOND, 60 * SECOND),
+    )
+    bind, callback = Mock(), Mock()
+    monkeypatch.setattr(ThreadingHTTPServer, "server_bind", bind)
+    config = dict(
+        clock_guard=guard,
+        context=context(pki, "validator", server=True),
+        peers={pki[1]["reader"][2]: "reader:0:nonclinical"},
+        validate=callback,
+    )
+    server = ClockCheckedSummaryServer
+    if private:
+        config["endpoint"] = PrivateEndpoint("10.20.30.40", 8443)
+        server = ClockCheckedPrivateSummaryServer
+    with pytest.raises(WorkerDenied, match=r"^Worker access denied$"):
+        server(**config)
+    bind.assert_not_called()
+    callback.assert_not_called()
+    if failure == "missing":
+        assert not health_path.exists()
+    with sqlite3.connect(clock_path) as db:
+        assert db.execute("SELECT unsafe FROM clock_state").fetchone() == (1,)

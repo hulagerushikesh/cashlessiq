@@ -1,9 +1,24 @@
 # Product P2 — read-only case workspace
 
 Status: In progress — synthetic-only alpha  
-Last updated: 21 October 2026
+Last updated: 22 October 2026
 
 ## Latest checkpoint — authenticated inspection
+
+### Signed retained health in worker tests — 22 October
+
+Broker/reader/validator test guards now consume independently signed synthetic
+health evidence with retained continuity during real two-hop loopback mTLS.
+Both tenants/all roles preserve truthful SAVED/MISSING and replay denials.
+Signature failures deny before source reads; stale evidence during source work
+prevents response delivery; restored healthy input and reopened consumers do not
+clear latches. Six negative pre-bind cases cover loopback/private listener
+constructors without opening a private socket. Test-local bridge only: separate
+health/clock files are not an atomic authorization ledger or deployed provider.
+See [limits and next gate](../architecture/p2-clock-health-proposal.md).
+Verification: 84 composition/pre-bind cases (42 additional), backend 681 and
+root 193 pass; Ruff/format/whitespace pass. No browser/build/container/CI rerun,
+Snowflake spend, activation, deployment, push or P3. P2 remains about 60%.
 
 ### Offline bounded health collection — 21 October
 

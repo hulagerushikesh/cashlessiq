@@ -245,3 +245,39 @@ Verification: **26 new tests / 130 health tests**, full API/PostgreSQL **639**
 and root **193** pass; repository Ruff, changed-file formatting and whitespace
 checks pass. Browser/build/container/remote CI were not rerun. No Snowflake call,
 account change, real credential, push or public deployment.
+
+## Signed worker composition checkpoint — 22 October
+
+The existing signed two-hop loopback mTLS suite now injects retained, independently
+signed synthetic health into each broker/reader/validator guard. The temporary
+health signing key differs from assertion signing and TLS keys. Each authority
+has its own explicit health state; repeated current evidence is checked at every
+guard observation, not cached as a startup grant. The bridge to `ClockHealth`
+exists **only in the test module**, not production code or worker packaging.
+
+Across two tenants and three roles, 78 paths check truthful GOL001 SAVED/95,000
+INR and GOL024 MISSING, no raw financial/clinical payload, consumed parent/child
+replay denial, and healthy reuse. Existing rollback failures still deny before
+source access or prevent delivery after one source read. New bad-signature cases
+at all three authorities perform zero source reads; stale signed evidence at
+delivery denies after one read. Restoring valid input and reopening consumers
+does not clear a retained latch. New signature/stale cases assert retained
+sequence/unsafe state after failure. Six more negative tests cover missing,
+bad-signature and stale health before loopback/private listener binding, with
+zero bind/source calls and no missing-file initialization.
+
+These are explicit fake host samples and evidence, real disposable SQLite/RSA
+and loopback TLS. No collector subprocess runs in these transport tests; the
+separately tested fake collector is not an installed Chrony service. Two separate
+health/clock transactions are **not atomic**, and the old guard samples before
+its health callback, so this test bridge does not solve delayed-provider timing.
+Do not install it as a runtime adapter. Unified health/clock/nonce transaction
+ordering, end-to-end deadlines, stopped-generation recovery, custody, packaging
+and real host acceptance remain open. The next step is to specify that unified
+state/lifecycle boundary for review before implementing it; no implicit migration
+or approval to provision a host/service identity is included.
+
+Verification: **84 composition/pre-bind cases / 42 additional tests**, full
+API/PostgreSQL **681** and root **193** pass; Ruff/format/whitespace pass.
+Browser/build/container/remote CI not rerun. No Snowflake call, real credential,
+account change, runtime activation, push or deployment; P2 remains open.
