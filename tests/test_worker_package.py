@@ -184,7 +184,14 @@ def test_owner_side_launcher_is_inactive_and_absent_from_service_artifacts():
             assert node.module in {"dataclasses", "hashlib", "ipaddress", "types"}
         elif isinstance(node, ast.Import):
             assert all(alias.name in {"json", "re"} for alias in node.names)
-    for name in ("composition_launcher", "composition_inventory_fixture", "composition_inventory"):
+    for name in (
+        "composition_launcher",
+        "composition_inventory_fixture",
+        "composition_inventory",
+        "bounded_composition_actor",
+        "composition_actor_fixture",
+        "composition_actor_case",
+    ):
         for file in (
             "apps/api/Dockerfile",
             "apps/api/Dockerfile.broker-test",

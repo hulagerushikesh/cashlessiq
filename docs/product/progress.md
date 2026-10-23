@@ -55,6 +55,52 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Bounded process/watchdog around the fake-engine launcher — 23 October
+
+Added an opt-in, one-use process boundary and a separate watcher, then composed
+it with the actual inactive launcher/supervisor using the fake Docker engine.
+Healthy all-eight model start/readiness/admit/stop and partial-start fencing run
+inside an owned actor process. Blocked create/stop callbacks and valid-looking
+output followed by a blocked actor are interrupted and denied. Disposable marker
+files prove those callbacks were reached, rather than treating an import timeout
+as successful containment evidence. No real Docker engine is used by these cases.
+
+The caller sets one immutable elapsed deadline; framing is bounded and rejects
+duplicate keys, non-finite JSON, extra output, non-object results and failed exits.
+Child errors/output on denial are discarded, not leaked. Actor arguments contain
+only a closed test mode and disposable marker path; no credentials or tokens.
+The watcher owns/reaps its direct actor. The caller bounds and forcibly stops/
+reaps the watcher in its separately owned process group before reaping that group
+leader. Unknown cleanup denies, with no automatic retry or replacement attempt.
+The fake-case wrapper reserves all eight names outside the actor and retains its
+test slot/name reservations on unknown completion. This is not a durable Docker
+ownership journal or a guarantee of container absence after process termination.
+
+The first run exposed a raw macOS `EPERM` cleanup path after a watcher exited;
+the watcher now remains alive until owner termination and syscall/cleanup errors
+remain redacted, fenced outcomes. A separately run partial fixture produced the
+expected FENCED/stopped metadata; subsequent integrated checks pass. Stalled-
+watcher, late-result and malformed-output cases also deny. PID-group ownership
+requires default SIGCHLD disposition, exclusive child reaping and closed test
+actors that do not escape the process group; unknown SIGCHLD handling denies.
+Same-host suspension still pauses this mechanism. It is not external deadline,
+clock-domain continuity, arbitrary descendant containment or operational safety
+proof. Explicit Linux containment acceptance remains a separate evidence set.
+
+**21 root tests** cover process/framing/policy/cleanup behavior; **6 API tests**
+cover the real actor/watcher around the fake-engine lifecycle and reservation
+handling. The expanded targeted API suite has **592 passing tests** and root
+regression has **265 passing tests**, plus lint/format checks.
+Previous `77e1260` is green in CI. No service image/default startup includes the
+actor/watchdog or closed test-case helpers. Existing app containers/settings are
+unchanged; host preflight again reports pressure `2`. No Docker resources,
+auth material, Snowflake use, public deployment or P3 work was added.
+
+**Next: material provisioning/verification and physical all-eight composition**,
+including bounded real Docker callbacks, independent retained ownership/recovery
+records, canonical service readiness/delivery and confirmed exact cleanup. This
+process fixture alone does not close those gates or advance the completion estimate.
+
 ### Inactive eight-role inventory and owner-side launch adapter — 23 October
 
 Added a pure, no-I/O launch inventory covering all eight application roles,

@@ -375,6 +375,52 @@ watchdog, exact material provisioning, all-eight readiness and physical cleanup
 acceptance are composed. This preparation is part of the approved disposable
 batch, not operational activation or permission to bypass host headroom.
 
+**Subsequent bounded fake-engine actor checkpoint (23 October):**
+`scripts/bounded_composition_actor.py` supplies an explicitly invoked, one-use
+POSIX process boundary for trusted disposable test commands. Construction has
+no I/O. It fixes the caller's monotonic elapsed deadline before launching a
+separate watcher, passing only the command/deadline over private stdin. Empty
+environments, closed descriptors, discarded stderr and bounded unique-key JSON
+frames prevent accidental ambient credential/config use or uncontrolled output.
+The watcher launches the actor in its owned group, bounds output/exit and reaps
+its direct child, escalating TERM to KILL for a blocked actor. A printed valid
+result without successful exit cannot authorize delivery. Trailing output,
+non-finite JSON, bad exits, expired results and unknown termination deny.
+
+The watcher stays alive after its report until its owner kills/reaps it; this
+avoids an observed macOS group-only-exited-leader `EPERM` path. The owner also
+bounds a stalled watcher, kills the exact owned group before reaping its leader,
+and fences on kill/wait uncertainty. Default SIGCHLD disposition and exclusive
+child reaping are required: do not embed this into an unrelated shared process
+reaper. Closed test actors must not create new sessions/escape the owned group.
+This is not arbitrary hostile descendant containment. The existing Linux
+subreaper/stubborn-descendant acceptance remains separate, not rerun here.
+
+These test budgets are explicit, at most ten seconds per command, with separate
+bounded cleanup allowance; they do not change the 30-second assertion lifetime
+or supply reviewed operational limits. Time uses same-host monotonic elapsed
+samples, not a trusted health provider or independent rollback authority. Host
+suspension pauses the watchdog as well. No external hard-bound/SLA is claimed.
+
+`composition_actor_case.py` runs only five closed fake-engine modes: healthy,
+partial start, blocked create, blocked stop and late result. It imports the same
+inactive eight-role launcher/supervisor used in the preceding tests; it cannot
+select a real Docker backend. Per-test create-exclusive marker files prove a
+blocked callback/result stage was reached. `FakeCompositionAttempt` reserves
+eight exact names in the caller before starting the actor and retains its test
+slot/UNKNOWN reservations on denial. Successful fake metadata is validated
+before releasing that test slot. All these helpers remain excluded from normal
+startup and service images.
+
+**No real Docker callback/daemon workload is contained by this checkpoint.**
+Reaping an actor/watcher is not proof that a Docker-daemon-owned container exited.
+The next physical composition still needs a retained, independently available
+ownership journal before mutations, bounded real engine actors/reconciliation,
+exact material provisioning/verification, all-eight canonical readiness and
+confirmed container/socket/resource cleanup. The in-memory test reservation map
+does not survive parent replacement or meet the operational generation fence.
+No Docker socket, secret custody, live source flag or public endpoint is added.
+
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
 - Exercise both tenants and all three roles through verified identity context:
