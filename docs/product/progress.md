@@ -53,6 +53,25 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Current owner-testing milestone — local synthetic alpha, 23 October
+
+Owner has no additional Linux host and approved a usable local-only synthetic
+alpha rather than hosting/provisioning. The Mac's existing Docker stack is rebuilt
+and healthy at `http://localhost:3000`; DB data is retained. No website change,
+Snowflake/AI call, purchase, source activation or P3. This is not a UI redesign.
+
+[Start the 10-minute owner checklist](local-alpha-testing.md). Verification:
+**26 browser, 15 source API/UI fake-gateway, 41 client, 213 root and 1,003 backend
+tests pass**; typecheck, production build, lint, contract/no-drift and whitespace
+checks pass. Three new browser tests verify sign-out blocks protected case access
+for each role. One existing intentional backend serializer warning remains.
+Prior containment commit `2d10fcc` passed remote CI; this batch's CI is pending.
+
+P2's governed live acceptance and public release are still open. Continue local
+owner testing without depending on trial renewal or treating synthetic snapshots
+as live records. Customer SSO, hosting and real custody/source integration require
+their own configuration and approval; do not expose the development role selector.
+
 ### Latest integration — disposable process containment, 23 October
 
 The owner authorized the bounded Linux process harness. Five actual-process

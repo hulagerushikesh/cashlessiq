@@ -114,6 +114,8 @@ make product-up
 ```
 
 Open [localhost:3000](http://localhost:3000) and choose a synthetic reviewer role.
+Use the [10-minute local alpha testing guide](docs/product/local-alpha-testing.md)
+for the three role journeys, expected values and issue-reporting checklist.
 The [case queue](http://localhost:3000/cases) now supports read-only exploration
 of three golden scenarios, calculation traces, and policy source references.
 See the [P2 checklist](docs/product/phase-p2-checklist.md) for scope and limits.

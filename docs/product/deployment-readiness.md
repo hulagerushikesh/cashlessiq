@@ -1,5 +1,12 @@
 # Product deployment: concrete remaining work
 
+**23 October local-only milestone:** owner has no additional Linux host and
+approved refreshing the existing Mac/Docker synthetic workspace. It is rebuilt,
+healthy and regression-verified; [owner testing checklist](local-alpha-testing.md).
+This does not require a Linux purchase, Snowflake access or public hosting. Keep
+development authentication loopback-only. The three governed live/public release
+bundles below remain open; local testing is not an assertion that they passed.
+
 22 October 2026. The hackathon website is not the authenticated product release.
 The new local Next.js/FastAPI/PostgreSQL workspace exists, but its governed live
 source route remains disabled. More passing security tests do not publish it.

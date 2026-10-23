@@ -10,6 +10,20 @@ async function signIn(page: import("@playwright/test").Page, profile: string) {
 }
 
 for (const profile of ["processor", "medical_officer", "auditor"]) {
+  test(`${profile} cannot reopen a protected case after sign-out`, async ({ page, context }) => {
+    await signIn(page, profile);
+    await page.getByRole("link", { name: "Open GOL001" }).click();
+    await expect(page.getByText("₹95,000", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    expect((await context.cookies()).find((cookie) => cookie.name === "ciq_session"))
+      .toBeUndefined();
+    await page.goto("/cases/GOL001");
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByText("₹95,000", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Acute appendicitis", { exact: true })).toHaveCount(0);
+  });
+
   test(`${profile} reads queue and the three case journeys`, async ({ page }) => {
     await signIn(page, profile);
     await expect(page.getByRole("heading", { name: "Case queue", exact: true })).toBeVisible();

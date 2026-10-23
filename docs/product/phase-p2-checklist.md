@@ -5,6 +5,24 @@ Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Local authenticated synthetic alpha — 23 October
+
+- [x] Owner approved refreshing/verifying the local Mac/Docker workspace; no
+  additional Linux host, purchase, public deployment or Snowflake access.
+- [x] Rebuilt local web/API; migrations and idempotent seed succeed; persistent
+  PostgreSQL data retained. Web/API/DB/Redis healthy with host bindings loopback-only.
+- [x] 26 browser tests: all roles, golden journeys, role-based clinical display,
+  filters, mobile, fixture/error states and three new sign-out access regressions.
+- [x] 15 fake-gateway source API/UI tests across two tenants/three roles; 41 client
+  checks; root 213 and backend 1,003. Typecheck, build, lint, contracts/no drift pass.
+- [x] [Owner testing guide](local-alpha-testing.md) distinguishes snapshots, UI
+  fixtures, source MISSING and unavailability; no live-source equivalence claim.
+- [ ] Governed live P2 and public release gates remain open. This local milestone
+  neither activates source routes nor starts P3.
+
+Remote CI for `2d10fcc` passed, including disposable containment. This local-alpha
+batch's post-push CI is pending; one existing backend negative-model warning remains.
+
 ### Disposable process containment — 23 October
 
 - [x] Owner authorized the bounded real-process test harness after its separate
