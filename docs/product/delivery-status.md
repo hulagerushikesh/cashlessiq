@@ -4,6 +4,12 @@ Updated 23 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+**23 October delivery focus:** the [next-demo and validation plan](next-demo-and-validation.md)
+separates a supervised synthetic walkthrough (possible before live P2 exit) from
+a public/real-data pilot. Start owner-led workflow conversations now; retain all
+deployment and phase gates. The next engineering milestone is integrated
+disposable container acceptance, not more unrelated security primitives.
+
 ## How much is finished?
 
 **Approximately 35–40% overall; P2 approximately 60%.** These remain rough
