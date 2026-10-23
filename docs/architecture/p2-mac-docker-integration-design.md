@@ -514,6 +514,34 @@ approved financial/clinical projection, live API/UI acceptance and public OIDC/
 hosting are still open. P3 remains blocked by P2 exit. No percentage increase is
 earned merely by writing this design.
 
+**Subsequent retained-journal checkpoint (23 October):**
+`scripts/composition_journal.py` explicitly creates a private per-prefix directory
+and exclusive mode-0600 append journal under a caller-supplied private parent.
+Reservations must be durably returned before engine mutations. The record schema
+contains only exact namespaced names, closed resource kinds/identities, public
+configuration fingerprints and lifecycle observations. No engine output, errors,
+tokens, keys or arbitrary configuration is persisted. Append checks existing
+canonical bounded contents, metadata/identity and private modes; short writes
+are completed and file fsync precedes success. Directory and parent fsync precede
+initial creation success. Failure retains state and permanently denies that
+writer; partial records are not silently truncated or repaired.
+
+Independent read-only inspection is available after the writer releases its lock
+or dies. UNKNOWN reservations remain unknown even after an actor is killed or
+reports successful exit. Observation/fence/stop/removal transitions are checked,
+but the trusted caller still owes actual engine identity/ownership, confirmed
+exit and removal evidence. No journal-only cleanup, discovery/adoption, resumed
+writer or automatic replacement is supplied. A journal lives outside disposable
+actor/service mounts and must be retained until independent reconciliation.
+
+Real host-file tests and actual process-death/watchdog tests exercise this API
+with fake workloads only; it is **not yet wired to a real engine**. Advisory locks
+and local fsync are not encryption, hostile same-UID protection, independent
+generation authority, complete-rollback detection or externally durable custody.
+The next physical batch still owes bounded real-engine callbacks, independently
+verified helper/volume operations, seven retained states, restricted DB, all-eight
+readiness/delivery and exact cleanup. Elevated Mac pressure still defers builds.
+
 ## Implementation anchors and change exclusions
 
 Reuse `offline_supervisor.py`, v3 broker/guard/transport, restricted membership

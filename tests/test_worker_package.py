@@ -194,6 +194,7 @@ def test_owner_side_launcher_is_inactive_and_absent_from_service_artifacts():
         "composition_material",
         "composition_material_fixture",
         "composition_volume",
+        "composition_journal",
     ):
         for file in (
             "apps/api/Dockerfile",

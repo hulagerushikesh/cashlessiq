@@ -55,6 +55,42 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Retained disposable ownership/recovery journal — 23 October
+
+Added an explicitly created, owner-private journal outside actor/service mounts.
+It fsyncs each exact UUID-namespaced reservation before a trusted caller may
+mutate the engine. Container/network IDs, volume names and image digests have
+closed formats and bind a public configuration fingerprint; arbitrary payloads,
+credentials and engine errors are not accepted. Exclusive writer locking,
+canonical bounded records, no-follow opens and file/directory identity checks
+reject concurrent writers, aliases, replacement and malformed/truncated records.
+Short writes are completed; write/fsync uncertainty permanently closes that
+writer. Nothing is overwritten, repaired, retried or deleted.
+
+A separate inspection-only recovery API reopens the retained file after process
+death. Unobserved reservations stay **UNKNOWN**, never absent or stopped. Trusted
+engine observations may be recorded after a fence; no new resource reservations
+may be added. A container cannot be recorded removed before confirmed stop, and
+one engine identity cannot be assigned to two reservations. **These are journal
+transition checks, not Docker attestations or automatic removal authorization.**
+There is no reopen/resume writer, operational rollback protection or independent
+generation authority. Same-owner rewriting/complete rollback remains trusted.
+
+Real disposable filesystem tests include abrupt writer exit, failed fsync and
+partial writes. Composition with the existing real actor/watchdog retains all
+eight UNKNOWN reservations after blocked/late fake workloads; successful process
+exit also cannot promote them to stopped. Docker is not called by these tests.
+The journal remains excluded from normal and service-image startup. Actual engine
+callbacks are **not yet wired**: next compose the journal with bounded real-engine
+creation/inspection/reconciliation and exact cleanup, then run helper/volume and
+eight-role acceptance when Mac headroom permits. Current pressure is still `2`;
+no new Docker resources, local UI changes, Snowflake spend or deployment.
+
+**40 new journal tests pass; 392 root regression tests, 145 targeted API
+launcher/actor/material/supervisor tests and lint/format checks pass.**
+P2 and overall completion estimates remain unchanged; physical acceptance and
+operational source gates are not satisfied by this filesystem checkpoint.
+
 ### Disposable volume installer/read-back implementation — 23 October
 
 Added a separately invoked, standard-library material helper and closed two-file
