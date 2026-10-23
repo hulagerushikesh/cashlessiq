@@ -5,6 +5,25 @@ Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Disposable state-volume helper candidate — 23 October
+
+- [x] Closed bounded request for the exact seven roles/fixed test generation;
+  explicit empty-directory initialization only, partial outcomes retained.
+- [x] Independent existing-state probe checks private file/directory metadata,
+  canonical SQLite authority/generation and signed frozen-time health. No
+  initialization, byte-digest reset or repair on reload; spent replay survives.
+- [x] CLI fixes the state path and initialize-root / verify-10001 identities;
+  redacted receipts/errors, no ambient configuration or new health provider.
+- [x] Candidate helper image and deny-by-default build context; requires an
+  independently verified pinned broker-test base. No image build was run.
+- [x] 33 new host tests; 561 root and 247 targeted API regressions pass, with
+  repository lint, changed-Python formatting and whitespace checks. No full
+  API/browser rerun; remote CI remains pending.
+- [ ] Actual mount/UID/chown, bounded journaled helper execution and containment,
+  eight-role readiness/lifecycle/cleanup remain unproven. Probe needs RW state
+  for health high-water writes. Elevated Mac pressure 2 defers heavy acceptance.
+  No normal activation, Snowflake spend, deployment or P3.
+
 ### Seven-state/material preflight integration — 23 October
 
 - [x] Explicit empty-root initialization of exactly seven plan-named disposable

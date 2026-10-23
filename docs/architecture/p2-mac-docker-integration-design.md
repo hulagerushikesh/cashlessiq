@@ -721,6 +721,36 @@ inference exists. Real subprocess tests use fake CLI metadata, not a Docker
 daemon. No actual container exit/removal or mounted material is claimed. Physical
 eight-role/helper acceptance remains deferred at Mac memory pressure 2.
 
+**Disposable state-helper candidate (23 October):**
+`apps/worker/tests/composition_state_volume.py` is an explicit test artifact,
+not the normal worker entrypoint or an operational clock-health provider. A
+4096-byte maximum stdin request names exactly one of seven authorities and the
+fixed disposable generation. The initialize CLI requires UID/GID 0 and an empty
+explicit `/var/lib/ciq-replay` directory. It invokes the existing frozen-time
+initializer, retains partial files on error, and refuses reinitialization.
+The separate verify CLI requires UID/GID 10001 and checks exact files, modes,
+ownership, single links, sizes, authority/generation, canonical SQLite and signed
+fictional health. It never initializes or repairs. Retained replay/high-water
+changes are legitimate, so no original database-byte hash is used as authority.
+
+The physical runner must supply an exclusive disposable named volume, bounded
+stdin/process execution, inspected pinned image/container/mount identity and
+independently confirmed exit. Initializer configuration must permit CHOWN only;
+the capability-free non-root probe still needs a RW state mount because health
+observation may persist high-water marks. No network, host mounts or material
+secrets are needed by either helper. The candidate Dockerfile derives from an
+explicit independently verified pinned broker-test image (the Dockerfile alone
+does not enforce the caller's pin); its separate allowlisted build context adds
+only this helper. Normal application packaging and activation remain unchanged.
+
+Host tests use disposable directories and a no-op fixture chown: they do not
+prove Linux UID semantics, mount behavior, image construction or process/daemon
+containment. Receipts are diagnostic, not readiness. Lost outcomes still require
+the future journaled coordinator to retain UNKNOWN and contain exact acknowledged
+CIDs without retry/adoption. No such state-helper engine wiring, physical
+eight-service lifecycle or cleanup acceptance is claimed here. Mac pressure 2
+continues to defer heavy builds; no resources were allocated or Snowflake called.
+
 Reuse `offline_supervisor.py`, v3 broker/guard/transport, restricted membership
 factory, worker/membership packaging and existing container fixtures. The current
 worker and membership `__main__.py` deliberately exit; do not remove that refusal

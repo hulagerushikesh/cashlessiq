@@ -1,0 +1,8 @@
+# Explicit disposable helper only. Supply an independently verified sha256-pinned
+# broker-test image; no default tag, application activation or credential context.
+ARG CIQ_BROKER_TEST_IMAGE
+FROM ${CIQ_BROKER_TEST_IMAGE}
+COPY apps/worker/tests/composition_state_volume.py /opt/ciq-composition/
+USER 10001:10001
+ENTRYPOINT ["/app/apps/api/.venv/bin/python", "/opt/ciq-composition/composition_state_volume.py"]
+CMD []

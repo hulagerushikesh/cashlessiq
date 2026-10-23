@@ -1,0 +1,5 @@
+**
+!apps/
+!apps/worker/
+!apps/worker/tests/
+!apps/worker/tests/composition_state_volume.py

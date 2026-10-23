@@ -55,6 +55,28 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Disposable state-volume helper candidate — 23 October
+
+An explicit test-only helper now accepts a small closed role/generation request
+for one of the seven canonical authorities. Initialization requires an empty
+directory, uses the existing frozen-time fixture, and retains partial outcomes.
+The separate probe checks UID/GID, private modes, exact regular single-link
+files, canonical SQLite/config/authority and signed fictional health. It never
+initializes or repairs state. Replay remains spent across repeated probes.
+
+The candidate image derives from a caller-supplied, independently verified pinned
+broker-test image and adds only the helper; its deny-by-default build context
+excludes credentials. Initialization must run as root with only CHOWN; the
+independent probe runs as UID/GID 10001. Both use the explicit state mount;
+verification requires RW because health observations may persist high-water
+marks. Neither receipt is service readiness or proof of a stopped container.
+
+Thirty-three new host tests cover the helper and CLI boundary. No image was
+built or volume mounted: Mac pressure remains 2. Bounded journaled state-helper
+coordination, actual Linux ownership/read-back, restricted DB/controller and
+eight-role lifecycle/cleanup remain next. No source flags, normal startup,
+deployment, Snowflake spend or P3 changes. P2 and its estimate remain unchanged.
+
 ### Seven-state/material preflight integration — 23 October
 
 An inactive host-side test fixture now joins all seven canonical retained guard
