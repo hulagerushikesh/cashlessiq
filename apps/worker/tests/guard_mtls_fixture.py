@@ -36,11 +36,46 @@ NOW = HealthNow(
     boottime_ns=100 * SECOND,
 )
 
+# Supervisor names are not wire audiences: in particular clinical -> medical.
+# Membership deliberately has no v3 state. This mapping is test material only.
+SERVICE_BINDINGS = {
+    "broker": None,
+    "reader-0-nonclinical": (0, "reader:0:nonclinical"),
+    "reader-0-clinical": (0, "reader:0:medical"),
+    "reader-1-nonclinical": (1, "reader:1:nonclinical"),
+    "reader-1-clinical": (1, "reader:1:medical"),
+    "validator-0": (0, "validator:0"),
+    "validator-1": (1, "validator:1"),
+}
 
-def initialize(role):
-    assert role in {"reader", "validator"}
-    audience = "reader:0:nonclinical" if role == "reader" else "validator:0"
-    tenant = SOURCE_TENANTS[0].tenant_id
+
+def authority_for(role):
+    """Exact seven-state inventory; never infer a tenant/audience from input."""
+    if type(role) is not str or role not in SERVICE_BINDINGS:
+        raise ValueError("Unknown disposable authority role")
+    binding = SERVICE_BINDINGS[role]
+    if binding is None:
+        return "broker"
+    index, audience = binding
+    tenant = SOURCE_TENANTS[index].tenant_id
+    return sha256(f"{ISSUER}\0{audience}\0{tenant}".encode()).hexdigest()
+
+
+def _paths(directory):
+    if directory is None:
+        return STATE, PUBLIC
+    return Path(directory) / "used.sqlite", Path(directory) / "public-guard.json"
+
+
+def initialize(role, *, directory=None, generation=GENERATION):
+    # Preserve the existing single-tenant test harness, not runtime aliases.
+    if type(role) is not str:
+        raise ValueError("Unknown disposable authority role")
+    role = {"reader": "reader-0-nonclinical", "validator": "validator-0"}.get(role, role)
+    authority = authority_for(role)
+    state, public_path = _paths(directory)
+    if os.path.lexists(state) or os.path.lexists(public_path):
+        raise FileExistsError("Disposable state already exists")
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     public = key.public_key().public_bytes(
         serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
@@ -52,8 +87,8 @@ def initialize(role):
         collector_epoch="00000000-0000-0000-0000-000000000003",
     )
     config = GuardStateConfig(
-        authority=sha256(f"{ISSUER}\0{audience}\0{tenant}".encode()).hexdigest(),
-        assertion_generation=GENERATION,
+        authority=authority,
+        assertion_generation=generation,
         health_key_sha256=sha256(
             key.public_key().public_bytes(
                 serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo
@@ -97,9 +132,9 @@ def initialize(role):
         synchronized=True,
         leap_status="Normal",
     )
-    STATE.parent.chmod(0o700)
-    OfflineGuardState.initialize_for_offline_test(STATE, config=config, initial=NOW)
-    with PUBLIC.open("x") as output:
+    state.parent.chmod(0o700)
+    OfflineGuardState.initialize_for_offline_test(state, config=config, initial=NOW)
+    with public_path.open("x") as output:
         json.dump(
             dict(
                 config=config.model_dump(mode="json"),
@@ -108,15 +143,17 @@ def initialize(role):
             ),
             output,
         )
-    PUBLIC.chmod(0o400)
-    for path in (STATE, PUBLIC, STATE.parent):
+    public_path.chmod(0o400)
+    for path in (state, public_path, state.parent):
         os.chown(path, 10001, 10001)
 
 
-def load(*, unsafe=False):
-    fixture = json.loads(PUBLIC.read_text())
+def load(*, unsafe=False, directory=None):
+    """Open existing fixture only; never initialize or repair on reload."""
+    state, public_path = _paths(directory)
+    fixture = json.loads(public_path.read_text())
     guard = OfflineHealthGuard(
-        STATE,
+        state,
         config=GuardStateConfig.model_validate_json(json.dumps(fixture["config"])),
         public_key=serialization.load_pem_public_key(fixture["public"].encode()),
         sample=lambda: NOW.model_copy(update={"wall_ns": NOW.wall_ns - SECOND}) if unsafe else NOW,

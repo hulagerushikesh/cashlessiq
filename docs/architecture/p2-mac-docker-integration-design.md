@@ -19,7 +19,7 @@ Two modes must remain separate:
 
 | Mode | Inputs and permitted result | Status |
 | --- | --- | --- |
-| Integration acceptance | Disposable test identities, signed fictional health and synthetic source; exercise canonical handlers in owned containers | Owner approved; implementation/run pending sufficient Mac headroom |
+| Integration acceptance | Disposable test identities, signed fictional health and synthetic source; exercise canonical handlers in owned containers | Owner approved; seven-state test fixtures prepared, full composition/run pending sufficient Mac headroom |
 | Operational source | Real restricted identities, reviewed health policy/provider, protected retained state and current-generation authority | Blocked; no credentials or activation authorized |
 
 The first mode closes service-composition gaps without a trial or payment. It
@@ -151,6 +151,13 @@ image, read any existing credential or replace normal service entry points.
 Owner approval includes a configuration/load precheck; it is not permission to
 stress the machine despite failing headroom. No extra implementation approval
 is needed merely because this resource checkpoint deferred the work.
+
+Lightweight preparation now extends the existing explicit `mtls-test` fixture
+to all seven authority roles, preserving existing test aliases and default image
+refusal. Focused offline tests cover exact tenant/disclosure namespaces, retained
+replay and partial-state refusal. This does not implement eight actual handlers,
+their supervisor/launcher wiring, shared health delivery or restricted membership
+DB composition. Those are still the next implementation work, not accepted here.
 
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.

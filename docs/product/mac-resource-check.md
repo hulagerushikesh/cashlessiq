@@ -67,3 +67,32 @@ build, backend/PostgreSQL suite, browser suite or source test rerun locally.
 Historical local-alpha checks remain recorded separately. Remote CI for this
 new commit is not yet claimed complete. No Snowflake/AI spending, host setting
 changes, encrypted-image creation, account changes or P3 work.
+
+## Follow-up and lightweight work
+
+The owner authorized closing unused tabs and temporarily stopping the local
+sandbox. Eight reference/blank Chrome tabs were closed; Snowflake, Gmail and
+YouTube were retained. All four exact product containers were stopped without
+removing containers or data volumes. Even with zero containers running, pressure
+remained `2`. They were restarted afterward: all four healthy, API ready and
+login HTTP 200. No unrelated app/process was terminated or host setting changed.
+The root suite still passed all 238 tests and Ruff passed.
+
+A subsequent check with the app restored observed approximately 0.56 GiB
+container memory, 7.23 GiB allocated swap, 31% reported free memory and pressure
+`2`; the pressure gate still refuses the heavy run. Free percentage and swap
+occupancy are not substitutes for that observation. This does not establish a
+hardware fault or an application leak, and the blocker does not prevent
+lightweight source editing and focused tests.
+
+The explicit test-only guard fixture now prepares all seven independent
+authorities for the planned eight-role composition (membership has no v3 store).
+Its 31 focused tests pass, including 19 new cases. This is not service wiring,
+process isolation, a health provider or full composition acceptance. The Docker
+build/multi-container run remains deferred; normal entry points still refuse
+activation. No live Snowflake/AI usage or deployment occurred.
+
+The earlier resource-check implementation `2e42c09` has now independently passed
+[remote CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/39899869481).
+That result is historical evidence, not CI acceptance for the subsequent fixture
+changes.

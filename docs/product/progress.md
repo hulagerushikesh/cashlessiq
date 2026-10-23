@@ -55,6 +55,24 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Integration fixture preparation — 23 October
+
+Continued lightweight source work while the Mac's heavy-run preflight still
+reports warning pressure (`2`). The explicit test-only helper now maps all seven
+supervisor authorities to independent disposable v3 stores: broker, four readers
+and two validators. Membership has no v3 store. Clinical role names map explicitly
+to the `medical` wire audience; tenant indices map to the frozen source tenants.
+Existing single-tenant test aliases remain compatible. Initializing over either
+existing fixture file refuses, including a public-only partial fixture; loading
+missing/corrupt state never repairs it. No real key, default entry point, normal
+API/source flag or public UI changed.
+
+**31 focused tests pass (19 new)**, including all seven role bindings, retained
+replay, restrictive file modes, cross-authority claims and partial-state refusal.
+This prepares the all-role harness; the eight-service container composition,
+supervisor wiring and restricted-DB acceptance remain unimplemented/unrun.
+No P2 exit or completion-percentage increase follows from fixture tests.
+
 ### Mac resource gate — 23 October
 
 Owner approved the disposable canonical-service integration batch, subject to a
