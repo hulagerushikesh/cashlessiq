@@ -586,6 +586,46 @@ missing bridge IPAM. Material helpers, Linux UID transitions, retained states,
 DB/controller and eight-role physical lifecycle acceptance remain unverified.
 Mac pressure remains 2; no heavy execution or normal runtime change occurred.
 
+**Material-helper coordinator checkpoint (23 October):**
+`scripts/composition_helpers.py` is explicit one-role test-owner plumbing, with
+no command-line activation or default engine. It requires the public Inventory,
+matching Staged role/fingerprint, pinned helper image ID, bounded engine and
+headroom callback. The observed material volume must be PRESENT in the still-open,
+unfenced resource journal. A separate fresh helper journal uses the same invocation
+prefix under a different private parent; the resource writer is never modified.
+Use a separate bounded Engine per role (two helper CIDs), not the application's
+eight-CID registration set. The caller must supply the returned closed command
+inventory when configuring that engine; no permissive fallback is introduced.
+
+Both installer/verifier reservations precede engine calls. Exact-name collision
+denies adoption. The helper image's entrypoint/default user/empty command/no
+inherited volumes/health/ports/labels are checked; container environment must
+match that inspected immutable image. Before private input, full CID, exact
+name/image/labels/mount/user/capabilities/security, memory/CPU/PIDs/restart/IPC,
+network-none/no-address, read-only root/no host binds and created/PID-zero state
+are independently checked. Installer is root with CHOWN only, one writable named
+material volume. Verifier is UID/GID10001 with no added capabilities and that
+same volume read-only. No entrypoint override, tmpfs, other volume or network.
+Headroom and volume metadata are checked again before each helper create.
+
+Each start uses the bounded private input channel. Exact role/fingerprint/state
+receipt AND a fresh matching exited/PID-zero/non-OOM/zero-exit inspect precede
+the STOPPED journal observation. Success requires BOTH helpers; an installer
+receipt cannot authorize application launch by itself. Failure fences admission
+and retains intentions/observations. There is no name-based adoption, automatic
+retry/removal, or inference that a timed-out CLI means the daemon helper stopped.
+An ambiguous create may lack a CID; an ambiguous start may leave an active helper.
+The physical runner still owes independent bounded reconciliation/containment
+and cleanup of these exact helper resources. Current code returns failure and
+requires owner review, not a false successful-cleanup receipt.
+
+41 offline tests exercise all roles with real private staging/journals, bad
+metadata/receipts/exits, post-install unsafe verifiers and renewed headroom;
+two cases traverse real bounded actors with a fake CLI, retaining only public
+fake-daemon metadata. No Docker helper image, mount, Linux UID transition,
+seven-state initialization or full eight-role lifecycle is claimed. Memory
+pressure 2 defers heavy acceptance; normal app startup and source flags stay off.
+
 **Private helper-input transport checkpoint (23 October):** the existing bounded
 actor accepts optional bytes, maximum 2 MiB, through anonymous pipes. A bounded
 bytewise control header precedes an exact-size private body with required EOF;

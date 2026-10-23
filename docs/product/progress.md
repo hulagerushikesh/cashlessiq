@@ -55,6 +55,27 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Material-helper coordinator — 23 October
+
+An inactive one-role coordinator now joins staged material, bounded private-input
+transport and two independently inspected helper containers. It reserves both
+intentions before engine work, refuses existing names, checks the observed named
+volume and pinned helper image, and checks exact configuration before sending
+input. Installer success alone cannot pass: a separate UID-10001, read-only,
+capability-free verifier must return the expected receipt and independently
+exit successfully. Helpers have no network or host mounts; only the installer
+receives CHOWN. Failures fence and retain ambiguous outcomes for owner inspection;
+there is no automatic retry, removal or daemon-exit claim.
+
+Each role uses a dedicated helper journal under a separate private parent and
+a separate bounded engine registration set; the observed resource journal is
+checked but not modified. Application launcher journals/admission are unchanged.
+Tests cover all eight roles with fake daemon metadata and real disposable
+staging/journals, plus a real bounded subprocess/fake-CLI success and failed-exit
+round trip. This is not physical mounted-file/chown proof. Mac pressure remains
+2; mounted acceptance, seven retained states and full lifecycle remain next.
+No normal startup, Snowflake access, public deployment or P3 is enabled.
+
 ### Private helper-input transport — 23 October
 
 The bounded actor now accepts an explicit, at-most-2-MiB private byte body over

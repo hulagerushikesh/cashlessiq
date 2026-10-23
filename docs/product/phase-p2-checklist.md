@@ -5,6 +5,26 @@ Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Inactive material-helper coordination — 23 October
+
+- [x] Two journaled helper intentions before engine work; separate helper ledger
+  and CID registrations leave resource/application journals unchanged.
+- [x] Pinned image, named-volume ownership, exact helper name/labels/user,
+  entrypoint/environment, capabilities, read-only root, no network/host mounts,
+  resource limits and stopped/exited metadata checked before/after input.
+- [x] Independent UID-10001 read-only verifier required after root/CHOWN installer;
+  wrong receipts, nonzero exit, OOM/running state and unsafe verifier cannot pass.
+- [x] 41 new tests: all roles, early/late metadata failures, headroom checks,
+  unknown outcomes and real bounded transport with a fake CLI. No Docker work.
+- [x] 541 root tests and 169 targeted API composition tests pass; repository
+  lint, changed-Python formatting and whitespace checks pass. Remote CI for this
+  checkpoint is not yet verified; no full API/browser rerun is claimed.
+- [ ] Physical helper build/UID transition/mounted-file read-back, retained-state
+  integration, eight-role lifecycle and cleanup acceptance remain pending.
+- [ ] On an ambiguous create/start the helper may still exist or run in Docker;
+  known/unknown intentions are retained for explicit owner inspection, not erased
+  or represented as confirmed daemon containment.
+
 ### Disposable helper private transport — 23 October
 
 - [x] Explicit bounded anonymous-pipe input for trusted noninteractive test actors;
