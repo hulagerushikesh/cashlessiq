@@ -82,7 +82,7 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
         tenant.tenant_id: Mock(side_effect=lambda request_id: deepcopy(inputs[request_id]))
         for tenant in SOURCE_TENANTS
     }
-    captured, clients, ports, opened = [], {}, {}, []
+    captured, clients, ports, opened, closers = [], {}, {}, [], {}
 
     def summary_client(port, caller, target, audience, operation):
         return LoopbackSummaryClient(
@@ -109,13 +109,22 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
         return invoke
 
     with ExitStack() as stack:
+
+        def own_listener(role, manager):
+            # Each exact test listener can be closed by the model adapter;
+            # the outer stack remains a final cleanup owner on partial failure.
+            owned = stack.enter_context(ExitStack())
+            port = owned.enter_context(manager)
+            closers[role] = owned.close
+            return port
+
         tenants = {
             audience: SOURCE_TENANTS[index].tenant_id
             for index, audience in (f.SERVICE_BINDINGS[role] for role in TLS_NAMES)
         }
         peers = {pki[1][name][2]: f.SERVICE_BINDINGS[role][1] for role, name in TLS_NAMES.items()}
-        ports["membership"] = stack.enter_context(
-            service(pki, lookup_spy, tenants=tenants, peers=peers)
+        ports["membership"] = own_listener(
+            "membership", service(pki, lookup_spy, tenants=tenants, peers=peers)
         )
         opened.append("membership")
         memberships = {
@@ -146,7 +155,8 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
         def listen(role, callback, allowed_peers, operation):
             if before_bind:
                 before_bind(role, guards, evidence)
-            ports[role] = stack.enter_context(
+            ports[role] = own_listener(
+                role,
                 listening(
                     pki,
                     TLS_NAMES[role],
@@ -155,7 +165,7 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
                     callback,
                     allowed_peers,
                     operation,
-                )
+                ),
             )
             opened.append(role)
 
@@ -220,6 +230,7 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
             evidence=lambda: evidence["broker"](),
         )
         opened.append("broker")  # In-process issuer, not an HTTP listener.
+        closers["broker"] = lambda: None
         yield SimpleNamespace(
             broker=broker,
             members=members,
@@ -233,6 +244,7 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
             ports=ports,
             opened=opened,
             memberships=memberships,
+            close_role=lambda role: closers[role](),
             token=lambda index, role: issue_local_token(
                 settings,
                 next(p.subject for p in SOURCE_TENANTS[index].profiles if p.role == role),

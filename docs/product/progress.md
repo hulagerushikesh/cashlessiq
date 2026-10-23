@@ -55,6 +55,35 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Supervised logical-role delivery — 23 October
+
+The shared TLS fixture now has independent, idempotent listener closers and a
+test-only bridge to `OfflineSupervisor`. The model adopts the already-created
+eight logical roles; it does not launch independent processes/containers. The
+supervised call path admits no work until all eight bound readiness receipts
+match, and returns a validated summary only after model completion permits it.
+The model/audit receive opaque receipts, not recommendation payloads. Raw Python
+fixture access remains trusted test internals, not a security isolation boundary.
+
+**11 new tests pass** for readiness barrier and stale receipts, both tenants/all
+roles, duplicate completion, expiry at the deadline, stopped delivery, readiness
+or approval loss, unknown cancellation, source outage and partial adoption.
+Stop closes actual loopback listeners; outer fixture cleanup owns any listener
+not yet adopted during a partial failure. Missing/corrupt-state and TLS checks
+remain covered by the preceding shared composition suite.
+
+Clock, approval, cancellation confirmation and artifact marker are fictional.
+The model bridge stops its test world on a failed request; this does not decide
+the product's source-outage policy. No hard deadline/independent watchdog,
+container-launch readiness, restricted DB or real custody acceptance is claimed.
+Mac pressure remains warning (`2`), so the approved multi-container run is still
+deferred. P2 estimate and exit remain unchanged; no deployment or source spend.
+
+Verification: **285 targeted supervisor/TLS/guard/fixture tests and all 238 root
+tests pass**; Ruff, changed Python formatting and whitespace checks pass. Four
+existing product containers remain healthy. No Docker builds or full DB/browser
+regression locally; latest remote CI completion is not yet confirmed.
+
 ### Shared logical-role TLS composition — 23 October
 
 The canonical broker, four readers, two validators and membership now share one

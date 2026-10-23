@@ -171,6 +171,16 @@ eight independent processes/containers, supervisor/launcher readiness or deadlin
 control, shared health delivery or restricted membership DB composition. Those
 remain the next implementation work and are not accepted by loopback tests.
 
+`guard_supervisor_fixture.py` additionally adopts that already-created test world
+into the existing lifecycle model. Individual closures stop real test listeners,
+and a supervised result path checks all-eight readiness plus operation completion.
+Tests exercise stale receipts, expired/closed delivery and retained capacity under
+unknown cancellation. Time, approval and cancellation acknowledgements are fake;
+artifact markers are not image attestations. The bridge is not a process launcher,
+independent watchdog or protection against trusted test code directly calling the
+raw world. Unadopted listeners on partial failure remain owned by the outer test
+scope. This closes a model/handler composition test gap, not container acceptance.
+
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
 - Exercise both tenants and all three roles through verified identity context:
