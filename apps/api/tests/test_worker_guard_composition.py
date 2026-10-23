@@ -28,7 +28,7 @@ def test_both_tenants_all_roles_share_one_exact_composition(
 ):
     with compose(tmp_path, topology_fixture, pki, settings, assertion_key) as w:
         assert set(w.opened) == ROLES and len(w.opened) == 8
-        assert len(w.ports) == 7 and len(w.guards) == 7
+        assert len(w.ports) == 9 and len(w.guards) == 7
         for index, tenant in enumerate(SOURCE_TENANTS):
             for profile in tenant.profiles:
                 token = w.token(index, profile.role)
@@ -186,6 +186,39 @@ def test_shared_tls_peer_pins_deny_foreign_identity_and_direct_broker_hop(
         assert sum(read.call_count for read in w.reads.values()) == 1
 
 
+@pytest.mark.parametrize("index", [0, 1])
+@pytest.mark.parametrize("fault", ["revoke", "downgrade", "outage"])
+def test_broker_rechecks_remote_membership_after_successful_reader_result(
+    tmp_path, topology_fixture, pki, settings, assertion_key, index, fault
+):
+    with compose(tmp_path, topology_fixture, pki, settings, assertion_key) as w:
+        tenant = SOURCE_TENANTS[index]
+        profile = next(p for p in tenant.profiles if p.role == "medical_officer")
+        client = w.clients[f"reader-{index}-clinical"]
+        original = client.summary
+        completed = []
+
+        def after_reader(token):
+            result = original(token)  # Reader and validator completed their own checks.
+            completed.append(result)
+            if fault == "outage":
+                w.lookup.side_effect = RuntimeError("private membership detail")
+            else:
+                w.members[tenant.tenant_id, str(profile.user_id)] = (
+                    None if fault == "revoke" else Membership(tenant.tenant_id, "auditor")
+                )
+            return result
+
+        client.summary = after_reader
+        with pytest.raises(WorkerDenied, match=r"^Worker access denied$"):
+            w.broker.summary(
+                w.token(index, "medical_officer"), "GOL001" if index == 0 else "GOL024"
+            )
+        assert len(completed) == 1
+        assert w.lookup.call_count == 7  # Three broker + four worker fresh network checks.
+        assert w.lookup.call_args.args == (str(profile.user_id), tenant.tenant_id)
+
+
 @pytest.mark.parametrize("failure", ["invalid-health", "missing-state", "corrupt-state"])
 def test_partial_bind_closes_previous_listeners_without_repairing_state(
     tmp_path, topology_fixture, pki, settings, assertion_key, monkeypatch, failure
@@ -216,7 +249,7 @@ def test_partial_bind_closes_previous_listeners_without_repairing_state(
         compose(tmp_path, topology_fixture, pki, settings, assertion_key, before_bind=before_bind),
     ):
         pytest.fail("Partial composition unexpectedly admitted work")
-    assert len(ports) == 6  # Membership + two validators + three readers.
+    assert len(ports) == 8  # Three membership endpoints + two validators + three readers.
     for port in ports:
         with pytest.raises(OSError), socket.create_connection(("127.0.0.1", port), timeout=0.2):
             pytest.fail("Partial startup leaked a listener")

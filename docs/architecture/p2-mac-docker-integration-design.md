@@ -239,6 +239,45 @@ edge or API-broker transport. Do not add broker to the six-worker point-lookup
 allowlist, pass caller-chosen tenant settings or silently connect all roles to one
 common network to bypass that remaining composition work.
 
+**Subsequent broker-edge implementation (23 October):** membership's explicit
+test command now requires a third top-level key, `broker`, containing exactly
+`listen` (two distinct private IPv4 addresses at port 8443, ordered TPA001 then
+TPA003) and `pin` (the broker certificate SHA-256 pin, distinct from worker pins).
+These addresses cannot overlap the six worker addresses. Each broker endpoint
+maps the single broker peer to one fixed server-side tenant; its request remains
+only internal subject UUID plus fresh nonce. No broker is added to the worker
+peer map. Both broker endpoints use the same restricted lookup/factory; neither
+requires new SQL grants, schema/identity columns or broker-held DB credentials.
+All eight membership endpoints bind before serving. Partial failure owns factory
+and socket cleanup; READY remains diagnostic, not a readiness receipt.
+
+Enumerate **two additional broker-membership links** outside the existing 14
+worker links, one dedicated private network per endpoint. The future launcher
+must validate the exact network/interface and mount inventory before startup;
+loopback tests do not prove network isolation. The broker is trusted for both
+tenants but cannot choose a tenant on the membership wire. Reversed endpoint
+configuration causes client tenant validation to deny, not cross-tenant fallback.
+No direct broker-validator or shared all-role network is added.
+
+`broker_composition_fixture.py` has a closed synthetic-only principal registry:
+verified local issuer + tenant UUID + fixture subject maps to internal user UUID.
+Its two immutable trusted callbacks perform fresh remote membership lookups on
+each canonical broker check, including after reader delivery. Registry entries
+never supply active status or disclosure roles. Unknown principals do no lookup;
+errors deny rather than becoming missing recommendations. Production issuer
+provisioning and identity lifecycle remain unimplemented, not inferred from this
+fixture. The normal authentication system and all default entry points are
+unchanged. Membership's CLI refuses missing/null broker configuration; the Python
+test helper retains its explicit worker-only option for earlier regression tests.
+
+The shared fixture now owns nine real loopback TLS listeners (six workers, one
+worker-membership endpoint, two broker-membership endpoints) under the same eight
+logical roles. Closing the membership role closes all three membership sockets.
+Broker ingress/image packaging, separate-process readiness/deadline supervision
+and actual restricted PostgreSQL composition remain pending. This supersedes
+only the earlier broker membership edge gap, not the unimplemented API-broker
+transport or the operational custody/provider/source activation blockers.
+
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
 - Exercise both tenants and all three roles through verified identity context:

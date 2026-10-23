@@ -1,6 +1,6 @@
-"""OPT-IN TEST IMAGE ONLY: six-worker membership over the restricted TLS DB.
+"""OPT-IN TEST IMAGE ONLY: worker/broker membership over the restricted TLS DB.
 
-No broker identity-resolution API, in-memory membership fallback, automatic
+No OIDC identity-resolution API, in-memory membership fallback, automatic
 schema/grant changes or normal service activation. The launcher owns deadlines,
 exact mounts/networks and process exit; READY is only a test diagnostic.
 """
@@ -59,13 +59,60 @@ def build_server(*, context, peers, lookup, tenants=None, endpoint=None):
     return PrivateMembershipServer(endpoint=endpoint, **options)
 
 
-def serve(root, raw, *, factory_builder, stopped):
+def build_broker_server(index, *, context, broker_pin, lookup, endpoint=None):
+    """Separate broker edge: one listener fixes one tenant, never a wire field.
+
+    This does not add the broker to the six-worker peer map. The acceptance
+    launcher must give each endpoint its own exact broker-membership network.
+    """
+    if type(index) is not int or index not in (0, 1):
+        raise ValueError("Invalid disposable broker tenant index")
+    if (
+        type(broker_pin) is not str
+        or len(broker_pin) != 64
+        or any(c not in "0123456789abcdef" for c in broker_pin)
+    ):
+        raise ValueError("Invalid disposable broker pin")
+    options = dict(
+        context=context,
+        peers={broker_pin: "broker"},
+        tenants={"broker": SOURCE_TENANTS[index].tenant_id},
+        lookup=lookup,
+    )
+    if endpoint is None:
+        return LoopbackMembershipServer(**options)
+    return PrivateMembershipServer(endpoint=endpoint, **options)
+
+
+def broker_configuration(raw, workers):
+    if type(raw) is not dict or set(raw) != {"listen", "pin"}:
+        raise ValueError("Invalid disposable broker membership configuration")
+    listen = raw["listen"]
+    pin = raw["pin"]
+    if (
+        type(listen) is not list
+        or len(listen) != 2
+        or len(set(listen)) != 2
+        or set(listen) & set(workers["listen"])
+        or type(pin) is not str
+        or len(pin) != 64
+        or any(c not in "0123456789abcdef" for c in pin)
+        or pin in workers["peers"]
+    ):
+        raise ValueError("Invalid disposable broker membership configuration")
+    for address in listen:
+        PrivateEndpoint(address, 8443)
+
+
+def serve(root, raw, *, factory_builder, stopped, broker=None):
     """All binds before serving; always close factory and owned listeners.
 
     Factory builder is injected only for tests. The command-line path pins the
     existing verified-TLS factory; it cannot choose plaintext or memory storage.
     """
     configuration(raw)  # Invalid configuration cannot open credentials or DB.
+    if broker is not None:
+        broker_configuration(broker, raw)
     with ExitStack() as stack:
         if stopped.is_set():
             raise WorkerDenied("Worker access denied")
@@ -90,6 +137,23 @@ def serve(root, raw, *, factory_builder, stopped):
             )
             stack.callback(listener.server_close)
             listeners.append(listener)
+        for index, address in enumerate(broker["listen"] if broker is not None else ()):
+            if stopped.is_set():
+                raise WorkerDenied("Worker access denied")
+            listener = build_broker_server(
+                index,
+                endpoint=PrivateEndpoint(address, 8443),
+                context=tls_context(
+                    server=True,
+                    ca=root / "ca.pem",
+                    certificate=root / "identity.pem",
+                    private_key=root / "identity.key",
+                ),
+                broker_pin=broker["pin"],
+                lookup=store.lookup,
+            )
+            stack.callback(listener.server_close)
+            listeners.append(listener)
         for listener in listeners:
             if stopped.is_set():
                 raise WorkerDenied("Worker access denied")
@@ -108,10 +172,15 @@ def main():
 
     root = Path("/run/ciq")
     raw = json.loads((root / "config.json").read_text())
+    if type(raw) is not dict or set(raw) != {"listen", "peers", "broker"}:
+        raise ValueError("Invalid disposable eight-edge membership configuration")
+    workers = {key: raw[key] for key in ("listen", "peers")}
+    configuration(workers)
+    broker_configuration(raw["broker"], workers)  # None cannot select worker-only CLI startup.
     stopped = Event()
     for name in (signal.SIGTERM, signal.SIGINT):
         signal.signal(name, lambda *_: stopped.set())
-    serve(root, raw, factory_builder=fixed_factory, stopped=stopped)
+    serve(root, workers, broker=raw["broker"], factory_builder=fixed_factory, stopped=stopped)
 
 
 if __name__ == "__main__":

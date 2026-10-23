@@ -55,6 +55,44 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Broker's separate fresh-membership edges — 23 October
+
+The disposable membership test target now supports **two additional broker-only
+endpoints**, fixed to TPA001 and TPA003 respectively. They reuse the strict
+nonce/internal-UUID lookup contract without accepting a tenant, issuer or role
+on the wire. The existing six-worker allowlist is unchanged; broker certificates
+cannot enter it, and worker/foreign certificates cannot enter broker endpoints.
+The future launcher must isolate these two edges on separate exact networks.
+
+The shared logical-role TLS composition now routes broker membership checks over
+these endpoints rather than reading its fixture dictionary directly. Its closed
+synthetic identity registry maps verified local principals to internal UUIDs,
+not roles; every resolve fetches current membership remotely. This is a test
+registry, not production OIDC identity provisioning. The broker receives no DB
+password and has no cached-membership or outage-to-MISSING fallback.
+
+**50 new broker-edge/configuration/lifecycle tests pass**. Six additional shared
+chain tests verify that revocation, downgrade or outage after a successfully
+validated reader result still blocks broker delivery across both tenants.
+The expanded targeted API suite has **407 passing tests** and the root suite
+remains **242 passing tests**, with lint/format and whitespace checks
+passing. Previous `e643f3d` and `b2f470b` are now independently **green in CI**.
+
+The membership command-line test target requires the explicit broker endpoint
+configuration; missing/null configuration cannot silently start worker-only.
+All eight membership endpoint binds precede serving/diagnostic READY, and partial
+broker bind failures close owned worker endpoints and the DB factory. Shared
+tests exercise nine real loopback TLS listeners under eight logical roles;
+this is still not eight independently supervised containers or restricted-DB
+acceptance. Broker HTTP ingress/image packaging and bounded all-eight launcher/
+watchdog wiring remain next. Normal app startup/source flags are unchanged.
+
+Host preflight still defers heavy Docker work: memory pressure `2`, roughly
+6.39 GiB allocated swap, four running containers using about 741 MiB. Allocated
+swap is not proof of active swapping or a fault. Existing services/settings are
+untouched. No public deployment, live Snowflake use or purchase occurred, and
+the completion estimate is unchanged.
+
 ### Six-worker restricted membership test service — 23 October
 
 Added the membership image's explicit `composition-test` target. Six pinned
