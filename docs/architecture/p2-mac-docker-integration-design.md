@@ -421,6 +421,42 @@ confirmed container/socket/resource cleanup. The in-memory test reservation map
 does not survive parent replacement or meet the operational generation fence.
 No Docker socket, secret custody, live source flag or public endpoint is added.
 
+**Subsequent local material checkpoint (23 October):**
+`scripts/composition_material.py` is an inactive, explicit staging/archive helper,
+not a normal entrypoint or Docker installer. The trusted test builder supplies
+exact per-role bytes/configs and validates supplied disposable TLS identities
+against inventory pins. Only broker gets assertion signing/local identity secret;
+only membership gets fictional DB configuration/CA; only the matching validator
+gets tenant source rows. The controller private key is absent from all eight.
+The shared assertion public key belongs to all six workers, not membership.
+
+Each expected inventory retains bounded hashes/sizes, not source bytes, and binds
+the caller's role fingerprint. Provisioning creates a new mode-0700 directory
+under an explicit current-owner mode-0700 parent, walking without symlinks.
+Exclusive/no-follow file creation, mode-0400 final files and fsync precede a receipt
+for the root device/inode. Partial failure remains private, unadopted and retained
+for explicit test-owner cleanup; no retry/overwrite/auto-repair. Read-back bounds
+each regular file, rejects aliases/symlinks/extra files, compares stable metadata
+and expected hashes, and checks root identity again. Atime changes caused by reads
+are permitted; modification/change timestamps and security attributes are not.
+This is a snapshot check, not an exclusion lock against a hostile same-UID owner.
+
+USTAR export contains only the verified in-memory snapshot, flat regular members
+and one directory, UID/GID 10001, directory mode 0500/file mode 0400. It performs
+no extraction or Docker calls, writes no archive/secret digest manifest to disk,
+and hides fields from repr. The caller must treat archive bytes as secrets on a
+private bounded channel. There is no zeroization or encrypted/operational custody.
+No trusted content semantics are inferred by the generic helper.
+
+Real temporary-file and generated-PKI tests prepare canonical broker/worker
+handlers without requests, parse membership configuration without a DB factory,
+and use this checker as the fake-engine launcher's material callback. No mounted
+volume is attested. Physical installation/read-back of exact volume owner/mode/
+contents, replay-state provisioning and restricted DB acceptance are still owed,
+as are the independent ownership journal and bounded real Docker actors. These
+helpers are excluded from normal/service images. The approved physical batch is
+not complete, and operational/P3/public activation remains prohibited.
+
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
 - Exercise both tenants and all three roles through verified identity context:

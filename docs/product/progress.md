@@ -55,6 +55,51 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Private per-role material staging and verified archives — 23 October
+
+Implemented the local file-material prerequisite for the approved disposable
+composition. Each role has an exact file allowlist: broker alone receives the
+assertion signer/local-test identity secret; membership alone receives fictional
+DB configuration/CA; validators alone receive their tenant's synthetic source;
+readers receive only assertion verification material and their own TLS identity.
+The test builder checks each certificate pin and matching private key against
+the explicit inventory. Missing source decisions remain empty, not demo copies.
+The controller's key is never copied into an application-role bundle.
+
+The inactive standard-library helper creates new role directories only under an
+explicit private owner directory. It refuses existing directories and never
+repairs, adopts or removes partial state. fd-relative exclusive/no-follow writes,
+file/directory fsync, mode 0700 directories and mode 0400 files precede an in-memory
+receipt binding expected hashes, role fingerprint and root device/inode.
+Read-only snapshot verification bounds file sizes and rejects extra/missing files,
+changed content/security metadata, insecure modes, symlinks (including parents),
+hard links, FIFOs and root replacement. A first run exposed legitimate access-time
+updates; comparison now excludes atime but retains content/security timestamps.
+
+Archive export uses only the verified byte snapshot, without rereading files.
+It emits an exact flat USTAR inventory with UID/GID 10001, directory mode 0500
+and file mode 0400, with no links/host paths. Archive bytes are secrets and must
+remain on private bounded input, never argv/logs/public artifacts. Hash manifests
+are not persisted/printed; expected/staged object representations omit contents.
+This is not encryption, memory zeroization, same-user hostile mutation prevention
+or operational credential custody. PKI/source/DB semantics are not inferred by
+the generic staging helper; its caller is trusted disposable test provisioning.
+
+Tests use real temporary files and generated test PKI, prepare all seven canonical
+broker/worker handlers and parse the eight-edge membership configuration. They
+also replace the launcher's fake material callback with the actual local snapshot
+checker; Docker observations remain fake. No DB factory/connection is opened.
+**35 new root tests and 4 API tests pass**; root regression is **300 passing**,
+expanded targeted API regression **596 passing**, plus lint/format checks.
+Prior `bb47829` is green in CI. All helpers stay out of normal/service images.
+
+Host preflight remains pressure `2`; no Docker build/new resources or existing
+app changes were made. **Actual named-volume installation/read-back, independent
+ownership/recovery records, bounded real-engine actors and physical eight-role
+acceptance remain next.** A verified host bundle/tar is not proof of mounted file
+ownership, live TLS/DB connectivity or container cleanup. P2/completion estimates
+are unchanged; no public deployment, live Snowflake use or P3 work.
+
 ### Bounded process/watchdog around the fake-engine launcher — 23 October
 
 Added an opt-in, one-use process boundary and a separate watcher, then composed

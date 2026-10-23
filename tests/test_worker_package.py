@@ -191,6 +191,8 @@ def test_owner_side_launcher_is_inactive_and_absent_from_service_artifacts():
         "bounded_composition_actor",
         "composition_actor_fixture",
         "composition_actor_case",
+        "composition_material",
+        "composition_material_fixture",
     ):
         for file in (
             "apps/api/Dockerfile",
