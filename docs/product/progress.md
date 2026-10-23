@@ -55,6 +55,17 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Next integration design — Mac/Docker, 23 October
+
+Owner approved preparing the [local operational integration design](../architecture/p2-mac-docker-integration-design.md).
+The design fixes the eight-role/seven-state mapping, private network/material
+ownership, proposed owner-unlocked encrypted-image storage and fail-closed
+clock/activation limits. Real storage, health policy and independent generation
+authority are not proven or provisioned. One separately approvable 15-minute
+disposable all-role canonical-service composition batch is specified; no actual
+credential, encrypted image, container, source activation or deployment created.
+No implementation/test-count or completion-percentage increase is claimed.
+
 ### Current owner-testing milestone — local synthetic alpha, 23 October
 
 Owner has no additional Linux host and approved a usable local-only synthetic

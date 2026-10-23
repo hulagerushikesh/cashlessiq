@@ -62,10 +62,12 @@ must not be exposed publicly, even for synthetic data.
 
 The next implementation depends on an owner-approved operational target and
 custody arrangement. There is no approved external host or hosting budget.
-First review a **no-purchase Mac/Docker integration design** that names which
-real controls it can prove and which remain blocked; do not assume Docker's VM
-is an independently trusted production host. Implementation using actual keys,
-secret stores or service activation requires separate explicit approval.
+The owner approved preparing the [no-purchase Mac/Docker integration design](../architecture/p2-mac-docker-integration-design.md).
+It now specifies topology, proposed manual encrypted-image custody, clock/fence
+blockers and one bounded next service-composition batch. This is design approval
+only; neither that implementation nor operational custody/activation is approved.
+Docker's VM is not an independently trusted production host. Implementation
+using actual keys, secret stores or service activation requires separate approval.
 
 Public release additionally needs browser OIDC configuration, hosting, secret
 delivery, rollback and deployment approval. Those are not prerequisites for

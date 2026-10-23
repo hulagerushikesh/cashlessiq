@@ -10,6 +10,11 @@ The owner now reports local manual checks working; implementation `c6a4b03` has
 green remote CI. See the [delivery dashboard](delivery-status.md) for the concise
 phase checklist and next operational decision. No deployment was performed.
 
+Owner subsequently approved drafting the [Mac/Docker integration design](../architecture/p2-mac-docker-integration-design.md).
+It is now ready for review, with one bounded disposable service-composition batch
+proposed. Design approval does not authorize its execution, encrypted storage,
+real credential custody, operational activation or public release.
+
 22 October 2026. The hackathon website is not the authenticated product release.
 The new local Next.js/FastAPI/PostgreSQL workspace exists, but its governed live
 source route remains disabled. More passing security tests do not publish it.
