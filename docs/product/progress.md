@@ -55,6 +55,34 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Six-worker restricted membership test service — 23 October
+
+Added the membership image's explicit `composition-test` target. Six pinned
+worker certificate audiences map to the two fixed source tenants; the service
+accepts no caller tenant, broker peer, fallback store or schema/grant option.
+The command-line path pins the existing verified-TLS DB factory and canonical
+restricted membership store. Every lookup remains fresh; it adds no prefetch or
+positive cache. The shared real-TLS suite now uses the same server builder.
+
+The disposable PostgreSQL helper can explicitly seed the six canonical source
+profiles in one additive transaction. Re-seeding does not overwrite inactive or
+downgraded rows, change grants or alter the old single-tenant smoke by default.
+The service itself never provisions rows/schema. No actual DB was seeded here.
+
+**29 new service/configuration/lifecycle tests pass**, including pre-credential
+refusal, exact tenant mapping, partial startup, stop suppression and factory/
+listener cleanup. Seed registry and portable INSERT semantics have offline tests;
+these do not establish PostgreSQL/TLS privileges. **351 targeted API tests and
+242 root tests pass**, plus lint/format/whitespace checks. Earlier `b2f470b` remote
+CI was still running when checked; it is not yet claimed green.
+
+The Mac still reports pressure `2`; the existing four-container app is healthy
+and untouched. No Docker build/run, separate membership DB acceptance, public
+deployment or Snowflake spend. Diagnostic `READY` means listeners started, not
+DB availability or a supervisor readiness receipt. Broker transport/identity
+resolution, all-eight launcher/watchdog wiring and actual container acceptance
+remain open. P2 and its completion estimate remain unchanged.
+
 ### Separately runnable worker test handlers — 23 October
 
 Added an explicit worker `composition-test` image target for the four readers

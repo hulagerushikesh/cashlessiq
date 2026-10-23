@@ -213,6 +213,32 @@ next integration work, alongside the broker/membership container composition and
 two-tenant restricted DB fixture. No heavy execution bypass is authorized by the
 new test target; the host preflight still gates the approved container run.
 
+Membership now has its own opt-in `composition-test` image target with
+`python -m ciq_membership_runtime.composition_service`. Its `/run/ciq/config.json`
+contains exactly six private IPv4 `listen` addresses and `peers` (six certificate
+SHA-256 pins mapped to the fixed four reader/two validator audiences). Each peer's
+tenant is derived from the closed server-side mapping; broker peers and caller
+tenant fields are refused. Shared loopback TLS composition uses this same builder.
+
+The command-line path always supplies `db_probe.fixed_factory`, using the existing
+`db.json` and `db-ca.pem` format and verified-TLS connection policy. There is no
+plaintext/in-memory fallback, source credential, assertion signer or guard store.
+The service owns factory closure and listener cleanup on partial start or stop.
+Its diagnostic `READY` does not prove a successful DB lookup, distributed
+membership consistency or all-eight bound readiness; no prefetch is introduced.
+
+The disposable DB operator helper separately exposes `seed_source_profiles()`
+for the six canonical source profiles across TPA001/TPA003. It adds rows in one
+transaction with conflict-do-nothing semantics, preserving revocation/downgrade;
+normal single-tenant fixture startup does not invoke it. The membership service
+cannot execute this provisioning operation. Actual PostgreSQL/TLS/privilege
+acceptance is still required; offline SQLite INSERT tests do not substitute.
+
+These targets do not yet supply the broker's separate identity/membership access
+edge or API-broker transport. Do not add broker to the six-worker point-lookup
+allowlist, pass caller-chosen tenant settings or silently connect all roles to one
+common network to bypass that remaining composition work.
+
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
 - Exercise both tenants and all three roles through verified identity context:

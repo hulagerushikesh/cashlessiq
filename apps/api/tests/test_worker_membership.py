@@ -28,8 +28,8 @@ from ciq_api.worker_membership import (
 
 
 @contextmanager
-def service(pki, lookup, *, tenants=None, peers=None):
-    listener = LoopbackMembershipServer(
+def service(pki, lookup, *, tenants=None, peers=None, server_factory=LoopbackMembershipServer):
+    listener = server_factory(
         context=context(pki, "membership", server=True),
         peers=peers or {pki[1]["reader"][2]: "reader:0:nonclinical"},
         tenants=tenants or {"reader:0:nonclinical": SOURCE_TENANTS[0].tenant_id},

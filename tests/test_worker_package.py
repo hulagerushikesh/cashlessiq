@@ -127,3 +127,16 @@ def test_composition_service_is_explicit_test_target_only():
     assert "!apps/worker/tests/composition_service.py" in ignore
     package = (ROOT / "apps/worker/pyproject.toml").read_text()
     assert "composition_service" not in package
+
+
+def test_membership_composition_keeps_db_adapter_out_of_worker_image():
+    dockerfile = (ROOT / "apps/membership/Dockerfile").read_text()
+    before, target = dockerfile.split("FROM db-test AS composition-test", 1)
+    target, after = target.split("FROM runtime-base AS candidate", 1)
+    assert "composition_service.py" in target
+    assert "composition_service.py" not in before + after
+    assert 'ENTRYPOINT ["python", "-m", "ciq_membership_runtime.composition_service"]' in target
+    worker = (ROOT / "apps/worker/Dockerfile.dockerignore").read_text()
+    assert "!apps/membership/tests/composition_service.py" not in worker
+    for project in ("worker", "membership"):
+        assert "composition_service" not in (ROOT / f"apps/{project}/pyproject.toml").read_text()

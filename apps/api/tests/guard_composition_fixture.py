@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 
 from composition_service_fixture import service as worker_service
+from membership_composition_fixture import service as membership_service
 from test_source_cases import build_test_sources
 from test_worker_guard_mtls import listening
 from test_worker_membership import service
@@ -115,7 +116,14 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
         }
         peers = {pki[1][name][2]: f.SERVICE_BINDINGS[role][1] for role, name in TLS_NAMES.items()}
         ports["membership"] = own_listener(
-            "membership", service(pki, lookup_spy, tenants=tenants, peers=peers)
+            "membership",
+            service(
+                pki,
+                lookup_spy,
+                tenants=tenants,
+                peers=peers,
+                server_factory=membership_service.build_server,
+            ),
         )
         opened.append("membership")
         memberships = {

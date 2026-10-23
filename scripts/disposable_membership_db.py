@@ -18,6 +18,26 @@ from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 DB_HOSTNAME = "ciq-membership-db.test"
 
+# Closed synthetic registry, checked against canonical SOURCE_TENANTS in tests.
+# The pre-existing single-tenant smoke keeps its original seed unless the new
+# composition launcher explicitly asks for these additional disposable rows.
+SOURCE_PROFILES = (
+    ("00000000-0000-4000-8000-000000000101", "00000000-0000-4000-8000-000000000111", "processor"),
+    (
+        "00000000-0000-4000-8000-000000000101",
+        "00000000-0000-4000-8000-000000000112",
+        "medical_officer",
+    ),
+    ("00000000-0000-4000-8000-000000000101", "00000000-0000-4000-8000-000000000113", "auditor"),
+    ("00000000-0000-4000-8000-000000000103", "00000000-0000-4000-8000-000000000131", "processor"),
+    (
+        "00000000-0000-4000-8000-000000000103",
+        "00000000-0000-4000-8000-000000000132",
+        "medical_officer",
+    ),
+    ("00000000-0000-4000-8000-000000000103", "00000000-0000-4000-8000-000000000133", "auditor"),
+)
+
 
 def test_ca(name):
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -132,6 +152,28 @@ class DisposableMembershipDB:
             "synthetic",
             input=statement,
         )
+
+    def seed_source_profiles(self):
+        """Explicit disposable DB provisioning only, not membership-service I/O.
+
+        One transaction adds the frozen two-tenant/six-profile registry. Existing
+        inactive/downgraded rows are not reactivated or overwritten. No new grant,
+        profile/OIDC column, production connection or caller-supplied SQL value.
+        """
+        tenants = sorted({tenant for tenant, _, _ in SOURCE_PROFILES})
+        tenant_rows = ",".join(f"('{tenant}',true)" for tenant in tenants)
+        user_rows = ",".join(f"('{user}',true)" for _, user, _ in SOURCE_PROFILES)
+        member_rows = ",".join(
+            f"('{user}','{tenant}','{role}',true)" for tenant, user, role in SOURCE_PROFILES
+        )
+        self.sql(f"""
+BEGIN;
+INSERT INTO ops.tenant(id,active) VALUES {tenant_rows} ON CONFLICT DO NOTHING;
+INSERT INTO ops.app_user(id,active) VALUES {user_rows} ON CONFLICT DO NOTHING;
+INSERT INTO ops.tenant_membership(user_id,tenant_id,role,active)
+ VALUES {member_rows} ON CONFLICT DO NOTHING;
+COMMIT;
+""")
 
     def start(self):
         tls_mounts, command = self.tls_files() if self.verified_tls else ([], ["postgres"])
