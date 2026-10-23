@@ -85,6 +85,13 @@ class Launcher:
                 fingerprint=self.plan.fingerprint(role),
             )
 
+    def _permit_incarnation(self, cid):
+        # Optional bounded transport's pure in-memory full-ID registration;
+        # never ownership attestation. Fake historical engines need no hook.
+        permit = getattr(self.engine, "permit_incarnation", None)
+        if permit is not None:
+            permit(cid)
+
     def _fence(self):
         self.closed = True
         if self.journal is not None:
@@ -202,6 +209,7 @@ class Launcher:
             if not _hex(cid) or cid in self.owned.values() or cid in self.auxiliaries.values():
                 raise ValueError("Invalid disposable incarnation")
             self.owned[role] = cid  # Own BEFORE network attach, inspect or start.
+            self._permit_incarnation(cid)
             # A create acknowledgement alone is not identity attestation.
             if self._observe(role, self._read("inspect", cid)) != cid:
                 raise ValueError("Disposable incarnation mismatch")
@@ -247,6 +255,7 @@ class Launcher:
                 return False
             self.owned[role] = cid
             self._observe(role, row)
+            self._permit_incarnation(cid)
             return True
         except Exception:
             return False  # Unknown, not proof of absence or permission to retry.

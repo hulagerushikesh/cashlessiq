@@ -559,6 +559,22 @@ readiness/delivery and exact cleanup. Elevated Mac pressure still defers builds.
 
 ## Implementation anchors and change exclusions
 
+**Bounded CLI transport checkpoint (23 October):** `composition_engine.py` is
+explicit owner-side plumbing, excluded from normal startup. An exact trusted
+command inventory and explicit Unix endpoint/private empty Docker config prevent
+accidental ambient context/credential selection. Each command has an independently
+owned bounded actor; finite output, successful exit and the enclosing deadline
+are required. Failure latches create/start/connect admission closed while bounded
+inspection/stop can still contain the known attempt. Newly returned full CIDs
+may populate only predeclared final-ID slots. This is not resource authorization;
+the launcher's exact owner/image/attempt checks and journal remain authoritative.
+The caller still owes an accurate inventory, cleanup reservation and independently
+verified physical resources. It cannot use this transport for build/pull/exec/rm,
+provisioning or generic command execution. No automatic retry or absent-resource
+inference exists. Real subprocess tests use fake CLI metadata, not a Docker
+daemon. No actual container exit/removal or mounted material is claimed. Physical
+eight-role/helper acceptance remains deferred at Mac memory pressure 2.
+
 Reuse `offline_supervisor.py`, v3 broker/guard/transport, restricted membership
 factory, worker/membership packaging and existing container fixtures. The current
 worker and membership `__main__.py` deliberately exit; do not remove that refusal

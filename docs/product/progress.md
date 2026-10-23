@@ -55,6 +55,31 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Bounded engine/launcher integration — 23 October
+
+The explicit disposable transport now runs a closed Docker command inventory
+through the existing owned actor/watchdog. It requires an explicit Unix endpoint,
+absolute trusted executable and empty private CLI configuration, with no ambient
+context, shell, credentials, retry or image pull. Time/output/exit failures latch
+admission closed; independently bounded inspection/stop remain available. Returned
+full container IDs can fill only predeclared final-ID command slots, not arbitrary
+operations. Registration is not ownership attestation: the launcher/journal still
+checks exact owner/attempt metadata before recording observations or stopping.
+
+New tests use actual subprocesses, disposable local sockets and fake executables;
+launcher tests replay fake metadata through the real process transport and private
+journal. A killed create retains UNKNOWN reservations/fence; successful partial
+cleanup records only the observed stopped container and leaves seven UNKNOWN.
+No Docker mutation, transport-to-daemon acceptance, mounted-volume/UID transition,
+network isolation or
+canonical eight-container readiness is proven. Physical resource provisioning,
+helper installation/read-back and full composition remain next. Mac pressure is
+still 2; heavy builds were deferred and four existing product services untouched.
+Verification: **416 root tests**, **165 targeted API composition tests**, whole-
+repository lint, changed-source formatting and whitespace checks pass. These
+results do not close P2 or increase the readiness estimate. No source/AI spend,
+public deployment, P3 or operational credential change occurred.
+
 ### Journal-backed launcher lifecycle — 23 October
 
 The inactive launcher now accepts an explicit fresh private journal. It durably
