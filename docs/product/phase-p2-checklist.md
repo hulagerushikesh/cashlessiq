@@ -5,6 +5,24 @@ Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Explicit helper containment — 23 October
+
+- [x] Inactive explicit containment fences admission, checks exact acknowledged
+  full-CID configuration before stop, then independently proves PID-zero exit.
+- [x] Lost stop acknowledgement can be resolved only by fresh inspection;
+  still-running, foreign configuration, missing metadata or journal failure
+  cannot report containment success. Remaining known helpers are still checked.
+- [x] Twenty new offline cases; no name adoption, start retry, removal, raw
+  engine output or resource-journal changes. Stopped is not material verification.
+- [x] 561 root and 169 targeted API composition tests pass; repository lint,
+  changed-Python formatting and whitespace checks pass. Full API/browser and
+  physical Docker acceptance were not rerun; this commit's remote CI is pending.
+- [ ] Unknown create acknowledgements remain UNKNOWN. This is not crash recovery
+  or a physical daemon containment/cleanup proof; mounted material, retained-state
+  integration and eight-role lifecycle acceptance remain pending.
+- [ ] Heavy acceptance remains deferred at Mac pressure 2. No normal runtime,
+  Snowflake, public deployment or P3 changes.
+
 ### Inactive material-helper coordination — 23 October
 
 - [x] Two journaled helper intentions before engine work; separate helper ledger

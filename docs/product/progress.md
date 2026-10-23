@@ -55,6 +55,24 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Explicit helper containment — 23 October
+
+The inactive helper coordinator now has an explicit containment method using
+only acknowledged full CIDs and its existing bounded inspect/stop slots. It
+fences admission, rechecks exact configuration before stopping, and requires a
+fresh created/exited, PID-zero observation afterward. Lost stop acknowledgements
+are resolved by inspection, not assumed successful. Other known helpers still
+receive containment attempts if one inspection or the journal fails; the result
+stays false when durable observations or any intention are unresolved.
+
+Containment does not certify material or erase failure: nonzero exited helpers
+may be stopped but never become verified. Missing create acknowledgements remain
+UNKNOWN; no name adoption, retry, removal, resource-journal change or automatic
+startup follows. Twenty new offline cases cover these boundaries. Physical
+Docker acceptance remains deferred at Mac pressure 2; seven retained states,
+restricted DB/controller, all-eight-role lifecycle and exact cleanup remain next.
+No deployment, Snowflake spend or P3. P2 remains open; completion estimate unchanged.
+
 ### Material-helper coordinator — 23 October
 
 An inactive one-role coordinator now joins staged material, bounded private-input

@@ -277,6 +277,132 @@ def test_headroom_failure_does_no_engine_work(tmp_path):
         resources.close()
 
 
+def containment_engine(helper, engine, *, lost_stop=False, keep_running=False, missing=None):
+    """Closed fake stop path; no actual Docker process or resources."""
+
+    class Containment:
+        fenced = True
+
+        def __call__(self, *args):
+            if args[0] == "stop":
+                engine.calls.append(args)
+                assert args == ("stop", "--time", "1", args[-1])
+                assert args[-1] in helper.owned.values()
+                if not keep_running:
+                    engine.rows[args[-1]]["State"].update(
+                        Status="exited",
+                        Running=False,
+                        Paused=False,
+                        Restarting=False,
+                        Pid=0,
+                        ExitCode=137,
+                    )
+                if lost_stop:
+                    raise TimeoutError("private stop acknowledgement")
+                return args[-1]
+            if args == ("inspect", missing):
+                engine.calls.append(args)
+                raise TimeoutError("private inspection error")
+            return engine(*args)
+
+    helper.engine = Containment()
+
+
+@pytest.mark.parametrize("active", ["Running", "Paused", "Restarting"])
+@pytest.mark.parametrize("lost_stop", [False, True])
+def test_containment_requires_fresh_exit_not_stop_acknowledgement(tmp_path, active, lost_stop):
+    helper, engine, journal, resources = setup(tmp_path)
+    try:
+        assert helper.run()
+        for row in engine.rows.values():
+            row["State"].update(Status="running", Running=True, Pid=99)
+            row["State"][active] = True
+        containment_engine(helper, engine, lost_stop=lost_stop)
+        before = deepcopy(resources.events)
+        assert helper.contain() is True
+        assert resources.events == before and fold(journal.events)[2]
+        assert len([a for a in engine.calls if a[0] == "stop"]) == 2
+        assert all(r[2] == "STOPPED" for r in fold(journal.events)[1].values())
+        assert helper.contain() is True
+        assert len([a for a in engine.calls if a[0] == "stop"]) == 2
+        with pytest.raises(HelpersDenied):
+            helper.run()
+    finally:
+        journal.close()
+        resources.close()
+
+
+@pytest.mark.parametrize("fault", ["unknown-create", "unknown-start", "nonzero", "receipt"])
+def test_failed_run_containment_never_adopts_unknown_create_or_claims_verified(tmp_path, fault):
+    helper, engine, journal, resources = setup(tmp_path, fault=fault)
+    try:
+        with pytest.raises(HelpersDenied):
+            helper.run()
+        containment_engine(helper, engine)
+        assert helper.contain() is False  # Verifier was never created.
+        rows = fold(journal.events)[1]
+        assert rows[("container", helper.name("verify"))][2] == "UNKNOWN"
+        assert rows[("container", helper.name("install"))][2] == (
+            "UNKNOWN" if fault == "unknown-create" else "STOPPED"
+        )
+        assert not any(a[0] in {"rm", "run", "exec", "stop"} for a in engine.calls)
+    finally:
+        journal.close()
+        resources.close()
+
+
+@pytest.mark.parametrize("fault", ["labels", "identity", "image", "mount", "privileged", "network"])
+def test_containment_does_not_stop_mismatched_container(tmp_path, fault):
+    helper, engine, journal, resources = setup(tmp_path)
+    try:
+        assert helper.run()
+        cid = helper.owned["install"]
+        engine.rows[cid]["State"].update(Running=True, Pid=99, Status="running")
+        CHANGES[fault](engine.rows[cid])
+        containment_engine(helper, engine)
+        assert helper.contain() is False
+        assert not any(a[0] == "stop" for a in engine.calls)
+    finally:
+        journal.close()
+        resources.close()
+
+
+@pytest.mark.parametrize("failure", ["still-running", "missing", "journal"])
+def test_containment_uncertainty_returns_false_but_continues_other_owned_helper(tmp_path, failure):
+    helper, engine, journal, resources = setup(tmp_path)
+    try:
+        assert helper.run()
+        for row in engine.rows.values():
+            row["State"].update(Status="running", Running=True, Pid=99)
+        containment_engine(
+            helper,
+            engine,
+            keep_running=failure == "still-running",
+            missing=helper.owned["install"] if failure == "missing" else None,
+        )
+        if failure == "journal":
+            journal.failed = True
+        assert helper.contain() is False
+        stops = [a[-1] for a in engine.calls if a[0] == "stop"]
+        assert helper.owned["verify"] in stops
+        assert len(stops) == (1 if failure == "missing" else 2)
+        assert not any(a[0] in {"rm", "exec", "run"} for a in engine.calls)
+    finally:
+        journal.close()
+        resources.close()
+
+
+def test_containment_before_attempt_is_denied_without_engine_io(tmp_path):
+    helper, engine, journal, resources = setup(tmp_path)
+    try:
+        with pytest.raises(HelpersDenied):
+            helper.contain()
+        assert not engine.calls
+    finally:
+        journal.close()
+        resources.close()
+
+
 @pytest.mark.parametrize("fault", LATE_CHANGES)
 def test_installer_success_never_substitutes_for_safe_readonly_verifier(tmp_path, fault):
     helper, engine, journal, resources = setup(tmp_path, fault=fault)

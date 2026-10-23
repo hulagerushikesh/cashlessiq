@@ -165,7 +165,7 @@ class Helpers:
         require(prefix == self.plan.prefix and not fenced)
         require(rows.get(("volume", volume), (None, None, None))[1:] == (volume, "PRESENT"))
 
-    def _check(self, row, mode, *, exited=False):
+    def _check(self, row, mode, *, exited=False, configuration_only=False):
         require(row["Id"] == self.owned[mode] and row["Name"] == "/" + self.name(mode))
         require(row["Image"] == self.image)
         config, host, state = row["Config"], row["HostConfig"], row["State"]
@@ -225,6 +225,8 @@ class Helpers:
                 not n.get("IPAddress") and not n.get("GlobalIPv6Address") for n in networks.values()
             )
         )
+        if configuration_only:
+            return
         require(state["Running"] is False and type(state["Pid"]) is int and state["Pid"] == 0)
         require(
             not any(state.get(k) for k in ("Paused", "Restarting", "Dead", "OOMKilled", "Error"))
@@ -233,6 +235,72 @@ class Helpers:
         require(state["Status"] == ("exited" if exited else "created"))
         if exited:
             require(type(state["ExitCode"]) is int and state["ExitCode"] == 0)
+
+    def contain(self):
+        """Fence and inspect/stop exact acknowledged CIDs; never certify material.
+
+        Uses the engine's existing bounded inspection/stop slots even after a
+        failed run. Unknown create acknowledgements are not recovered by name.
+        Every reserved intention must have fresh stopped proof and a durable
+        journal observation for True. No retry, removal or readiness follows.
+        """
+        require(self.used)
+        self.engine.fenced = True
+        durable = True
+        try:
+            self.journal.check()
+            if not fold(self.journal.events)[2]:
+                self.journal.fence()
+        except Exception:
+            durable = False
+        complete = True
+        for mode in ("install", "verify"):
+            cid = self.owned.get(mode)
+            if cid is None:
+                complete = False
+                continue
+            try:
+                row = self._read("inspect", cid)
+                self._check(row, mode, configuration_only=True)
+                state = row["State"]
+                require(
+                    all(
+                        type(state.get(k, False)) is bool
+                        for k in ("Running", "Paused", "Restarting", "Dead")
+                    )
+                )
+                require(type(state["Pid"]) is int and state["Pid"] >= 0)
+                require(not state.get("Dead") and row.get("RestartCount", 0) == 0)
+                if any(state.get(k) for k in ("Running", "Paused", "Restarting")):
+                    # A lost stop acknowledgement is not proof either way.
+                    with suppress(Exception):
+                        self.engine("stop", "--time", "1", cid)
+                row = self._read("inspect", cid)
+                self._check(row, mode, configuration_only=True)
+                state = row["State"]
+                require(
+                    state["Running"] is False and type(state["Pid"]) is int and state["Pid"] == 0
+                )
+                require(state["Status"] in {"created", "exited"})
+                require(not any(state.get(k) for k in ("Paused", "Restarting", "Dead", "Error")))
+                require(row.get("RestartCount", 0) == 0)
+                self.journal.check()
+                _, rows, _ = fold(self.journal.events)
+                previous = rows[("container", self.name(mode))]
+                require(previous[0] == self.fingerprint(mode))
+                if previous[2] == "UNKNOWN":
+                    self._record("observe", mode, cid)
+                else:
+                    require(previous[1] == cid and previous[2] in {"PRESENT", "STOPPED"})
+                if previous[2] != "STOPPED":
+                    self._record("stopped", mode, cid)
+            except Exception:
+                complete = False
+        try:
+            self.journal.check()
+        except Exception:
+            durable = False
+        return complete and durable
 
     def run(self):
         require(not self.used)

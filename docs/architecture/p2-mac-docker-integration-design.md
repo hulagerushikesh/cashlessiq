@@ -587,6 +587,22 @@ DB/controller and eight-role physical lifecycle acceptance remain unverified.
 Mac pressure remains 2; no heavy execution or normal runtime change occurred.
 
 **Material-helper coordinator checkpoint (23 October):**
+
+Subsequent explicit containment adds `Helpers.contain()`, callable only after an
+attempt. It fences admission and uses the same bounded engine's inspect/stop
+slots for acknowledged full CIDs only. Exact helper configuration is rechecked
+before any stop and after it; fresh created/exited/PID-zero, non-dead,
+non-restarting state is required. Stop command success alone is insufficient;
+a lost acknowledgement can be resolved by fresh inspection. Nonzero exit is
+acceptable for containment only, never for material verification. Both reserved
+intentions must have fresh stopped proof and durable journal observations to
+return true. Journal failure does not prevent bounded attempts on known helpers,
+but the result remains false. One failed helper does not skip the other.
+Lost create acknowledgements are not recovered by name, and there is no retry,
+removal, automatic invocation, readiness receipt or resource-journal mutation.
+Twenty offline fake-daemon cases cover these branches. Physical daemon exit,
+mounted UID transitions and cleanup are still unproven at Mac pressure 2.
+
 `scripts/composition_helpers.py` is explicit one-role test-owner plumbing, with
 no command-line activation or default engine. It requires the public Inventory,
 matching Staged role/fingerprint, pinned helper image ID, bounded engine and
