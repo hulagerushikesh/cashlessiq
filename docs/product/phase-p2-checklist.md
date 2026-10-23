@@ -5,6 +5,23 @@ Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Seven-state/material preflight integration — 23 October
+
+- [x] Explicit empty-root initialization of exactly seven plan-named disposable
+  guard stores using the existing frozen-time fixture; no membership state.
+- [x] Existing-state reload checks full inventory, file modes/link types,
+  authority/generation, SQLite and staged material before health observations.
+  Healthy observations can persist high-water marks; no repair is performed.
+- [x] Fourteen new offline cases cover replay retention, missing/corrupt/latch/
+  wrong-generation/swapped state, links/modes, extras, partial-init retention,
+  repeat/new-object initialization refusal and launcher denial before create/start.
+- [x] 561 root and 214 targeted API composition/state regressions pass;
+  repository lint, changed-Python formatting and whitespace checks pass. Full
+  API/browser/physical Docker acceptance was not rerun; remote CI is pending.
+- [ ] Named-volume state transport, Linux UID ownership and physical service
+  lifecycle/cleanup are not proven. Mac pressure 2 still defers heavy acceptance.
+  No normal activation, Snowflake work, deployment or P3.
+
 ### Explicit helper containment — 23 October
 
 - [x] Inactive explicit containment fences admission, checks exact acknowledged

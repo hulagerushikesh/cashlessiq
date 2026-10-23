@@ -55,6 +55,28 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Seven-state/material preflight integration — 23 October
+
+An inactive host-side test fixture now joins all seven canonical retained guard
+stores with the eight staged role bundles. Explicit initialization requires an
+empty private root, creates exactly the plan's state-volume names, and uses the
+existing frozen-time initializer once. Membership has no state. Failed/partial
+initialization is retained; neither the same nor a new fixture may overwrite it.
+
+Reload checks exact inventory, private directories, regular single-link files,
+modes, authority/generation binding and SQLite integrity before any canonical
+health observation. Health observations may persist high-water marks; this is
+not a read-only filesystem probe. Missing/corrupt/swapped/latched state, wrong
+generation, extra paths or changed material deny. Replay remains spent after
+reload. A real launcher preflight with fake daemon metadata now requires the
+combined gate and denies missing state before any container create/start.
+
+This is host-directory/SQLite integration, not named-volume installation,
+Linux UID/chown proof, operational clock health or physical eight-service
+acceptance. Mac pressure remains 2. Mounted retained-state transport, restricted
+DB/controller and full lifecycle/cleanup remain next. No normal startup,
+Snowflake, deployment or P3; the completion estimate is unchanged.
+
 ### Explicit helper containment — 23 October
 
 The inactive helper coordinator now has an explicit containment method using

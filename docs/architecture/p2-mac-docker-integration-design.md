@@ -588,6 +588,23 @@ Mac pressure remains 2; no heavy execution or normal runtime change occurred.
 
 **Material-helper coordinator checkpoint (23 October):**
 
+Subsequent host-only retained-state integration lives in
+`apps/api/tests/composition_state_fixture.py`, not any service image/entrypoint.
+It explicitly initializes all seven plan-named state directories using the
+existing fictional frozen-time fixture; membership is excluded. The private root
+must be empty, repeat/partial attempts are retained and cannot be overwritten.
+Reload checks exact directory/file inventories, ownership/modes, regular
+single-link files, unique directory identities, authority/generation bindings
+and canonical SQLite inspection before health observations. Observations may
+persist canonical high-water marks; there is no all-seven atomic transaction
+or filesystem read-only claim. Neither reload nor failure invokes an initializer.
+Tests compose real staged material and SQLite with launcher preflight/fake daemon
+metadata, preserve spent replay across reload and deny damaged/mismatched state
+before create/start. These are host directories, not mounted named-volume UID,
+transport/read-back, bounded helper or physical readiness proofs. Fourteen new
+cases pass; state-volume installation, DB/controller and all-eight-role physical
+lifecycle remain pending at Mac pressure 2.
+
 Subsequent explicit containment adds `Helpers.contain()`, callable only after an
 attempt. It fences admission and uses the same bounded engine's inspect/stop
 slots for acknowledged full CIDs only. Exact helper configuration is rechecked
