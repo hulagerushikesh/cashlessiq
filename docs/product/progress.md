@@ -55,6 +55,35 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Shared logical-role TLS composition — 23 October
+
+The canonical broker, four readers, two validators and membership now share one
+explicit test world, rather than testing each tenant/disclosure path separately.
+Signed local-test JWT verification selects fixed source identities; six workers
+check fresh membership over pinned loopback TLS. Seven listeners use real TLS,
+while broker membership resolution, membership storage, source and frozen health
+remain test fixtures. Seven independent authority stores retain replay/latches.
+The broker is an in-process call, not a public/private HTTP service.
+
+**21 new shared-composition tests** cover all three roles and both tenants,
+SAVED INR 95,000/MISSING, privacy-safe summary payloads, replay, revocation and
+downgrade during source work, outages, invalid health, foreign/direct-hop denial
+and listener cleanup after three partial-start failures. An affected reader's
+failure does not poison the other tenant's independent state. Existing fixture
+commit `e9f0083` passed [remote CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/39903446086).
+
+No Docker build, independent service-process/custody proof, restricted membership
+DB, supervisor readiness/deadline wiring, live-source/UI activation or deployment
+is claimed. The Mac still reports warning pressure, so the multi-container run
+remains deferred. Continue the approved container/supervisor composition next;
+P2 exit and the rough completion estimate are unchanged.
+
+Verification for this batch: **169 targeted TLS/guard/fixture tests and all 238
+root tests pass**; repository Ruff, changed Python formatting and whitespace
+checks pass. The full PostgreSQL/backend/browser suites and Docker acceptance
+were not rerun locally. Remote CI for this batch is pending until independently
+observed; the earlier green run above does not stand in for it.
+
 ### Integration fixture preparation — 23 October
 
 Continued lightweight source work while the Mac's heavy-run preflight still

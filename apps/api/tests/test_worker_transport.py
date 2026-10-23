@@ -86,7 +86,15 @@ def pki():
                 .add_extension(
                     x509.ExtendedKeyUsage(
                         [ExtendedKeyUsageOID.CLIENT_AUTH, ExtendedKeyUsageOID.SERVER_AUTH]
-                        if name in {"reader", "reader1", "reader_medical", "reader1_medical"}
+                        if name
+                        in {
+                            "reader",
+                            "reader1",
+                            "reader_medical",
+                            "reader1_medical",
+                            "validator",
+                            "validator1",
+                        }
                         else [usage]
                     ),
                     critical=True,

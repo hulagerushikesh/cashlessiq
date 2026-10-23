@@ -19,7 +19,7 @@ Two modes must remain separate:
 
 | Mode | Inputs and permitted result | Status |
 | --- | --- | --- |
-| Integration acceptance | Disposable test identities, signed fictional health and synthetic source; exercise canonical handlers in owned containers | Owner approved; seven-state test fixtures prepared, full composition/run pending sufficient Mac headroom |
+| Integration acceptance | Disposable test identities, signed fictional health and synthetic source; exercise canonical handlers in owned containers | Owner approved; shared logical-role TLS fixture prepared, container/supervisor composition still pending |
 | Operational source | Real restricted identities, reviewed health policy/provider, protected retained state and current-generation authority | Blocked; no credentials or activation authorized |
 
 The first mode closes service-composition gaps without a trial or payment. It
@@ -152,12 +152,24 @@ Owner approval includes a configuration/load precheck; it is not permission to
 stress the machine despite failing headroom. No extra implementation approval
 is needed merely because this resource checkpoint deferred the work.
 
-Lightweight preparation now extends the existing explicit `mtls-test` fixture
-to all seven authority roles, preserving existing test aliases and default image
-refusal. Focused offline tests cover exact tenant/disclosure namespaces, retained
-replay and partial-state refusal. This does not implement eight actual handlers,
-their supervisor/launcher wiring, shared health delivery or restricted membership
-DB composition. Those are still the next implementation work, not accepted here.
+Lightweight preparation extends the existing explicit `mtls-test` fixture to
+all seven authority roles, preserving existing test aliases and default image
+refusal. The new `guard_composition_fixture.py` test helper composes canonical
+broker, four readers, two validators and membership in one test process. Six
+worker listeners and membership use real loopback TLS; the broker is invoked
+in-process, verifying signed local-test JWTs. Broker membership resolution and
+membership storage are injected memory fixtures; workers use six pinned, fresh
+membership TLS clients. Source and frozen signed health inputs remain fictional.
+The test TLS certificates now permit validators to act as clients for that
+membership hop; no actual runtime credential changed.
+
+Shared-topology checks cover both tenants/all three roles, SAVED INR 95,000,
+truthful MISSING, retained replay, disclosure routing, mid-read revocation or
+downgrade, source/membership outage, invalid health, foreign peer/direct-hop denial
+and actual listener closure after normal/partial startup. This does **not** wire
+eight independent processes/containers, supervisor/launcher readiness or deadline
+control, shared health delivery or restricted membership DB composition. Those
+remain the next implementation work and are not accepted by loopback tests.
 
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.

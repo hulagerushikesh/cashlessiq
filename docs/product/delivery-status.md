@@ -66,6 +66,10 @@ The owner approved preparing the [no-purchase Mac/Docker integration design](../
 It now specifies topology, proposed manual encrypted-image custody, clock/fence
 blockers and one bounded next service-composition batch. The owner subsequently
 approved that disposable implementation with a Mac configuration/load check.
+Lightweight preparation now includes seven independent authority-state fixtures
+and a shared eight-logical-role, one-process TLS test world. Both tenants/all
+three roles and failure/cleanup paths are exercised without live source access.
+This is not the separate-container/supervisor acceptance batch or a deployment.
 The [resource preflight](mac-resource-check.md) currently refuses heavy execution
 at elevated memory pressure. The batch is still pending, not re-awaiting approval;
 operational custody/activation remains unapproved.
