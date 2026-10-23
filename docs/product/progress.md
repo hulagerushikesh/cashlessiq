@@ -55,6 +55,38 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Bounded Mac/Docker subnet collision gate — 23 October
+
+The disposable provisioner's collision callback now has a concrete collector:
+bounded numeric Mac IPv4 routes plus full-ID Docker network/IPAM inspection,
+with no ambient CLI context or credentials. It rejects overlap (including host
+routes and enclosing subnets), malformed/incomplete metadata, duplicate IDs,
+unbounded inventories and changes in host routes or Docker network membership
+between snapshots. The default route is excluded, not other occupied networks;
+there is no own-namespace exemption, automatic subnet search or allocation.
+Discovered network IDs authorize only bounded metadata inspection, not container
+operations or ownership. Fresh checks are required; successful results are not
+cached. Snapshots are not atomic reservations: a trusted stable host/daemon is
+still required during acceptance, and same-ID IPAM changes after inspection are
+not excluded by these snapshots.
+
+Offline tests compose this gate with real disposable journals: conflicts prevent
+all provisioning engine calls and retain UNKNOWN intentions. A bounded read-only
+check also passed on this Mac against four actual Docker networks and eighteen
+proposed `10.81.*.0/29` subnets. The initial check safely denied Docker Desktop's
+null IPAM on its built-in host/none networks; explicit support for null or empty
+IPAM is now limited to those two non-IPAM drivers and regression-tested. No
+network/container/volume was created, modified or stopped. Temporary empty CLI
+configuration was removed automatically; no credential files were accessed.
+
+Verification: **478 root tests**, **169 targeted API composition tests**, lint,
+changed-file formatting and whitespace checks pass. Mac pressure remains 2, so
+image builds and physical mounted-helper/eight-role acceptance remain deferred.
+Next: bounded private helper input, actual mounted-material installation/readback
+and retained-state integration, then auxiliary DB/controller and eight-role
+lifecycle acceptance. No Snowflake spend, public deployment, normal startup
+change or P3; P2 and the overall completion estimate remain unchanged.
+
 ### Disposable resource provisioning integration — 23 October
 
 `composition_resources.py` prepares eighteen internal bridge networks and fifteen

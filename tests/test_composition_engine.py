@@ -61,6 +61,35 @@ def test_explicit_endpoint_config_empty_environment_and_inactive_construction(ri
     assert "HOME" not in observed["env"]
 
 
+def test_discovered_network_slot_is_inspection_only_and_requires_full_registration(rig):
+    make, _, _ = rig
+    engine = make("print('network metadata')")
+    engine.commands = frozenset([("network", "inspect", "{network}")])
+    identifier = "a" * 64
+    engine.permit_network(identifier)
+    assert engine("network", "inspect", identifier) == "network metadata\n"
+    for args in (
+        ("network", "inspect", "b" * 64),
+        ("network", "inspect", "{network}"),
+        ("start", identifier),
+    ):
+        with pytest.raises(ActorDenied):
+            engine(*args)
+    # A latched transport still permits bounded, registered metadata inspection.
+    assert engine("network", "inspect", identifier) == "network metadata\n"
+    assert not engine.incarnations
+
+
+def test_network_slot_is_bounded_and_does_not_authorize_container_identity(rig):
+    make, _, _ = rig
+    engine = make("print('unused')")
+    for i in range(128):
+        engine.permit_network(f"{i:064x}")
+    with pytest.raises(ActorDenied):
+        engine.permit_network("f" * 64)
+    assert engine.fenced and not engine.incarnations
+
+
 @pytest.mark.parametrize(
     "code",
     [

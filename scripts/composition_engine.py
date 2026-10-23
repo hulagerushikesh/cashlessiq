@@ -85,6 +85,18 @@ class Engine:
         self.deadline_ns, self.budget_ns = deadline_ns, budget_ns
         self.fenced = False
         self.incarnations = set()
+        self.networks = set()
+
+    def permit_network(self, identifier):
+        """Read-only inspect slot for a discovered full network ID; not ownership."""
+        if (
+            type(identifier) is not str
+            or re.fullmatch("[a-f0-9]{64}", identifier) is None
+            or (identifier not in self.networks and len(self.networks) >= 128)
+        ):
+            self.fenced = True
+            raise ActorDenied()
+        self.networks.add(identifier)
 
     def permit_incarnation(self, cid):
         """Allow a returned full ID only in predeclared final-ID command slots.
@@ -102,12 +114,18 @@ class Engine:
 
     def __call__(self, *args):
         try:
-            exact = args in self.commands and "{incarnation}" not in args
+            exact = args in self.commands and not {"{incarnation}", "{network}"}.intersection(args)
             registered = (
                 len(args) >= 2
                 and (args[0] in {"inspect", "start", "stop"} or args[:2] == ("network", "connect"))
                 and args[-1] in self.incarnations
                 and (*args[:-1], "{incarnation}") in self.commands
+            )
+            registered = registered or (
+                len(args) == 3
+                and args[:2] == ("network", "inspect")
+                and args[-1] in self.networks
+                and ("network", "inspect", "{network}") in self.commands
             )
             if not (exact or registered) or (
                 self.fenced and not (_readonly(args) or args[0] == "stop")

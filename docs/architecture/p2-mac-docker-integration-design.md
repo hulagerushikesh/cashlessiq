@@ -559,6 +559,33 @@ readiness/delivery and exact cleanup. Elevated Mac pressure still defers builds.
 
 ## Implementation anchors and change exclusions
 
+**Route-collision checkpoint (23 October):** `composition_routes.py` supplies
+the previously injected admission gate using bounded, empty-environment numeric
+Mac `netstat` output and the explicit engine's read-only network inventory.
+At most 128 distinct full IDs are registered into inspect-only slots; container
+ID slots remain separate. Every network's IPv4 IPAM is considered, regardless
+of label/namespace. Only built-in host/null drivers may have absent/empty IPAM;
+bridge/other missing IPAM denies. CIDR overlap, malformed/oversized/duplicate
+metadata, expired deadlines, host-route changes or network-set changes deny.
+No subnet selection, allocation, retry or implicit default endpoint is added.
+The eighteen proposed IPv4 networks must themselves be disjoint. The Mac's
+default route is intentionally not treated as occupied address space.
+
+The owner must pass the same overall deadline to collector and engine, and
+include its two exact read-only command templates in the engine inventory.
+Admission snapshots do not atomically reserve routes or exclude concurrent
+same-ID IPAM changes; trusted host/daemon stability is still required. There is
+no exemption for already allocated composition networks: this gate belongs
+before fresh provisioning, not as an adoption/restart mechanism.
+
+Fake metadata tests exercise collision/failure/journal integration. A real
+bounded read-only scan passed against this Mac's four Docker networks; no
+physical resources were allocated. A first denied scan exposed null IPAM on
+Docker Desktop's host/none built-ins, now explicitly covered without allowing
+missing bridge IPAM. Material helpers, Linux UID transitions, retained states,
+DB/controller and eight-role physical lifecycle acceptance remain unverified.
+Mac pressure remains 2; no heavy execution or normal runtime change occurred.
+
 **Resource provisioning checkpoint (23 October):** explicit owner-side
 `composition_resources.py` joins the existing inventory, engine and retained
 journal. Constructor validates supplied public layout only; no default subnet,

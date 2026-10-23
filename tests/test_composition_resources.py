@@ -12,6 +12,7 @@ from scripts.composition_engine import Engine
 from scripts.composition_inventory import EDGES, ROLES
 from scripts.composition_journal import Journal, inspect
 from scripts.composition_resources import Resources, ResourcesDenied
+from scripts.composition_routes import LIST, CollisionCheck
 
 
 def setup(tmp_path, *, fault=None, headroom=lambda: True, collision=lambda _: True):
@@ -184,6 +185,43 @@ def test_failed_durable_reservation_prevents_all_engine_io(tmp_path, monkeypatch
         resource.provision()
     assert not calls
     journal.close()
+
+
+@pytest.mark.parametrize("conflict", [False, True])
+def test_real_collision_gate_composes_with_provisioning_journal(tmp_path, conflict):
+    class Metadata:
+        def permit_network(self, identifier):
+            assert identifier == "a" * 64
+
+        def __call__(self, *args):
+            if args == LIST:
+                return "a" * 64
+            return json.dumps(
+                [
+                    dict(
+                        Id="a" * 64,
+                        Driver="bridge",
+                        IPAM=dict(Config=[dict(Subnet="172.17.0.0/16")]),
+                    )
+                ]
+            )
+
+    check = CollisionCheck(
+        Metadata(),
+        time.monotonic_ns() + 10_000_000_000,
+        route_reader=lambda _: frozenset(
+            [IPv4Network("10.0.0.0/8" if conflict else "192.168.1.0/24")]
+        ),
+    )
+    resource, journal, calls, _ = setup(tmp_path, collision=check)
+    if conflict:
+        with pytest.raises(ResourcesDenied):
+            resource.provision()
+        assert not calls
+        assert {r[-1] for r in recover(journal).resources} == {"UNKNOWN"}
+    else:
+        assert len(resource.provision().networks) == 18
+        assert {r[-1] for r in recover(journal).resources} == {"PRESENT"}
 
 
 def test_volume_options_refused_after_networks_without_fallback(tmp_path):
