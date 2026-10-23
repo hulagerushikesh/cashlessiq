@@ -320,6 +320,61 @@ deadline supervision and actual restricted PostgreSQL composition remain pending
 only the earlier broker membership edge gap, not the unimplemented API-broker
 production transport or operational custody/provider/source activation blockers.
 
+**Subsequent inactive owner-side launch preparation (23 October):**
+`scripts/composition_inventory.py` generates only public descriptors and stopped
+container command arguments; construction performs no file, Docker or secret I/O.
+It requires the exact eight roles, fixed disposable generation, three distinct
+image digests, nine distinct public TLS pins and eighteen UUID-owned network
+records. Subnets must be disjoint RFC1918 IPv4 ranges, /16 through /29; the
+provisioner must separately check collisions with existing Docker/host routes.
+The gateway is explicitly reserved at subnet +1; edge endpoints use +2/+3.
+Network allocation/discovery is not supplied by this module.
+
+The eighteen edges are the existing fourteen worker links, two separate broker-
+membership links, one membership-DB and one controller-broker link. Each service
+receives only its exact attachments. Fifteen unique named test volumes comprise
+eight read-only material mounts and seven writable authority state mounts.
+Membership has no authority state. These disposable local volumes are not the
+unapproved operational encrypted store. The auxiliary controller/DB are outside
+the eight application roles and their full CIDs must be independently registered;
+they are not adopted from network metadata or arbitrary matching labels.
+
+`composition_launcher.py` lives only under API tests, excluded from all service
+images and normal startup. The adapter takes an injected engine and mandatory
+material-check callback. Image entrypoint/empty arguments are checked; observed
+container entrypoint, command and environment must match that pinned image.
+All three explicit service test entrypoints now use `CMD []`; default candidates
+remain unchanged. Startup validates exact labels, network IDs/static IPs, local
+volume names/labels/options, read-only mounts/root, UID/GID 10001, dropped caps,
+no-new-privileges, no ports/host PID/IPC links/devices and fixed test limits.
+Broker uses 192 MiB, other application roles 128 MiB; each has 0.5 CPU/32 PIDs.
+These are fictional acceptance caps, not measured capacity or reviewed production
+budgets. Docker inspect normalization/behavior still requires physical acceptance.
+
+Service fingerprints bind those descriptors, own pin, subnet, artifact digest,
+configuration and state/material names. They do **not** establish image provenance,
+actual file contents/modes, secret custody or clock health. Material verification
+is mandatory but remains an injected fake in current tests; a real bounded,
+reviewed materializer/verification step is still missing. The adapter cannot
+manufacture a readiness receipt from a socket, metadata or diagnostic READY.
+
+Before create, reject any existing exact container name. Reserve the attempt
+before issuing create, register returned full CIDs before fallible attach/inspect,
+and reconcile unknown creation only by exact name/image/owner/current-attempt
+labels. Never adopt or stop an unrelated/pre-existing container. Any failure
+closes replacement launch. Stop verifies ownership and confirms zero PID/exited
+state; unknown identity/termination retains ownership/fence. Cleanup preserves
+containers and volumes, reporting stop confirmation only; final exact removal
+and ambiguous-resource handling remain the outer owner's responsibility.
+
+The 124 new tests use fake engine observations/callbacks and the existing model;
+they prove no Docker process exit, socket closure or isolation. **No independent
+actor/watchdog has been wired into this adapter.** Synchronous callbacks can still
+block; no runtime caller may activate it until the bounded owned actor, independent
+watchdog, exact material provisioning, all-eight readiness and physical cleanup
+acceptance are composed. This preparation is part of the approved disposable
+batch, not operational activation or permission to bypass host headroom.
+
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
 - Exercise both tenants and all three roles through verified identity context:

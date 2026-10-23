@@ -175,3 +175,25 @@ def test_broker_test_image_has_closed_import_context_and_no_normal_activation():
                 f"!apps/api/tests/{name}.py"
                 not in (ROOT / f"apps/{project}/Dockerfile.dockerignore").read_text()
             )
+
+
+def test_owner_side_launcher_is_inactive_and_absent_from_service_artifacts():
+    tree = ast.parse((ROOT / "scripts/composition_inventory.py").read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            assert node.module in {"dataclasses", "hashlib", "ipaddress", "types"}
+        elif isinstance(node, ast.Import):
+            assert all(alias.name in {"json", "re"} for alias in node.names)
+    for name in ("composition_launcher", "composition_inventory_fixture", "composition_inventory"):
+        for file in (
+            "apps/api/Dockerfile",
+            "apps/api/Dockerfile.broker-test",
+            "apps/worker/Dockerfile",
+            "apps/membership/Dockerfile",
+            "apps/api/src/ciq_api/main.py",
+        ):
+            assert name not in (ROOT / file).read_text()
+    for path in ("apps/worker/Dockerfile", "apps/membership/Dockerfile"):
+        target = (ROOT / path).read_text().split(" AS composition-test", 1)[1].split("FROM ", 1)[0]
+        assert "CMD []" in target
+    assert "CMD []" in (ROOT / "apps/api/Dockerfile.broker-test").read_text()

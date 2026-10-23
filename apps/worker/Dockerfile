@@ -32,6 +32,7 @@ ENTRYPOINT ["python", "-m", "ciq_worker_runtime.mtls_probe"]
 FROM mtls-test AS composition-test
 COPY apps/worker/tests/composition_service.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/composition_service.py
 ENTRYPOINT ["python", "-m", "ciq_worker_runtime.composition_service"]
+CMD []
 
 # Network-free clock-domain probe; fabricated health is test-only.
 FROM runtime-base AS clock-test

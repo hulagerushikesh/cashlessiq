@@ -55,6 +55,53 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Inactive eight-role inventory and owner-side launch adapter — 23 October
+
+Added a pure, no-I/O launch inventory covering all eight application roles,
+three pinned test image digests, nine distinct public certificate pins, fifteen
+per-role named volumes (eight read-only material plus seven writable state),
+and **eighteen separately enumerated private links**: the fourteen worker links,
+two broker-membership links, membership-DB and controller-broker. No host bind,
+shared ledger, direct broker-validator link or public port is generated. The
+controller and disposable DB remain explicitly registered auxiliaries, not
+extra signing authorities or replacements for the eight-role readiness barrier.
+
+Generated configs pass the actual broker/worker/membership configuration parsers.
+Service fingerprints bind image, configuration, own public pin, network/subnet
+inventory, role volumes and fixed test resource/security limits. Inspection
+checks refuse foreign labels, external networks, unknown endpoints, volume
+driver/bind aliases, extra mounts/ports, privilege/restart changes and resource
+limit mismatches. This is a strict engine-metadata contract, not measured file
+ownership, clock health, TLS custody or readiness attestation.
+
+The **inactive test-only owner-side adapter** connects this inventory to the
+existing supervisor interface with injected engine and mandatory material-check
+callbacks. It verifies stopped metadata before start, then checks the full
+running container incarnation. Every attempted name is reserved before create;
+a failed/unknown create is reconciled only by exact name, image, ownership and
+attempt/fingerprint labels. Existing names are never adopted. Failed launch or
+stop closes the adapter to replacement launches; unknown stop retains ownership
+and the supervisor's fence/capacity. Cleanup confirms stops only, preserving
+containers and all volumes for explicit owner-side incident/removal handling.
+It does not prune, erase state, initialize material or manufacture readiness.
+
+**124 new tests pass using a fake Docker engine**, including all-eight model
+adoption/stop, partial creation, network failures, unknown start/stop and foreign
+ownership. The expanded targeted API suite has **586 passing tests** and the root
+suite has **244 passing tests**; lint/format and whitespace
+checks pass. Three explicit test image entrypoints now set `CMD []` to exclude
+inherited default arguments; normal image targets/startup remain unchanged.
+Previous `e2efe87` is green in remote CI.
+
+These tests invoke no real Docker commands and create no network, volume,
+container, key or credential. Host preflight still reports pressure `2`; existing four containers
+are untouched. **This adapter is not the independent actor/watchdog or complete
+eight-container runner.** Mandatory material verification is injected/fake, not
+an implemented custody provider. Provisioning, measured Docker metadata behavior,
+bounded actor/watchdog wiring, confirmed resource removal and real restricted-DB/
+all-eight physical acceptance remain next. No public deployment, Snowflake spend
+or P3 work; completion estimate unchanged.
+
 ### Private broker test ingress and isolated packaging — 23 October
 
 Added `apps/api/Dockerfile.broker-test`, an explicitly selected synthetic test

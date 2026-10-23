@@ -13,3 +13,4 @@ COPY apps/api/tests/broker_composition_service.py apps/api/tests/broker_composit
 USER 10001:10001
 WORKDIR /tmp
 ENTRYPOINT ["/app/apps/api/.venv/bin/python", "/opt/ciq-composition/broker_composition_service.py"]
+CMD []

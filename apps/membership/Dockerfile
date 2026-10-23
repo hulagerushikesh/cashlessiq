@@ -31,5 +31,6 @@ COPY apps/worker/tests/mtls_probe.py /opt/venv/lib/python3.11/site-packages/ciq_
 FROM db-test AS composition-test
 COPY apps/membership/tests/composition_service.py /opt/venv/lib/python3.11/site-packages/ciq_membership_runtime/composition_service.py
 ENTRYPOINT ["python", "-m", "ciq_membership_runtime.composition_service"]
+CMD []
 
 FROM runtime-base AS candidate
