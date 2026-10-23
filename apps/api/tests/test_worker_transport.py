@@ -60,6 +60,7 @@ def pki():
             ("reader_medical", "reader:0:medical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("reader1_medical", "reader:1:medical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("broker", "broker", ExtendedKeyUsageOID.CLIENT_AUTH),
+            ("controller", "controller", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("foreign", "reader:1:nonclinical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("medical", "reader:0:medical", ExtendedKeyUsageOID.CLIENT_AUTH),
             ("validator", "validator:0", ExtendedKeyUsageOID.SERVER_AUTH),
@@ -94,6 +95,7 @@ def pki():
                             "reader1_medical",
                             "validator",
                             "validator1",
+                            "broker",
                         }
                         else [usage]
                     ),

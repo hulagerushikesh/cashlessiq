@@ -1,6 +1,7 @@
 """Offline manifest/import-boundary checks, no build/container/network."""
 
 import ast
+import shlex
 import tomllib
 from copy import deepcopy
 from pathlib import Path
@@ -140,3 +141,37 @@ def test_membership_composition_keeps_db_adapter_out_of_worker_image():
     assert "!apps/membership/tests/composition_service.py" not in worker
     for project in ("worker", "membership"):
         assert "composition_service" not in (ROOT / f"apps/{project}/pyproject.toml").read_text()
+
+
+def test_broker_test_image_has_closed_import_context_and_no_normal_activation():
+    expected = set(MODULES) | {"auth", "models", "config", "worker_broker", "worker_guard_broker"}
+    dockerfile = (ROOT / "apps/api/Dockerfile.broker-test").read_text()
+    ignore = (ROOT / "apps/api/Dockerfile.broker-test.dockerignore").read_text().splitlines()
+    copied = {
+        Path(part).stem
+        for line in dockerfile.splitlines()
+        if line.startswith("COPY ")
+        for part in shlex.split(line)[1:-1]
+        if part.startswith("apps/api/src/ciq_api/")
+    }
+    assert copied == expected
+    assert all(f"!apps/api/src/ciq_api/{name}.py" in ignore for name in expected)
+    assert "!apps/api/src/**" not in ignore
+    for name in expected:
+        tree = ast.parse((ROOT / f"apps/api/src/ciq_api/{name}.py").read_text())
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("ciq_api."):
+                assert node.module.split(".")[1] in expected
+    assert "USER 10001:10001" in dockerfile
+    assert "broker_composition_service.py" in dockerfile
+    assert "uvicorn" not in dockerfile and "migrations" not in dockerfile
+    for name in ("main", "source_cases", "snowflake_reads", "worker_membership_store"):
+        assert f"!apps/api/src/ciq_api/{name}.py" not in ignore
+    for name in ("broker_composition_service", "broker_composition_fixture"):
+        assert name not in (ROOT / "apps/api/Dockerfile").read_text()
+        assert name not in (ROOT / "apps/api/src/ciq_api/main.py").read_text()
+        for project in ("worker", "membership"):
+            assert (
+                f"!apps/api/tests/{name}.py"
+                not in (ROOT / f"apps/{project}/Dockerfile.dockerignore").read_text()
+            )

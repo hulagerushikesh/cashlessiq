@@ -11,7 +11,7 @@ from copy import deepcopy
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-from broker_composition_fixture import SyntheticBrokerMemberships
+from broker_composition_service import BrokerClient, BrokerServer, build_handler
 from composition_service_fixture import service as worker_service
 from membership_composition_fixture import service as membership_service
 from test_source_cases import build_test_sources
@@ -19,13 +19,11 @@ from test_worker_guard_mtls import listening
 from test_worker_membership import service
 from test_worker_transport import context
 
-from ciq_api.auth import JWTVerifier, issue_local_token
+from ciq_api.auth import issue_local_token
 from ciq_api.source_alpha import SOURCE_TENANTS
-from ciq_api.source_scopes import source_alpha_scopes
 from ciq_api.validation_worker import ValidationInputs
 from ciq_api.worker_authority import Membership
 from ciq_api.worker_broker import OfflineSummaryRoute
-from ciq_api.worker_guard_broker import GuardedSummaryBroker
 from ciq_api.worker_membership import LoopbackMembershipClient
 from ciq_api.worker_transport import LoopbackSummaryClient
 
@@ -43,7 +41,6 @@ TLS_NAMES = {
 @contextmanager
 def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
     """Explicit disposable fixture; construction cannot open the normal app DB."""
-    scopes = source_alpha_scopes()
     guards, evidence, members = {}, {}, {}
     for role in f.SERVICE_BINDINGS:
         directory = root / role
@@ -139,7 +136,6 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
                 server_pin=pki[1]["membership"][2],
                 server_audience="membership:0",
             ).lookup
-        broker_memberships = SyntheticBrokerMemberships(broker_lookups)
         opened.append("membership")
         memberships = {
             role: LoopbackMembershipClient(
@@ -214,20 +210,49 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
                 route_invoke(role, parent),
                 validator_audience,
             )
-        broker = GuardedSummaryBroker(
-            verifier=JWTVerifier(settings),
-            memberships=broker_memberships,
-            scopes=scopes,
+        broker = build_handler(
+            settings=settings,
+            lookups=broker_lookups,
             routes=routes,
             private_key=assertion_key,
             generation=f.GENERATION,
             guard=guards["broker"],
             evidence=lambda: evidence["broker"](),
         )
-        opened.append("broker")  # In-process issuer, not an HTTP listener.
-        closers["broker"] = lambda: None
+
+        @contextmanager
+        def ingress():
+            from threading import Thread
+
+            server = BrokerServer(
+                context=context(pki, "broker", server=True),
+                peers={pki[1]["controller"][2]: "controller"},
+                summary=broker.summary,
+                guard=guards["broker"],
+                evidence=lambda: evidence["broker"](),
+            )
+            thread = Thread(
+                target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True
+            )
+            thread.start()
+            try:
+                yield server.server_port
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=4)
+                assert not thread.is_alive()
+
+        ports["broker"] = own_listener("broker", ingress())
+        opened.append("broker")
+        client = BrokerClient(
+            context=context(pki, "controller"),
+            port=ports["broker"],
+            server_pin=pki[1]["broker"][2],
+            server_audience="broker",
+        )
         yield SimpleNamespace(
-            broker=broker,
+            broker=client,
             members=members,
             reads=reads,
             inputs=inputs,
@@ -239,7 +264,7 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
             ports=ports,
             opened=opened,
             memberships=memberships,
-            broker_memberships=broker_memberships,
+            broker_memberships=broker._memberships,
             close_role=lambda role: closers[role](),
             token=lambda index, role: issue_local_token(
                 settings,

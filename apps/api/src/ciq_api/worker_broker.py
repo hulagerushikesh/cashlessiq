@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from ciq_api.auth import IdentityVerifier, Principal
 from ciq_api.models import AppUser, Tenant
 from ciq_api.models import Membership as StoredMembership
-from ciq_api.source_cases import ALPHA_REFERENCES
+from ciq_api.source_identity import ALPHA_REFERENCES
 from ciq_api.source_scopes import SyntheticSourceScopes
 from ciq_api.validation_worker import SummaryObservation
 from ciq_api.worker_authority import (

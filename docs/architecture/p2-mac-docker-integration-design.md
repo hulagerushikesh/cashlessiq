@@ -270,13 +270,55 @@ fixture. The normal authentication system and all default entry points are
 unchanged. Membership's CLI refuses missing/null broker configuration; the Python
 test helper retains its explicit worker-only option for earlier regression tests.
 
+**Subsequent broker ingress/packaging implementation (23 October):** explicitly
+select `apps/api/Dockerfile.broker-test`; normal API/worker/membership entry points
+are unchanged. The Docker context and COPY set enumerate the canonical worker
+modules plus API-side auth/config/models and the two broker modules. No normal
+API startup, migrations, source fixture, Snowflake gateway or membership DB
+adapter is copied. API dependencies are reused; this is not a claim that all DB
+libraries have been removed. The broker receives no DB credential/mount. A
+closed-source subprocess import check supplements static manifest checks;
+an actual image build/run is still required.
+
+`broker_composition_service.py` is copied only into this test image, alongside
+the synthetic identity adapter and frozen health helper. `/run/ciq/config.json`
+has exactly `listen` (private IPv4, port 8443), `controller_pin`, `readers` (four
+fixed reader wire audiences mapped to `{address, pin}`), and `membership` (two
+`{address, pin}` entries ordered TPA001 then TPA003). Addresses must be distinct;
+reader pins must be distinct and cannot equal controller/membership pins. There
+are no caller tenant, audience, validator, DB, issuer or key-path settings.
+
+Required own material: `ca.pem`, `identity.pem`, `identity.key`, `signer.pem`
+(disposable RSA assertion signer, at least 2048 bits), `local-auth.json` with
+exactly one `secret` of at least 32 characters, and existing own v3 state at the
+test helper's `/var/lib/ciq-replay` paths. No initializer, environment-selected
+identity, JWKS fetch or credential fallback occurs. The launcher still must
+generate only test material and validate permissions, exact mounts and networks.
+The local HS256 verifier is a synthetic acceptance mechanism, not public OIDC.
+
+Ingress is `POST /v1/broker-summary`, only from the pinned `controller` certificate
+URI. Strict JSON contains only `token`, `request_id`, `nonce` (canonical UUID).
+It invokes the canonical broker and returns only `{nonce, summary}`. Reuse the
+canonical bounded framing/TLS checks, no-store responses and redacted denials;
+no browser/public port, redirect, retry or operation selector is added. Clients
+check returned nonce and request ID and validate the summary contract. Nonce
+correlation is not session-token revocation, idempotency or a replay ledger.
+Canonical broker/worker guard and fresh membership checks remain authoritative.
+
+The external controller-broker link is **one additional separately enumerated
+edge**, outside the 14 worker links and two broker-membership links. Controller
+test material must not be mounted in the broker, workers or membership. This
+does not authorize wiring the normal API or publishing a port; the acceptance
+launcher still owes the exact isolated controller execution arrangement.
+
 The shared fixture now owns nine real loopback TLS listeners (six workers, one
 worker-membership endpoint, two broker-membership endpoints) under the same eight
 logical roles. Closing the membership role closes all three membership sockets.
-Broker ingress/image packaging, separate-process readiness/deadline supervision
-and actual restricted PostgreSQL composition remain pending. This supersedes
+With the subsequent broker ingress it owns **ten** listeners and closing the
+broker role closes its ingress socket as well. Separate-process readiness/
+deadline supervision and actual restricted PostgreSQL composition remain pending. This supersedes
 only the earlier broker membership edge gap, not the unimplemented API-broker
-transport or the operational custody/provider/source activation blockers.
+production transport or operational custody/provider/source activation blockers.
 
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.

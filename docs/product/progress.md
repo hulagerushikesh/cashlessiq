@@ -55,6 +55,52 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Private broker test ingress and isolated packaging — 23 October
+
+Added `apps/api/Dockerfile.broker-test`, an explicitly selected synthetic test
+artifact, not a new normal API entry point. It copies a closed canonical module
+set and the disposable broker/health helpers, runs as UID/GID 10001, and omits
+normal API startup, migrations, source gateway, source fixtures and membership
+DB adapter. Its import closure is tested in a subprocess from only those copied
+sources; this is not a successful Docker build/run. The broker's existing
+`ALPHA_REFERENCES` import now points directly at its canonical identity module
+rather than pulling the same re-export through the source repository/gateway.
+
+The private mTLS ingress accepts only a pinned test-controller certificate and
+strict `{token, request_id, nonce}` JSON. It calls the canonical broker, returning
+only a nonce-bound validated summary. Caller tenant/role/destination/signer
+settings, duplicate fields, wrong paths, foreign peers and widened/mismatched
+responses deny without source access. The response nonce binds a transport
+exchange; it is not an idempotency key or replay ledger for user sessions.
+Both loopback and explicit private-endpoint clients are test-only.
+
+Trusted configuration fixes four reader destinations and two broker-membership
+destinations; it permits no caller URL, shared peer identity, DB fallback or
+validator shortcut. Runtime material is only the broker's own TLS files, own
+existing guard state, disposable assertion signer and disposable local-auth
+verification secret. Verifier settings do not read ambient CIQ authentication/
+DB settings. Missing/weak/invalid material never discovers or generates keys.
+The test service owns socket/thread cleanup and suppresses READY on partial
+startup/stop; the external controller still owes readiness receipts, operation
+deadlines and confirmed process termination.
+
+The shared chain now enters through this actual TLS broker listener, bringing
+the fixture to **ten real loopback TLS listeners under eight logical roles**.
+It still uses fictional health/source, a synthetic identity registry and fake
+membership storage in one Python process. This is not real OIDC, restricted
+PostgreSQL or eight-container acceptance. **55 new broker ingress/packaging tests
+pass**; the expanded targeted API suite has **462 passing tests** and the root
+suite has **243 passing tests**. Lint/format and whitespace
+checks pass. Previous `24d541b` is now green in remote CI.
+
+Mac preflight initially passed at pressure `1`, then the required pre-build
+recheck returned pressure `2`; no image build or new container was started.
+Four existing containers/settings remain unchanged. No public deployment or
+Snowflake spend occurred. **Next: assemble the bounded all-eight container
+launcher/watchdog and run physical acceptance when headroom permits.** Custody,
+health provider/current-generation authority, governed source identities and
+live API/UI acceptance remain separate P2 gates. Completion estimate unchanged.
+
 ### Broker's separate fresh-membership edges — 23 October
 
 The disposable membership test target now supports **two additional broker-only

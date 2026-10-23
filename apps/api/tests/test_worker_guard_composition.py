@@ -28,7 +28,7 @@ def test_both_tenants_all_roles_share_one_exact_composition(
 ):
     with compose(tmp_path, topology_fixture, pki, settings, assertion_key) as w:
         assert set(w.opened) == ROLES and len(w.opened) == 8
-        assert len(w.ports) == 9 and len(w.guards) == 7
+        assert len(w.ports) == 10 and len(w.guards) == 7
         for index, tenant in enumerate(SOURCE_TENANTS):
             for profile in tenant.profiles:
                 token = w.token(index, profile.role)
