@@ -55,6 +55,37 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Disposable resource provisioning integration — 23 October
+
+`composition_resources.py` prepares eighteen internal bridge networks and fifteen
+local volumes (eight material/seven state), within the existing disposable scope.
+All 33 exact names/configuration fingerprints are journaled before engine I/O.
+Explicit headroom and route-collision callbacks must approve before allocation;
+headroom is checked again before each create. Existing target names deny rather
+than adopt. Exact independent inspection checks names/labels, network ID/subnet/
+gateway/empty endpoints and volume driver/options before recording PRESENT.
+A create acknowledgement alone is insufficient. Lost acknowledgements reconcile
+only attempted exact names with matching metadata; uncertainty fences the batch,
+retains UNKNOWN and prevents retry. No removal/prune or fallback storage exists.
+
+The same open journal can feed the inactive launcher only after all 33 expected
+resource identities are observed; partial/fenced/mismatched records deny before
+engine calls. Container intentions are appended without resetting the resource
+history. Tests use real private journals and fake engine/headroom/collision input,
+not physical resources. The bounded transport accepts the exact provisioner
+command inventory; no default CLI or normal entrypoint is activated.
+
+The actual route-collision collector, private mounted-material helper, seven
+retained stores, auxiliary DB/controller and eight-container readiness/cleanup
+acceptance remain owed. No helper build, Linux UID transition, Docker mutation,
+live source, website deployment or P3 occurred. Mac pressure remains 2, deferring
+heavy execution; existing four product services remain untouched.
+Verification: **432 root tests**, **169 targeted API composition tests**, lint,
+changed-file formatting and whitespace checks pass. Prior transport commit
+`a2f130b` passed remote CI ([run 39982829113](https://github.com/hulagerushikesh/cashlessiq/actions/runs/39982829113)).
+P2 and the readiness estimate remain unchanged; these are integration plumbing
+checks, not production isolation or physical resource acceptance.
+
 ### Bounded engine/launcher integration — 23 October
 
 The explicit disposable transport now runs a closed Docker command inventory

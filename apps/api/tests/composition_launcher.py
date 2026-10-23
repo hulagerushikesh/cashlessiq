@@ -68,9 +68,30 @@ class Launcher:
             for role in ROLES
         )
         if journal is not None:
-            # Only a fresh, explicit owner-side journal. Never resume/adopt a
-            # retained attempt. Complete durable intentions BEFORE engine I/O.
-            if journal.events != [{"version": 1, "prefix": plan.prefix}]:
+            # A fresh header or this invocation's fully observed resource batch;
+            # never resume a container attempt or a fenced/partial provision.
+            journal.check()
+            header, *events = journal.events
+            expected = {
+                ("network", f"{plan.prefix}-{n.edge}"): n.identifier for n in plan.networks
+            } | {
+                ("volume", plan.volume(role, kind)): plan.volume(role, kind)
+                for role in ROLES
+                for kind in (("material",) if role == "membership" else ("material", "state"))
+            }
+            reserved, observed = {}, {}
+            for event in events:
+                key = (event.get("kind"), event.get("name"))
+                action = event.get("action")
+                if key not in expected or action not in {"reserve", "observe"}:
+                    raise ValueError("Disposable journal must be fresh")
+                target = reserved if action == "reserve" else observed
+                if key in target:
+                    raise ValueError("Disposable journal must be fresh")
+                target[key] = event["identity"]
+            if header != {"version": 1, "prefix": plan.prefix} or (
+                events and (set(reserved) != set(expected) or observed != expected)
+            ):
                 raise ValueError("Disposable journal must be fresh")
             for role in ROLES:
                 self._record("reserve", role)

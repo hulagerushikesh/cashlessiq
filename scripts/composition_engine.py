@@ -33,7 +33,9 @@ def _readonly(args):
     return args[:1] == ("inspect",) or args[:2] in {
         ("image", "inspect"),
         ("network", "inspect"),
+        ("network", "ls"),
         ("volume", "inspect"),
+        ("volume", "ls"),
         ("container", "ls"),
     }
 
@@ -42,7 +44,7 @@ def _supported(args):
     return (
         _readonly(args)
         or args[:1] in {("create",), ("start",), ("stop",)}
-        or args[:2] == ("network", "connect")
+        or args[:2] in {("network", "connect"), ("network", "create"), ("volume", "create")}
     )
 
 

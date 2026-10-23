@@ -559,6 +559,29 @@ readiness/delivery and exact cleanup. Elevated Mac pressure still defers builds.
 
 ## Implementation anchors and change exclusions
 
+**Resource provisioning checkpoint (23 October):** explicit owner-side
+`composition_resources.py` joins the existing inventory, engine and retained
+journal. Constructor validates supplied public layout only; no default subnet,
+images, trust or engine discovery. All eighteen network and fifteen volume
+reservations precede engine I/O. Mandatory headroom/collision callbacks are
+trusted injected dependencies and still require actual bounded collection in
+the physical runner. Headroom is rechecked before every create; target-name
+collisions deny before mutation. A trusted exclusive UUID namespace is required;
+this is not an atomic-name or hostile same-UID race protection claim.
+
+Inspection requires exact labels/name/driver/options, full network identity,
+internal bridge/subnet/gateway and no endpoints. Unexpected attachability,
+ingress or IPv6 denies. Volume creation never includes host driver options or
+fallback storage. Journal observation follows independent inspection, not an
+acknowledgement. Failure fences and reconciles only exact attempted names; unknown
+is not absence and no retry/removal follows. The launcher accepts the same open
+journal's complete expected resource observations, then appends container
+intentions; it refuses partial/fenced/mismatched or previously attempted journals.
+Actual metadata is still rechecked by launcher preflight. Tests use fake engine
+observations with real disposable journals; the full Docker transport/mounted
+helper/UID/state/DB/eight-role/cleanup composition remains unverified. No resources
+were physically allocated by this checkpoint at elevated Mac pressure.
+
 **Bounded CLI transport checkpoint (23 October):** `composition_engine.py` is
 explicit owner-side plumbing, excluded from normal startup. An exact trusted
 command inventory and explicit Unix endpoint/private empty Docker config prevent
