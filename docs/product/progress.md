@@ -55,6 +55,40 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Disposable volume installer/read-back implementation — 23 October
+
+Added a separately invoked, standard-library material helper and closed two-file
+test-image context. It has no default action or normal-service wiring. Its CLI
+accepts only `install` (root) or `verify` (UID 10001), fixes `/material` and final
+UID/GID 10001, and receives bounded private stdin frames rather than credential
+arguments/environment. Output contains only state, role and inventory fingerprint;
+denials are redacted and report an unknown outcome, not successful cleanup.
+
+Installation validates the entire archive before touching the target: exact
+role allowlist, sizes/hashes, owner/modes, flat members and canonical USTAR bytes.
+Traversal, links, devices/FIFOs, duplicates, PAX/compression/trailing payloads and
+noncanonical metadata deny. It never calls tar extraction. Only an empty,
+current-owner target is accepted; files are created exclusively, synchronized
+and assigned final mode/owner. The directory is finalized last. Failure retains
+partial state with no automatic retry, overwrite or deletion.
+
+The separate read-only checker verifies every regular file's ownership, mode,
+size/hash, link count and stable metadata plus root identity. Installer success
+is not read-back success or readiness. Tests exercise all eight inventories on
+real temporary host directories using the host's unprivileged UID/GID, **not Linux
+UID-10001 transitions or named Docker volumes**. CLI fixed paths/UID policy are
+unit-tested; the helper image has not been built/run. Proposed root CHOWN-only
+installation and a separate capability-free UID-10001 read-only probe still need
+physical verification in independently owned/bounded helper containers.
+
+**50 new volume tests and two packaging boundary tests pass**; root regression
+**352 passing**, targeted API regression **596 passing**, lint/format checks pass.
+Prior `d055a0c` is green in CI. Host pressure remains `2`; no new Docker resources,
+existing app changes, Snowflake calls, deployment or P3 work. The local API and
+website remain unchanged. Next: retained ownership/recovery journal and bounded
+engine wiring, then actual helper/volume and eight-role acceptance when host
+headroom permits. P2/completion estimates remain unchanged.
+
 ### Private per-role material staging and verified archives — 23 October
 
 Implemented the local file-material prerequisite for the approved disposable

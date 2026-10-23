@@ -224,13 +224,18 @@ class Staged:
         volume afterward. No extraction, Docker execution or disk output here.
         """
         snapshot = self._snapshot(role, fingerprint)
-        output = io.BytesIO()
-        with tarfile.open(fileobj=output, mode="w", format=tarfile.USTAR_FORMAT) as archive:
-            root = tarfile.TarInfo(".")
-            root.type, root.mode, root.uid, root.gid = tarfile.DIRTYPE, 0o500, 10001, 10001
-            archive.addfile(root)
-            for name, data in sorted(snapshot.items()):
-                entry = tarfile.TarInfo(name)
-                entry.size, entry.mode, entry.uid, entry.gid = len(data), 0o400, 10001, 10001
-                archive.addfile(entry, io.BytesIO(data))
-        return output.getvalue()
+        return _archive(snapshot)
+
+
+def _archive(snapshot):
+    """One canonical wire encoding, also checked before disposable installation."""
+    output = io.BytesIO()
+    with tarfile.open(fileobj=output, mode="w", format=tarfile.USTAR_FORMAT) as archive:
+        root = tarfile.TarInfo(".")
+        root.type, root.mode, root.uid, root.gid = tarfile.DIRTYPE, 0o500, 10001, 10001
+        archive.addfile(root)
+        for name, data in sorted(snapshot.items()):
+            entry = tarfile.TarInfo(name)
+            entry.size, entry.mode, entry.uid, entry.gid = len(data), 0o400, 10001, 10001
+            archive.addfile(entry, io.BytesIO(data))
+    return output.getvalue()

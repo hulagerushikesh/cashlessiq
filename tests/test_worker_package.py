@@ -193,6 +193,7 @@ def test_owner_side_launcher_is_inactive_and_absent_from_service_artifacts():
         "composition_actor_case",
         "composition_material",
         "composition_material_fixture",
+        "composition_volume",
     ):
         for file in (
             "apps/api/Dockerfile",
@@ -206,3 +207,64 @@ def test_owner_side_launcher_is_inactive_and_absent_from_service_artifacts():
         target = (ROOT / path).read_text().split(" AS composition-test", 1)[1].split("FROM ", 1)[0]
         assert "CMD []" in target
     assert "CMD []" in (ROOT / "apps/api/Dockerfile.broker-test").read_text()
+
+
+def test_material_helper_has_only_stdlib_sources_and_no_normal_activation():
+    dockerfile = (ROOT / "scripts/Dockerfile.material-test").read_text()
+    assert 'ENTRYPOINT ["python", "-m", "scripts.composition_volume"]' in dockerfile
+    assert "USER 10001:10001" in dockerfile and "CMD []" in dockerfile
+    assert "pip" not in dockerfile and "uv " not in dockerfile and "VOLUME" not in dockerfile
+    allowlist = (ROOT / "scripts/Dockerfile.material-test.dockerignore").read_text().splitlines()
+    assert allowlist == [
+        "**",
+        "!scripts/",
+        "!scripts/composition_material.py",
+        "!scripts/composition_volume.py",
+    ]
+    for name in ("composition_material", "composition_volume"):
+        tree = ast.parse((ROOT / f"scripts/{name}.py").read_text())
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                assert node.module in {
+                    "dataclasses",
+                    "hashlib",
+                    "pathlib",
+                    "scripts.composition_material",
+                }
+            elif isinstance(node, ast.Import):
+                assert all(
+                    a.name
+                    in {
+                        "base64",
+                        "io",
+                        "json",
+                        "os",
+                        "stat",
+                        "sys",
+                        "tarfile",
+                    }
+                    for a in node.names
+                )
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                assert node.func.attr not in {"extract", "extractall"}
+
+
+def test_material_image_source_closure_imports_without_the_repository(tmp_path):
+    import shutil
+    import subprocess
+    import sys
+
+    package = tmp_path / "scripts"
+    package.mkdir()
+    for name in ("composition_material.py", "composition_volume.py"):
+        shutil.copyfile(ROOT / "scripts" / name, package / name)
+    result = subprocess.run(
+        [sys.executable, "-m", "scripts.composition_volume"],
+        cwd=tmp_path,
+        env={"PYTHONDONTWRITEBYTECODE": "1"},
+        input=b"",
+        capture_output=True,
+        timeout=3,
+    )
+    assert result.returncode == 1 and result.stdout == b""
+    assert result.stderr == b"Disposable material operation denied; outcome unknown\n"

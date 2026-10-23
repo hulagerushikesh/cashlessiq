@@ -457,6 +457,40 @@ as are the independent ownership journal and bounded real Docker actors. These
 helpers are excluded from normal/service images. The approved physical batch is
 not complete, and operational/P3/public activation remains prohibited.
 
+**Subsequent volume-helper implementation checkpoint (23 October):**
+`scripts/composition_volume.py` consumes a bounded private frame containing the
+trusted role/fingerprint/file inventory and, for installation only, its canonical
+archive. No secret bytes/digests are emitted. `scripts/Dockerfile.material-test`
+copies only this helper and the staging module; it has no dependencies/default
+action and is not an application image or addition to the eight-role barrier.
+Its CLI fixes `/material`, root installer and UID/GID-10001 read-back policy.
+
+Before filesystem mutation, installation validates the complete flat archive
+against expected sizes/hashes/owner/modes and canonical USTAR encoding; no tar
+extract/extractall is used. An empty current-owner target is mandatory. Files
+are exclusively created, fsynced and finalized mode 0400/owner; directory mode
+0500/owner is finalized last. Partial failure retains state, no repair/retry/rm.
+A separate read-only checker verifies regular files, hashes, owner/modes, no
+aliases/extras, stable metadata and root identity. Neither operation discovers,
+creates, mounts or attests the identity of a Docker volume itself.
+
+The test-image installer is intended to need only CHOWN beyond dropped default
+capabilities, with no network/other mounts. A new verifier should run UID 10001
+without capabilities and with its exact material volume read-only. This minimal
+capability/ownership transition is **not yet Linux/Docker-tested**. Both helpers
+must be independently registered before create, engine-inspected for exact image/
+volume/security settings, bounded by owned actors, and confirmed exited. A frame
+or helper success cannot replace those checks, fresh read-back or readiness.
+Unknown outcomes retain the outer ownership journal/fence; no retry/replacement.
+No helper receives replay volumes, Docker socket, other role material or network.
+
+Local tests use disposable host directories and the host UID/GID, not root
+privilege changes. They cover all eight roles, malformed/aliased archives, changed
+files and partial writes. CLI identity/path policy is mocked unit evidence only.
+No image build, container, mounted volume or actual UID-10001 transition occurred.
+The approved physical batch still awaits its ownership journal and bounded real
+engine composition; operational/P3/public source activation stays blocked.
+
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
 - Exercise both tenants and all three roles through verified identity context:

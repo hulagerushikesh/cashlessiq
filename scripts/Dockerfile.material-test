@@ -1,0 +1,8 @@
+# Explicit disposable installer/probe only. Never an application service image.
+FROM python:3.11-slim-bookworm
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /opt/ciq-material
+COPY scripts/composition_material.py scripts/composition_volume.py ./scripts/
+USER 10001:10001
+ENTRYPOINT ["python", "-m", "scripts.composition_volume"]
+CMD []
