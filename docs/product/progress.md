@@ -8,6 +8,8 @@ checklists contain verification evidence. Earlier entries in those checklists
 are historical checkpoints, not the latest status. Hackathon submission is done;
 demo-video work is not part of this product plan.
 
+[Short owner dashboard: completed work, remaining phases and next decision](delivery-status.md).
+
 ## Phase scoreboard
 
 | Phase | Status | Exit gate |
@@ -20,7 +22,7 @@ demo-video work is not part of this product plan.
 | P5 / M5 — ingestion and policy management | Not started | Secure ingestion; second supported policy onboarded through approval/regression gates |
 | P6 / M6 — prototype retirement | Not started | Parallel reconciliation passes; no operational dependency on Streamlit/user credentials |
 
-### Completion estimate — 21 October
+### Completion estimate — reviewed 23 October
 
 Owner-facing planning estimate: **35–40% of the full P0–P6 migration; P2 about
 60%**. P0 is complete, P1 engineering is complete under the explicitly deferred
@@ -65,7 +67,11 @@ Snowflake/AI call, purchase, source activation or P3. This is not a UI redesign.
 tests pass**; typecheck, production build, lint, contract/no-drift and whitespace
 checks pass. Three new browser tests verify sign-out blocks protected case access
 for each role. One existing intentional backend serializer warning remains.
-Prior containment commit `2d10fcc` passed remote CI; this batch's CI is pending.
+Prior containment commit `2d10fcc` passed remote CI. Local-alpha implementation
+`c6a4b03` also passed [remote CI run 39895921707](https://github.com/hulagerushikesh/cashlessiq/actions/runs/39895921707),
+independently checked on 23 October. The owner subsequently reported manual
+checks working as expected and welcomed the synthetic sign-in role categories.
+This closes the local owner-testing checkpoint, not P2's live acceptance gates.
 
 P2's governed live acceptance and public release are still open. Continue local
 owner testing without depending on trial renewal or treating synthetic snapshots

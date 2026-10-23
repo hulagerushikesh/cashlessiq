@@ -87,4 +87,7 @@ passing does not make the running local development stack production-ready.
 No new UI redesign or reviewer-write features are included. This is a refreshed,
 verified testing baseline, not the governed live-source P2 exit. Remote CI for
 the prior containment commit `2d10fcc` is green; this testing-guide commit's
-post-push CI is not yet claimed complete.
+post-push CI subsequently passed: implementation `c6a4b03`, run
+[39895921707](https://github.com/hulagerushikesh/cashlessiq/actions/runs/39895921707),
+checked on 23 October. The owner reports manual checks working as expected and
+accepts this local baseline; live-source and public-release gates remain open.

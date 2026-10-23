@@ -17,11 +17,14 @@ Last updated: 23 October 2026
   checks; root 213 and backend 1,003. Typecheck, build, lint, contracts/no drift pass.
 - [x] [Owner testing guide](local-alpha-testing.md) distinguishes snapshots, UI
   fixtures, source MISSING and unavailability; no live-source equivalence claim.
+- [x] Owner reports manual checks working as expected; local baseline accepted.
+- [x] Local-alpha implementation `c6a4b03` passed remote CI, run `39895921707`,
+  independently checked on 23 October.
 - [ ] Governed live P2 and public release gates remain open. This local milestone
   neither activates source routes nor starts P3.
 
-Remote CI for `2d10fcc` passed, including disposable containment. This local-alpha
-batch's post-push CI is pending; one existing backend negative-model warning remains.
+Remote CI for `2d10fcc` passed, including disposable containment. The local-alpha
+implementation is also green; one existing backend negative-model warning remains.
 
 ### Disposable process containment — 23 October
 

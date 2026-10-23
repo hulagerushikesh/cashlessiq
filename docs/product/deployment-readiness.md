@@ -6,6 +6,9 @@ healthy and regression-verified; [owner testing checklist](local-alpha-testing.m
 This does not require a Linux purchase, Snowflake access or public hosting. Keep
 development authentication loopback-only. The three governed live/public release
 bundles below remain open; local testing is not an assertion that they passed.
+The owner now reports local manual checks working; implementation `c6a4b03` has
+green remote CI. See the [delivery dashboard](delivery-status.md) for the concise
+phase checklist and next operational decision. No deployment was performed.
 
 22 October 2026. The hackathon website is not the authenticated product release.
 The new local Next.js/FastAPI/PostgreSQL workspace exists, but its governed live
