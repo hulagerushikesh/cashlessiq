@@ -1,6 +1,7 @@
 """Actual small disposable processes; no Docker, credentials or user services."""
 
 import sys
+from hashlib import sha256
 
 import pytest
 
@@ -131,3 +132,71 @@ def test_cleanup_uncertainty_denies_without_raw_syscall_error(monkeypatch, failu
         child.kill.assert_called_once_with()
     else:
         assert not task.watcher_reaped
+
+
+@pytest.mark.parametrize("size", [1, 65537, 2 * 1024 * 1024])
+def test_private_body_exact_binary_delivery_and_empty_environment(size, capsys, monkeypatch):
+    monkeypatch.setenv("CIQ_TEST_PRIVATE_SENTINEL", "must-not-be-inherited")
+    body = (b"synthetic-secret-only\x00\xff\n" * (size // 23 + 1))[:size]
+    task = actor(
+        "import sys,os,json,hashlib; data=sys.stdin.buffer.read(); "
+        "print(json.dumps(dict(size=len(data),digest=hashlib.sha256(data).hexdigest(),"
+        "environment=sorted(os.environ))))"
+    )
+    result = task.execute(private_input=body)
+    assert result["size"] == len(body) and result["digest"] == sha256(body).hexdigest()
+    # Python locale coercion / macOS may synthesize these even with env={}.
+    assert set(result["environment"]) <= {"LC_CTYPE", "__CF_USER_TEXT_ENCODING"}
+    assert task.actor_reaped and task.watcher_reaped
+    assert capsys.readouterr() == ("", "")
+
+
+@pytest.mark.parametrize("body", [b"", "private", bytearray(b"private"), b"x" * (2097152 + 1)])
+def test_invalid_private_body_consumes_attempt_without_launch(body, monkeypatch):
+    from unittest.mock import Mock
+
+    import scripts.bounded_composition_actor as implementation
+
+    launch = Mock()
+    monkeypatch.setattr(implementation.subprocess, "Popen", launch)
+    task = actor("pass")
+    with pytest.raises(ActorDenied):
+        task.execute(private_input=body)
+    assert task.used and task.fenced
+    launch.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "import time; time.sleep(30)",
+        "import sys; sys.stdin.buffer.read(1); sys.exit(1)",
+        "import sys,time; sys.stdin.buffer.read(); print('{}',flush=True); time.sleep(30)",
+    ],
+)
+def test_private_input_blocked_early_exit_and_late_response_are_redacted(code, capsys):
+    task = actor(code, budget=500_000_000)
+    with pytest.raises(ActorDenied, match="outcome unknown"):
+        task.execute(private_input=b"synthetic-private" * 100000)
+    assert task.fenced and task.watcher_reaped
+    assert capsys.readouterr() == ("", "")
+
+
+@pytest.mark.parametrize("body,size", [(b"short", 8), (b"overflow", 2), (b"", 1)])
+def test_private_body_rejects_incomplete_or_extra_bytes(body, size):
+    import os
+    import time
+
+    from scripts.bounded_composition_actor import _private
+
+    read, write = os.pipe()
+    try:
+        os.write(write, body)
+        os.close(write)
+        write = None
+        with pytest.raises(ActorDenied):
+            _private(read, size, time.monotonic_ns() + 100_000_000)
+    finally:
+        os.close(read)
+        if write is not None:
+            os.close(write)

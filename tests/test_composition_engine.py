@@ -90,6 +90,76 @@ def test_network_slot_is_bounded_and_does_not_authorize_container_identity(rig):
     assert engine.fenced and not engine.incarnations
 
 
+def test_registered_helper_private_input_round_trip_without_argv_or_env(rig, capsys):
+    from hashlib import sha256
+
+    make, _, _ = rig
+    engine = make(
+        "import sys,json,hashlib; body=sys.stdin.buffer.read(); "
+        "print(json.dumps(dict(digest=hashlib.sha256(body).hexdigest(),args=sys.argv[5:])))"
+    )
+    cid = "a" * 64
+    engine.commands = frozenset([("start", "--attach", "--interactive", "{incarnation}")])
+    engine.permit_incarnation(cid)
+    body = b"synthetic-private\x00\xff\n" * 100000
+    result = json.loads(
+        engine.execute("start", "--attach", "--interactive", cid, private_input=body)
+    )
+    assert result == dict(
+        digest=sha256(body).hexdigest(), args=["start", "--attach", "--interactive", cid]
+    )
+    assert not engine.fenced and capsys.readouterr() == ("", "")
+
+
+@pytest.mark.parametrize(
+    "args,body,registered",
+    [
+        (("inspect", "owned"), b"private", True),
+        (("start", "owned"), b"private", True),
+        (("start", "--attach", "--interactive", "a" * 64), b"private", False),
+        (("start", "--attach", "--interactive", "a" * 64), b"", True),
+        (("start", "--attach", "--interactive", "a" * 64), "private", True),
+    ],
+)
+def test_private_input_requires_closed_registered_interactive_start(
+    rig, args, body, registered, monkeypatch
+):
+    from unittest.mock import Mock
+
+    import scripts.composition_engine as implementation
+
+    make, _, _ = rig
+    engine = make("raise RuntimeError('must not run')")
+    engine.commands = frozenset([args, ("start", "--attach", "--interactive", "{incarnation}")])
+    if registered:
+        engine.permit_incarnation("a" * 64)
+    launch = Mock()
+    monkeypatch.setattr(implementation, "BoundedActor", launch)
+    with pytest.raises(ActorDenied):
+        engine.execute(*args, private_input=body)
+    assert engine.fenced
+    launch.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "import time; time.sleep(30)",
+        "import sys; sys.stdin.buffer.read(); print('synthetic-private'); sys.exit(1)",
+        "import sys,time; sys.stdin.buffer.read(); print('{}',flush=True); time.sleep(30)",
+    ],
+)
+def test_private_cli_that_blocks_fails_or_reports_late_is_bounded_and_redacted(rig, capsys, code):
+    make, _, _ = rig
+    engine = make(code, budget=500_000_000)
+    cid = "a" * 64
+    engine.commands = frozenset([("start", "--attach", "--interactive", "{incarnation}")])
+    engine.permit_incarnation(cid)
+    with pytest.raises(ActorDenied):
+        engine.execute("start", "--attach", "--interactive", cid, private_input=b"x" * 2097152)
+    assert engine.fenced and capsys.readouterr() == ("", "")
+
+
 @pytest.mark.parametrize(
     "code",
     [

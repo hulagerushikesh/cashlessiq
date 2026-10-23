@@ -17,6 +17,7 @@ from contextlib import suppress
 from pathlib import Path
 
 MAX_FRAME = 32768
+MAX_PRIVATE_INPUT = 2 * 1024 * 1024
 
 
 class ActorDenied(ValueError):
@@ -42,14 +43,14 @@ def _json(data):
     return value
 
 
-def _line(fd, deadline):
+def _line(fd, deadline, *, chunk_size=4096):
     result = bytearray()
     os.set_blocking(fd, False)
     while time.monotonic_ns() < deadline:
         remaining = (deadline - time.monotonic_ns()) / 1e9
         if remaining <= 0 or not select.select([fd], [], [], remaining)[0]:
             break
-        data = os.read(fd, min(4096, MAX_FRAME + 1 - len(result)))
+        data = os.read(fd, min(chunk_size, MAX_FRAME + 1 - len(result)))
         if not data:
             raise ActorDenied()
         result.extend(data)
@@ -59,6 +60,25 @@ def _line(fd, deadline):
             if not result.endswith(b"\n") or result.count(b"\n") != 1:
                 raise ActorDenied()
             return _json(result[:-1])
+    raise ActorDenied()
+
+
+def _private(fd, size, deadline):
+    """Exact bounded private body followed by EOF; never decode or report it."""
+    data = bytearray()
+    os.set_blocking(fd, False)
+    while time.monotonic_ns() < deadline:
+        remaining = (deadline - time.monotonic_ns()) / 1e9
+        if remaining <= 0 or not select.select([fd], [], [], remaining)[0]:
+            break
+        chunk = os.read(fd, min(65536, size + 1 - len(data)))
+        if not chunk:
+            if len(data) == size:
+                return bytes(data)
+            break
+        data.extend(chunk)
+        if len(data) > size:
+            break
     raise ActorDenied()
 
 
@@ -95,8 +115,9 @@ def _watch():
     report = {"state": "denied", "actor_reaped": False}
     # Initial framing has its own small bound before accepting the caller lease.
     try:
-        request = _line(0, time.monotonic_ns() + 2_000_000_000)
-        if set(request) != {"command", "deadline", "grace_ns"}:
+        # Bytewise header avoids consuming credential body bytes as JSON framing.
+        request = _line(0, time.monotonic_ns() + 2_000_000_000, chunk_size=1)
+        if set(request) != {"command", "deadline", "grace_ns", "input_size"}:
             raise ActorDenied()
         command, deadline, grace = request["command"], request["deadline"], request["grace_ns"]
         if (
@@ -108,16 +129,30 @@ def _watch():
             or not 0 < deadline - time.monotonic_ns() <= 10_000_000_000
             or type(grace) is not int
             or not 50_000_000 <= grace <= 2_000_000_000
+            or (
+                request["input_size"] is not None
+                and (
+                    type(request["input_size"]) is not int
+                    or not 0 < request["input_size"] <= MAX_PRIVATE_INPUT
+                )
+            )
         ):
             raise ActorDenied()
+        body = (
+            None if request["input_size"] is None else _private(0, request["input_size"], deadline)
+        )
         child = subprocess.Popen(
             command,
-            stdin=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL if body is None else subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             env={},
             close_fds=True,
         )
+        if body is not None:
+            _write(child.stdin.fileno(), body, deadline)
+            child.stdin.close()
+            del body
         value = _line(child.stdout.fileno(), deadline)
         remaining = (deadline - time.monotonic_ns()) / 1e9
         if remaining <= 0:
@@ -133,6 +168,8 @@ def _watch():
             report["actor_reaped"] = _terminate(child, request["grace_ns"] / 1e9)
     finally:
         if child is not None:
+            if child.stdin is not None and not child.stdin.closed:
+                child.stdin.close()
             child.stdout.close()
     # No actor stdout/error detail is reported on denial.
     payload = json.dumps(report, separators=(",", ":")).encode() + b"\n"
@@ -163,10 +200,21 @@ class BoundedActor:
         self.command, self.budget_ns, self.grace_ns = command, budget_ns, grace_ns
         self.used, self.fenced, self.actor_reaped, self.watcher_reaped = False, False, False, False
 
-    def execute(self):
+    def execute(self, *, private_input=None):
+        """Optional bounded bytes via anonymous pipes only, never argv/env/files.
+
+        Trusted noninteractive actors must consume stdin before producing a
+        response. Failure retains an unknown outcome; this is not zeroization
+        or exclusion of a privileged/same-UID host observer.
+        """
         if self.used or os.name != "posix" or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL:
             raise ActorDenied()
         self.used = True
+        if private_input is not None and (
+            type(private_input) is not bytes or not 0 < len(private_input) <= MAX_PRIVATE_INPUT
+        ):
+            self.fenced = True
+            raise ActorDenied()
         child = None
         result = None
         deadline = time.monotonic_ns() + self.budget_ns
@@ -181,8 +229,15 @@ class BoundedActor:
                 start_new_session=True,
                 close_fds=True,
             )
-            request = dict(command=self.command, deadline=deadline, grace_ns=self.grace_ns)
+            request = dict(
+                command=self.command,
+                deadline=deadline,
+                grace_ns=self.grace_ns,
+                input_size=None if private_input is None else len(private_input),
+            )
             _write(child.stdin.fileno(), json.dumps(request).encode() + b"\n", deadline)
+            if private_input is not None:
+                _write(child.stdin.fileno(), private_input, deadline)
             child.stdin.close()
             report = _line(child.stdout.fileno(), outer)
             self.actor_reaped = report.get("actor_reaped") is True

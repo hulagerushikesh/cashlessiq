@@ -586,6 +586,29 @@ missing bridge IPAM. Material helpers, Linux UID transitions, retained states,
 DB/controller and eight-role physical lifecycle acceptance remain unverified.
 Mac pressure remains 2; no heavy execution or normal runtime change occurred.
 
+**Private helper-input transport checkpoint (23 October):** the existing bounded
+actor accepts optional bytes, maximum 2 MiB, through anonymous pipes. A bounded
+bytewise control header precedes an exact-size private body with required EOF;
+the body is never JSON-encoded into control metadata. The trusted actor must
+consume stdin before emitting output. Sending, reading, response and exit all
+share the lease, with the existing whole-group cleanup/uncertainty fencing.
+Default calls still receive DEVNULL. Invalid private input consumes/fences the
+one-use attempt without process creation.
+
+Engine private input requires a predeclared `start --attach --interactive` slot
+and registered full CID; the fixed isolated wrapper forwards stdin only to that
+explicit CLI invocation. It does not add exec/run or make helper registration an
+ownership claim. The future coordinator must inspect helper image, mount and
+security configuration before start, then independently confirm exact exit and
+non-root mounted read-back. Blocking/partial CLI input cannot extend the actor
+deadline; killing that process group does not prove the daemon stopped work.
+No payload persistence, shell, argv/environment secret transport or normal
+application activation was added. OS/Python may synthesize locale metadata in
+an otherwise empty environment. Copies in process memory are not zeroized;
+trusted-host assumptions remain. Synthetic process tests are not mounted-volume,
+Linux chown, encrypted custody or eight-role acceptance. Mac pressure 2 defers
+heavy execution; material verification and seven retained states remain next.
+
 **Resource provisioning checkpoint (23 October):** explicit owner-side
 `composition_resources.py` joins the existing inventory, engine and retained
 journal. Constructor validates supplied public layout only; no default subnet,

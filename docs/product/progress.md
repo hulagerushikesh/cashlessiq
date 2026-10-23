@@ -55,6 +55,19 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Private helper-input transport — 23 October
+
+The bounded actor now accepts an explicit, at-most-2-MiB private byte body over
+anonymous pipes, separate from its small control/result frames. The engine uses
+that channel only for an exactly inventoried attached/interactive start of a
+registered full container ID. No payload is placed in argv, environment, files
+or journal. Unknown/blocked/early-exit outcomes fence admission; this does not
+prove daemon-side cancellation. Real subprocess tests use synthetic bodies and
+fake CLI executables only. Mounted material installation/read-back, Linux UID
+transitions, seven retained states and eight-role lifecycle remain pending.
+Mac memory pressure remains 2, so no Docker build/allocation was attempted.
+P2 remains open; no website, Snowflake or normal runtime change.
+
 ### Bounded Mac/Docker subnet collision gate — 23 October
 
 The disposable provisioner's collision callback now has a concrete collector:

@@ -5,6 +5,24 @@ Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Disposable helper private transport — 23 October
+
+- [x] Explicit bounded anonymous-pipe input for trusted noninteractive test actors;
+  2 MiB maximum, exact framing/EOF, shared deadline and whole-group cleanup.
+- [x] Closed engine input path requires a registered full CID and predeclared
+  `start --attach --interactive` command; no ambient helper, exec/run, retry or
+  default activation. Payload never enters argv/environment/journal/files.
+- [x] Synthetic real-process/fake-CLI checks cover binary delivery, oversize/type
+  refusal, blocked readers, early exit and late response with redacted failure.
+- [x] 500 root and 169 targeted API composition regressions pass; repository
+  lint, changed-Python formatting and whitespace checks pass. Previous checkpoint
+  `ec81a15` remote CI passed (`39984645607`); this checkpoint's CI is not yet
+  verified. No full API/browser/physical Docker acceptance rerun is claimed.
+- [ ] Exact helper image/mount/security inspection, independent container exit,
+  mounted UID-10001 read-back and retained-state integration still owed.
+- [ ] Physical eight-role acceptance remains deferred at Mac pressure 2. No
+  Snowflake use, website deployment or P3 is included in this checkpoint.
+
 ### Local authenticated synthetic alpha — 23 October
 
 - [x] Owner approved refreshing/verifying the local Mac/Docker workspace; no

@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 
 if __package__:
-    from .bounded_composition_actor import MAX_FRAME, ActorDenied, BoundedActor
+    from .bounded_composition_actor import MAX_FRAME, MAX_PRIVATE_INPUT, ActorDenied, BoundedActor
 else:
     # -I disables repository/sys.path discovery. Load only this fixed sibling.
     _spec = importlib.util.spec_from_file_location(
@@ -27,6 +27,7 @@ else:
     _actor = importlib.util.module_from_spec(_spec)
     _spec.loader.exec_module(_actor)
     MAX_FRAME, ActorDenied, BoundedActor = _actor.MAX_FRAME, _actor.ActorDenied, _actor.BoundedActor
+    MAX_PRIVATE_INPUT = _actor.MAX_PRIVATE_INPUT
 
 
 def _readonly(args):
@@ -113,7 +114,24 @@ class Engine:
         self.incarnations.add(cid)
 
     def __call__(self, *args):
+        return self.execute(*args)
+
+    def execute(self, *args, private_input=None):
+        """Private input only for an explicitly inventoried registered helper start.
+
+        The owner still owes exact helper image/mount/security inspection before
+        starting it, and independent exit/read-back afterwards. No exec/run or
+        default helper container is introduced here.
+        """
         try:
+            if private_input is not None and (
+                type(private_input) is not bytes
+                or not 0 < len(private_input) <= MAX_PRIVATE_INPUT
+                or len(args) != 4
+                or args[:3] != ("start", "--attach", "--interactive")
+                or args[-1] not in self.incarnations
+            ):
+                raise ActorDenied()
             exact = args in self.commands and not {"{incarnation}", "{network}"}.intersection(args)
             registered = (
                 len(args) >= 2
@@ -150,7 +168,7 @@ class Engine:
                     sys.executable,
                     "-I",
                     str(Path(__file__).resolve()),
-                    "--command",
+                    "--command" if private_input is None else "--private-command",
                     self.binary,
                     "--host",
                     "unix://" + self.socket,
@@ -161,7 +179,11 @@ class Engine:
                 budget_ns=budget,
                 grace_ns=300_000_000,
             )
-            value = task.execute()
+            value = (
+                task.execute()
+                if private_input is None
+                else task.execute(private_input=private_input)
+            )
             if set(value) != {"output"} or type(value["output"]) is not str:
                 raise ActorDenied()
             return value["output"]
@@ -170,7 +192,7 @@ class Engine:
             raise ActorDenied() from None
 
 
-def _command(command):
+def _command(command, *, private=False):
     """Closed child under the actor-owned group, never start a new session.
 
     BoundedActor bounds time/exit and kills the WHOLE owned group. Bound output
@@ -178,14 +200,25 @@ def _command(command):
     """
     child = None
     try:
+        body = None
+        if private:
+            body = sys.stdin.buffer.read(MAX_PRIVATE_INPUT + 1)
+            if not 0 < len(body) <= MAX_PRIVATE_INPUT:
+                raise ActorDenied()
         child = subprocess.Popen(
             command,
-            stdin=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL if body is None else subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             env={},
             close_fds=True,
         )
+        if body is not None:
+            # This entire helper and CLI share the watcher's bounded process
+            # group. A non-reading CLI blocks only until that group is killed.
+            child.stdin.write(body)
+            child.stdin.close()
+            del body
         data = bytearray()
         while True:
             select.select([child.stdout], [], [])
@@ -207,10 +240,17 @@ def _command(command):
         return 2  # No raw Docker output/error on denial.
     finally:
         if child is not None:
+            if child.stdin is not None and not child.stdin.closed:
+                child.stdin.close()
             child.stdout.close()
         # The parent watcher owns group cancellation/reaping even if this helper
         # failed while Docker is still running. Do not claim daemon cleanup.
 
 
 if __name__ == "__main__":
-    raise SystemExit(_command(sys.argv[2:]) if sys.argv[1:2] == ["--command"] else 2)
+    mode = sys.argv[1:2]
+    raise SystemExit(
+        _command(sys.argv[2:], private=mode == ["--private-command"])
+        if mode in (["--command"], ["--private-command"])
+        else 2
+    )
