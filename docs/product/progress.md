@@ -55,6 +55,31 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Journaled state-helper coordination — 23 October
+
+The inactive state coordinator now reuses the material coordinator's bounded
+engine, strict image/container/mount inspection, separate helper journal and
+explicit containment. Both state-helper intentions precede engine work; the
+initializer runs as root/CHOWN only and the independent verifier as UID 10001
+with no capabilities. Only the exact observed state-volume intention can
+authorize this attempt. A material-volume observation or membership role cannot.
+Both helpers have no network or host mounts and use RW retained state.
+
+Each receipt must match role/generation, followed by exact successful exit proof.
+Unknown create/start, changed configuration, bad receipts, nonzero exit or lost
+headroom fence the attempt without retry/adoption. Containment uses only known
+full CIDs and fresh exit inspection; an unattempted/unknown verifier stays
+UNKNOWN, and no resource-journal mutation, readiness or removal follows.
+Shared material tests still require a read-only verifier. Real bounded actor/CLI
+tests exercise both paths against fake metadata; no Docker daemon was used.
+
+Mac pressure remains 2. Physical state/image/ownership acceptance and the unified
+restricted DB/controller/eight-role lifecycle/cleanup runner remain next. This
+does not close operational custody/clock-health, Snowflake isolation or live
+API/UI parity. No deployment, Snowflake spend, normal activation or P3 changes;
+P2 and the completion estimate remain unchanged. Prior helper commit `1997813`
+and seven-state checkpoint `4634f8c` now have successful remote CI runs.
+
 ### Disposable state-volume helper candidate — 23 October
 
 An explicit test-only helper now accepts a small closed role/generation request

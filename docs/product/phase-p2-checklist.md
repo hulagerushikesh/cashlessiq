@@ -5,6 +5,28 @@ Last updated: 23 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Journaled state-helper coordination — 23 October
+
+- [x] State-specific closed coordinator reuses the bounded transport, exact
+  inspection and explicit containment implementation; separate fresh helper
+  ledger, two intentions first, observed exact state volume and headroom required.
+- [x] Independent root/CHOWN initializer and capability-free UID-10001 verifier;
+  exact fixed entrypoint/modes, RW state mount only, no networks/host mounts.
+  Material read-back still requires RO; normal application packaging is unchanged.
+- [x] Role/generation receipts never substitute for successful independently
+  inspected exit. Unknown/unsafe outcomes fence, retain UNKNOWN and refuse retry,
+  adoption or removal. Containment checks other known helpers despite failures.
+- [x] 56 additional root cases cover all seven roles, unsafe metadata/receipts,
+  capability/RW differences, headroom, material-vs-state authority and containment;
+  includes two state cases through real bounded actor/CLI with fake daemon data.
+- [x] 617 root and 247 targeted API tests, repository lint, changed-Python
+  formatting and whitespace checks pass. No full API/browser or physical Docker
+  acceptance rerun; this commit's remote CI remains pending. Prior `1997813`
+  and `4634f8c` remote CI succeeded.
+- [ ] Physical Linux ownership/mounted read-back, restricted DB/controller and
+  unified eight-service lifecycle/cleanup remain. Mac pressure 2 defers heavy
+  acceptance. No Snowflake spend, public deployment, normal activation or P3.
+
 ### Disposable state-volume helper candidate — 23 October
 
 - [x] Closed bounded request for the exact seven roles/fixed test generation;

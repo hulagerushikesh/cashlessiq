@@ -11,14 +11,15 @@ from pathlib import Path
 import pytest
 
 from scripts.composition_engine import Engine as BoundedEngine
-from scripts.composition_helpers import ENTRYPOINT, Helpers, HelpersDenied
+from scripts.composition_helpers import Helpers, HelpersDenied
 from scripts.composition_inventory import EDGES, LABEL, ROLES, Inventory, Network
 from scripts.composition_journal import Journal, fold
 from scripts.composition_material import Material, names
+from scripts.composition_state_helpers import StateHelpers
 from scripts.composition_volume import parse
 
 
-def setup(tmp_path, role="broker", fault=None, headroom=lambda: True):
+def setup(tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=False):
     plan = Inventory(
         "ciq-comp-abcdef123456",
         tuple(
@@ -32,7 +33,9 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True):
         (tmp_path / name).mkdir(mode=0o700)
     resources = Journal(tmp_path / "resources", plan.prefix)
     journal = Journal(tmp_path / "helpers", plan.prefix)
-    volume = plan.volume(role, "material")
+    kind = "state" if state else "material"
+    first = "initialize" if state else "install"
+    volume = plan.volume(role, kind)
     for action in ("reserve", "observe"):
         resources.record(
             action,
@@ -64,7 +67,7 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True):
                         dict(
                             Id=helper.image,
                             Config=dict(
-                                Entrypoint=ENTRYPOINT,
+                                Entrypoint=helper.entrypoint,
                                 Cmd=[],
                                 User="10001:10001",
                                 Env=["PYTHONUNBUFFERED=1"],
@@ -83,7 +86,7 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True):
                             Labels={
                                 LABEL: plan.prefix,
                                 f"{LABEL}.role": role,
-                                f"{LABEL}.kind": "material",
+                                f"{LABEL}.kind": kind,
                             },
                         )
                     ]
@@ -93,7 +96,7 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True):
             if args[0] == "create":
                 mode = args[-1]
                 assert args == helper.create(mode)
-                cid = ("a" if mode == "install" else "b") * 64
+                cid = ("a" if mode == first else "b") * 64
                 self.rows[cid] = container(helper, mode, cid)
                 if fault == "unknown-create":
                     raise TimeoutError("private daemon error")
@@ -104,6 +107,8 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True):
                 CHANGES[fault](row)
             if fault in LATE_CHANGES and row["Config"]["Cmd"] == ["verify"]:
                 LATE_CHANGES[fault](row)
+            if state and fault == "verify-readonly" and row["Config"]["Cmd"] == ["verify"]:
+                row["Mounts"][0]["RW"] = False
             return json.dumps([row])
 
         def execute(self, *args, private_input):
@@ -111,8 +116,13 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True):
             cid = args[-1]
             assert args == ("start", "--attach", "--interactive", cid) and cid in self.permitted
             mode = self.rows[cid]["Config"]["Cmd"][0]
-            spec, archive = parse(private_input, install=mode == "install")
-            assert spec == staged.expected and (archive is not None) == (mode == "install")
+            if state:
+                assert json.loads(private_input) == dict(
+                    version=1, role=role, generation=plan.generation
+                )
+            else:
+                spec, archive = parse(private_input, install=mode == "install")
+                assert spec == staged.expected and (archive is not None) == (mode == "install")
             self.rows[cid]["State"].update(Status="exited", ExitCode=0)
             if fault == "nonzero":
                 self.rows[cid]["State"]["ExitCode"] = 1
@@ -120,21 +130,20 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True):
                 self.rows[cid]["State"].update(Running=True, Pid=99)
             elif fault == "unknown-start":
                 raise TimeoutError("private input not reported")
-            result = dict(
-                state="INSTALLED" if mode == "install" else "VERIFIED",
-                role=role,
-                fingerprint=spec.fingerprint,
-            )
+            result = helper.receipt(mode)
             if fault == "receipt":
                 result["role"] = "other"
+            if state and fault == "generation":
+                result["generation"] = "wrong-generation"
             if fault == "duplicate-json":
                 return '{"state":"VERIFIED","state":"VERIFIED"}'
             return json.dumps(result)
 
     engine = Engine()
-    helper = Helpers(
+    helper_type = StateHelpers if state else Helpers
+    helper = helper_type(
         plan,
-        staged,
+        role if state else staged,
         image="sha256:" + "c" * 64,
         journal=journal,
         resources=resources,
@@ -157,8 +166,8 @@ def container(helper, mode, cid):
                 f"{LABEL}.role": helper.role,
                 f"{LABEL}.fingerprint": helper.fingerprint(mode),
             },
-            User="0:0" if mode == "install" else "10001:10001",
-            Entrypoint=ENTRYPOINT,
+            User="0:0" if mode == helper.modes[0] else "10001:10001",
+            Entrypoint=helper.entrypoint,
             Cmd=[mode],
             Env=["PYTHONUNBUFFERED=1"],
             OpenStdin=True,
@@ -168,7 +177,7 @@ def container(helper, mode, cid):
             ReadonlyRootfs=True,
             Privileged=False,
             CapDrop=["ALL"],
-            CapAdd=["CHOWN"] if mode == "install" else [],
+            CapAdd=["CHOWN"] if mode == helper.modes[0] else [],
             SecurityOpt=["no-new-privileges"],
             Memory=128 * 1024**2,
             NanoCpus=500_000_000,
@@ -180,9 +189,9 @@ def container(helper, mode, cid):
         Mounts=[
             dict(
                 Type="volume",
-                Name=helper.plan.volume(helper.role, "material"),
-                Destination="/material",
-                RW=mode == "install",
+                Name=helper.plan.volume(helper.role, helper.kind),
+                Destination=helper.destination,
+                RW=helper.writable(mode),
             )
         ],
         NetworkSettings=dict(Networks={"none": dict(IPAddress="", GlobalIPv6Address="")}),
@@ -436,13 +445,14 @@ def test_headroom_rechecked_before_second_helper(tmp_path):
 
 
 @pytest.mark.parametrize("failed_exit", [False, True])
-def test_coordinator_through_real_bounded_transport_and_fake_cli(tmp_path, failed_exit):
-    helper, _, journal, resources = setup(tmp_path)
+@pytest.mark.parametrize("state", [False, True])
+def test_coordinator_through_real_bounded_transport_and_fake_cli(tmp_path, failed_exit, state):
+    helper, _, journal, resources = setup(tmp_path, state=state)
     config = tmp_path / "empty-config"
     config.mkdir(mode=0o700)
     metadata = tmp_path / "fake-daemon-public-metadata.json"
     rows = {
-        "a" * 64: container(helper, "install", "a" * 64),
+        "a" * 64: container(helper, helper.modes[0], "a" * 64),
         "b" * 64: container(helper, "verify", "b" * 64),
     }
     # Fake daemon retains public container metadata only, never helper input.
@@ -451,21 +461,21 @@ def test_coordinator_through_real_bounded_transport_and_fake_cli(tmp_path, faile
     image_row = dict(
         Id=helper.image,
         Config=dict(
-            Entrypoint=ENTRYPOINT,
+            Entrypoint=helper.entrypoint,
             Cmd=[],
             User="10001:10001",
             Env=["PYTHONUNBUFFERED=1"],
         ),
     )
     volume_row = dict(
-        Name=helper.plan.volume(helper.role, "material"),
+        Name=helper.plan.volume(helper.role, helper.kind),
         Driver="local",
         Scope="local",
         Options={},
         Labels={
             LABEL: helper.plan.prefix,
             f"{LABEL}.role": helper.role,
-            f"{LABEL}.kind": "material",
+            f"{LABEL}.kind": helper.kind,
         },
     )
     binary.write_text(
@@ -479,17 +489,17 @@ def test_coordinator_through_real_bounded_transport_and_fake_cli(tmp_path, faile
         "elif args[:2]==['volume','inspect']:\n"
         f" print({json.dumps([volume_row])!r})\n"
         "elif args[:2]==['container','ls']: print('')\n"
-        "elif args[0]=='create': print(('a' if args[-1]=='install' else 'b')*64)\n"
+        f"elif args[0]=='create': print(('a' if args[-1]=={helper.modes[0]!r} else 'b')*64)\n"
         "elif args[0]=='inspect': print(json.dumps([rows[args[-1]]]))\n"
         "elif args[:3]==['start','--attach','--interactive']:\n"
         " cid=args[-1]; mode=rows[cid]['Config']['Cmd'][0]\n"
         " body=json.loads(sys.stdin.buffer.read())\n"
-        " assert ('archive' in body)==(mode=='install')\n"
-        f" assert body['fingerprint']=={helper.plan.fingerprint(helper.role)!r}\n"
+        f" assert ('archive' in body)==(mode=='install' and not {state!r})\n"
+        f" assert body[{('generation' if state else 'fingerprint')!r}]=="
+        f"{(helper.plan.generation if state else helper.plan.fingerprint(helper.role))!r}\n"
         f" rows[cid]['State'].update(Status='exited',ExitCode={1 if failed_exit else 0})\n"
         " with open(path,'w') as f: json.dump(rows,f)\n"
-        " print(json.dumps(dict(state='INSTALLED' if mode=='install' else 'VERIFIED',"
-        "role=body['role'],fingerprint=body['fingerprint'])))\n"
+        f" print(json.dumps({dict((m, helper.receipt(m)) for m in helper.modes)!r}[mode]))\n"
         "else: sys.exit(2)\n"
     )
     binary.chmod(0o700)

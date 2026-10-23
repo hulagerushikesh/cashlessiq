@@ -751,6 +751,36 @@ CIDs without retry/adoption. No such state-helper engine wiring, physical
 eight-service lifecycle or cleanup acceptance is claimed here. Mac pressure 2
 continues to defer heavy builds; no resources were allocated or Snowflake called.
 
+**Journaled state-helper coordination (23 October):**
+`scripts/composition_state_helpers.py` now reuses the material-helper engine,
+inspection/journal and containment flow with a closed seven-role state contract.
+The shared flow has explicit class-level mode/entrypoint/mount/receipt hooks;
+no untrusted input selects a helper implementation. Material behavior remains
+root install + independent RO non-root verification. State behavior is root
+`initialize` + independent non-root `verify`, both mounting only the exact state
+volume RW. Only the initializer gets CHOWN; no network, host bind, entrypoint
+override, inherited volumes or other capabilities are admitted. State stdin
+contains only version, role and fixed disposable generation, never a signer.
+
+A new helper ledger and bounded engine per role remain mandatory. The matching
+observed state-volume resource intention is checked before admission and again
+before each create, together with actual volume metadata and headroom. Both
+helper intentions precede engine work. Exact image entrypoint/configuration,
+created-state inspection, role/generation receipt and independently inspected
+successful exit are all necessary. The full invocation's exclusive empty state
+volume is still a trusted caller precondition; a success receipt alone does not
+prove it, and a new journal is not permission to reset/reuse existing state.
+
+Lost acknowledgements or failed probes retain uncertainty and fence admission.
+Explicit containment rechecks exact owned configuration/identity, attempts only
+known full CIDs, and requires fresh stopped proof plus durable ledger results.
+It never adopts by name, retries initialization, removes resources or certifies
+readiness. An unknown/unattempted verifier remains UNKNOWN. Fake metadata and
+real bounded CLI/actor regressions cover the shared flow, not actual mounts or
+daemon exit. No helper image was built or started while Mac pressure stayed 2.
+Full physical state initialization/read-back and the restricted DB/controller/
+eight-role readiness, recovery and exact cleanup runner remain unverified.
+
 Reuse `offline_supervisor.py`, v3 broker/guard/transport, restricted membership
 factory, worker/membership packaging and existing container fixtures. The current
 worker and membership `__main__.py` deliberately exit; do not remove that refusal

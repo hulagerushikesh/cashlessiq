@@ -4,6 +4,8 @@ Uses a separate explicit helper journal (same invocation prefix, different
 private parent) so helper observations cannot masquerade as application launch
 intentions. Trusted bounded engine/headroom and an observed resource journal are
 mandatory. No normal entrypoint, removal, retry, discovery or readiness receipt.
+The closed state-helper subclass reuses this lifecycle with its own mount and
+wire contract; caller input cannot select arbitrary helper code or configuration.
 """
 
 import json
@@ -20,7 +22,7 @@ ENTRYPOINT = ["python", "-m", "scripts.composition_volume"]
 
 class HelpersDenied(ValueError):
     def __init__(self):
-        super().__init__("Disposable material helpers denied; retained outcome requires review")
+        super().__init__("Disposable composition helpers denied; retained outcome requires review")
 
 
 def require(value):
@@ -45,17 +47,33 @@ class Helpers:
     or exclusion of a privileged/same-UID daemon/host observer.
     """
 
+    modes = ("install", "verify")
+    kind = "material"
+    destination = "/material"
+    entrypoint = ENTRYPOINT
+
     def __init__(self, plan, staged, *, image, journal, resources, engine, headroom):
         require(type(plan) is Inventory and type(staged) is Staged)
-        require(type(image) is str and image.startswith("sha256:") and _hex(image[7:]))
         require(staged.expected.fingerprint == plan.fingerprint(staged.expected.role))
+        self.staged = staged
+        self._initialize(
+            plan,
+            staged.expected.role,
+            image=image,
+            journal=journal,
+            resources=resources,
+            engine=engine,
+            headroom=headroom,
+        )
+
+    def _initialize(self, plan, role, *, image, journal, resources, engine, headroom):
+        require(type(image) is str and image.startswith("sha256:") and _hex(image[7:]))
         require(journal is not resources and callable(engine) and callable(headroom))
         require(
             callable(getattr(engine, "execute", None))
             and callable(getattr(engine, "permit_incarnation", None))
         )
-        self.plan, self.staged, self.image = plan, staged, image
-        self.role = staged.expected.role
+        self.plan, self.image, self.role = plan, image, role
         self.journal, self.resources, self.engine, self.headroom = (
             journal,
             resources,
@@ -69,8 +87,8 @@ class Helpers:
         self._volume_intention()
 
     def name(self, mode):
-        require(mode in {"install", "verify"})
-        return f"{self.plan.prefix}-material-{self.role}-{mode}"
+        require(mode in self.modes)
+        return f"{self.plan.prefix}-{self.kind}-{self.role}-{mode}"
 
     def fingerprint(self, mode):
         return sha256(
@@ -78,7 +96,7 @@ class Helpers:
                 dict(
                     name=self.name(mode),
                     image=self.image,
-                    volume=self.plan.volume(self.role, "material"),
+                    volume=self.plan.volume(self.role, self.kind),
                     fingerprint=self.plan.fingerprint(self.role),
                     mode=mode,
                 )
@@ -86,7 +104,7 @@ class Helpers:
         ).hexdigest()
 
     def create(self, mode):
-        installing = mode == "install"
+        installing = mode == self.modes[0]
         args = [
             "create",
             "--name",
@@ -126,8 +144,8 @@ class Helpers:
                 "--ipc",
                 "private",
                 "--mount",
-                f"type=volume,src={self.plan.volume(self.role, 'material')},dst=/material"
-                + ("" if installing else ",readonly"),
+                f"type=volume,src={self.plan.volume(self.role, self.kind)},dst={self.destination}"
+                + ("" if self.writable(mode) else ",readonly"),
                 self.image,
                 mode,
             ]
@@ -136,12 +154,25 @@ class Helpers:
     def commands(self):
         return (
             ("image", "inspect", self.image),
-            ("volume", "inspect", self.plan.volume(self.role, "material")),
+            ("volume", "inspect", self.plan.volume(self.role, self.kind)),
             ("container", "ls", "--all", "--format", "{{.Names}}"),
-            *(self.create(mode) for mode in ("install", "verify")),
+            *(self.create(mode) for mode in self.modes),
             ("inspect", "{incarnation}"),
             ("start", "--attach", "--interactive", "{incarnation}"),
             ("stop", "--time", "1", "{incarnation}"),
+        )
+
+    def writable(self, mode):
+        return mode == self.modes[0]
+
+    def body(self, mode):
+        return request(self.staged, install=mode == self.modes[0])
+
+    def receipt(self, mode):
+        return dict(
+            state="INSTALLED" if mode == self.modes[0] else "VERIFIED",
+            role=self.role,
+            fingerprint=self.plan.fingerprint(self.role),
         )
 
     def _read(self, *args):
@@ -161,7 +192,7 @@ class Helpers:
     def _volume_intention(self):
         self.resources.check()
         prefix, rows, fenced = fold(self.resources.events)
-        volume = self.plan.volume(self.role, "material")
+        volume = self.plan.volume(self.role, self.kind)
         require(prefix == self.plan.prefix and not fenced)
         require(rows.get(("volume", volume), (None, None, None))[1:] == (volume, "PRESENT"))
 
@@ -178,15 +209,15 @@ class Helpers:
                 f"{LABEL}.fingerprint": self.fingerprint(mode),
             }
         )
-        require(config["User"] == ("0:0" if mode == "install" else "10001:10001"))
-        require(config["Entrypoint"] == ENTRYPOINT and config["Cmd"] == [mode])
+        require(config["User"] == ("0:0" if mode == self.modes[0] else "10001:10001"))
+        require(config["Entrypoint"] == self.entrypoint and config["Cmd"] == [mode])
         require(config.get("Env") == self.config.get("Env"))
         require(config["OpenStdin"] is True and not config.get("Tty"))
         require(not config.get("ExposedPorts") and not config.get("Healthcheck"))
         require(host["ReadonlyRootfs"] is True and host["Privileged"] is False)
         require(not host.get("AutoRemove"))
         require(host["CapDrop"] == ["ALL"])
-        require((host.get("CapAdd") or []) == (["CHOWN"] if mode == "install" else []))
+        require((host.get("CapAdd") or []) == (["CHOWN"] if mode == self.modes[0] else []))
         require(host["SecurityOpt"] == ["no-new-privileges"])
         require(host["Memory"] == 128 * 1024**2 and host["NanoCpus"] == 500_000_000)
         require(host["PidsLimit"] == 32 and host["NetworkMode"] == "none")
@@ -215,9 +246,9 @@ class Helpers:
         require(len(mounts) == 1)
         mount = mounts[0]
         require(
-            mount["Type"] == "volume" and mount["Name"] == self.plan.volume(self.role, "material")
+            mount["Type"] == "volume" and mount["Name"] == self.plan.volume(self.role, self.kind)
         )
-        require(mount["Destination"] == "/material" and mount["RW"] is (mode == "install"))
+        require(mount["Destination"] == self.destination and mount["RW"] is self.writable(mode))
         networks = row["NetworkSettings"]["Networks"]
         require(type(networks) is dict and set(networks) <= {"none"})
         require(
@@ -237,7 +268,7 @@ class Helpers:
             require(type(state["ExitCode"]) is int and state["ExitCode"] == 0)
 
     def contain(self):
-        """Fence and inspect/stop exact acknowledged CIDs; never certify material.
+        """Fence and inspect/stop exact acknowledged CIDs; never certify readiness.
 
         Uses the engine's existing bounded inspection/stop slots even after a
         failed run. Unknown create acknowledgements are not recovered by name.
@@ -254,7 +285,7 @@ class Helpers:
         except Exception:
             durable = False
         complete = True
-        for mode in ("install", "verify"):
+        for mode in self.modes:
             cid = self.owned.get(mode)
             if cid is None:
                 complete = False
@@ -309,13 +340,14 @@ class Helpers:
             self.journal.check()
             self._volume_intention()
             require(self.headroom() is True)
-            for mode in ("install", "verify"):
+            for mode in self.modes:
                 self._record("reserve", mode)
             image = self._read("image", "inspect", self.image)
             require(image["Id"] == self.image)
             self.config = image["Config"]
             require(
-                self.config["Entrypoint"] == ENTRYPOINT and self.config.get("Cmd") in (None, [])
+                self.config["Entrypoint"] == self.entrypoint
+                and self.config.get("Cmd") in (None, [])
             )
             require(self.config["User"] == "10001:10001")
             require(
@@ -325,25 +357,21 @@ class Helpers:
             )
             self.plan.check_volume(
                 self.role,
-                "material",
-                self._read("volume", "inspect", self.plan.volume(self.role, "material")),
+                self.kind,
+                self._read("volume", "inspect", self.plan.volume(self.role, self.kind)),
             )
             existing = self.engine("container", "ls", "--all", "--format", "{{.Names}}")
-            require(
-                not {self.name(m) for m in ("install", "verify")}.intersection(
-                    existing.splitlines()
-                )
-            )
-            for mode in ("install", "verify"):
+            require(not {self.name(m) for m in self.modes}.intersection(existing.splitlines()))
+            for mode in self.modes:
                 self.journal.check()
                 self._volume_intention()
                 require(self.headroom() is True)
                 self.plan.check_volume(
                     self.role,
-                    "material",
-                    self._read("volume", "inspect", self.plan.volume(self.role, "material")),
+                    self.kind,
+                    self._read("volume", "inspect", self.plan.volume(self.role, self.kind)),
                 )
-                body = request(self.staged, install=mode == "install")
+                body = self.body(mode)
                 cid = self.engine(*self.create(mode)).strip()
                 require(_hex(cid) and cid not in self.owned.values())
                 self.owned[mode] = cid
@@ -355,14 +383,7 @@ class Helpers:
                 )
                 del body
                 result = json.loads(output, object_pairs_hook=unique)
-                require(
-                    result
-                    == dict(
-                        state="INSTALLED" if mode == "install" else "VERIFIED",
-                        role=self.role,
-                        fingerprint=self.plan.fingerprint(self.role),
-                    )
-                )
+                require(result == self.receipt(mode))
                 self._check(self._read("inspect", cid), mode, exited=True)
                 self._record("stopped", mode, cid)
             self.journal.check()
