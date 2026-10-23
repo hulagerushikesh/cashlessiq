@@ -514,6 +514,21 @@ approved financial/clinical projection, live API/UI acceptance and public OIDC/
 hosting are still open. P3 remains blocked by P2 exit. No percentage increase is
 earned merely by writing this design.
 
+**Subsequent launcher/journal integration (23 October):** the inactive launcher
+accepts an explicitly supplied fresh journal and reserves all eight exact
+container names/fingerprints before engine I/O. Writer validation gates preflight
+and create. Identity observation precedes attach/start; a returned create ID
+alone is not attestation. Failed create reconciliation uses exact owner/attempt
+labels and cannot adopt another resource. Failure/stop fences admission; only
+independently confirmed stopped identity/PID/state permits a stopped record.
+Partial cleanup keeps unattempted reservations UNKNOWN and reports incomplete.
+Failed durable writes do not prevent exact known-container containment but cannot
+claim durable cleanup. No resource removal, writer resumption or automatic repair.
+Eighteen real-filesystem/FakeDocker cases exercise these lifecycle/write failures;
+no daemon or mounted-volume evidence is claimed. No-journal callers remain
+historical model-only fixtures. Bounded real engine transport/provisioning and
+the approved physical eight-role acceptance are still pending headroom/work.
+
 **Subsequent retained-journal checkpoint (23 October):**
 `scripts/composition_journal.py` explicitly creates a private per-prefix directory
 and exclusive mode-0600 append journal under a caller-supplied private parent.

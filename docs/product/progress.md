@@ -55,6 +55,37 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Journal-backed launcher lifecycle — 23 October
+
+The inactive launcher now accepts an explicit fresh private journal. It durably
+reserves all eight container names/configuration fingerprints before any engine
+call, checks the writer before admission/create, and rejects reused or foreign
+journals. A create acknowledgement alone cannot record ownership: an exact
+name/image/attempt/owner observation is required before network attachment/start.
+Ambiguous creates reconcile only against that same attempt; failed inspection
+leaves UNKNOWN rather than inferring absence. Launch failure and stop close
+admission and persist a fence when storage remains healthy.
+
+Confirmed stop is recorded only after observing zero PID, stopped state and the
+same full container identity. Repeated cleanup does not duplicate transitions.
+Write failure still permits containment of an independently known container but
+cannot report durable success. Unattempted reservations remain UNKNOWN, so even
+successful containment of a partial launch does not report the whole attempt
+clean. No removal, journal repair, replacement or retained-attempt adoption is
+introduced. Historical no-journal callers remain model-only tests.
+
+**18 new integration cases combine real private files with FakeDocker, not a
+real daemon.** They cover all-eight stop, ambiguous creation, foreign ownership,
+failed inspect/start/stop, closed/replaced/reused journals and reserve/observe/
+stop/fence write failures. This connects the journal to lifecycle callbacks;
+it does **not** yet provide bounded real Docker transport, resource provisioning,
+helper-volume acceptance or eight-container readiness. Those remain next.
+Mac pressure is still `2`; no builds, new containers, Snowflake spend, public
+deployment or UI changes. P2/overall estimates are unchanged.
+
+Verification: 392 root regression tests, 163 targeted API lifecycle/material/
+supervisor cases, lint, changed-file formatting and diff checks pass.
+
 ### Retained disposable ownership/recovery journal — 23 October
 
 Added an explicitly created, owner-private journal outside actor/service mounts.

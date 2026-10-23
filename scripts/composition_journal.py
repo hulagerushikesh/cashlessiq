@@ -13,7 +13,7 @@ import re
 import stat
 from dataclasses import dataclass
 
-from scripts.composition_material import _directory
+from .composition_material import _directory
 
 LIMIT = 1024 * 1024
 MAX_EVENTS = 1024
@@ -206,7 +206,8 @@ class Journal:
     def fence(self):
         self._append({"action": "fence"})
 
-    def _append(self, event):
+    def check(self):
+        """Validate the still-open retained writer without adding an event."""
         try:
             require(not self.failed and self.fd is not None)
             require(read(self.fd) == self.events)
@@ -223,6 +224,13 @@ class Journal:
                 private(os.fstat(path_fd), 0o700)
             finally:
                 os.close(path_fd)
+        except Exception:
+            self.failed = True
+            raise JournalDenied() from None
+
+    def _append(self, event):
+        try:
+            self.check()
             proposed = [*self.events, event]
             fold(proposed)
             payload = canonical(event)

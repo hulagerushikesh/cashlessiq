@@ -4,9 +4,11 @@ Engine commands and material verification are injected trusted dependencies.
 They MUST be run in bounded owned actors with an independent watchdog before
 physical acceptance. This adapter alone does not contain a blocked Docker call.
 It neither builds/provisions resources nor manufactures readiness receipts.
+Optional journal wiring is explicit; no-journal callers remain model-only tests.
 """
 
 import json
+from contextlib import suppress
 
 from composition_inventory_fixture import implementation as inv
 
@@ -36,7 +38,7 @@ class OwnedContainer:
 
 
 class Launcher:
-    def __init__(self, plan, *, engine, material_check, auxiliaries):
+    def __init__(self, plan, *, engine, material_check, auxiliaries, journal=None):
         if type(plan) is not Inventory or not callable(engine) or not callable(material_check):
             raise ValueError("Invalid disposable launcher")
         if (
@@ -52,6 +54,9 @@ class Launcher:
         self.binding = None
         self.closed = False
         self._image_configs = {}
+        self.journal = journal
+        self._observed, self._stopped = set(), set()
+        self._fenced = False
         self.services = tuple(
             Service(
                 role,
@@ -62,6 +67,38 @@ class Launcher:
             )
             for role in ROLES
         )
+        if journal is not None:
+            # Only a fresh, explicit owner-side journal. Never resume/adopt a
+            # retained attempt. Complete durable intentions BEFORE engine I/O.
+            if journal.events != [{"version": 1, "prefix": plan.prefix}]:
+                raise ValueError("Disposable journal must be fresh")
+            for role in ROLES:
+                self._record("reserve", role)
+
+    def _record(self, action, role, cid=None):
+        if self.journal is not None:
+            self.journal.record(
+                action,
+                kind="container",
+                name=self.plan.name(role),
+                identity=cid,
+                fingerprint=self.plan.fingerprint(role),
+            )
+
+    def _fence(self):
+        self.closed = True
+        if self.journal is not None:
+            self.journal.check()
+            if not self._fenced:
+                self.journal.fence()
+                self._fenced = True
+
+    def _observe(self, role, row):
+        cid = self._identity(role, row)
+        if role not in self._observed:
+            self._record("observe", role, cid)
+            self._observed.add(role)
+        return cid
 
     def _read(self, *args):
         rows = json.loads(self.engine(*args))
@@ -91,6 +128,8 @@ class Launcher:
         if services != self.services:
             return False
         try:
+            if self.journal is not None:
+                self.journal.check()
             for kind, identifier in self.plan.images:
                 row = self._read("image", "inspect", identifier)
                 if (
@@ -148,6 +187,8 @@ class Launcher:
                 "{{.ID}}",
             ).strip():
                 raise ValueError("Disposable name already exists")
+            if self.journal is not None:
+                self.journal.check()
             self.allocating.add(role)
             args = self.plan.create_arguments(role)
             cid = self.engine(
@@ -161,6 +202,9 @@ class Launcher:
             if not _hex(cid) or cid in self.owned.values() or cid in self.auxiliaries.values():
                 raise ValueError("Invalid disposable incarnation")
             self.owned[role] = cid  # Own BEFORE network attach, inspect or start.
+            # A create acknowledgement alone is not identity attestation.
+            if self._observe(role, self._read("inspect", cid)) != cid:
+                raise ValueError("Disposable incarnation mismatch")
             for network, address in self.plan.attachments(role)[1:]:
                 self.engine("network", "connect", "--ip", address, network, cid)
             row = self._read("inspect", cid)
@@ -179,6 +223,8 @@ class Launcher:
             # Failed create may still have allocated a container. Never retry it
             # or infer absence from a CLI error. Reconcile by exact name+labels.
             self.closed = True
+            with suppress(Exception):  # Journal uncertainty cannot authorize more work.
+                self._fence()
             self.reconcile(role)
             raise ValueError("Disposable launch failed; stopped review required") from None
 
@@ -200,6 +246,7 @@ class Launcher:
             ):
                 return False
             self.owned[role] = cid
+            self._observe(role, row)
             return True
         except Exception:
             return False  # Unknown, not proof of absence or permission to retry.
@@ -210,6 +257,11 @@ class Launcher:
             return False
         if role not in self.owned:
             return False
+        journal_safe = True
+        try:
+            self._fence()
+        except Exception:
+            journal_safe = False
         cid = self.owned[role]
         try:
             row = self._read("inspect", cid)
@@ -222,7 +274,7 @@ class Launcher:
             ):
                 self.engine("stop", "--time", str(grace_ns // 1_000_000_000), cid)
             row = self._read("inspect", cid)
-            return (
+            confirmed = (
                 self._identity(role, row) == cid
                 and row["State"].get("Running") is False
                 and row["State"].get("Pid") == 0
@@ -230,6 +282,11 @@ class Launcher:
                 and not any(row["State"].get(k) for k in ("Paused", "Restarting", "Dead"))
                 and row.get("RestartCount", 0) == 0
             )
+            if confirmed and role not in self._stopped:
+                self._observe(role, row)
+                self._record("stopped", role, cid)
+                self._stopped.add(role)
+            return confirmed and journal_safe
         except Exception:
             return False  # Retain ownership and the caller's fence/capacity.
 
@@ -241,10 +298,16 @@ class Launcher:
         """
         clean = True
         self.closed = True
+        try:
+            self._fence()
+        except Exception:
+            clean = False  # Still attempt exact owned containment, never report clean.
         for role in tuple(self.allocating):
             if role not in self.owned and not self.reconcile(role):
                 clean = False
                 continue
             if not self.stop(role, grace_ns):
                 clean = False
+        if self.journal is not None and set(ROLES) != self._stopped:
+            clean = False  # Even unlaunched reservations remain UNKNOWN, never absent.
         return clean
