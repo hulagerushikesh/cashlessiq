@@ -14,6 +14,10 @@ SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql 
 .PHONY: product-worker-guard product-worker-package
 .PHONY: product-worker-guard-tls
 .PHONY: product-supervisor-containment
+.PHONY: product-host-check
+
+product-host-check:
+	$(PYTHON) scripts/check_product_host.py
 
 product-supervisor-containment:
 	$(PYTHON) scripts/test_supervisor_container.py

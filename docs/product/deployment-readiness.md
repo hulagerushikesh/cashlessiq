@@ -11,9 +11,11 @@ green remote CI. See the [delivery dashboard](delivery-status.md) for the concis
 phase checklist and next operational decision. No deployment was performed.
 
 Owner subsequently approved drafting the [Mac/Docker integration design](../architecture/p2-mac-docker-integration-design.md).
-It is now ready for review, with one bounded disposable service-composition batch
-proposed. Design approval does not authorize its execution, encrypted storage,
-real credential custody, operational activation or public release.
+The owner then approved its bounded disposable service-composition implementation,
+subject to a Mac load check. [The resource gate](mac-resource-check.md) currently
+defers heavy execution under elevated memory pressure; the batch remains pending.
+No encrypted storage, real credential custody, operational activation or public
+release is authorized. The local sandbox was not stopped or changed.
 
 22 October 2026. The hackathon website is not the authenticated product release.
 The new local Next.js/FastAPI/PostgreSQL workspace exists, but its governed live

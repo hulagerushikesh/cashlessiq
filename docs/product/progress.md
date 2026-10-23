@@ -55,6 +55,18 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Mac resource gate — 23 October
+
+Owner approved the disposable canonical-service integration batch, subject to a
+Mac load/configuration check. [Read-only observations and policy](mac-resource-check.md)
+show 8 GiB RAM, about 3.82 GiB Docker allocation and elevated Mac pressure. The
+new bounded metrics-only `make product-host-check` correctly returns DEFER;
+no extra containers/builds or host settings/process changes. Existing four
+services remain healthy. **25 new tests; all 238 root tests**, Ruff/format and
+whitespace pass. Heavy backend/browser/container runs deferred. The eight-role
+composition is not implemented/run or accepted yet; approval remains valid once
+headroom allows it. No source/AI spend, activation, public deployment or P3.
+
 ### Next integration design — Mac/Docker, 23 October
 
 Owner approved preparing the [local operational integration design](../architecture/p2-mac-docker-integration-design.md).

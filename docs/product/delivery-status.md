@@ -64,8 +64,11 @@ The next implementation depends on an owner-approved operational target and
 custody arrangement. There is no approved external host or hosting budget.
 The owner approved preparing the [no-purchase Mac/Docker integration design](../architecture/p2-mac-docker-integration-design.md).
 It now specifies topology, proposed manual encrypted-image custody, clock/fence
-blockers and one bounded next service-composition batch. This is design approval
-only; neither that implementation nor operational custody/activation is approved.
+blockers and one bounded next service-composition batch. The owner subsequently
+approved that disposable implementation with a Mac configuration/load check.
+The [resource preflight](mac-resource-check.md) currently refuses heavy execution
+at elevated memory pressure. The batch is still pending, not re-awaiting approval;
+operational custody/activation remains unapproved.
 Docker's VM is not an independently trusted production host. Implementation
 using actual keys, secret stores or service activation requires separate approval.
 

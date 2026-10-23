@@ -1,7 +1,10 @@
 # P2 Mac/Docker operational integration design
 
-23 October 2026. Owner approved **preparing this design**, not implementing or
-activating it. Proposed local synthetic integration; no purchase, new Linux host,
+23 October 2026. Owner initially approved preparing this design, then explicitly
+approved the disposable implementation batch below with a Mac load check first.
+The [resource checkpoint](../product/mac-resource-check.md) defers heavy execution
+at elevated pressure. Operational activation remains unapproved.
+Proposed local synthetic integration; no purchase, new Linux host,
 Snowflake access, secret creation, host configuration change or public deployment.
 This specializes the [operational contract](p2-operational-control-design.md),
 not a replacement for its fail-closed requirements.
@@ -16,7 +19,7 @@ Two modes must remain separate:
 
 | Mode | Inputs and permitted result | Status |
 | --- | --- | --- |
-| Integration acceptance | Disposable test identities, signed fictional health and synthetic source; exercise canonical handlers in owned containers | Recommended next implementation, needs approval |
+| Integration acceptance | Disposable test identities, signed fictional health and synthetic source; exercise canonical handlers in owned containers | Owner approved; implementation/run pending sufficient Mac headroom |
 | Operational source | Real restricted identities, reviewed health policy/provider, protected retained state and current-generation authority | Blocked; no credentials or activation authorized |
 
 The first mode closes service-composition gaps without a trial or payment. It
@@ -139,12 +142,15 @@ separately approved authority/recovery model meets the existing contract.
    an active ledger backup, repair a suspect file or clear its latch. New trust
    and state require separately approved stopped-generation recovery.
 
-## One next implementation batch to approve
+## Approved next implementation batch — pending Mac headroom
 
 **Build and run an opt-in, disposable Mac/Docker service-composition acceptance
 mode**, using generated test keys, a disposable membership DB and fictional
 signed health/source inputs only. This is not permission to create the encrypted
 image, read any existing credential or replace normal service entry points.
+Owner approval includes a configuration/load precheck; it is not permission to
+stress the machine despite failing headroom. No extra implementation approval
+is needed merely because this resource checkpoint deferred the work.
 
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
