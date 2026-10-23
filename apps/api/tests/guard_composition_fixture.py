@@ -11,6 +11,7 @@ from copy import deepcopy
 from types import SimpleNamespace
 from unittest.mock import Mock
 
+from composition_service_fixture import service as worker_service
 from test_source_cases import build_test_sources
 from test_worker_guard_mtls import listening
 from test_worker_membership import service
@@ -19,11 +20,9 @@ from test_worker_transport import context
 from ciq_api.auth import LOCAL_ISSUER, JWTVerifier, issue_local_token
 from ciq_api.source_alpha import SOURCE_TENANTS
 from ciq_api.source_scopes import source_alpha_scopes
-from ciq_api.validation_worker import OfflineValidationWorker, ValidationInputs
-from ciq_api.worker_authority import Membership, WorkerDenied
+from ciq_api.validation_worker import ValidationInputs
+from ciq_api.worker_authority import Membership
 from ciq_api.worker_broker import OfflineSummaryRoute, ResolvedWorkerIdentity
-from ciq_api.worker_delegation import OfflineDelegatedValidator, TransportPeer
-from ciq_api.worker_guard_authority import GuardedAuthority, GuardedReadRelay
 from ciq_api.worker_guard_broker import GuardedSummaryBroker
 from ciq_api.worker_membership import LoopbackMembershipClient
 from ciq_api.worker_transport import LoopbackSummaryClient
@@ -93,14 +92,6 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
             operation=operation,
         )
 
-    def reader_callback(relay):
-        def read(token, *, peer):
-            if type(peer) is not TransportPeer or peer.audience != "broker":
-                raise WorkerDenied("Worker access denied")
-            return relay.summary(token)
-
-        return read
-
     def route_invoke(role, client):
         def invoke(token):
             captured.append((role, token))
@@ -138,18 +129,15 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
             for role, name in TLS_NAMES.items()
         }
 
-        def authority(role, **configuration):
-            index, audience = f.SERVICE_BINDINGS[role]
-            return GuardedAuthority(
+        def handler(role, **dependencies):
+            return worker_service.build_handler(
+                role,
                 public_key=assertion_key.public_key(),
                 generation=f.GENERATION,
-                tenant_id=SOURCE_TENANTS[index].tenant_id,
-                scopes=scopes,
-                audience=audience,
                 membership=memberships[role].lookup,
                 guard=guards[role],
                 evidence=lambda: evidence[role](),
-                **configuration,
+                **dependencies,
             )
 
         def listen(role, callback, allowed_peers, operation):
@@ -171,25 +159,13 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
 
         for index, tenant in enumerate(SOURCE_TENANTS):
             role = f"validator-{index}"
-            readers = {
-                f"reader:{index}:nonclinical": "nonclinical",
-                f"reader:{index}:medical": "medical",
-            }
-            validator = authority(role, readers=readers)
-            endpoint = OfflineDelegatedValidator(
-                validator,
-                OfflineValidationWorker(
-                    authority=validator,
-                    scope=scopes.get(tenant.tenant_id),
-                    read_inputs=reads[tenant.tenant_id],
-                ),
-            )
+            endpoint = handler(role, read_inputs=reads[tenant.tenant_id])
             allowed = {
                 pki[1][TLS_NAMES[reader]][2]: f.SERVICE_BINDINGS[reader][1]
                 for reader in TLS_NAMES
                 if reader.startswith("reader-") and f.SERVICE_BINDINGS[reader][0] == index
             }
-            listen(role, endpoint.validate, allowed, "validate_summary")
+            listen(role, endpoint.callback, allowed, endpoint.operation)
 
         routes = {}
         for role, name in TLS_NAMES.items():
@@ -206,12 +182,8 @@ def compose(root, f, pki, settings, assertion_key, *, before_bind=None):
                 validator_audience,
                 "validate_summary",
             )
-            relay = GuardedReadRelay(
-                authority=authority(role, disclosure=disclosure),
-                validator_audience=validator_audience,
-                invoke=validator_client.summary,
-            )
-            listen(role, reader_callback(relay), {pki[1]["broker"][2]: "broker"}, "read_detail")
+            endpoint = handler(role, invoke=validator_client.summary)
+            listen(role, endpoint.callback, {pki[1]["broker"][2]: "broker"}, endpoint.operation)
             parent = summary_client(ports[role], "broker", name, audience, "read_detail")
             clients[role] = parent
             routes[SOURCE_TENANTS[index].tenant_id, disclosure] = OfflineSummaryRoute(

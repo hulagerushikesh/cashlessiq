@@ -181,6 +181,38 @@ independent watchdog or protection against trusted test code directly calling th
 raw world. Unadopted listeners on partial failure remain owned by the outer test
 scope. This closes a model/handler composition test gap, not container acceptance.
 
+The worker Dockerfile now has a separate opt-in `composition-test` target with
+`python -m ciq_worker_runtime.composition_service` as its entry point. This test
+target inherits the disposable health helper; the default candidate still refuses
+service startup. It supports exactly the six reader/validator role names above,
+not broker or membership. Shared loopback tests import the exact same handler
+builder, avoiding a second implementation of the canonical chain.
+
+Its trusted `/run/ciq/config.json` contains exactly `role`, `listen` (one to three
+private IPv4 addresses at port 8443), `peers` (certificate SHA-256 pin to fixed
+peer audience) and `membership` (`address`, `pin`). Readers additionally require
+`validator` (`address`, `pin`); validators reject that extra field. Membership's
+fixed wire audience remains `membership:0`, with tenant derived from the exact
+worker role, not request/config tenant fields. Reader peers are broker only;
+validator peers are its same-tenant medical/nonclinical readers only.
+
+Each service requires its own `ca.pem`, `identity.pem`, `identity.key` and public
+assertion `verify.pem`, plus its already-initialized own v3 store at the existing
+test helper paths. Only validators require a synthetic `source.json`, keyed by
+request ID with `case`, `decisions`, `evidence` rows. Source reads happen per request
+to allow an outage test; missing rows/files never become a MISSING recommendation.
+There is no assertion signer, source SQL or automatic initialization in this
+entry point. The future launcher must enforce exact mounts and permissions; this
+module alone does not prove custody or reject unrelated files on a trusted mount.
+
+All listeners bind before serving starts. Startup stop checks suppress diagnostic
+`READY`; partial failure/stop owns listener closure and orderly serving-thread
+shutdown. This does not supply the all-eight supervisor receipt/barrier,
+independent watchdog, hard I/O deadline or container cleanup. Those remain the
+next integration work, alongside the broker/membership container composition and
+two-tenant restricted DB fixture. No heavy execution bypass is authorized by the
+new test target; the host preflight still gates the approved container run.
+
 - Compose all eight canonical roles with the existing supervisor and bounded
   launcher/watchdog adapters; test the real handlers/listeners, not service stubs.
 - Exercise both tenants and all three roles through verified identity context:

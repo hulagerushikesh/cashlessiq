@@ -55,6 +55,35 @@ do not change the public website or make the disabled live route available.
 
 ## P2 remaining work — in order
 
+### Separately runnable worker test handlers — 23 October
+
+Added an explicit worker `composition-test` image target for the four readers
+and two validators. It assembles canonical v3 authorities/relays/validators with
+fixed tenant/disclosure mappings, fresh pinned membership clients and existing
+own guard state. Readers receive no source callback/file or assertion signer;
+validators read only their tenant's synthetic fixture and reject mismatched rows.
+The shared TLS tests now call this same handler builder instead of maintaining a
+second assembly. Normal worker/membership candidates and API flags are unchanged.
+
+Configuration rejects unknown roles, extra authority settings, public endpoints,
+foreign/extra peer audiences and malformed pins before binding. Partial bind
+failure closes the listeners already owned; orderly stop shuts down serving
+threads and closes sockets. Stop during startup suppresses `READY`. That output
+is only a diagnostic, not an attempt/configuration/incarnation-bound supervisor
+receipt. External process deadlines and exit confirmation are still required.
+
+**37 new service/configuration/lifecycle tests pass**, plus the existing shared
+TLS and supervisor regressions: **322 targeted tests and 239 root tests** in this
+batch. Service cleanup tests use injected listener/thread doubles; actual TLS
+handler behavior is exercised by the shared loopback suite. No separate process,
+Docker build/run or mount/network isolation acceptance is inferred. Earlier
+commits `cf59c3f` and `c24f421` now both have confirmed green remote CI.
+
+Mac pressure is still warning (`2`); four existing product containers are healthy
+and remain running. Eight-container broker/membership composition, restricted DB
+seeding, bound readiness and launcher/watchdog wiring remain open. No Snowflake
+spend, public deployment, P2 exit or completion-estimate increase in this batch.
+
 ### Supervised logical-role delivery — 23 October
 
 The shared TLS fixture now has independent, idempotent listener closers and a

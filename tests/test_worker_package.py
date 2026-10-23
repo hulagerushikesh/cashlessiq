@@ -113,3 +113,17 @@ def test_offline_supervisor_has_no_runtime_wiring_or_worker_packaging():
         "hashlib",
         "typing",
     }
+
+
+def test_composition_service_is_explicit_test_target_only():
+    dockerfile = (ROOT / "apps/worker/Dockerfile").read_text()
+    before, target = dockerfile.split("FROM mtls-test AS composition-test", 1)
+    target, after = target.split("FROM runtime-base AS clock-test", 1)
+    assert "composition_service.py" in target
+    assert "composition_service.py" not in before + after
+    assert 'ENTRYPOINT ["python", "-m", "ciq_worker_runtime.composition_service"]' in target
+    assert dockerfile.rstrip().endswith("FROM runtime-base AS candidate")
+    ignore = (ROOT / "apps/worker/Dockerfile.dockerignore").read_text()
+    assert "!apps/worker/tests/composition_service.py" in ignore
+    package = (ROOT / "apps/worker/pyproject.toml").read_text()
+    assert "composition_service" not in package

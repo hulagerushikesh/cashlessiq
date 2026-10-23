@@ -28,6 +28,11 @@ COPY apps/worker/tests/mtls_probe.py /opt/venv/lib/python3.11/site-packages/ciq_
 COPY apps/worker/tests/guard_mtls_fixture.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/guard_mtls_fixture.py
 ENTRYPOINT ["python", "-m", "ciq_worker_runtime.mtls_probe"]
 
+# Six independently runnable handlers, explicit synthetic integration target only.
+FROM mtls-test AS composition-test
+COPY apps/worker/tests/composition_service.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/composition_service.py
+ENTRYPOINT ["python", "-m", "ciq_worker_runtime.composition_service"]
+
 # Network-free clock-domain probe; fabricated health is test-only.
 FROM runtime-base AS clock-test
 COPY apps/worker/tests/clock_probe.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/clock_probe.py

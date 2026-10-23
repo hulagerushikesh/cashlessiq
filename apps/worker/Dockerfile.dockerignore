@@ -9,6 +9,7 @@
 !apps/worker/tests/isolation_probe.py
 !apps/worker/tests/mtls_probe.py
 !apps/worker/tests/guard_mtls_fixture.py
+!apps/worker/tests/composition_service.py
 !apps/worker/tests/clock_probe.py
 !apps/worker/tests/guard_probe.py
 !apps/api/
