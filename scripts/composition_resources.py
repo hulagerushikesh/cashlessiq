@@ -19,12 +19,32 @@ class ResourcesDenied(ValueError):
         super().__init__("Disposable provisioning denied; retained resources require review")
 
 
+def unique(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ResourcesDenied()
+        result[key] = value
+    return result
+
+
 class Resources:
     def __init__(
-        self, *, prefix, images, pins, subnets, journal, engine, headroom, collision_check
+        self,
+        *,
+        prefix,
+        images,
+        pins,
+        subnets,
+        journal,
+        engine,
+        headroom,
+        collision_check,
+        database=False,
     ):
         if (
-            type(subnets) is not dict
+            type(database) is not bool
+            or type(subnets) is not dict
             or set(subnets) != set(EDGES)
             or not all(callable(fn) for fn in (engine, headroom, collision_check))
         ):
@@ -64,6 +84,17 @@ class Resources:
                 for kind in (("material",) if role == "membership" else ("material", "state"))
             ]
         )
+        if database:
+            self.specs += tuple(
+                dict(
+                    kind="volume",
+                    name=self.layout.database_volume(kind),
+                    role="database",
+                    volume_kind=kind,
+                    labels={LABEL: prefix, LABEL + ".role": "database", LABEL + ".kind": kind},
+                )
+                for kind in ("material", "data")
+            )
         self.attempted, self.observed = set(), {}
         self.used, self.closed = False, False
 
@@ -107,14 +138,19 @@ class Resources:
         )
 
     def _observe(self, spec, acknowledgement=None):
-        rows = json.loads(self.engine(spec["kind"], "inspect", spec["name"]))
+        rows = json.loads(
+            self.engine(spec["kind"], "inspect", spec["name"]), object_pairs_hook=unique
+        )
         if type(rows) is not list or len(rows) != 1 or type(rows[0]) is not dict:
             raise ResourcesDenied()
         row = rows[0]
         if row.get("Name") != spec["name"] or row.get("Labels") != spec["labels"]:
             raise ResourcesDenied()
         if spec["kind"] == "volume":
-            self.layout.check_volume(spec["role"], spec["volume_kind"], row)
+            if spec["role"] == "database":
+                self.layout.check_database_volume(spec["volume_kind"], row)
+            else:
+                self.layout.check_volume(spec["role"], spec["volume_kind"], row)
             identity = row["Name"]
         else:
             identity = row.get("Id")
@@ -140,7 +176,7 @@ class Resources:
             raise ResourcesDenied()
         self.used = True
         try:
-            # Durable intentions for ALL 33 objects precede even discovery.
+            # Durable intentions for ALL selected objects precede even discovery.
             for spec in self.specs:
                 self._record("reserve", spec)
             if (

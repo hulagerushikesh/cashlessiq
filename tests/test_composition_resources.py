@@ -15,7 +15,7 @@ from scripts.composition_resources import Resources, ResourcesDenied
 from scripts.composition_routes import LIST, CollisionCheck
 
 
-def setup(tmp_path, *, fault=None, headroom=lambda: True, collision=lambda _: True):
+def setup(tmp_path, *, fault=None, headroom=lambda: True, collision=lambda _: True, database=False):
     parent = tmp_path / "private"
     parent.mkdir(mode=0o700)
     journal = Journal(parent, "ciq-comp-abcdef123456")
@@ -24,7 +24,9 @@ def setup(tmp_path, *, fault=None, headroom=lambda: True, collision=lambda _: Tr
 
     def engine(*args):
         # Every engine operation must have all intentions durably present first.
-        assert len([e for e in journal.events if e.get("action") == "reserve"]) == 33
+        assert len([e for e in journal.events if e.get("action") == "reserve"]) == (
+            35 if database else 33
+        )
         calls.append(args)
         kind, operation = args[:2]
         if operation == "ls":
@@ -91,6 +93,7 @@ def setup(tmp_path, *, fault=None, headroom=lambda: True, collision=lambda _: Tr
         engine=engine,
         headroom=headroom,
         collision_check=collision,
+        database=database,
     )
     return resource, journal, calls, rows
 
@@ -251,3 +254,126 @@ def test_observation_fsync_failure_never_allows_next_creation(tmp_path, monkeypa
     assert sum(c[1] == "create" for c in calls) == 1
     state = recover(journal)
     assert {r[-1] for r in state.resources} == {"UNKNOWN"}
+
+
+@pytest.mark.parametrize("database", [False, True])
+def test_database_volumes_are_explicit_and_transport_bounded(tmp_path, database):
+    resource, journal, calls, rows = setup(tmp_path, database=database)
+    try:
+        plan = resource.provision()
+        assert len(rows) == (35 if database else 33)
+        for kind in ("material", "data"):
+            name = plan.database_volume(kind)
+            assert (name in rows) is database
+            if database:
+                plan.check_database_volume(kind, rows[name])
+        assert all(call in resource.commands() for call in calls)
+        engine = Engine(
+            binary=sys.executable,
+            socket=str(tmp_path / "unopened.sock"),
+            config=tmp_path / "unopened-config",
+            commands=resource.commands(),
+            deadline_ns=time.monotonic_ns() + 10_000_000_000,
+        )
+        assert len(engine.commands) == (72 if database else 68)
+    finally:
+        journal.close()
+
+
+@pytest.mark.parametrize("kind", ["material", "data"])
+@pytest.mark.parametrize("fault", ["options", "labels", "scope", "name", "unknown", "duplicate"])
+def test_database_volume_observation_refuses_drift_and_ambiguity(tmp_path, kind, fault):
+    resource, journal, calls, _ = setup(tmp_path, database=True)
+    original = resource.engine
+    target = resource.layout.database_volume(kind)
+
+    def engine(*args):
+        output = original(*args)
+        if args == ("volume", "inspect", target):
+            if fault == "unknown":
+                raise TimeoutError("private detail")
+            row = json.loads(output)[0]
+            if fault == "duplicate":
+                return '[{"Name":"foreign",' + output[2:]
+            if fault == "options":
+                row["Options"] = {"device": "/private"}
+            elif fault == "labels":
+                row["Labels"]["extra"] = "foreign"
+            elif fault == "scope":
+                row["Scope"] = "global"
+            else:
+                row["Name"] = resource.layout.database_volume(
+                    "data" if kind == "material" else "material"
+                )
+            return json.dumps([row])
+        return output
+
+    resource.engine = engine
+    with pytest.raises(ResourcesDenied):
+        resource.provision()
+    assert resource.closed
+    before = list(calls)
+    with pytest.raises(ResourcesDenied):
+        resource.provision()
+    assert calls == before
+    state = recover(journal)
+    assert state.fenced
+    assert next(r[-1] for r in state.resources if r[0] == ("volume", target)) == "UNKNOWN"
+    assert sum(c[:2] == ("volume", "create") and c[-1] == target for c in calls) == 1
+    assert not any(c[1] in {"rm", "prune"} for c in calls)
+
+
+@pytest.mark.parametrize("database", [1, None, "yes"])
+def test_database_allocation_requires_explicit_boolean(tmp_path, database):
+    with pytest.raises(ResourcesDenied):
+        setup(tmp_path, database=database)
+
+
+def test_allocated_database_volume_authorizes_helpers_with_actual_network_ids(tmp_path):
+    from test_composition_helpers import setup as helper_setup
+
+    allocation = tmp_path / "allocation"
+    allocation.mkdir()
+    resource, resources, calls, _ = setup(allocation, database=True)
+    plan = resource.provision()
+    helper_root = tmp_path / "helper"
+    helper_root.mkdir()
+    helper, _, journal, same_resources = helper_setup(
+        helper_root,
+        database=True,
+        provisioned=(plan, resources),
+    )
+    try:
+        assert same_resources is resources
+        assert (
+            helper.plan.network("member-db").identifier
+            == resource.observed[plan.prefix + "-member-db"]
+        )
+        assert helper.run()
+        assert all(call in resource.commands() for call in calls)
+    finally:
+        journal.close()
+        resources.close()
+
+
+@pytest.mark.parametrize("kind", ["material", "data"])
+def test_lost_database_create_ack_is_inspected_but_never_retried(tmp_path, kind):
+    resource, journal, calls, _ = setup(tmp_path, database=True)
+    original = resource.engine
+    target = resource.layout.database_volume(kind)
+
+    def engine(*args):
+        result = original(*args)
+        if args[:2] == ("volume", "create") and args[-1] == target:
+            raise TimeoutError("lost acknowledgement")
+        return result
+
+    resource.engine = engine
+    with pytest.raises(ResourcesDenied):
+        resource.provision()
+    state = recover(journal)
+    assert state.fenced
+    assert next(r[-1] for r in state.resources if r[0] == ("volume", target)) == "PRESENT"
+    assert sum(c[:2] == ("volume", "create") and c[-1] == target for c in calls) == 1
+    if kind == "material":
+        assert not any(c[:2] == ("volume", "create") and c[-1].endswith("-db-data") for c in calls)

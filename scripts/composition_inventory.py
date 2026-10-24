@@ -126,6 +126,23 @@ class Inventory:
         _require(kind != "state" or role != "membership")
         return f"{self.name(role)}-{kind}"
 
+    def database_volume(self, kind):
+        _require(kind in {"material", "data"})
+        return f"{self.name('db')}-{kind}"
+
+    def check_database_volume(self, kind, row):
+        _require(row["Name"] == self.database_volume(kind))
+        _require(row["Driver"] == "local" and row["Scope"] == "local")
+        _require(not row.get("Options"))
+        _require(
+            row["Labels"]
+            == {
+                LABEL: self.prefix,
+                LABEL + ".role": "database",
+                LABEL + ".kind": kind,
+            }
+        )
+
     def network(self, edge):
         _require(edge in EDGES)
         return next(n for n in self.networks if n.edge == edge)

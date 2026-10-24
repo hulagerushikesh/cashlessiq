@@ -23,7 +23,14 @@ from scripts.composition_volume import parse
 
 
 def setup(
-    tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=False, database=False
+    tmp_path,
+    role="broker",
+    fault=None,
+    headroom=lambda: True,
+    *,
+    state=False,
+    database=False,
+    provisioned=None,
 ):
     plan = Inventory(
         "ciq-comp-abcdef123456",
@@ -36,14 +43,17 @@ def setup(
     )
     for name in ("resources", "helpers", "staging"):
         (tmp_path / name).mkdir(mode=0o700)
-    resources = Journal(tmp_path / "resources", plan.prefix)
+    if provisioned is not None:
+        plan, resources = provisioned
+    else:
+        resources = Journal(tmp_path / "resources", plan.prefix)
     journal = Journal(tmp_path / "helpers", plan.prefix)
     kind = "state" if state else "material"
     first = "initialize" if state else "install"
     volume = plan.name("db") + "-material" if database else plan.volume(role, kind)
     if database:
         role = "database"
-    for action in ("reserve", "observe"):
+    for action in () if provisioned is not None else ("reserve", "observe"):
         resources.record(
             action,
             kind="volume",

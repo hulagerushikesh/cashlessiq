@@ -895,3 +895,30 @@ API contracts and `http://localhost:3000` owner sandbox unchanged.
 
 This document is the only new design artifact. No encrypted image, keys,
 containers, volumes, account objects or daemon were created during its drafting.
+
+### Explicit DB resource allocation — 24 October
+
+`Resources(database=True)` now reserves all 35 intentions before discovery:
+18 internal networks, 15 app volumes and separate DB material/data volumes.
+The default remains the existing 33-object app inventory. DB names and exact
+local-driver/label validation are shared with the material helper. Duplicate
+inspection JSON keys, option/label/name/scope drift and unknown observations
+fail closed. A lost create acknowledgement can be independently observed but
+still fences the invocation; it never permits retry or further allocation.
+
+An offline integration test now connects the real allocator journal and returned
+network IDs to DB material helper installation/probing. This proves the authority
+handoff with fake daemon metadata, not physical volume ownership or DB readiness.
+The host recheck deferred Docker acceptance (pressure level 2, load 15.86).
+No containers or host settings changed. Remaining sequence: UID/GID 10002 data
+initialization, pinned PostgreSQL packaging, bounded startup and TLS/grant probes,
+then full physical lifecycle/containment acceptance. P2 estimates stay unchanged.
+
+Validation: the full root suite passed 699 cases before the final two lost-ack
+cases were added; the complete 38-case resource file then passed, covering all
+701 collected root cases across those runs. Ruff, formatting and whitespace
+checks pass. The broad targeted API run passed 408/409: the existing blocked-stop
+watchdog case lacked its callback marker. All six actor cases passed in an
+isolated rerun (11.10 seconds), without changing deadlines or assertions. Host
+load is a possible contributor, not a diagnosed cause; the initial failure is
+retained here and no all-green broad API run is claimed.
