@@ -5,6 +5,39 @@ Last updated: 24 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Nonroot PostgreSQL cluster initialization — 24 October
+
+Added an explicit PostgreSQL 16 `initdb` helper using UID:GID 10002:10002,
+verified DB-only material and the previously prepared empty data directory.
+It durably writes an exclusive ATTEMPTED marker before spawning; any partial,
+failed or interrupted attempt remains ineligible for retry/adoption. Fixed
+arguments use a private password file, reject local/host authentication during
+initialization, enable checksums and retain partial initdb files. The child has
+a fixed environment, discarded diagnostics and a 30-second wait with owned
+process-group termination on timeout; the outer owner still owes its watchdog.
+[PostgreSQL 16 initdb option reference](https://www.postgresql.org/docs/16/app-initdb.html).
+
+The separate probe checks the invocation marker, version, ownership/modes,
+control-file shape, absence of a PID file and fresh material hashes. This is
+**structural read-back only**, not catalog integrity, stopped-process proof,
+schema/grant bootstrap or authenticated readiness. No PostgreSQL binary was run
+in this checkpoint; command/process fixtures and temporary files are offline evidence.
+
+The journaled coordinator now checks both exact volumes, mounts material
+read-only in both containers, allows data writes only during initialization,
+and runs both modes nonroot without added capabilities. Existing app/material/
+state helper contracts retain their defaults. Unknown outcomes fence and remain
+for explicit containment/review.
+
+Validation: all 789 root tests passed; Ruff and diff checks passed. The earlier
+allocation commit CI passed; the data-directory commit CI was still running
+at this checkpoint.
+
+Host gate remains DEFER (pressure 2, load 9.06); no Docker build/start or settings
+change. Still owed: PostgreSQL image packaging/digest inspection, physical initdb,
+closed schema/bootstrap, bounded service startup, TLS/grant probes and full
+lifecycle acceptance. Product phase estimates are unchanged.
+
 ### Empty DB data directory preparation — 24 October
 
 Added a DB-only helper that exclusively creates `pgdata` inside the allocated

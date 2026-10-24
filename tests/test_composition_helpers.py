@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from scripts.composition_database import DatabaseStaging
+from scripts.composition_database_cluster_helpers import DatabaseClusterHelpers
 from scripts.composition_database_data_helpers import DatabaseDataHelpers
 from scripts.composition_database_helpers import DatabaseHelpers, fingerprint
 from scripts.composition_database_volume import DatabaseVolume
@@ -33,6 +34,7 @@ def setup(
     database=False,
     provisioned=None,
     database_data=False,
+    database_cluster=False,
 ):
     plan = Inventory(
         "ciq-comp-abcdef123456",
@@ -50,9 +52,9 @@ def setup(
     else:
         resources = Journal(tmp_path / "resources", plan.prefix)
     journal = Journal(tmp_path / "helpers", plan.prefix)
-    database = database or database_data
+    database = database or database_data or database_cluster
     kind = "data" if database_data else "state" if state else "material"
-    first = "prepare" if database_data else "initialize" if state else "install"
+    first = "prepare" if database_data else "initialize" if state or database_cluster else "install"
     volume = plan.database_volume(kind) if database else plan.volume(role, kind)
     if database:
         role = "database"
@@ -64,6 +66,16 @@ def setup(
             identity=volume if action == "observe" else None,
             fingerprint="e" * 64,
         )
+    if database_cluster and provisioned is None:
+        for action in ("reserve", "observe"):
+            data_volume = plan.database_volume("data")
+            resources.record(
+                action,
+                kind="volume",
+                name=data_volume,
+                identity=data_volume if action == "observe" else None,
+                fingerprint="d" * 64,
+            )
     material = DatabaseStaging if database else Material
     contents = {name: ("synthetic-private-" + name).encode() for name in material.names(role)}
     binding = fingerprint(plan) if database else plan.fingerprint(role)
@@ -103,14 +115,14 @@ def setup(
                 return json.dumps(
                     [
                         dict(
-                            Name=volume,
+                            Name=args[-1],
                             Driver="local",
                             Scope="local",
                             Options={},
                             Labels={
                                 LABEL: plan.prefix,
                                 f"{LABEL}.role": role,
-                                f"{LABEL}.kind": kind,
+                                f"{LABEL}.kind": "data" if args[-1].endswith("-db-data") else kind,
                             },
                         )
                     ]
@@ -175,7 +187,9 @@ def setup(
 
     engine = Engine()
     helper_type = (
-        DatabaseDataHelpers
+        DatabaseClusterHelpers
+        if database_cluster
+        else DatabaseDataHelpers
         if database_data
         else DatabaseHelpers
         if database
@@ -208,7 +222,7 @@ def container(helper, mode, cid):
                 f"{LABEL}.role": helper.role,
                 f"{LABEL}.fingerprint": helper.fingerprint(mode),
             },
-            User="0:0" if mode == helper.modes[0] else helper.probe_user,
+            User=helper.user(mode),
             Entrypoint=helper.entrypoint,
             Cmd=[mode],
             Env=["PYTHONUNBUFFERED=1"],
@@ -219,7 +233,7 @@ def container(helper, mode, cid):
             ReadonlyRootfs=True,
             Privileged=False,
             CapDrop=["ALL"],
-            CapAdd=["CHOWN"] if mode == helper.modes[0] else [],
+            CapAdd=helper.capabilities(mode),
             SecurityOpt=["no-new-privileges"],
             Memory=128 * 1024**2,
             NanoCpus=500_000_000,
@@ -231,10 +245,11 @@ def container(helper, mode, cid):
         Mounts=[
             dict(
                 Type="volume",
-                Name=helper.volume_name(),
-                Destination=helper.destination,
-                RW=helper.writable(mode),
+                Name=name,
+                Destination=destination,
+                RW=writable,
             )
+            for name, destination, writable in helper.mounts(mode)
         ],
         NetworkSettings=dict(Networks={"none": dict(IPAddress="", GlobalIPv6Address="")}),
         State=dict(Status="created", Running=False, Pid=0, ExitCode=0),

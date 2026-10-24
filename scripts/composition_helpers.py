@@ -113,8 +113,16 @@ class Helpers:
             )
         ).hexdigest()
 
+    def user(self, mode):
+        return "0:0" if mode == self.modes[0] else self.probe_user
+
+    def capabilities(self, mode):
+        return ["CHOWN"] if mode == self.modes[0] else []
+
+    def mounts(self, mode):
+        return [(self.volume_name(), self.destination, self.writable(mode))]
+
     def create(self, mode):
-        installing = mode == self.modes[0]
         args = [
             "create",
             "--name",
@@ -132,12 +140,18 @@ class Helpers:
             "--read-only",
             "--interactive",
             "--user",
-            "0:0" if installing else self.probe_user,
+            self.user(mode),
             "--cap-drop",
             "ALL",
         ]
-        if installing:
-            args += ["--cap-add", "CHOWN"]
+        for capability in self.capabilities(mode):
+            args += ["--cap-add", capability]
+        mount_args = []
+        for name, destination, writable in self.mounts(mode):
+            mount_args += [
+                "--mount",
+                f"type=volume,src={name},dst={destination}" + ("" if writable else ",readonly"),
+            ]
         return tuple(
             [
                 *args,
@@ -153,9 +167,7 @@ class Helpers:
                 "no",
                 "--ipc",
                 "private",
-                "--mount",
-                f"type=volume,src={self.volume_name()},dst={self.destination}"
-                + ("" if self.writable(mode) else ",readonly"),
+                *mount_args,
                 self.image,
                 mode,
             ]
@@ -219,7 +231,7 @@ class Helpers:
                 f"{LABEL}.fingerprint": self.fingerprint(mode),
             }
         )
-        require(config["User"] == ("0:0" if mode == self.modes[0] else self.probe_user))
+        require(config["User"] == self.user(mode))
         require(config["Entrypoint"] == self.entrypoint and config["Cmd"] == [mode])
         require(config.get("Env") == self.config.get("Env"))
         require(config["OpenStdin"] is True and not config.get("Tty"))
@@ -227,7 +239,7 @@ class Helpers:
         require(host["ReadonlyRootfs"] is True and host["Privileged"] is False)
         require(not host.get("AutoRemove"))
         require(host["CapDrop"] == ["ALL"])
-        require((host.get("CapAdd") or []) == (["CHOWN"] if mode == self.modes[0] else []))
+        require((host.get("CapAdd") or []) == self.capabilities(mode))
         require(host["SecurityOpt"] == ["no-new-privileges"])
         require(host["Memory"] == 128 * 1024**2 and host["NanoCpus"] == 500_000_000)
         require(host["PidsLimit"] == 32 and host["NetworkMode"] == "none")
@@ -253,10 +265,15 @@ class Helpers:
             )
         )
         mounts = row["Mounts"]
-        require(len(mounts) == 1)
-        mount = mounts[0]
-        require(mount["Type"] == "volume" and mount["Name"] == self.volume_name())
-        require(mount["Destination"] == self.destination and mount["RW"] is self.writable(mode))
+        expected_mounts = self.mounts(mode)
+        require(len(mounts) == len(expected_mounts))
+        require(len({mount["Destination"] for mount in mounts}) == len(mounts))
+        for name, destination, writable in expected_mounts:
+            matches = [m for m in mounts if m["Destination"] == destination]
+            require(len(matches) == 1)
+            mount = matches[0]
+            require(mount["Type"] == "volume" and mount["Name"] == name)
+            require(mount["RW"] is writable)
         networks = row["NetworkSettings"]["Networks"]
         require(type(networks) is dict and set(networks) <= {"none"})
         require(

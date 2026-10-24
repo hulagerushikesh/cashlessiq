@@ -15,8 +15,9 @@ journaled coordinator with separate volume authority and UID/GID 10002.
 The explicit allocator now includes DB material/data volumes, with the real
 resource journal tested through the material helper handoff using fake daemon
 metadata. Empty DB data-directory preparation and its separate nonroot probe
-are now implemented/tested offline. PostgreSQL cluster initialization, pinned
-packaging, launch/readiness and
+are now implemented/tested offline. Nonroot initdb coordination and a separate
+structural cluster probe are also implemented with offline fixtures. Actual
+PostgreSQL image packaging, initialization/bootstrap, launch/readiness and
 physical lifecycle acceptance remain pending; the host gate still defers Docker. Phase
 estimates are unchanged.
 
