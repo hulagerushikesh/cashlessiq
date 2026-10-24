@@ -1071,4 +1071,3 @@ All 848 local root tests and repository Ruff checks pass; the dedicated CI
 integration module skips locally. New remote SQL results are pending.
 P2 remains open; image pinning, membership TLS readiness and full containment
 acceptance remain pending. No deployment, paid source access or P3 activation.
-

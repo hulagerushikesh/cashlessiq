@@ -15,6 +15,7 @@ import psycopg
 
 from scripts.composition_database import prepare
 from scripts.composition_database_catalog import CATALOG_SQL
+from scripts.disposable_membership_db import SOURCE_PROFILES
 from tests.test_composition_database import plan
 
 DSN = "host=127.0.0.1 port=5432 user=postgres password=ciq-disposable-catalog connect_timeout=3"
@@ -72,3 +73,38 @@ def test_privilege_or_schema_drift_denied(database, mutation):
     with pytest.raises(psycopg.Error):
         database.execute(CATALOG_SQL.decode())
     database.execute("ROLLBACK")
+
+
+def test_membership_role_reads_exact_closed_registry(database):
+    database.execute("SET ROLE membership_test")
+    rows = database.execute(
+        "SELECT m.tenant_id::text, m.user_id::text, m.role "
+        "FROM ops.tenant_membership m "
+        "JOIN ops.tenant t ON t.id=m.tenant_id "
+        "JOIN ops.app_user u ON u.id=m.user_id "
+        "WHERE m.active AND t.active AND u.active"
+    ).fetchall()
+    assert sorted(rows) == sorted(SOURCE_PROFILES)
+    assert database.execute("SELECT count(*) FROM ops.tenant").fetchone() == (2,)
+    assert database.execute("SELECT count(*) FROM ops.app_user").fetchone() == (6,)
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "INSERT INTO ops.tenant VALUES ('00000000-0000-4000-8000-000000000999', true)",
+        "UPDATE ops.tenant SET active=false",
+        "DELETE FROM ops.tenant_membership",
+        "TRUNCATE ops.app_user",
+        "CREATE TABLE ops.unexpected(id int)",
+        "CREATE TABLE public.unexpected(id int)",
+        "CREATE TEMP TABLE unexpected(id int)",
+        "CREATE SCHEMA unexpected",
+        "SELECT rolpassword FROM pg_authid",
+    ],
+)
+def test_membership_role_cannot_write_or_read_passwords(database, statement):
+    database.execute("SET ROLE membership_test")
+    with pytest.raises(psycopg.errors.InsufficientPrivilege) as failure:
+        database.execute(statement)
+    assert failure.value.sqlstate == "42501"
