@@ -100,12 +100,18 @@ class Material:
     fingerprint: str
     records: tuple = field(repr=False)
 
+    names = staticmethod(names)
+
+    @staticmethod
+    def pack(snapshot):
+        return _archive(snapshot)
+
     @classmethod
     def expected(cls, role, fingerprint, contents):
         try:
             _require(type(fingerprint) is str and len(fingerprint) == 64)
             _require(all(c in "0123456789abcdef" for c in fingerprint))
-            _require(type(contents) is dict and set(contents) == names(role))
+            _require(type(contents) is dict and set(contents) == cls.names(role))
             _require(all(type(b) is bytes and 0 < len(b) <= MAX_FILE for b in contents.values()))
             _require(sum(map(len, contents.values())) <= MAX_TOTAL)
             return cls(
@@ -127,7 +133,7 @@ class Material:
         """
         parent_fd = root_fd = None
         try:
-            _require(self == Material.expected(self.role, self.fingerprint, contents))
+            _require(self == type(self).expected(self.role, self.fingerprint, contents))
             parent_fd = _directory(parent)
             _require(_private(os.fstat(parent_fd), 0o700))
             os.mkdir(self.role, mode=0o700, dir_fd=parent_fd)
@@ -179,7 +185,7 @@ class Staged:
             info = os.fstat(root_fd)
             _require(_private(info, 0o700))
             _require((info.st_dev, info.st_ino) == (self.device, self.inode))
-            _require(set(os.listdir(root_fd)) == names(role))
+            _require(set(os.listdir(root_fd)) == self.expected.names(role))
             result = {}
             for name, size, digest in self.expected.records:
                 fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=root_fd)
@@ -199,7 +205,7 @@ class Staged:
                     result[name] = bytes(data)
                 finally:
                     os.close(fd)
-            _require(set(os.listdir(root_fd)) == names(role))
+            _require(set(os.listdir(root_fd)) == self.expected.names(role))
             current_fd = _directory(self.root)
             current = os.fstat(current_fd)
             _require(_private(current, 0o700))
@@ -224,7 +230,7 @@ class Staged:
         volume afterward. No extraction, Docker execution or disk output here.
         """
         snapshot = self._snapshot(role, fingerprint)
-        return _archive(snapshot)
+        return self.expected.pack(snapshot)
 
 
 def _archive(snapshot):

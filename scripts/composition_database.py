@@ -15,6 +15,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 from .composition_inventory import Inventory, canonical
+from .composition_material import Material, MaterialDenied
 from .disposable_membership_db import DB_HOSTNAME, source_profiles_sql, test_ca
 
 
@@ -108,3 +109,25 @@ GRANT SELECT(user_id,tenant_id,role,active) ON ops.tenant_membership TO membersh
             ),
         },
     )
+
+
+class DatabaseStaging(Material):
+    """Host-only private staging; never an application UID 10001 archive.
+
+    Bind the expectation to the owner's invocation fingerprint before writing.
+    Files are retained on failure; no adoption, repair, removal or DB install.
+    PostgreSQL image UID and bounded mounted installation remain separate work.
+    """
+
+    @staticmethod
+    def names(role):
+        if role != "database":
+            raise MaterialDenied()
+        return frozenset(
+            {"server.pem", "server.key", "admin-password", "bootstrap.sql", "pg_hba.conf"}
+        )
+
+    @staticmethod
+    def pack(snapshot):
+        # Do not accidentally use the application archive's fixed UID/GID.
+        raise MaterialDenied()

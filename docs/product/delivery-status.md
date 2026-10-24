@@ -10,6 +10,10 @@ a public/real-data pilot. Start owner-led workflow conversations now; retain all
 deployment and phase gates. The next engineering milestone is integrated
 disposable container acceptance, not more unrelated security primitives.
 
+**24 October follow-up:** DB-only private host staging is implemented and
+refuses application archive ownership. Mounted PostgreSQL installation and
+physical lifecycle acceptance remain pending; phase estimates are unchanged.
+
 ## How much is finished?
 
 **Approximately 35–40% overall; P2 approximately 60%.** These remain rough

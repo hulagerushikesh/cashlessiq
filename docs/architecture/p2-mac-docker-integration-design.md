@@ -595,6 +595,26 @@ request actors, full eight-service failure/recovery and exact cleanup. Elevated
 Mac pressure continues to defer builds/runs; none of the operational health,
 custody, source isolation or P2 exit gates is closed by this checkpoint.
 
+### Private disposable DB staging — 24 October
+
+The generated DB-only bundle can now be staged in a fresh owner-private host
+folder, bound to an invocation fingerprint. The existing checked file path is
+shared through explicit material-class contracts; application role allowlists
+and archive ownership stay unchanged. Database staging requires exactly the
+five server files, a private parent, exclusive creation and durable writes.
+Verification checks original directory identity, exact names, ownership, modes,
+single links, sizes and byte digests. Failed writes remain private and cannot
+be silently retried or adopted. No secret bytes or hashes are logged.
+
+The database contract refuses the application UID 10001 archive. This completes
+host staging only: PostgreSQL image ownership, bounded volume installation,
+DB/controller launch and readiness, request actors/watchdog and physical
+all-eight lifecycle/removal remain pending. No Docker or source access occurred.
+
+Validation: 634 root tests and 409 targeted API tests pass, including ten new
+DB staging regressions; repository lint, changed-file formatting and whitespace
+checks pass. Physical acceptance and remote CI are not claimed.
+
 ## Implementation anchors and change exclusions
 
 **Route-collision checkpoint (23 October):** `composition_routes.py` supplies
