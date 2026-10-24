@@ -51,6 +51,7 @@ class Helpers:
     kind = "material"
     destination = "/material"
     entrypoint = ENTRYPOINT
+    probe_user = "10001:10001"
 
     def __init__(self, plan, staged, *, image, journal, resources, engine, headroom):
         require(type(plan) is Inventory and type(staged) is Staged)
@@ -86,6 +87,15 @@ class Helpers:
         require(journal.events == [{"version": 1, "prefix": plan.prefix}])
         self._volume_intention()
 
+    def volume_name(self):
+        return self.plan.volume(self.role, self.kind)
+
+    def material_fingerprint(self):
+        return self.plan.fingerprint(self.role)
+
+    def check_volume(self, row):
+        self.plan.check_volume(self.role, self.kind, row)
+
     def name(self, mode):
         require(mode in self.modes)
         return f"{self.plan.prefix}-{self.kind}-{self.role}-{mode}"
@@ -96,8 +106,8 @@ class Helpers:
                 dict(
                     name=self.name(mode),
                     image=self.image,
-                    volume=self.plan.volume(self.role, self.kind),
-                    fingerprint=self.plan.fingerprint(self.role),
+                    volume=self.volume_name(),
+                    fingerprint=self.material_fingerprint(),
                     mode=mode,
                 )
             )
@@ -122,7 +132,7 @@ class Helpers:
             "--read-only",
             "--interactive",
             "--user",
-            "0:0" if installing else "10001:10001",
+            "0:0" if installing else self.probe_user,
             "--cap-drop",
             "ALL",
         ]
@@ -144,7 +154,7 @@ class Helpers:
                 "--ipc",
                 "private",
                 "--mount",
-                f"type=volume,src={self.plan.volume(self.role, self.kind)},dst={self.destination}"
+                f"type=volume,src={self.volume_name()},dst={self.destination}"
                 + ("" if self.writable(mode) else ",readonly"),
                 self.image,
                 mode,
@@ -154,7 +164,7 @@ class Helpers:
     def commands(self):
         return (
             ("image", "inspect", self.image),
-            ("volume", "inspect", self.plan.volume(self.role, self.kind)),
+            ("volume", "inspect", self.volume_name()),
             ("container", "ls", "--all", "--format", "{{.Names}}"),
             *(self.create(mode) for mode in self.modes),
             ("inspect", "{incarnation}"),
@@ -172,7 +182,7 @@ class Helpers:
         return dict(
             state="INSTALLED" if mode == self.modes[0] else "VERIFIED",
             role=self.role,
-            fingerprint=self.plan.fingerprint(self.role),
+            fingerprint=self.material_fingerprint(),
         )
 
     def _read(self, *args):
@@ -192,7 +202,7 @@ class Helpers:
     def _volume_intention(self):
         self.resources.check()
         prefix, rows, fenced = fold(self.resources.events)
-        volume = self.plan.volume(self.role, self.kind)
+        volume = self.volume_name()
         require(prefix == self.plan.prefix and not fenced)
         require(rows.get(("volume", volume), (None, None, None))[1:] == (volume, "PRESENT"))
 
@@ -209,7 +219,7 @@ class Helpers:
                 f"{LABEL}.fingerprint": self.fingerprint(mode),
             }
         )
-        require(config["User"] == ("0:0" if mode == self.modes[0] else "10001:10001"))
+        require(config["User"] == ("0:0" if mode == self.modes[0] else self.probe_user))
         require(config["Entrypoint"] == self.entrypoint and config["Cmd"] == [mode])
         require(config.get("Env") == self.config.get("Env"))
         require(config["OpenStdin"] is True and not config.get("Tty"))
@@ -245,9 +255,7 @@ class Helpers:
         mounts = row["Mounts"]
         require(len(mounts) == 1)
         mount = mounts[0]
-        require(
-            mount["Type"] == "volume" and mount["Name"] == self.plan.volume(self.role, self.kind)
-        )
+        require(mount["Type"] == "volume" and mount["Name"] == self.volume_name())
         require(mount["Destination"] == self.destination and mount["RW"] is self.writable(mode))
         networks = row["NetworkSettings"]["Networks"]
         require(type(networks) is dict and set(networks) <= {"none"})
@@ -349,16 +357,14 @@ class Helpers:
                 self.config["Entrypoint"] == self.entrypoint
                 and self.config.get("Cmd") in (None, [])
             )
-            require(self.config["User"] == "10001:10001")
+            require(self.config["User"] == self.probe_user)
             require(
                 not any(
                     self.config.get(k) for k in ("Volumes", "ExposedPorts", "Healthcheck", "Labels")
                 )
             )
-            self.plan.check_volume(
-                self.role,
-                self.kind,
-                self._read("volume", "inspect", self.plan.volume(self.role, self.kind)),
+            self.check_volume(
+                self._read("volume", "inspect", self.volume_name()),
             )
             existing = self.engine("container", "ls", "--all", "--format", "{{.Names}}")
             require(not {self.name(m) for m in self.modes}.intersection(existing.splitlines()))
@@ -366,10 +372,8 @@ class Helpers:
                 self.journal.check()
                 self._volume_intention()
                 require(self.headroom() is True)
-                self.plan.check_volume(
-                    self.role,
-                    self.kind,
-                    self._read("volume", "inspect", self.plan.volume(self.role, self.kind)),
+                self.check_volume(
+                    self._read("volume", "inspect", self.volume_name()),
                 )
                 body = self.body(mode)
                 cid = self.engine(*self.create(mode)).strip()

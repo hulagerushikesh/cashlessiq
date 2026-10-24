@@ -5,6 +5,30 @@ Last updated: 24 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Journaled DB material helpers — 24 October
+
+The inactive DB coordinator now reuses bounded engine commands and the shared
+one-attempt helper lifecycle. It requires DB-specific staging bound to the
+invocation/member-db topology, a separately observed exact DB material volume
+and a fresh helper ledger. Both container intentions precede engine execution.
+The installer is root with CHOWN only; the independent read-only probe is
+UID/GID 10002 with no capabilities. Image, mount, labels, receipt and successful
+exit must all match. Headroom and resource authority are rechecked before create.
+
+Lost acknowledgements fence admission and retain UNKNOWN. Explicit containment
+inspects only acknowledged exact CIDs and cannot turn an unattempted verifier
+into success. No retries, name adoption, removal or database-readiness claims.
+Fake daemon tests cover metadata corruption, ambiguous outcomes and wrong
+volume/binding authority; the real bounded subprocess transport also runs the DB
+contract against a fake CLI. No actual Docker or PostgreSQL execution occurred.
+
+Validation: the root regression suite plus the final two constructor checks
+pass (681 collected tests), as do 409 targeted API tests, repository lint and
+changed-file formatting. No remote CI run is claimed. Next: allocate/journal the
+DB-specific material/data resources, supply the pinned UID-10002 PostgreSQL
+image and bounded launch/readiness probes, then physical unified lifecycle and
+cleanup when host headroom permits. P2 and completion estimates are unchanged.
+
 ### Disposable DB volume installer and probe — 24 October
 
 A separate inactive DB helper now converts verified host staging into bounded

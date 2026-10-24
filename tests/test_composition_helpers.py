@@ -10,16 +10,21 @@ from pathlib import Path
 
 import pytest
 
+from scripts.composition_database import DatabaseStaging
+from scripts.composition_database_helpers import DatabaseHelpers, fingerprint
+from scripts.composition_database_volume import DatabaseVolume
 from scripts.composition_engine import Engine as BoundedEngine
 from scripts.composition_helpers import Helpers, HelpersDenied
 from scripts.composition_inventory import EDGES, LABEL, ROLES, Inventory, Network
 from scripts.composition_journal import Journal, fold
-from scripts.composition_material import Material, names
+from scripts.composition_material import Material
 from scripts.composition_state_helpers import StateHelpers
 from scripts.composition_volume import parse
 
 
-def setup(tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=False):
+def setup(
+    tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=False, database=False
+):
     plan = Inventory(
         "ciq-comp-abcdef123456",
         tuple(
@@ -35,7 +40,9 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=F
     journal = Journal(tmp_path / "helpers", plan.prefix)
     kind = "state" if state else "material"
     first = "initialize" if state else "install"
-    volume = plan.volume(role, kind)
+    volume = plan.name("db") + "-material" if database else plan.volume(role, kind)
+    if database:
+        role = "database"
     for action in ("reserve", "observe"):
         resources.record(
             action,
@@ -44,10 +51,10 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=F
             identity=volume if action == "observe" else None,
             fingerprint="e" * 64,
         )
-    contents = {name: ("synthetic-private-" + name).encode() for name in names(role)}
-    staged = Material.expected(role, plan.fingerprint(role), contents).provision(
-        tmp_path / "staging", contents
-    )
+    material = DatabaseStaging if database else Material
+    contents = {name: ("synthetic-private-" + name).encode() for name in material.names(role)}
+    binding = fingerprint(plan) if database else plan.fingerprint(role)
+    staged = material.expected(role, binding, contents).provision(tmp_path / "staging", contents)
 
     class Engine:
         fenced = False
@@ -69,7 +76,7 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=F
                             Config=dict(
                                 Entrypoint=helper.entrypoint,
                                 Cmd=[],
-                                User="10001:10001",
+                                User=helper.probe_user,
                                 Env=["PYTHONUNBUFFERED=1"],
                             ),
                         )
@@ -121,8 +128,14 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=F
                     version=1, role=role, generation=plan.generation
                 )
             else:
-                spec, archive = parse(private_input, install=mode == "install")
-                assert spec == staged.expected and (archive is not None) == (mode == "install")
+                spec, archive = parse(
+                    private_input,
+                    install=mode == "install",
+                    material_type=DatabaseVolume if database else Material,
+                )
+                assert spec.records == staged.expected.records
+                assert spec.fingerprint == staged.expected.fingerprint
+                assert (archive is not None) == (mode == "install")
             self.rows[cid]["State"].update(Status="exited", ExitCode=0)
             if fault == "nonzero":
                 self.rows[cid]["State"]["ExitCode"] = 1
@@ -140,7 +153,7 @@ def setup(tmp_path, role="broker", fault=None, headroom=lambda: True, *, state=F
             return json.dumps(result)
 
     engine = Engine()
-    helper_type = StateHelpers if state else Helpers
+    helper_type = DatabaseHelpers if database else StateHelpers if state else Helpers
     helper = helper_type(
         plan,
         role if state else staged,
@@ -166,7 +179,7 @@ def container(helper, mode, cid):
                 f"{LABEL}.role": helper.role,
                 f"{LABEL}.fingerprint": helper.fingerprint(mode),
             },
-            User="0:0" if mode == helper.modes[0] else "10001:10001",
+            User="0:0" if mode == helper.modes[0] else helper.probe_user,
             Entrypoint=helper.entrypoint,
             Cmd=[mode],
             Env=["PYTHONUNBUFFERED=1"],
@@ -189,7 +202,7 @@ def container(helper, mode, cid):
         Mounts=[
             dict(
                 Type="volume",
-                Name=helper.plan.volume(helper.role, helper.kind),
+                Name=helper.volume_name(),
                 Destination=helper.destination,
                 RW=helper.writable(mode),
             )
@@ -445,9 +458,10 @@ def test_headroom_rechecked_before_second_helper(tmp_path):
 
 
 @pytest.mark.parametrize("failed_exit", [False, True])
-@pytest.mark.parametrize("state", [False, True])
-def test_coordinator_through_real_bounded_transport_and_fake_cli(tmp_path, failed_exit, state):
-    helper, _, journal, resources = setup(tmp_path, state=state)
+@pytest.mark.parametrize("kind", ["material", "state", "database"])
+def test_coordinator_through_real_bounded_transport_and_fake_cli(tmp_path, failed_exit, kind):
+    state = kind == "state"
+    helper, _, journal, resources = setup(tmp_path, state=state, database=kind == "database")
     config = tmp_path / "empty-config"
     config.mkdir(mode=0o700)
     metadata = tmp_path / "fake-daemon-public-metadata.json"
@@ -463,12 +477,12 @@ def test_coordinator_through_real_bounded_transport_and_fake_cli(tmp_path, faile
         Config=dict(
             Entrypoint=helper.entrypoint,
             Cmd=[],
-            User="10001:10001",
+            User=helper.probe_user,
             Env=["PYTHONUNBUFFERED=1"],
         ),
     )
     volume_row = dict(
-        Name=helper.plan.volume(helper.role, helper.kind),
+        Name=helper.volume_name(),
         Driver="local",
         Scope="local",
         Options={},
@@ -496,7 +510,7 @@ def test_coordinator_through_real_bounded_transport_and_fake_cli(tmp_path, faile
         " body=json.loads(sys.stdin.buffer.read())\n"
         f" assert ('archive' in body)==(mode=='install' and not {state!r})\n"
         f" assert body[{('generation' if state else 'fingerprint')!r}]=="
-        f"{(helper.plan.generation if state else helper.plan.fingerprint(helper.role))!r}\n"
+        f"{(helper.plan.generation if state else helper.material_fingerprint())!r}\n"
         f" rows[cid]['State'].update(Status='exited',ExitCode={1 if failed_exit else 0})\n"
         " with open(path,'w') as f: json.dump(rows,f)\n"
         f" print(json.dumps({dict((m, helper.receipt(m)) for m in helper.modes)!r}[mode]))\n"
