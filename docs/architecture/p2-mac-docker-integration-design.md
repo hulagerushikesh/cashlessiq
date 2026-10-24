@@ -922,3 +922,27 @@ watchdog case lacked its callback marker. All six actor cases passed in an
 isolated rerun (11.10 seconds), without changing deadlines or assertions. Host
 load is a possible contributor, not a diagnosed cause; the initial failure is
 retained here and no all-green broad API run is claimed.
+
+### Empty DB data directory preparation — 24 October
+
+Added a DB-only helper that exclusively creates `pgdata` inside the allocated
+data volume, sets both directories to mode 0700 / UID:GID 10002:10002, and leaves
+partial failures intact. A separate nonroot, read-only probe requires exactly
+that empty directory and ownership/mode contract. Existing contents, symlinks,
+wrong ownership/modes, duplicate request fields and wrong CLI identities deny.
+This is empty-directory preparation, **not PostgreSQL initdb or readiness**.
+
+The bounded coordinator requires the observed data-volume resource journal,
+uses separate preparation/probe containers and exact image/mount inspection,
+and retains the existing one-attempt fencing/containment behavior. An offline
+allocator-to-helper test covers the actual resource journal handoff. The image
+recipe is a candidate, not built or digest-pinned acceptance evidence.
+
+Validation: full root suite 741 passed; after adding the data-volume handoff
+case, all 79 data-helper/resource checks passed. Ruff and diff checks pass.
+These are host filesystem and fake daemon checks, not mounted Linux proof.
+
+Host recheck: pressure 2 and one-minute load 14.70; Docker acceptance still
+DEFER. No containers/settings changed. Next: pinned PostgreSQL packaging,
+nonroot cluster initialization, bounded startup, TLS/grant readiness and physical
+lifecycle acceptance. Phase estimates unchanged.

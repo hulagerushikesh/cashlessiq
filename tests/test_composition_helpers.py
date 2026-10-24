@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from scripts.composition_database import DatabaseStaging
+from scripts.composition_database_data_helpers import DatabaseDataHelpers
 from scripts.composition_database_helpers import DatabaseHelpers, fingerprint
 from scripts.composition_database_volume import DatabaseVolume
 from scripts.composition_engine import Engine as BoundedEngine
@@ -31,6 +32,7 @@ def setup(
     state=False,
     database=False,
     provisioned=None,
+    database_data=False,
 ):
     plan = Inventory(
         "ciq-comp-abcdef123456",
@@ -48,9 +50,10 @@ def setup(
     else:
         resources = Journal(tmp_path / "resources", plan.prefix)
     journal = Journal(tmp_path / "helpers", plan.prefix)
-    kind = "state" if state else "material"
-    first = "initialize" if state else "install"
-    volume = plan.name("db") + "-material" if database else plan.volume(role, kind)
+    database = database or database_data
+    kind = "data" if database_data else "state" if state else "material"
+    first = "prepare" if database_data else "initialize" if state else "install"
+    volume = plan.database_volume(kind) if database else plan.volume(role, kind)
     if database:
         role = "database"
     for action in () if provisioned is not None else ("reserve", "observe"):
@@ -64,7 +67,11 @@ def setup(
     material = DatabaseStaging if database else Material
     contents = {name: ("synthetic-private-" + name).encode() for name in material.names(role)}
     binding = fingerprint(plan) if database else plan.fingerprint(role)
-    staged = material.expected(role, binding, contents).provision(tmp_path / "staging", contents)
+    staged = (
+        None
+        if database_data
+        else material.expected(role, binding, contents).provision(tmp_path / "staging", contents)
+    )
 
     class Engine:
         fenced = False
@@ -133,7 +140,11 @@ def setup(
             cid = args[-1]
             assert args == ("start", "--attach", "--interactive", cid) and cid in self.permitted
             mode = self.rows[cid]["Config"]["Cmd"][0]
-            if state:
+            if database_data:
+                assert json.loads(private_input) == dict(
+                    version=1, role=role, fingerprint=helper.material_fingerprint()
+                )
+            elif state:
                 assert json.loads(private_input) == dict(
                     version=1, role=role, generation=plan.generation
                 )
@@ -163,10 +174,18 @@ def setup(
             return json.dumps(result)
 
     engine = Engine()
-    helper_type = DatabaseHelpers if database else StateHelpers if state else Helpers
+    helper_type = (
+        DatabaseDataHelpers
+        if database_data
+        else DatabaseHelpers
+        if database
+        else StateHelpers
+        if state
+        else Helpers
+    )
     helper = helper_type(
         plan,
-        role if state else staged,
+        *(([]) if database_data else [role if state else staged]),
         image="sha256:" + "c" * 64,
         journal=journal,
         resources=resources,

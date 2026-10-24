@@ -329,7 +329,10 @@ def test_database_allocation_requires_explicit_boolean(tmp_path, database):
         setup(tmp_path, database=database)
 
 
-def test_allocated_database_volume_authorizes_helpers_with_actual_network_ids(tmp_path):
+@pytest.mark.parametrize("database_data", [False, True])
+def test_allocated_database_volume_authorizes_helpers_with_actual_network_ids(
+    tmp_path, database_data
+):
     from test_composition_helpers import setup as helper_setup
 
     allocation = tmp_path / "allocation"
@@ -342,6 +345,7 @@ def test_allocated_database_volume_authorizes_helpers_with_actual_network_ids(tm
         helper_root,
         database=True,
         provisioned=(plan, resources),
+        database_data=database_data,
     )
     try:
         assert same_resources is resources
