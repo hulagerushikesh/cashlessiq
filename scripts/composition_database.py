@@ -116,7 +116,8 @@ class DatabaseStaging(Material):
 
     Bind the expectation to the owner's invocation fingerprint before writing.
     Files are retained on failure; no adoption, repair, removal or DB install.
-    PostgreSQL image UID and bounded mounted installation remain separate work.
+    DB helper conversion is explicit; pinned PostgreSQL image ownership and
+    bounded mounted installation remain separate acceptance work.
     """
 
     @staticmethod

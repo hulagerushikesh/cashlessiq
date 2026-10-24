@@ -22,11 +22,9 @@ from scripts.composition_material import (
     Material,
     MaterialDenied,
     Staged,
-    _archive,
     _directory,
     _require,
     _stable,
-    names,
 )
 
 MAX_FRAME = 2 * 1024 * 1024
@@ -57,7 +55,7 @@ def _pairs(rows):
     return value
 
 
-def parse(frame, *, install):
+def parse(frame, *, install, material_type=Material):
     """Reject ambiguous/unbounded metadata before touching a target directory."""
     try:
         _require(type(frame) is bytes and 0 < len(frame) <= MAX_FRAME)
@@ -72,23 +70,23 @@ def parse(frame, *, install):
         role, fingerprint, rows = raw["role"], raw["fingerprint"], raw["records"]
         _require(type(role) is str and type(fingerprint) is str)
         _require(len(fingerprint) == 64 and all(c in "0123456789abcdef" for c in fingerprint))
-        _require(type(rows) is list and len(rows) == len(names(role)))
+        _require(type(rows) is list and len(rows) == len(material_type.names(role)))
         records = []
         for row in rows:
             _require(type(row) is list and len(row) == 3)
             name, size, digest = row
-            _require(type(name) is str and name in names(role))
+            _require(type(name) is str and name in material_type.names(role))
             _require(type(size) is int and 0 < size <= MAX_FILE)
             _require(type(digest) is str and len(digest) == 64)
             _require(all(c in "0123456789abcdef" for c in digest))
             records.append((name, size, bytes.fromhex(digest)))
-        _require([r[0] for r in records] == sorted(names(role)))
+        _require([r[0] for r in records] == sorted(material_type.names(role)))
         _require(sum(r[1] for r in records) <= MAX_TOTAL)
         archive = None
         if install:
             _require(type(raw["archive"]) is str)
             archive = base64.b64decode(raw["archive"], validate=True)
-        return Material(role, fingerprint, tuple(records)), archive
+        return material_type(role, fingerprint, tuple(records)), archive
     except Exception:
         raise MaterialDenied() from None
 
@@ -103,7 +101,7 @@ def unpack(spec, payload):
             members = archive.getmembers()
             _require([m.name for m in members] == [".", *sorted(expected)])
             for entry in members:
-                _require(entry.uid == 10001 and entry.gid == 10001)
+                _require((entry.uid, entry.gid) == spec.archive_owner)
                 _require(not entry.pax_headers and not entry.linkname)
                 _require(not entry.uname and not entry.gname and entry.mtime == 0)
                 if entry.name == ".":
@@ -116,7 +114,7 @@ def unpack(spec, payload):
                 _require(len(data) == size and sha256(data).digest() == digest)
                 snapshot[entry.name] = data
         # Refuse hidden trailing archives, noncanonical headers/padding and aliases.
-        _require(payload == _archive(snapshot))
+        _require(payload == spec.pack(snapshot))
         return snapshot
     except Exception:
         raise MaterialDenied() from None
@@ -167,7 +165,7 @@ def install(root, spec, payload, *, owner):
                 _require(info.st_size == len(data))
             finally:
                 os.close(child)
-        _require(set(os.listdir(fd)) == names(spec.role))
+        _require(set(os.listdir(fd)) == spec.names(spec.role))
         os.fchmod(fd, 0o500)  # Before chown: no FOWNER/DAC override needed afterward.
         os.fchown(fd, *owner)
         os.fsync(fd)
@@ -187,7 +185,7 @@ def verify(root, spec, *, owner):
         fd = _directory(root)
         initial = os.fstat(fd)
         _require(_metadata(initial, owner, 0o500))
-        _require(set(os.listdir(fd)) == names(spec.role))
+        _require(set(os.listdir(fd)) == spec.names(spec.role))
         for name, size, digest in spec.records:
             child = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
             try:
@@ -204,7 +202,7 @@ def verify(root, spec, *, owner):
                 _require(len(result) == size and sha256(result).digest() == digest)
             finally:
                 os.close(child)
-        _require(set(os.listdir(fd)) == names(spec.role))
+        _require(set(os.listdir(fd)) == spec.names(spec.role))
         current = _directory(root)
         after = os.fstat(current)
         _require(_metadata(after, owner, 0o500))

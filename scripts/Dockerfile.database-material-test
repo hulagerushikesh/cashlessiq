@@ -1,0 +1,8 @@
+# Explicit offline DB installer/probe candidate; never a PostgreSQL service.
+FROM python:3.11-slim-bookworm
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /opt/ciq-material
+COPY scripts/composition_material.py scripts/composition_volume.py scripts/composition_database_volume.py ./scripts/
+USER 10002:10002
+ENTRYPOINT ["python", "-m", "scripts.composition_database_volume"]
+CMD []

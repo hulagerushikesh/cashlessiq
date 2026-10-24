@@ -595,6 +595,30 @@ request actors, full eight-service failure/recovery and exact cleanup. Elevated
 Mac pressure continues to defer builds/runs; none of the operational health,
 custody, source isolation or P2 exit gates is closed by this checkpoint.
 
+### Disposable DB volume installer and probe — 24 October
+
+A separate inactive DB helper now converts verified host staging into bounded
+private stdin, validates a canonical five-file archive before mutation, installs
+only into an empty explicit directory and supports independent read-back.
+The DB wire contract requires UID/GID 10002; the application contract remains
+10001 and its parser rejects database frames. Traversal, links, changed bytes,
+wrong archive ownership and trailing data deny before writes. Existing partial
+state is retained without retry or adoption. CLI identity and target directory
+are fixed; receipts contain no credentials or hashes.
+
+The candidate helper image has an allowlisted three-file build context and no
+credential generation dependency. It is not a PostgreSQL service image. The
+future pinned PostgreSQL image must independently establish UID/GID 10002.
+The owner still owes bounded journaled helper coordination, exact image/mount
+inspection, independent probe exit, PostgreSQL startup/TLS/grants and the full
+DB/controller/eight-service lifecycle. No image was built, no Docker was run,
+and host filesystem tests do not prove Linux ownership or mounted acceptance.
+
+Validation: 643 root tests and 409 targeted API tests pass, with repository
+lint, changed-file formatting and whitespace checks. Nine new regressions cover
+DB archive/install/read-back and CLI identity/receipt boundaries. No remote CI
+run or physical Docker acceptance is claimed for this checkpoint.
+
 ### Private disposable DB staging — 24 October
 
 The generated DB-only bundle can now be staged in a fresh owner-private host

@@ -100,6 +100,7 @@ class Material:
     fingerprint: str
     records: tuple = field(repr=False)
 
+    archive_owner = (10001, 10001)
     names = staticmethod(names)
 
     @staticmethod
@@ -233,15 +234,15 @@ class Staged:
         return self.expected.pack(snapshot)
 
 
-def _archive(snapshot):
+def _archive(snapshot, *, owner=(10001, 10001)):
     """One canonical wire encoding, also checked before disposable installation."""
     output = io.BytesIO()
     with tarfile.open(fileobj=output, mode="w", format=tarfile.USTAR_FORMAT) as archive:
         root = tarfile.TarInfo(".")
-        root.type, root.mode, root.uid, root.gid = tarfile.DIRTYPE, 0o500, 10001, 10001
+        root.type, root.mode, root.uid, root.gid = tarfile.DIRTYPE, 0o500, *owner
         archive.addfile(root)
         for name, data in sorted(snapshot.items()):
             entry = tarfile.TarInfo(name)
-            entry.size, entry.mode, entry.uid, entry.gid = len(data), 0o400, 10001, 10001
+            entry.size, entry.mode, entry.uid, entry.gid = len(data), 0o400, *owner
             archive.addfile(entry, io.BytesIO(data))
     return output.getvalue()
