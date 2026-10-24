@@ -1,0 +1,6 @@
+# Supply the locally built, inspected cluster image ID explicitly. No default.
+ARG CLUSTER_IMAGE
+FROM ${CLUSTER_IMAGE}
+COPY scripts/composition_database_bootstrap.py /opt/ciq-cluster/scripts/
+ENTRYPOINT ["python", "-m", "scripts.composition_database_bootstrap"]
+CMD []

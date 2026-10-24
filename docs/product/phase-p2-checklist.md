@@ -5,6 +5,43 @@ Last updated: 24 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Private-socket schema bootstrap — 24 October
+
+Added an explicit one-shot bootstrap helper and journaled two-container
+bootstrap/structural-probe coordinator. It requires the initialized cluster and
+verified material, durably records an exclusive ATTEMPTED marker inside PGDATA,
+then starts the owned PostgreSQL process with TCP listeners disabled. A new
+0700 Unix-socket directory lives inside the writable data volume; the helper
+root filesystem stays read-only and container networking stays `none`.
+
+A bounded read-only `SELECT 1` connection probe may retry connection failures.
+Database creation and the generated schema/grant/seed transaction run once via
+psql stdin with `--no-psqlrc`, `--no-password` and `ON_ERROR_STOP=1`; no credentials
+or SQL diagnostics are emitted. The generated material supplies the fixed local
+admin HBA rule. This private admin probe is not membership TLS/grant acceptance.
+The owned supervisor must exit zero after SIGINT fast shutdown before a
+BOOTSTRAPPED completion marker can be written. Failed SQL/startup/shutdown and
+partial markers remain ineligible for retry; forced shutdown retains failure.
+The outer owner still owes invocation-wide watchdog and container containment.
+See the PostgreSQL 16 [psql](https://www.postgresql.org/docs/16/app-psql.html),
+[connection](https://www.postgresql.org/docs/16/runtime-config-connection.html)
+and [shutdown](https://www.postgresql.org/docs/16/server-shutdown.html) references.
+
+The separate read-only probe checks material, cluster structure and the exact
+completion marker; it does not inspect live catalogs or independently prove
+SQL/grant correctness. A bootstrap image wrapper requires an explicit built
+cluster base and inherits its nonroot runtime. Neither image has been built or
+pinned locally. The preceding runtime checkpoint passed CI (40100083540).
+Fresh host preflight remains DEFER (pressure 2, load 4.97, less than 2 GiB Docker
+headroom, four existing containers); no PostgreSQL/container process was run.
+
+Offline tests cover marker retention/tampering, no duplicate bootstrap, private
+SQL transport, startup/SQL/shutdown failures, read-only probe retry limits and
+the shared coordinator's daemon uncertainty matrix. All 847 root tests passed;
+Ruff and `git diff --check` passed. Physical image acceptance,
+actual SQL/catalog validation, service startup, membership TLS/grant readiness
+and integrated lifecycle acceptance remain pending.
+
 ### PostgreSQL 16 image candidate and runtime preflight — 24 October
 
 Added `scripts/Dockerfile.database-cluster-test` with a narrowly allowlisted

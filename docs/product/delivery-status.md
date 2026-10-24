@@ -18,7 +18,9 @@ metadata. Empty DB data-directory preparation and its separate nonroot probe
 are now implemented/tested offline. Nonroot initdb coordination and a separate
 structural cluster probe are also implemented with offline fixtures. Actual
 PostgreSQL image packaging now has an unbuilt candidate plus account/binary
-preflight. Image build/inspection, initialization/bootstrap, launch/readiness and
+preflight. Private-socket schema bootstrap and its separate structural probe
+now have offline implementation/tests. Image build/inspection, physical
+initialization/bootstrap, launch/readiness and
 physical lifecycle acceptance remain pending; the host gate still defers Docker. Phase
 estimates are unchanged.
 

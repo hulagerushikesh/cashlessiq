@@ -7,8 +7,11 @@ from scripts.composition_helpers import HelpersDenied
 from scripts.composition_journal import fold
 
 
-def test_two_mount_nonroot_initializer_and_readonly_probe(tmp_path):
-    helper, _engine, journal, resources = setup(tmp_path, database_cluster=True)
+@pytest.mark.parametrize("bootstrap", [False, True])
+def test_two_mount_nonroot_initializer_and_readonly_probe(tmp_path, bootstrap):
+    helper, _engine, journal, resources = setup(
+        tmp_path, database_cluster=True, database_bootstrap=bootstrap
+    )
     try:
         assert helper.run()
         for mode in helper.modes:
@@ -40,8 +43,11 @@ def test_two_mount_nonroot_initializer_and_readonly_probe(tmp_path):
         "verify-capability",
     ],
 )
-def test_cluster_uncertainty_fences(tmp_path, fault):
-    helper, engine, journal, resources = setup(tmp_path, database_cluster=True, fault=fault)
+@pytest.mark.parametrize("bootstrap", [False, True])
+def test_cluster_uncertainty_fences(tmp_path, fault, bootstrap):
+    helper, engine, journal, resources = setup(
+        tmp_path, database_cluster=True, database_bootstrap=bootstrap, fault=fault
+    )
     try:
         with pytest.raises(HelpersDenied):
             helper.run()

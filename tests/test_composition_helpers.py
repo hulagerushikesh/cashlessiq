@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from scripts.composition_database import DatabaseStaging
+from scripts.composition_database_bootstrap_helpers import DatabaseBootstrapHelpers
 from scripts.composition_database_cluster_helpers import DatabaseClusterHelpers
 from scripts.composition_database_data_helpers import DatabaseDataHelpers
 from scripts.composition_database_helpers import DatabaseHelpers, fingerprint
@@ -35,6 +36,7 @@ def setup(
     provisioned=None,
     database_data=False,
     database_cluster=False,
+    database_bootstrap=False,
 ):
     plan = Inventory(
         "ciq-comp-abcdef123456",
@@ -52,9 +54,12 @@ def setup(
     else:
         resources = Journal(tmp_path / "resources", plan.prefix)
     journal = Journal(tmp_path / "helpers", plan.prefix)
+    database_cluster = database_cluster or database_bootstrap
     database = database or database_data or database_cluster
     kind = "data" if database_data else "state" if state else "material"
     first = "prepare" if database_data else "initialize" if state or database_cluster else "install"
+    if database_bootstrap:
+        first = "bootstrap"
     volume = plan.database_volume(kind) if database else plan.volume(role, kind)
     if database:
         role = "database"
@@ -187,7 +192,9 @@ def setup(
 
     engine = Engine()
     helper_type = (
-        DatabaseClusterHelpers
+        DatabaseBootstrapHelpers
+        if database_bootstrap
+        else DatabaseClusterHelpers
         if database_cluster
         else DatabaseDataHelpers
         if database_data
