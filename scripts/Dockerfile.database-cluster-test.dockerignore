@@ -1,0 +1,8 @@
+**
+!scripts/
+!scripts/composition_material.py
+!scripts/composition_volume.py
+!scripts/composition_database_volume.py
+!scripts/composition_database_data.py
+!scripts/composition_database_cluster.py
+!scripts/composition_database_runtime.py

@@ -979,3 +979,32 @@ Host gate remains DEFER (pressure 2, load 9.06); no Docker build/start or settin
 change. Still owed: PostgreSQL image packaging/digest inspection, physical initdb,
 closed schema/bootstrap, bounded service startup, TLS/grant probes and full
 lifecycle acceptance. Product phase estimates are unchanged.
+
+### PostgreSQL 16 image candidate and runtime preflight — 24 October
+
+Added `scripts/Dockerfile.database-cluster-test` with a narrowly allowlisted
+build context, Python 3.11 and PGDG PostgreSQL 16 server/client packages.
+The recipe disables automatic Debian cluster creation and package service
+starts, requires an empty package data directory, and creates the real
+`ciqdb` account at UID:GID 10002:10002. It declares no volumes, exposed ports,
+healthcheck or service startup. Its default entrypoint remains the explicit
+cluster helper; it is **an unbuilt candidate, not a pinned acceptance image**.
+Repository/package inputs float; the physical owner must build, inspect and
+pin the resulting image ID before use through the existing strict coordinator.
+The package source follows the [official PGDG Debian instructions](https://www.postgresql.org/download/linux/debian/).
+
+A closed runtime preflight runs at image build time and before cluster CLI
+request parsing or volume mutation. It verifies the current OS account,
+root-owned non-writable regular binaries at the fixed PostgreSQL 16 paths,
+and successful major-version output for initdb, postgres and psql. Each command
+has a five-second timeout, fixed environment and redacted failure diagnostics.
+This establishes package/account compatibility only; it does not prove schema,
+TLS, grants, readiness or process containment by the outer owner.
+
+Both preceding commits passed CI (40080642100 and 40080314225). The fresh host
+gate still returns DEFER: memory pressure level 2 and less than 2 GiB estimated
+Docker headroom (load 3.66, four existing containers). No image build or database
+process was attempted. Physical build/inspection, schema bootstrap, bounded
+service startup, authenticated TLS/grant probes and full lifecycle acceptance
+remain pending. Offline validation: all 802 root tests passed, including 13
+new runtime/CLI rejection cases; Ruff and `git diff --check` passed.

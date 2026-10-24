@@ -16,6 +16,7 @@ from pathlib import Path
 
 from scripts import composition_database_data as data
 from scripts import composition_volume as volume
+from scripts.composition_database_runtime import check as check_runtime
 from scripts.composition_database_volume import DatabaseVolume
 
 MATERIAL = Path("/database-material")
@@ -143,6 +144,7 @@ def main():
     try:
         data.require(len(sys.argv) == 2 and sys.argv[1] in {"initialize", "verify"})
         data.require((os.geteuid(), os.getegid()) == data.OWNER)
+        check_runtime()
         spec, _ = volume.parse(
             sys.stdin.buffer.read(volume.MAX_FRAME + 1), install=False, material_type=DatabaseVolume
         )

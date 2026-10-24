@@ -1,0 +1,27 @@
+# Disposable initdb/probe candidate only. Build, inspect and pin its image ID
+# before use; floating build inputs are not an accepted runtime digest.
+FROM python:3.11-slim-bookworm
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+# Suppress both Debian's automatic cluster creation and package service starts.
+RUN set -eux; \
+    printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d; \
+    chmod 755 /usr/sbin/policy-rc.d; \
+    mkdir -p /etc/postgresql-common; \
+    printf 'create_main_cluster = false\n' > /etc/postgresql-common/createcluster.conf; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl; \
+    install -d /usr/share/postgresql-common/pgdg; \
+    curl --fail --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc; \
+    printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main\n' > /etc/apt/sources.list.d/pgdg.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends postgresql-16 postgresql-client-16; \
+    test -z "$(ls -A /var/lib/postgresql)"; \
+    groupadd --gid 10002 ciqdb; \
+    useradd --uid 10002 --gid 10002 --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin ciqdb; \
+    rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/ciq-cluster
+COPY scripts/composition_material.py scripts/composition_volume.py scripts/composition_database_volume.py scripts/composition_database_data.py scripts/composition_database_cluster.py scripts/composition_database_runtime.py ./scripts/
+USER 10002:10002
+RUN python -m scripts.composition_database_runtime
+ENTRYPOINT ["python", "-m", "scripts.composition_database_cluster"]
+CMD []
