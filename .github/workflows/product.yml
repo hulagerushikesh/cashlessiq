@@ -61,3 +61,32 @@ jobs:
       - name: Stop stack
         if: always()
         run: make product-down
+  database-catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ciq-disposable-catalog
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+      - name: Disposable PostgreSQL catalog and privilege regression
+        env:
+          CIQ_CATALOG_TEST: '1'
+        run: |
+          uv sync --project apps/api --frozen
+          uv run --project apps/api pytest tests/integration/test_composition_database_catalog.py

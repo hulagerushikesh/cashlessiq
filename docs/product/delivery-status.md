@@ -24,6 +24,32 @@ initialization/bootstrap, launch/readiness and
 physical lifecycle acceptance remain pending; the host gate still defers Docker. Phase
 estimates are unchanged.
 
+### Bootstrap catalog gate — 24 October
+
+Bootstrap now runs a fixed read-only catalog assertion after the schema/seed
+transaction and before shutdown/completion. It requires a login-only SCRAM role
+with no role memberships, CONNECT without CREATE/TEMPORARY, ops USAGE without
+CREATE, no public-schema access, exactly the three expected ordinary tables
+owned by postgres without RLS, and only the expected column SELECT privileges
+without grant options. Missing columns, extra columns/tables and effective
+PUBLIC/role grants fail closed. SQL uses a fixed pg_catalog search path and
+3-second statement timeout; diagnostics remain suppressed and failures retain
+ATTEMPTED. This is an admin catalog check, not a membership TLS connection or
+exact seed/schema-type proof. The separate structural probe stays structural.
+
+A dedicated PostgreSQL 16 CI service tests the valid generated bootstrap plus
+24 privilege/schema mutations. Local runs skip that opt-in destructive suite;
+it accepts no caller DSN and requires the dedicated GitHub Actions opt-in.
+The service does not validate the unbuilt Mac helper image or physical owner.
+The PostgreSQL [privilege inquiry reference](https://www.postgresql.org/docs/16/functions-info.html)
+defines the effective table/column checks. Prior checkpoint CI 40103096427 passed.
+Fresh local headroom remains DEFER (pressure 2, less than 2 GiB Docker headroom,
+four existing containers); no local image build or PostgreSQL process was run.
+All 848 local root tests and repository Ruff checks pass; the dedicated CI
+integration module skips locally. New remote SQL results are pending.
+P2 remains open; image pinning, membership TLS readiness and full containment
+acceptance remain pending. No deployment, paid source access or P3 activation.
+
 ## How much is finished?
 
 **Approximately 35–40% overall; P2 approximately 60%.** These remain rough

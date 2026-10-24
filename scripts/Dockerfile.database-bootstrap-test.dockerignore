@@ -1,3 +1,4 @@
 **
 !scripts/
 !scripts/composition_database_bootstrap.py
+!scripts/composition_database_catalog.py

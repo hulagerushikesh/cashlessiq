@@ -17,6 +17,7 @@ from pathlib import Path
 from scripts import composition_database_cluster as cluster
 from scripts import composition_database_data as data
 from scripts import composition_volume as volume
+from scripts.composition_database_catalog import CATALOG_SQL
 from scripts.composition_database_runtime import BIN, ENV
 from scripts.composition_database_runtime import check as check_runtime
 from scripts.composition_database_volume import DatabaseVolume
@@ -146,6 +147,7 @@ def execute(root, material, body, *, socket=SOCKET):
         wait_ready(child, socket, deadline)
         sql(socket, "postgres", b"CREATE DATABASE synthetic TEMPLATE template0;\n")
         sql(socket, "synthetic", body)
+        sql(socket, "synthetic", CATALOG_SQL)
         stop(child)
         stopped = True
     finally:

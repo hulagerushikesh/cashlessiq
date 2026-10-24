@@ -77,7 +77,7 @@ def test_client_failure_no_retry_and_private_stdin(monkeypatch, tmp_path):
     assert options["env"] == {**bootstrap.ENV, "PGCONNECT_TIMEOUT": "3"}
 
 
-@pytest.mark.parametrize("fault", [None, "sql", "startup", "shutdown"])
+@pytest.mark.parametrize("fault", [None, "sql", "catalog", "startup", "shutdown"])
 def test_owned_server_lifecycle(tmp_path, monkeypatch, fault):
     directory = tempfile.TemporaryDirectory(dir="/tmp", prefix="ciq-bs-")
     endpoint = Path(directory.name) / "socket"
@@ -113,7 +113,7 @@ def test_owned_server_lifecycle(tmp_path, monkeypatch, fault):
 
     def sql(path, database, body):
         events.append(("sql", database, body))
-        if fault == "sql":
+        if fault == "sql" or (fault == "catalog" and body == bootstrap.CATALOG_SQL):
             raise DataDenied()
 
     monkeypatch.setattr(bootstrap.subprocess, "Popen", popen)
@@ -126,10 +126,14 @@ def test_owned_server_lifecycle(tmp_path, monkeypatch, fault):
                 bootstrap.execute(tmp_path, tmp_path, b"secret body", socket=endpoint)
         else:
             bootstrap.execute(tmp_path, tmp_path, b"secret body", socket=endpoint)
-            assert [e[1] for e in events if e[0] == "sql"] == ["postgres", "synthetic"]
+            assert [e[1] for e in events if e[0] == "sql"] == ["postgres", "synthetic", "synthetic"]
+            assert [e[2] for e in events if e[0] == "sql"][-1] == bootstrap.CATALOG_SQL
             assert ("signal", signal.SIGINT) in events
         if fault == "sql":
             assert len([e for e in events if e[0] == "sql"]) == 1
+            assert ("signal", signal.SIGINT) in events
+        if fault == "catalog":
+            assert len([e for e in events if e[0] == "sql"]) == 3
             assert ("signal", signal.SIGINT) in events
         if fault == "shutdown":
             assert ("kill", child.pid, signal.SIGKILL) in events
