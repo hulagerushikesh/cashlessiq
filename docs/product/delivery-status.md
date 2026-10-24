@@ -38,7 +38,13 @@ ATTEMPTED. This is an admin catalog check, not a membership TLS connection or
 exact seed/schema-type proof. The separate structural probe stays structural.
 
 A dedicated PostgreSQL 16 CI service tests the valid generated bootstrap plus
-24 privilege/schema mutations. Local runs skip that opt-in destructive suite;
+24 privilege/schema mutations, plus an actual SET ROLE membership query over
+all six profiles and nine permission-denied operations (SQLSTATE 42501).
+All 35 live PostgreSQL cases passed in the database-catalog job of
+[CI 40107013580](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40107013580)
+at commit 2e9db27. The broader foundation job is still running. This uses local
+admin SET ROLE, not password/TLS authentication.
+Local runs skip that opt-in destructive suite;
 it accepts no caller DSN and requires the dedicated GitHub Actions opt-in.
 The service does not validate the unbuilt Mac helper image or physical owner.
 The PostgreSQL [privilege inquiry reference](https://www.postgresql.org/docs/16/functions-info.html)
@@ -46,7 +52,8 @@ defines the effective table/column checks. Prior checkpoint CI 40103096427 passe
 Fresh local headroom remains DEFER (pressure 2, less than 2 GiB Docker headroom,
 four existing containers); no local image build or PostgreSQL process was run.
 All 848 local root tests and repository Ruff checks pass; the dedicated CI
-integration module skips locally. New remote SQL results are pending.
+integration module skips locally. The live catalog job also passed at the
+preceding implementation commit 170bdb4 (25 cases before role-operation tests).
 P2 remains open; image pinning, membership TLS readiness and full containment
 acceptance remain pending. No deployment, paid source access or P3 activation.
 
