@@ -262,6 +262,22 @@ class Launcher:
         if observed != self._image_configs.get(self.plan.image(role)):
             raise ValueError("Disposable runtime override denied")
 
+    def running(self, role, incarnation):
+        """Fresh exact runtime check supporting, never manufacturing, readiness."""
+        try:
+            if self.closed or self.owned.get(role) != incarnation or role not in self.owned:
+                return False
+            if self.journal is not None:
+                self.journal.check()
+            row = self._read("inspect", incarnation)
+            self._runtime_config(role, row)
+            return (
+                self._identity(role, row) == incarnation
+                and self.plan.check_container(role, row, running=True) == incarnation
+            )
+        except Exception:
+            return False
+
     def reconcile(self, role):
         if role not in self.allocating:
             return False

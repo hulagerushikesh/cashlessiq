@@ -1,9 +1,30 @@
 # Product P2 — read-only case workspace
 
 Status: In progress — synthetic-only alpha  
-Last updated: 23 October 2026
+Last updated: 24 October 2026
 
 ## Latest checkpoint — authenticated inspection
+
+### Controller lifecycle and disposable DB preparation — 24 October
+
+- [x] Journaled launcher/controller bridge with explicit readiness receipts plus
+  fresh runtime inspection; all eight runtimes rechecked before admission/delivery.
+- [x] Separate request admission/completion, exact operation/case binding, summary
+  revalidation, no late/duplicate/closed delivery and no payloads in lifecycle audit.
+- [x] Partial allocations included in containment even without supervisor handles;
+  uncertain cancellation retains capacity and unknown intentions remain UNKNOWN.
+- [x] Two-tenant/all-role canonical loopback TLS requests through the controller;
+  fake engine, fake clock, explicit synthetic receipts, outer-owned listener cleanup.
+- [x] In-memory DB TLS/credential/HBA/bootstrap preparation bound to member-db;
+  one schema/grant/six-profile transaction and membership-only credential staging.
+  CA signing key, DB leaf/admin key material and bootstrap never enter role bundles.
+- [x] 624 root and 409 targeted API tests, repository lint, changed-Python
+  formatting and whitespace checks pass. No remote CI run for this checkpoint yet.
+- [ ] Bounded request actors/watchdog and actual DB/controller auxiliary launch,
+  private DB bundle installation, PostgreSQL TLS/grants/readiness, mounted UID
+  checks, physical all-eight lifecycle and exact removal still required.
+- [ ] Heavy Docker execution deferred at Mac memory pressure 2. No full
+  API/browser rerun, live source access, operational activation, deployment or P3.
 
 ### Journaled state-helper coordination — 23 October
 

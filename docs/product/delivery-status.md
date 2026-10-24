@@ -1,6 +1,6 @@
 # Product delivery — owner dashboard
 
-Updated 23 October 2026. This page summarizes the current product plan; the
+Updated 24 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
@@ -72,8 +72,9 @@ The owner approved preparing the [no-purchase Mac/Docker integration design](../
 It now specifies topology, proposed manual encrypted-image custody, clock/fence
 blockers and one bounded next service-composition batch. The owner subsequently
 approved that disposable implementation with a Mac configuration/load check.
-Lightweight preparation now includes seven independent authority-state fixtures
-and a shared eight-logical-role, one-process TLS test world. Both tenants/all
+Lightweight preparation now includes seven independent authority-state fixtures,
+a journaled launcher/controller bridge, disposable DB material generation and a
+shared eight-logical-role, one-process TLS test world. Both tenants/all
 three roles and failure/cleanup paths are exercised without live source access.
 This is not the separate-container/supervisor acceptance batch or a deployment.
 The [resource preflight](mac-resource-check.md) currently refuses heavy execution

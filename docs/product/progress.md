@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 23 October 2026
+Last updated: 24 October 2026
 Current phase: **P2 / M2 — synthetic-only, read-only case workspace**
 
 This is the current-status index. The migration plan defines sequence; phase
@@ -54,6 +54,39 @@ do not change the public website or make the disabled live route available.
   no grant option, only RUSHIKESH2001 as grantee. PUBLIC caveat remains open.
 
 ## P2 remaining work — in order
+
+### Controller lifecycle and disposable DB preparation — 24 October
+
+The inactive owner-side controller now joins the journaled launcher to the
+existing serialized supervisor. Explicit readiness receipts must also pass
+fresh exact runtime inspection; polling/admission and result completion recheck
+all eight runtimes. Requests are admitted separately from transport, so the
+future bounded request actor and independent watchdog remain external duties.
+Validated summaries must match the original operation object and request ID;
+late, duplicate, changed-runtime and closed-delivery results cannot escape.
+
+Stop includes launcher-owned partial allocations that never returned a handle
+to the supervisor. Unconfirmed request cancellation retains capacity even after
+container exit; unknown journal intentions remain UNKNOWN. This is containment
+of app/request work, not removal or proof that DB/controller auxiliaries stopped.
+The real loopback TLS chain passes through this bridge for both tenants/all
+three roles, using fake daemon observations and explicitly supplied test receipts.
+
+Disposable DB preparation now generates matching one-hour TLS material and a
+fresh restricted membership credential for the exact member-db edge. Its HBA
+permits only that membership IPv4 address, and its single bootstrap transaction
+creates narrow column grants plus all six synthetic identities. Only membership
+receives its credential/CA; the DB leaf key, admin password and bootstrap SQL
+remain in the separate in-memory server bundle. No files, DB objects, images or
+containers are created by preparation. Existing explicit seed behavior is reused.
+
+624 root and 409 targeted API tests pass, with lint and changed-file formatting. Mac memory pressure remains 2, so physical acceptance is deferred.
+Next: privately install the DB bundle, wire bounded DB/controller auxiliary
+launch/probes and request actors, then run the unified eight-service lifecycle
+and exact cleanup once headroom permits. PostgreSQL TLS/grants, mounted ownership,
+actual readiness, watchdog/exit/removal and operational custody remain unproven.
+No P2 exit, completion-estimate change, normal activation, deployment or Snowflake
+work is implied by these offline integration results.
 
 ### Journaled state-helper coordination — 23 October
 
