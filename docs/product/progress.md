@@ -17,7 +17,7 @@ Local validation passed 913 root tests, the 1,511-test broader API run, the fina
 the two new end-to-end MVP browser checks. The browser flow uses five different
 synthetic perspectives and covers policy proposal, approval, activation,
 assessment, final medical review, restricted notes and PDF download. The extra
-outbox rollback regression passes in the final focused run. Fresh full CI follows.
+outbox rollback regression passes in the final focused run. Full product CI at `517215a` now passes: [40203411894](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40203411894). Final hardening adds seven API regressions and mobile layout checks; the 37 focused command/MVP tests pass.
 
 The current localhost app uses the existing API/web images with read-only source
 and locked pure Python dependencies. API readiness passes at migration
@@ -45,8 +45,8 @@ The frontend production dependency audit found `fast-uri` 3.1.8 through AJV.
 The lockfile now resolves the compatible patched 3.1.9; all 41 client contract
 tests pass and a fresh `npm audit --omit=dev` reports zero known vulnerabilities.
 The [maintainer advisory](https://github.com/advisories/GHSA-w74x-v6f9-j3xg)
-identifies 3.1.9 as patched. Existing Docker dependencies are not hot-patched;
-fresh builds pick up the lockfile. This scan is not a claim of zero application risk.
+identifies 3.1.9 as patched. The local web runtime now uses a checksum-verified read-only 3.1.9 mount;
+the underlying image is unchanged and fresh builds use the lockfile. This scan is not a claim of zero application risk.
 
 This is the current-status index. The migration plan defines sequence; phase
 checklists contain verification evidence. Earlier entries in those checklists

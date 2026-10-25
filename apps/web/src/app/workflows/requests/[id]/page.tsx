@@ -70,7 +70,7 @@ export default async function RequestPage({
       <Link href="/workflows" className="text-sm text-teal-800 underline">
         Back to testing workspace
       </Link>
-      <h1 className="mt-5 text-3xl font-semibold">Request {id}</h1>
+      <h1 className="mt-5 break-words text-3xl font-semibold">Request {id}</h1>
       {result && (
         <p role="status" className="mt-4 rounded bg-amber-50 p-4">
           {result === "saved"

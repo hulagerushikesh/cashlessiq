@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { mvpBrowserOptions } from "./tests/mvp_browser/runtime";
 
 export default defineConfig({
   testDir: "tests/mvp_browser",
@@ -10,7 +11,7 @@ export default defineConfig({
   retries: 0,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:3000",
+    ...mvpBrowserOptions(),
     trace: "retain-on-failure",
     actionTimeout: 10000,
     navigationTimeout: 20000,

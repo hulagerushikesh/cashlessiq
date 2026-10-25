@@ -17,7 +17,7 @@ Local validation passed 913 root tests, the 1,511-test broader API run, the fina
 the two new end-to-end MVP browser checks. The browser flow uses five different
 synthetic perspectives and covers policy proposal, approval, activation,
 assessment, final medical review, restricted notes and PDF download. The extra
-outbox rollback regression passes in the final focused run. Fresh full CI follows.
+outbox rollback regression passes in the final focused run. Full product CI at `517215a` now passes: [40203411894](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40203411894). Final hardening adds seven API regressions and mobile layout checks; the 37 focused command/MVP tests pass.
 
 The current localhost app uses the existing API/web images with read-only source
 and locked pure Python dependencies. API readiness passes at migration

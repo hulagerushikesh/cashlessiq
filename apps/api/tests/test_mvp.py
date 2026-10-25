@@ -16,12 +16,14 @@ from sqlalchemy.orm import Session
 from test_identity import bearer
 from test_reviews import command
 
-from ciq_api.auth import LOCAL_ISSUER
+from ciq_api.auth import LOCAL_ISSUER, Principal, resolve_identity
 from ciq_api.jobs import claim, complete, compute, mirror_outbox, run_once
 from ciq_api.main import create_app
 from ciq_api.models import AppUser, Membership, Tenant
+from ciq_api.mvp import lock_who
 from ciq_api.mvp_contracts import PolicyProposal
 from ciq_api.mvp_models import AnalyticsEvent, CaseInputRevision, DocumentUpload, MvpEvent, WorkJob
+from ciq_api.reviews import lock_actor
 from ciq_api.seed import MVP_PROFILES, PROFILES, TENANT_ID
 
 
@@ -116,6 +118,10 @@ def test_complete_submitted_request_assessment_review_and_analytics(mvp, setting
         payable_inr=95000,
     )
     assert decision.status_code == 200, decision.text
+    queue = mvp.get("/v3/requests", headers=bearer(settings)).json()["items"]
+    assert queue[0]["workflow_state"] == "APPROVED_WITH_DEDUCTIONS"
+    assert queue[0]["assignee_name"] == "Dr. Neel Shah"
+    assert queue[0]["sla_breached"] is False
     assert mirror_outbox(engine) == 2
     assert mirror_outbox(engine) == 0
     analytics = mvp.get("/v3/analytics", headers=bearer(settings, "auditor")).json()
@@ -525,3 +531,52 @@ def test_policy_wording_upload_extraction_and_version_binding(mvp, settings, eng
     assert run_once(engine)
     saved = mvp.get(f"/v3/policies/{proposed['policy_id']}", headers=bearer(settings)).json()
     assert saved["proposal"]["wording_document_id"] == document
+
+
+@pytest.mark.parametrize("entity", ["membership", "user", "tenant"])
+@pytest.mark.parametrize("boundary", ["review", "mvp"])
+def test_write_lock_refreshes_previously_loaded_identity(engine, entity, boundary):
+    from fastapi import HTTPException
+
+    actor = UUID(PROFILES["processor"][0])
+    with Session(engine) as cached:
+        # Keep strong references to reproduce a session cache surviving the
+        # identity read. A write lock must refresh rows, not trust cached flags.
+        membership = cached.get(Membership, (TENANT_ID, actor))
+        user = cached.get(AppUser, actor)
+        tenant = cached.get(Tenant, TENANT_ID)
+        who = resolve_identity(cached, Principal(LOCAL_ISSUER, "processor", TENANT_ID), "local")
+        with Session(engine) as external, external.begin():
+            target = external.get(
+                {"membership": Membership, "user": AppUser, "tenant": Tenant}[entity],
+                (TENANT_ID, actor)
+                if entity == "membership"
+                else actor
+                if entity == "user"
+                else TENANT_ID,
+            )
+            target.active = False
+        assert membership.active and user.active and tenant.active
+        with pytest.raises(HTTPException) as denied:
+            lock_actor(cached, who) if boundary == "review" else lock_who(
+                cached, who, {"processor"}
+            )
+        assert denied.value.status_code == 403
+
+
+def test_chunked_json_is_bounded_before_parsing_or_writing(mvp, settings, engine):
+    def chunks():
+        yield b'{"padding":"'
+        for _ in range(65):
+            yield b"x" * 8192
+        yield b'"}'
+
+    result = mvp.post(
+        "/v3/requests",
+        headers=bearer(settings) | {"Content-Type": "application/json"},
+        content=chunks(),
+    )
+    assert result.status_code == 413
+    assert result.headers["cache-control"] == "no-store"
+    with Session(engine) as db:
+        assert db.scalar(select(func.count()).select_from(MvpEvent)) == 0

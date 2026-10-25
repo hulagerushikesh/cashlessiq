@@ -62,7 +62,7 @@ export default async function ReviewPage({
       >
         Supporting documents and assessment
       </Link>
-      <h1 className="mt-5 text-3xl font-semibold">Review {record.request_id}</h1>
+      <h1 className="mt-5 break-words text-3xl font-semibold">Review {record.request_id}</h1>
       <p className="mt-2 text-sm text-slate-600">
         Synthetic testing · {record.state.replaceAll("_", " ")} · Version {record.version}
       </p>
@@ -192,7 +192,7 @@ export default async function ReviewPage({
             <p className="text-xs text-slate-500">
               {c.actor.display_name} · {new Date(c.created_at).toISOString()} · {c.visibility}
             </p>
-            <p className="mt-2 whitespace-pre-wrap text-sm">{c.body}</p>
+            <p className="mt-2 break-words whitespace-pre-wrap text-sm">{c.body}</p>
           </article>
         ))}
       </section>

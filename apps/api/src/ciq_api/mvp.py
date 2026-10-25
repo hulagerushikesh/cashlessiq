@@ -38,12 +38,23 @@ from ciq_api.seed import MVP_PROFILES, PROFILES
 
 
 def lock_who(db, who, roles):
-    tenant = db.scalar(select(Tenant).where(Tenant.id == who.tenant.id).with_for_update())
-    user = db.scalar(select(AppUser).where(AppUser.id == who.user.id).with_for_update())
+    tenant = db.scalar(
+        select(Tenant)
+        .where(Tenant.id == who.tenant.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    user = db.scalar(
+        select(AppUser)
+        .where(AppUser.id == who.user.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     member = db.scalar(
         select(Membership)
         .where(Membership.tenant_id == who.tenant.id, Membership.user_id == who.user.id)
         .with_for_update()
+        .execution_options(populate_existing=True)
     )
     if (
         not tenant
@@ -196,6 +207,11 @@ def register_mvp(app, config, identity, get_session, case_repository):
         from ciq_api.review_models import ReviewCase
 
         workflow = {r.request_id: db.get(ReviewCase, (who.tenant.id, r.request_id)) for r in rows}
+        assignee_ids = {item.assignee_id for item in workflow.values() if item and item.assignee_id}
+        assignees = {
+            u.id: u.display_name
+            for u in db.scalars(select(AppUser).where(AppUser.id.in_(assignee_ids)))
+        }
         return {
             "total": db.scalar(
                 select(func.count())
@@ -210,6 +226,9 @@ def register_mvp(app, config, identity, get_session, case_repository):
                     if workflow[r.request_id]
                     else ("DRAFT_READY" if r.record else "READY_FOR_ASSESSMENT"),
                     "assignee_id": workflow[r.request_id].assignee_id
+                    if workflow[r.request_id]
+                    else None,
+                    "assignee_name": assignees.get(workflow[r.request_id].assignee_id)
                     if workflow[r.request_id]
                     else None,
                     "member_reference": r.inputs["member_reference"],
@@ -339,6 +358,7 @@ def register_mvp(app, config, identity, get_session, case_repository):
             select(SubmittedCase)
             .where(SubmittedCase.tenant_id == who.tenant.id, SubmittedCase.request_id == request_id)
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         if case is None:
             raise HTTPException(404, "Submitted case not found")
@@ -346,6 +366,7 @@ def register_mvp(app, config, identity, get_session, case_repository):
             select(ReviewCase)
             .where(ReviewCase.tenant_id == who.tenant.id, ReviewCase.request_id == request_id)
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         if (
             not review
@@ -465,7 +486,12 @@ def register_mvp(app, config, identity, get_session, case_repository):
         prior = prior_event(db, who, payload.command_id, digest)
         if prior:
             return prior.payload
-        job = db.scalar(select(WorkJob).where(WorkJob.id == job_id).with_for_update())
+        job = db.scalar(
+            select(WorkJob)
+            .where(WorkJob.id == job_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
         if job.state != "dead":
             raise HTTPException(409, "Only dead jobs can be explicitly retried")
         previous_attempts = job.attempts
@@ -790,6 +816,7 @@ def register_mvp(app, config, identity, get_session, case_repository):
             select(Membership)
             .where(Membership.tenant_id == who.tenant.id, Membership.user_id == user_id)
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
         if member is None:
             raise HTTPException(404, "Membership not found")

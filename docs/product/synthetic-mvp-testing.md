@@ -42,7 +42,7 @@ this small private test. The API container is capped at 512 MiB and one CPU.
 
 The Mac's heavy-build preflight still reports elevated memory pressure. The
 development refresh therefore uses the **existing** API image plus read-only
-source, migration and pure Python dependency mounts. It does not claim to have
+source, migration and locked pure Python/JavaScript dependency mounts. It does not claim to have
 rebuilt the image. Prepare these mounts with:
 
 ```sh
@@ -50,7 +50,9 @@ rebuilt the image. Prepare these mounts with:
 ```
 
 This builds and verifies the small domain wheel and verifies the universal
-`pypdf` wheel against the committed lock hash. It never changes Docker services.
+`pypdf` wheel against the committed lock hash. It also verifies the URI-parser
+archive against npm lockfile integrity and mounts the patched JavaScript package
+read-only. It never changes Docker services.
 The generated override is ignored at `output/mvp-local/compose.json`.
 
 After backing up the local PostgreSQL database, refresh only the owned API,
@@ -100,12 +102,33 @@ these are the newly added workflows to exercise next.
   and data limits plus a parent wall timeout. Direct macOS parser tests have
   CPU/wall/input bounds; macOS rejects those address/data limits.
 - Audit, proposals, analytics events and input revisions are forward-only.
-  Disable the workflow feature on the current migrated binary to recover;
+  Disable both `CIQ_SYNTHETIC_WORKFLOWS` and `CIQ_LOCAL_EMBEDDED_WORKER` on the
+  current migrated binary to recover;
   never delete audit history or downgrade it. Retain the pre-migration backup.
-- The read-only development overlay keeps the underlying old API/web images.
-  The web image's older installed transitive dependencies require a fresh build
-  when the heavy-build preflight permits; fresh builds include the URI-parser
-  patch already committed in the lockfile.
+- The read-only development overlay keeps the underlying API/web images. The
+  running web parser now reports the patched 3.1.9 version from the verified
+  read-only mount. Fresh immutable builds use the same committed lockfile.
 - Governed source selection, external custody, real AI/search and Snowflake
   analytics delivery remain separate, unactivated integrations. GCP deployment
   follows engineering validation and explicit cost approval.
+
+
+## Validation checkpoint
+
+Implementation `517215a` passed
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40203411894):
+913 root, 1,512 API, 72 membership, 35 database-catalog, 41 client, 26 browser,
+15 source UI and two MVP browser checks, plus contracts/types/build/containment.
+Its [production preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40203411961)
+also passed all 37 existing owner-gate and secure-cookie checks.
+
+Final hardening adds seven API regressions: previously cached user, membership
+or tenant state must be refreshed under a write lock, and chunked JSON must be
+bounded before parsing. All 37 focused reviewer/MVP tests pass. The two MVP
+browser checks also pass with mobile review/request layouts. One earlier local
+extraction failure was successfully retried through the actual operations UI,
+with its retry reason and previous attempt count retained in governance history.
+A fresh CI run will also exercise the complete MVP on the standalone production
+server behind its owner-password gate and constrained container budgets. That
+smoke uses a disposable loopback HTTP origin only after the independent HTTPS
+origin and secure-cookie checks; prepared remote origins remain HTTPS.

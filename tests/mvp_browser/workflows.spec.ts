@@ -1,8 +1,9 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import path from "node:path";
+import { mvpBrowserOptions } from "./runtime";
 
 async function login(browser: Browser, role: string) {
-  const context = await browser.newContext();
+  const context = await browser.newContext(mvpBrowserOptions());
   const page = await context.newPage();
   await page.goto("/login");
   await page.getByLabel("Review role").selectOption(role);
@@ -121,6 +122,15 @@ test("policy approval, queued assessment, human decision and document visibility
     );
     expect(download.status()).toBe(200);
     expect(download.headers()["content-disposition"]).toContain("attachment;");
+    await medical.page.setViewportSize({ width: 390, height: 844 });
+    await medical.page.goto(`/reviews/${requestId}`);
+    expect(
+      await medical.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await medical.page.goto(requestUrl);
+    expect(
+      await medical.page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
     await medical.page.screenshot({ path: "test-results/mvp/request.png", fullPage: true });
     await approver.page.screenshot({ path: "test-results/mvp/policy.png", fullPage: true });
   } finally {

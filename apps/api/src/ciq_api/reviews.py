@@ -104,12 +104,23 @@ def review_view(session, who, request_id, page=1):
 def lock_actor(session, who):
     # A tenant lock serializes this small synthetic MVP's writes. Locks on all
     # identity rows keep revocation from racing a committed reviewer action.
-    tenant = session.scalar(select(Tenant).where(Tenant.id == who.tenant.id).with_for_update())
-    user = session.scalar(select(AppUser).where(AppUser.id == who.user.id).with_for_update())
+    tenant = session.scalar(
+        select(Tenant)
+        .where(Tenant.id == who.tenant.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    user = session.scalar(
+        select(AppUser)
+        .where(AppUser.id == who.user.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     member = session.scalar(
         select(Membership)
         .where(Membership.tenant_id == who.tenant.id, Membership.user_id == who.user.id)
         .with_for_update()
+        .execution_options(populate_existing=True)
     )
     if (
         not tenant
@@ -205,6 +216,7 @@ def execute(session, who, snapshot, payload):
                     ReviewCommandReceipt.command_id == payload.command_id,
                 )
                 .with_for_update()
+                .execution_options(populate_existing=True)
             )
             if receipt.request_hash != fingerprint:
                 raise HTTPException(409, "Command ID was already used for another request")
@@ -221,6 +233,7 @@ def execute(session, who, snapshot, payload):
                 select(ReviewCase)
                 .where(ReviewCase.tenant_id == who.tenant.id, ReviewCase.request_id == request_id)
                 .with_for_update()
+                .execution_options(populate_existing=True)
             )
             if case.version != payload.expected_version:
                 raise HTTPException(409, "Case changed; refresh before submitting again")
@@ -254,6 +267,7 @@ def execute(session, who, snapshot, payload):
                             AppUser.id == payload.assignee_id, Membership.tenant_id == who.tenant.id
                         )
                         .with_for_update()
+                        .execution_options(populate_existing=True)
                     ).one_or_none()
                     if (
                         target is None

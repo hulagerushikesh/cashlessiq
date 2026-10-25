@@ -37,6 +37,8 @@ export type RequestSummary = {
   request_id: string;
   member_reference: string;
   priority: string;
+  workflow_state: string;
+  assignee_name: string | null;
   due_at: string;
   sla_breached: boolean;
   outcome: string | null;

@@ -73,12 +73,15 @@ export default async function Workflows({
                 {r.member_reference}
               </Link>
               <p className="mt-1 text-slate-500">
-                {r.priority} · {r.outcome?.replaceAll("_", " ") ?? "Assessment pending"} ·{" "}
-                {rupees(r.payable_inr)}
+                {r.priority} · {r.workflow_state.replaceAll("_", " ")} ·{" "}
+                {r.assignee_name ?? "Unassigned"} ·{" "}
+                {r.outcome?.replaceAll("_", " ") ?? "Assessment pending"} · {rupees(r.payable_inr)}
               </p>
             </div>
             <p className={r.sla_breached ? "text-red-800" : "text-slate-500"}>
-              {r.sla_breached ? "SLA overdue" : "Due"} · {new Date(r.due_at).toISOString()}
+              {["APPROVED", "APPROVED_WITH_DEDUCTIONS"].includes(r.workflow_state)
+                ? "Review completed"
+                : `${r.sla_breached ? "SLA overdue" : "Due"} · ${new Date(r.due_at).toISOString()}`}
             </p>
           </article>
         ))}
