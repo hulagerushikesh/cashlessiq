@@ -70,6 +70,12 @@ cookies, tokens, `.env.product.local`, passwords or real patient documents.
 
 ## Stop and limitations
 
+The development web service mounts only `apps/web/src` read-only. Frontend
+source edits become visible through Next.js development reload without rebuilding
+an image or starting another stack. Dependencies, API changes and web build
+configuration still need their normal rebuild. The production owner-preview
+composition does not use this development mount.
+
 `make product-down` stops local services but retains PostgreSQL data. Restart
 with `make product-up`. Existing local credentials stay in the ignored owner-only
 environment file; do not delete it or the DB volume to troubleshoot casually.

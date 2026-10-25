@@ -10,9 +10,16 @@ Local navigation follow-up: filtered queue links now carry the bounded reference
 recommendation and page into case detail, and “Back to case queue” restores that
 context. Unknown case IDs have a workspace recovery page with a queue link,
 without a substitute recommendation. Existing browser journeys now check the
-filtered round trip and unknown-case recovery. Local lint/types pass; the new
-build/browser run is pending. The running Docker web image is unchanged until
-a resource-admitted refresh; current sign-in and API readiness still respond.
+filtered round trip and unknown-case recovery. Local lint/types pass; all 26
+browser checks passed against the refreshed local app (34.7 seconds, one worker).
+The development composition now mounts only `apps/web/src` read-only, so source
+edits reload without image builds. Only the existing web container was replaced
+using its existing development image, with builds/pulls/dependency changes
+disabled. API, database and Redis container IDs are unchanged; web remains healthy
+and loopback-only. No second stack or cloud resource was started.
+Implementation `8aa2511` passed
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40185775870)
+and the [37-check production preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40185775770).
 
 Local Docker already supports the current tests. The production-server preview
 passed [37 HTTP checks under small limits](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40180267477),

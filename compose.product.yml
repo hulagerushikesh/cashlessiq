@@ -50,6 +50,13 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+    volumes:
+      - type: bind
+        source: ./apps/web/src
+        target: /app/apps/web/src
+        read_only: true
+        bind:
+          create_host_path: false
     environment:
       CIQ_ENVIRONMENT: local
       CIQ_AUTH_MODE: local

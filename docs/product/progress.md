@@ -16,6 +16,20 @@ builds, registry storage and VM deployment are not authorized. Keep the existing
 unbilled GCP project and prepared files for a future decision; continue current
 application testing locally without a second complete stack.
 
+### Local review navigation refreshed — 25 October
+
+Filtered queue → case → queue navigation now retains the reference,
+recommendation and page. Unknown case IDs show a recovery link without a
+substitute record. Implementation `8aa2511` passed
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40185775870)
+and the [37-check production preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40185775770).
+The existing local development web container was then refreshed without an image
+build or pull, using a read-only mount of `apps/web/src`. Its API, database and
+Redis container IDs are unchanged, and all 26 browser checks passed locally in
+34.7 seconds with one worker. These source changes are visible on localhost;
+dependencies/build configuration still require rebuilds. No duplicate stack,
+cloud deployment or new spend. P2's governed-source/integration exits remain open.
+
 ### Two-person runtime verified; dedicated GCP target prepared — 25 October
 
 The owner clarified that this is private development/testing before an MVP,
