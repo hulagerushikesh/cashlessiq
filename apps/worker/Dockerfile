@@ -5,6 +5,7 @@ RUN pip install --no-cache-dir uv==0.11.25
 COPY apps/worker/pyproject.toml apps/worker/uv.lock ./
 COPY apps/worker/src ./src
 COPY packages/domain /build/packages/domain
+COPY src/cashlessiq/rules /build/src/cashlessiq/rules
 COPY src/cashlessiq/decision_schema.py src/cashlessiq/source_decision.py src/cashlessiq/source_history.py src/cashlessiq/source_recommendation.py /build/src/cashlessiq/
 COPY apps/api/src/ciq_api/__init__.py apps/api/src/ciq_api/contracts.py apps/api/src/ciq_api/source_contracts.py apps/api/src/ciq_api/source_identity.py apps/api/src/ciq_api/source_models.py apps/api/src/ciq_api/source_alpha.py apps/api/src/ciq_api/source_scopes.py apps/api/src/ciq_api/validation_worker.py apps/api/src/ciq_api/worker_authority.py apps/api/src/ciq_api/worker_delegation.py apps/api/src/ciq_api/worker_replay.py apps/api/src/ciq_api/worker_clock.py apps/api/src/ciq_api/worker_transport.py apps/api/src/ciq_api/worker_membership.py /build/apps/api/src/ciq_api/
 COPY apps/api/src/ciq_api/worker_health.py apps/api/src/ciq_api/worker_guard_state.py apps/api/src/ciq_api/worker_guard_health.py apps/api/src/ciq_api/worker_guard_authority.py apps/api/src/ciq_api/worker_guard_transport.py /build/apps/api/src/ciq_api/

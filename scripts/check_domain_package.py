@@ -9,7 +9,18 @@ from pathlib import Path
 from zipfile import ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULES = ("decision_schema", "source_decision", "source_history", "source_recommendation")
+MODULES = (
+    "decision_schema",
+    "source_decision",
+    "source_history",
+    "source_recommendation",
+    "rules/__init__",
+    "rules/models",
+    "rules/engine",
+    "rules/payable",
+    "rules/waiting_periods",
+    "rules/sla",
+)
 
 SMOKE = """
 import importlib.util
@@ -32,6 +43,8 @@ except SourceDecisionError:
     pass
 else:
     raise AssertionError('Invalid saved row became missing')
+from cashlessiq_domain.rules import evaluate_case
+assert callable(evaluate_case)
 assert callable(observe_member_history)
 print(json.dumps(DECISION_SCHEMA, sort_keys=True))
 """

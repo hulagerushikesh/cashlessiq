@@ -50,3 +50,11 @@
 !src/cashlessiq/source_recommendation.py
 **/__pycache__
 **/*.pyc
+
+!src/cashlessiq/rules/
+!src/cashlessiq/rules/__init__.py
+!src/cashlessiq/rules/models.py
+!src/cashlessiq/rules/engine.py
+!src/cashlessiq/rules/payable.py
+!src/cashlessiq/rules/waiting_periods.py
+!src/cashlessiq/rules/sla.py

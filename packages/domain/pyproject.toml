@@ -20,8 +20,22 @@ packages = ["src/cashlessiq_domain"]
 "../../src/cashlessiq/source_history.py" = "cashlessiq_domain/source_history.py"
 "../../src/cashlessiq/source_recommendation.py" = "cashlessiq_domain/source_recommendation.py"
 
+"../../src/cashlessiq/rules/__init__.py" = "cashlessiq_domain/rules/__init__.py"
+"../../src/cashlessiq/rules/models.py" = "cashlessiq_domain/rules/models.py"
+"../../src/cashlessiq/rules/engine.py" = "cashlessiq_domain/rules/engine.py"
+"../../src/cashlessiq/rules/payable.py" = "cashlessiq_domain/rules/payable.py"
+"../../src/cashlessiq/rules/waiting_periods.py" = "cashlessiq_domain/rules/waiting_periods.py"
+"../../src/cashlessiq/rules/sla.py" = "cashlessiq_domain/rules/sla.py"
+
 [tool.uv]
 cache-keys = [
+  { file = "../../src/cashlessiq/rules/__init__.py" },
+  { file = "../../src/cashlessiq/rules/models.py" },
+  { file = "../../src/cashlessiq/rules/engine.py" },
+  { file = "../../src/cashlessiq/rules/payable.py" },
+  { file = "../../src/cashlessiq/rules/waiting_periods.py" },
+  { file = "../../src/cashlessiq/rules/sla.py" },
+
   { file = "pyproject.toml" },
   { file = "src/cashlessiq_domain/__init__.py" },
   { file = "../../src/cashlessiq/decision_schema.py" },

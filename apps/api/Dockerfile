@@ -6,6 +6,7 @@ COPY apps/api/pyproject.toml apps/api/uv.lock ./
 COPY apps/api/src ./src
 COPY packages/domain /app/packages/domain
 COPY src/cashlessiq/decision_schema.py src/cashlessiq/source_decision.py src/cashlessiq/source_history.py src/cashlessiq/source_recommendation.py /app/src/cashlessiq/
+COPY src/cashlessiq/rules /app/src/cashlessiq/rules
 RUN uv sync --frozen --no-dev
 COPY apps/api/alembic.ini ./
 COPY apps/api/migrations ./migrations
