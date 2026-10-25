@@ -12,15 +12,18 @@ PDF quarantine/extraction, versioned fact correction, two-person policy approval
 and activation, access administration and local reporting. See the
 [workflow and recovery guide](synthetic-mvp-testing.md).
 
-Local validation passed 913 root tests, the 1,511-test broader API run, the final
-30 focused MVP/reviewer tests, 41 client tests, all 26 existing browser checks and
-the two new end-to-end MVP browser checks. The browser flow uses five different
-synthetic perspectives and covers policy proposal, approval, activation,
-assessment, final medical review, restricted notes and PDF download. The extra
-outbox rollback regression passes in the final focused run. Full product CI at `517215a` now passes: [40203411894](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40203411894). Final hardening adds seven API regressions and mobile layout checks; the 37 focused command/MVP tests pass.
+Final code `7c73d69` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40204698447):
+913 root tests, 1,519 API tests, 72 membership checks, 35 database-catalog checks,
+41 client tests, 26 existing browser checks, 15 source UI checks and two full MVP
+browser checks, plus contracts/types/build/containment. The separate
+[production preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40204698347)
+passes all 37 owner-gate checks and the full MVP browser flow under constrained
+container limits. Mobile review/request layouts, cached-identity revocation,
+chunked request limits and transactional outbox rollback are covered.
+
 
 The current localhost app uses the existing API/web images with read-only source
-and locked pure Python dependencies. API readiness passes at migration
+and locked pure Python/JavaScript dependencies. API readiness passes at migration
 `0003_mvp`; the API and local worker share a 512 MiB container. Database and Redis
 incarnations are unchanged. The owner-only pre-MVP backup was successfully
 restored in a temporary database, migrated forward and seeded for all seven
@@ -214,20 +217,20 @@ acceptance remain pending. No deployment, paid source access or P3 activation.
 
 ## How much is finished?
 
-**Approximately 35–40% overall; P2 approximately 60%.** These remain rough
-planning estimates, not measured effort or a production-readiness score.
-Equal weighting of seven phases gives about 37%; later phases differ greatly
-in effort. There is no evidence-based calendar estimate for the remaining work.
+The earlier 35–40% estimate described the read-only checkpoint and is no longer
+current. The synthetic MVP workflow set is implemented and tested. Readiness for
+real data or customers is a separate milestone; a percentage would obscure the
+external approvals and validation still required.
 
-| Phase | Finished | Still required |
+| Phase | Finished for private synthetic testing | Still required before real operation |
 | --- | --- | --- |
-| P0: product direction | Approved scope, architecture boundaries and initial policy | Closed |
-| P1: foundation | Local frontend/API/database, authentication contracts, tenant membership, CI | Five user interviews explicitly deferred; required before customer rollout |
-| P2: read-only workspace | Local synthetic case queue/detail, role-specific clinical visibility, deterministic amounts, evidence presentation, source adapter and extensive isolated security tests | Real operational integration, governed source isolation/projection and authenticated live acceptance |
-| P3: reviewer workflow | Not started | Assignment, comments, reviewer actions, concurrency, transactional audit and outbox |
-| P4: assessment jobs | Not started | Background assessment, job status, restart/retry safety and validated persistence |
-| P5: ingestion/policies | Not started | Secure uploads/extraction and policy version/proposal/approval/regression workflow |
-| P6: migration completion | Not started | Parallel reconciliation and retirement of operational prototype dependencies |
+| P0: product direction | Approved initial scope, architecture and policy | Validate assumptions with design partners |
+| P1: foundation | Frontend/API/database, seven roles, membership, contracts and CI | Deferred user interviews before customer rollout |
+| P2: case/source reads | Golden case workspace and complete eight-service synthetic physical acceptance | Approved governed live sources and operational custody |
+| P3: reviewer workflow | Assignment, comments, human actions, version conflicts, immutable audit and transactional outbox | Domain-owner acceptance and authorised external analytics delivery; local projection is working |
+| P4: assessment jobs | Durable asynchronous rules assessment, leases, recovery, retries, dead-letter handling and validated persistence | Authorised live AI/search gateways and operational service monitoring |
+| P5: ingestion/policies | Synthetic PDF extraction, input history, supported rules/clauses, regression, second-person approval, activation and rollback | Real-data storage/retention, malware scanning, OCR and customer policy validation |
+| P6: migration completion | Prototype remains independently available | Parallel reconciliation and retirement after a real integration is proven |
 
 ## Accepted baseline
 

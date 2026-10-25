@@ -12,15 +12,18 @@ PDF quarantine/extraction, versioned fact correction, two-person policy approval
 and activation, access administration and local reporting. See the
 [workflow and recovery guide](synthetic-mvp-testing.md).
 
-Local validation passed 913 root tests, the 1,511-test broader API run, the final
-30 focused MVP/reviewer tests, 41 client tests, all 26 existing browser checks and
-the two new end-to-end MVP browser checks. The browser flow uses five different
-synthetic perspectives and covers policy proposal, approval, activation,
-assessment, final medical review, restricted notes and PDF download. The extra
-outbox rollback regression passes in the final focused run. Full product CI at `517215a` now passes: [40203411894](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40203411894). Final hardening adds seven API regressions and mobile layout checks; the 37 focused command/MVP tests pass.
+Final code `7c73d69` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40204698447):
+913 root tests, 1,519 API tests, 72 membership checks, 35 database-catalog checks,
+41 client tests, 26 existing browser checks, 15 source UI checks and two full MVP
+browser checks, plus contracts/types/build/containment. The separate
+[production preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40204698347)
+passes all 37 owner-gate checks and the full MVP browser flow under constrained
+container limits. Mobile review/request layouts, cached-identity revocation,
+chunked request limits and transactional outbox rollback are covered.
+
 
 The current localhost app uses the existing API/web images with read-only source
-and locked pure Python dependencies. API readiness passes at migration
+and locked pure Python/JavaScript dependencies. API readiness passes at migration
 `0003_mvp`; the API and local worker share a 512 MiB container. Database and Redis
 incarnations are unchanged. The owner-only pre-MVP backup was successfully
 restored in a temporary database, migrated forward and seeded for all seven
@@ -60,6 +63,12 @@ The owner declined the proposed paid eight-hour test. Billing linkage, cloud
 builds, registry storage and VM deployment are not authorized. Keep the existing
 unbilled GCP project and prepared files for a future decision; continue current
 application testing locally without a second complete stack.
+
+## Historical engineering checkpoints
+
+The entries below retain earlier evidence and scope restrictions. The current
+synthetic MVP scope and delivery summary above supersede their earlier P3–P5
+status and percentage estimates; the spend restrictions still apply.
 
 ### Local review navigation refreshed — 25 October
 

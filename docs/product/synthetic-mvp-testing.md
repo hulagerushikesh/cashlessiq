@@ -128,7 +128,19 @@ bounded before parsing. All 37 focused reviewer/MVP tests pass. The two MVP
 browser checks also pass with mobile review/request layouts. One earlier local
 extraction failure was successfully retried through the actual operations UI,
 with its retry reason and previous attempt count retained in governance history.
-A fresh CI run will also exercise the complete MVP on the standalone production
-server behind its owner-password gate and constrained container budgets. That
-smoke uses a disposable loopback HTTP origin only after the independent HTTPS
-origin and secure-cookie checks; prepared remote origins remain HTTPS.
+The complete MVP now also
+[passes on the standalone production server](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40204698347)
+at `7c73d69`, behind the owner-password gate. All 37 existing gate checks and
+the two full MVP browser checks passed (23.2 seconds for the MVP browser phase).
+The post-workflow snapshot was about 234 MiB combined across web/API/gateway/DB;
+this is not peak use and excludes the host and Docker daemon. Container memory
+ceilings total 1,408 MiB with the API/worker capped at 512 MiB. The smoke uses a
+disposable CI loopback HTTP origin only after independent HTTPS-origin and
+secure-cookie checks; prepared remote origins remain HTTPS.
+
+
+The final code at `7c73d69` also passes
+[full product CI 40204698447](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40204698447):
+913 root, 1,519 API, 72 membership, 35 database-catalog, 41 client, 26 browser,
+15 source UI and two MVP browser checks. The API phase passed in 156.56 seconds;
+MVP browser checks passed in 19.8 seconds. No cloud or paid source was used.
