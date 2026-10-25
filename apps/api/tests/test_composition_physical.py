@@ -292,7 +292,7 @@ class PhysicalOwner:
             assert key in {spec["network"], spec["network_name"]}
             assert network["NetworkID"] == spec["network"] or (
                 network["NetworkID"] == ""
-                and row["State"]["Status"] == "created"
+                and row["State"]["Status"] in {"created", "exited"}
                 and row["State"]["Running"] is False
                 and row["State"]["Pid"] == 0
             )
