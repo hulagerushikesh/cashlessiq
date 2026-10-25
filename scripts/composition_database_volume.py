@@ -11,8 +11,8 @@ import os
 import sys
 from pathlib import Path
 
-from scripts import composition_volume as volume
-from scripts.composition_material import Material, MaterialDenied, Staged, _archive, _require
+from . import composition_volume as volume
+from .composition_material import Material, MaterialDenied, Staged, _archive, _require
 
 OWNER = (10002, 10002)
 ROOT = Path("/database-material")
@@ -37,7 +37,7 @@ class DatabaseVolume(Material):
 def request(staged, *, install):
     """Explicit conversion from checked host staging to DB-only private stdin."""
     # Local import keeps cryptography and credential generation out of helper image.
-    from scripts.composition_database import DatabaseStaging
+    from .composition_database import DatabaseStaging
 
     _require(type(staged) is Staged and type(staged.expected) is DatabaseStaging)
     expected = staged.expected

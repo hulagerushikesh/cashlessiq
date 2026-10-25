@@ -14,13 +14,13 @@ import time
 from contextlib import suppress
 from pathlib import Path
 
-from scripts import composition_database_cluster as cluster
-from scripts import composition_database_data as data
-from scripts import composition_volume as volume
-from scripts.composition_database_catalog import CATALOG_SQL
-from scripts.composition_database_runtime import BIN, ENV
-from scripts.composition_database_runtime import check as check_runtime
-from scripts.composition_database_volume import DatabaseVolume
+from . import composition_database_cluster as cluster
+from . import composition_database_data as data
+from . import composition_volume as volume
+from .composition_database_catalog import CATALOG_SQL
+from .composition_database_runtime import BIN, ENV
+from .composition_database_runtime import check as check_runtime
+from .composition_database_volume import DatabaseVolume
 
 MARKER = "ciq-bootstrap.json"
 SOCKET = Path("/database-data/pgdata/ciq-bootstrap-socket")

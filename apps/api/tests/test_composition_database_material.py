@@ -10,10 +10,9 @@ from test_composition_launcher import plan
 from test_worker_guard_mtls import assertion_key as assertion_key
 from test_worker_transport import pki as pki
 
-# Host owner modules use their own exact Inventory class. Translate only the
-# immutable public test fixture fields; no arbitrary runtime coercion is added.
 database = importlib.import_module(ledger.__package__ + ".composition_database")
-owner_inventory = importlib.import_module(ledger.__package__ + ".composition_inventory")
+db_wire = importlib.import_module(ledger.__package__ + ".composition_database_volume")
+db_helpers = importlib.import_module(ledger.__package__ + ".composition_database_helpers")
 
 
 def test_generated_db_credentials_reach_only_membership_staged_bundle(
@@ -22,13 +21,7 @@ def test_generated_db_credentials_reach_only_membership_staged_bundle(
     assertion_key,
 ):
     p = replace(plan(), pins=tuple((role, pki[1][name][2]) for role, name in TLS_NAMES.items()))
-    owner = owner_inventory.Inventory(
-        p.prefix,
-        p.images,
-        p.pins,
-        tuple(owner_inventory.Network(n.edge, n.identifier, n.subnet) for n in p.networks),
-    )
-    db = database.prepare(owner)
+    db = database.prepare(p)
     credential = json.loads(db.membership["db.json"])
     assert credential["query"]["hostaddr"] == p.address("member-db", "db")
     prepared = bundles(
@@ -41,6 +34,16 @@ def test_generated_db_credentials_reach_only_membership_staged_bundle(
     )
     root = tmp_path / "material"
     root.mkdir(mode=0o700)
+    staged_db = database.DatabaseStaging.expected(
+        "database", db_helpers.fingerprint(p), db.server
+    ).provision(root, db.server)
+    for install in (False, True):
+        frame = db_wire.request(staged_db, install=install)
+        parsed, archive = db_wire.volume.parse(
+            frame, install=install, material_type=db_wire.DatabaseVolume
+        )
+        assert parsed.fingerprint == db_helpers.fingerprint(p)
+        assert (archive is not None) is install
     for role, (spec, data) in prepared.items():
         staged = spec.provision(root, data)
         assert staged.verify(role, p.fingerprint(role))

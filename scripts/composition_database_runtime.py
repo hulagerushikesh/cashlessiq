@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from scripts.composition_database_data import OWNER, require
+from .composition_database_data import OWNER, require
 
 BIN = Path("/usr/lib/postgresql/16/bin")
 ENV = {"PATH": str(BIN) + ":/usr/bin:/bin", "LC_ALL": "C"}

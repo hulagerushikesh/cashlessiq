@@ -14,10 +14,10 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 
-from scripts import composition_database_data as data
-from scripts import composition_volume as volume
-from scripts.composition_database_runtime import check as check_runtime
-from scripts.composition_database_volume import DatabaseVolume
+from . import composition_database_data as data
+from . import composition_volume as volume
+from .composition_database_runtime import check as check_runtime
+from .composition_database_volume import DatabaseVolume
 
 MATERIAL = Path("/database-material")
 DATA = Path("/database-data")

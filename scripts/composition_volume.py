@@ -16,7 +16,7 @@ import tarfile
 from hashlib import sha256
 from pathlib import Path
 
-from scripts.composition_material import (
+from .composition_material import (
     MAX_FILE,
     MAX_TOTAL,
     Material,

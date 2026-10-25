@@ -1,5 +1,6 @@
 """Actual per-role test files and canonical preparation, no Docker/database calls."""
 
+import importlib
 import io
 import json
 import tarfile
@@ -51,6 +52,17 @@ def test_staged_material_replaces_fake_launcher_material_callback(materials):
     (staged["reader-0-clinical"].root / "signer.pem").touch(mode=0o400)
     assert not launcher.verify(launcher.services)
     assert not any(call[0] in {"create", "start"} for call in engine.calls)
+
+
+def test_actual_staged_bundles_pass_private_volume_helper_wire(materials):
+    p, staged = materials
+    volume = importlib.import_module(inv.__package__ + ".composition_volume")
+    for role, bundle in staged.items():
+        for install in (False, True):
+            frame = volume.request(bundle, install=install)
+            spec, archive = volume.parse(frame, install=install)
+            assert spec == bundle.expected and spec.fingerprint == p.fingerprint(role)
+            assert (archive is not None) is install
 
 
 def test_all_eight_bundles_match_service_parsers_and_key_boundaries(
