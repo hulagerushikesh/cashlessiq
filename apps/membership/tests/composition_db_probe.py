@@ -40,6 +40,13 @@ def reason(error):
     for _ in range(8):
         message = str(error).lower()
         for needle, category in (
+            ("unexpected driver connection acceptance", "unexpected-acceptance"),
+            ("certificate signature failure", "certificate-signature"),
+            ("unable to get local issuer certificate", "certificate-issuer"),
+            ("self-signed certificate", "certificate-self-signed"),
+            ("decrypt error", "tls-decrypt"),
+            ("root certificate file", "certificate-file"),
+            ("permission denied", "permission"),
             ("certificate verify failed", "certificate"),
             ("does not match host name", "hostname"),
             ("password authentication failed", "password"),
