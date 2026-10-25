@@ -134,7 +134,8 @@ class DatabaseImages:
         assert before["Config"]["User"] == user
         host = before["HostConfig"]
         assert host["ReadonlyRootfs"] and host["NetworkMode"] == "none"
-        assert host["CapDrop"] == ["ALL"] and host["CapAdd"] == (["CHOWN"] if root else None)
+        assert host["CapDrop"] == ["ALL"]
+        assert (host.get("CapAdd") or []) in ((["CHOWN"], ["CAP_CHOWN"]) if root else ([],))
         assert host["SecurityOpt"] == ["no-new-privileges"]
         assert (host["Memory"], host["NanoCpus"], host["PidsLimit"]) == (
             128 * 1024**2,

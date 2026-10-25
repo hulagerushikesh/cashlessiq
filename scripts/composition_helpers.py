@@ -239,7 +239,15 @@ class Helpers:
         require(host["ReadonlyRootfs"] is True and host["Privileged"] is False)
         require(not host.get("AutoRemove"))
         require(host["CapDrop"] == ["ALL"])
-        require((host.get("CapAdd") or []) == self.capabilities(mode))
+        observed_caps = host.get("CapAdd") or []
+        expected_caps = self.capabilities(mode)
+        # Docker engines may canonicalize --cap-add CHOWN to CAP_CHOWN.
+        # Accept only that exact singleton alias, never extra/duplicate caps.
+        require(
+            observed_caps in (["CHOWN"], ["CAP_CHOWN"])
+            if expected_caps == ["CHOWN"]
+            else observed_caps == expected_caps
+        )
         require(host["SecurityOpt"] == ["no-new-privileges"])
         require(host["Memory"] == 128 * 1024**2 and host["NanoCpus"] == 500_000_000)
         require(host["PidsLimit"] == 32 and host["NetworkMode"] == "none")

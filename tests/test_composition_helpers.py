@@ -309,6 +309,42 @@ def test_each_role_requires_separate_install_and_nonroot_readback(tmp_path, role
 
 
 @pytest.mark.parametrize(
+    ("capabilities", "accepted"),
+    [
+        (["CHOWN"], True),
+        (["CAP_CHOWN"], True),
+        (["CHOWN", "CAP_CHOWN"], False),
+        (["CAP_CHOWN", "CAP_SYS_ADMIN"], False),
+        (["cap_chown"], False),
+        ("CAP_CHOWN", False),
+    ],
+)
+def test_engine_chown_spelling_without_extra_capabilities(
+    tmp_path, monkeypatch, capabilities, accepted
+):
+    original = container
+
+    def observed(helper, mode, cid):
+        row = original(helper, mode, cid)
+        if mode == "install":
+            row["HostConfig"]["CapAdd"] = capabilities
+        return row
+
+    monkeypatch.setattr(sys.modules[__name__], "container", observed)
+    helper, engine, journal, resources = setup(tmp_path)
+    try:
+        if accepted:
+            assert helper.run() is True
+        else:
+            with pytest.raises(HelpersDenied):
+                helper.run()
+            assert not any(call[0] == "start" for call in engine.calls)
+    finally:
+        journal.close()
+        resources.close()
+
+
+@pytest.mark.parametrize(
     "fault",
     [
         *CHANGES,
