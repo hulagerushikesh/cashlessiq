@@ -33,7 +33,7 @@ export default async function Login({
             Choose your review perspective.
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            Explore with a synthetic identity. Your role determines the actions available to you.
+            Explore with a synthetic identity. Your role determines which clinical details you can see.
           </p>
           {error && (
             <p role="alert" className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">

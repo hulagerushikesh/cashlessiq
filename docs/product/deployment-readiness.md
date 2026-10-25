@@ -1,5 +1,19 @@
 # Product deployment: concrete remaining work
 
+## Current target — private owner preview, 25 October
+
+The owner clarified that the first online version is for personal testing before
+a customer MVP. Use the [joint acceptance checklist](owner-preview-acceptance.md).
+The existing synthetic local workspace is responding; a private online version
+still needs a selected host and owner-only access, correct origin/session
+configuration, private backend/database, rollback and smoke checks. Synthetic
+role selection alone cannot protect a remotely exposed app. Ask before new spend
+or payment actions. No online deployment is claimed.
+
+The governed-source/customer release bundles below remain separate work. They
+are not prerequisites for a correctly isolated, synthetic owner preview. Customer
+interviews, P3 writes and later migration phases do not block personal testing.
+
 **23 October local-only milestone:** owner has no additional Linux host and
 approved refreshing the existing Mac/Docker synthetic workspace. It is rebuilt,
 healthy and regression-verified; [owner testing checklist](local-alpha-testing.md).

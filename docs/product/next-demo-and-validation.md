@@ -1,5 +1,12 @@
 # Next visible milestone and customer validation
 
+**25 October owner clarification:** “go live” means a private app for personal
+testing, with engineering and human checks before a customer MVP. The immediate
+goal is the [owner preview and acceptance round](owner-preview-acceptance.md).
+The customer research/pilot plan below is later scope, not a blocker for that
+synthetic preview. The local app is responding; owner-only online access still
+needs hosting/access configuration and approval before any new spend.
+
 23 October 2026. Planning checkpoint, not deployment or operational activation
 approval. The owner asked where delivery stands, when the product can be shown,
 and who should see it. Existing phase gates and human policy approval remain.

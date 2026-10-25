@@ -10,6 +10,26 @@ demo-video work is not part of this product plan.
 
 [Short owner dashboard: completed work, remaining phases and next decision](delivery-status.md).
 
+### Private owner preview before a customer MVP — 25 October
+
+“Go live” now explicitly means personal owner testing, with engineering and human
+acceptance before a customer MVP. The [joint checklist](owner-preview-acceptance.md)
+records the test scope, expected screens and pending human results. Local login
+returns 200 and the API is ready. Owner-only online hosting/access remains to be
+configured; no paid action or deployment occurred. This synthetic preview does
+not require closing the separate governed-source or later reviewer-write gates.
+Full [product CI 40161931233 at 6cb02c1 passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161931233);
+the formerly pending 40161796216 and 40161676816 also passed.
+
+The owner walkthrough exposed stale overview/sign-in descriptions. The current
+web source describes the working read-only alpha, links directly to its state
+preview and describes role-specific clinical visibility. Local browser checks
+passed 24/26 initially; the two intermittent sign-out/mobile-navigation cases
+passed unchanged on a focused rerun (2/2, 6.6 seconds). Web lint and TypeScript
+pass. The local Docker-built app has not been rebuilt for the copy change;
+changed-source CI acceptance is recorded separately when available. No human
+acceptance is inferred from these checks.
+
 ### Membership database TLS and clean shutdown accepted — 25 October
 
 [Live Linux CI 40161796204](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796204)

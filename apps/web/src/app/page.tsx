@@ -143,7 +143,7 @@ export default async function Workspace() {
               </p>
             </div>
             <span className="mt-2 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-              <span className="size-1.5 rounded-full bg-teal-600" /> Product foundation
+              <span className="size-1.5 rounded-full bg-teal-600" /> Read-only alpha
             </span>
           </div>
           {session.state === "unavailable" && (
@@ -255,22 +255,22 @@ export default async function Workspace() {
               <Sparkles size={18} className="mt-0.5 text-slate-400" />
               <div>
                 <h2 id="next-title" className="text-sm font-medium">
-                  Case review is the next milestone
+                  Explore the read-only alpha
                 </h2>
                 <p className="mt-1.5 text-xs leading-6 text-slate-500">
-                  The queue, member context and evidence workspace will be connected after this
-                  foundation passes validation.
+                  Try the case queue, calculations and policy references with fictional cases.
+                  The state preview also shows saved, missing and unavailable recommendations.
+                  Reviewer actions are not available yet.
                 </p>
               </div>
             </div>
-            <a
+            <Link
               className="text-xs font-medium text-teal-800 underline-offset-4 hover:underline"
-              href="https://cashlessiq.hulage.in"
-              target="_blank"
-              rel="noreferrer"
+              href={identity ? "/source-preview" : "/login"}
             >
-              Explore the public demo ↗
-            </a>
+              {identity ? "Open state preview" : "Sign in to explore"}{" "}
+              <ArrowRight className="inline" size={13} />
+            </Link>
           </section>
           <footer className="mt-9 flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
             <p>CashlessIQ · Thoughtful decisions. Clear evidence.</p>

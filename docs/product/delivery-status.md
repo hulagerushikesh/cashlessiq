@@ -4,6 +4,22 @@ Updated 25 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Next visible goal: private owner testing — 25 October
+
+The owner clarified that “go live” means a private preview for personal testing,
+with engineering and human checks before a customer MVP. The existing local
+synthetic workspace responds (login HTTP 200, API ready). Follow the
+[joint owner checklist](owner-preview-acceptance.md); this round's human results
+remain pending. An owner-only online address is not deployed. It needs a selected
+host and real owner access boundary; publishing the local role selector is not
+sufficient. Ask before new spend or payment actions.
+
+Synthetic owner testing can proceed before governed live-source P2 exit,
+customer interviews or later reviewer-write features. Keep those scopes separate.
+The latest full [product CI at 6cb02c1 passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161931233),
+including the API/browser/source-contract checks. The previously pending
+[40161796216 passed too](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216).
+
 ### Membership database TLS and clean shutdown accepted — 25 October
 
 [Live Linux CI 40161796204](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796204)
