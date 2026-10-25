@@ -44,13 +44,14 @@ that [they cover warehouses, not serverless features or AI](https://docs.snowfla
    verifies the base tag's ID before/after, and runs checks against exact IDs.
    It does not publish or establish a reusable trusted image digest.
 2. Real disposable volume preparation, initdb and private-socket bootstrap now
-   pass on Linux CI (see evidence below). Next add the membership TLS connection,
-   including permission and connection denials. Use generated test identities
+   pass on Linux CI (see evidence below). Membership TLS, permission/connection
+   denials and clean stop now also pass in the dedicated member-DB edge. Use generated test identities
    and fixed fictional source inputs only.
 3. Wire and verify the complete owned service lifecycle: readiness barrier,
    tenant/role behavior, revocation, stop, uncertain completion and containment.
-   The current Mac route/headroom collectors need explicit Linux equivalents
-   before the full allocator can run there. Do not bypass those gates or call
+   An explicit Linux route collector now exists and is used by the member-DB
+   edge. Linux resource/headroom collection and its full-allocator integration
+   are still required. Do not bypass those gates or call
    the image smoke full composition acceptance.
 4. Keep Mac-specific verification optional for a future Mac runtime target.
    Select any persistent operational/deployment host and key custody separately.
@@ -111,17 +112,18 @@ the broader run for 08c8caf subsequently passed (40159936102), as did
 the documentation checkpoint 90a5873 (40160040974).
 
 
-### Membership database TLS acceptance prepared — 25 October
+### Membership database TLS acceptance — 25 October
 
 The same manual workflow now also builds the explicit `composition-db-test`
 membership target, inspecting its exact image ID and nonroot identity. It is
-absent from the default candidate/wheel. A fresh internal Docker bridge uses an explicit test subnet/gateway. The
-existing collision gate now accepts an explicitly selected, bounded Linux
+absent from the default candidate/wheel. A fresh internal Docker bridge uses an explicit test
+subnet/gateway. The existing collision gate now accepts an explicitly selected, bounded Linux
 `ip -j -4 route show table all` collector, alongside two real Docker network
 snapshots. Collision or incomplete/changing observation denies before creation.
 The inspected subnet/ID replace only the member-DB edge in a validated test
 inventory before generating credentials, HBA and PKI.
-This is a dedicated CI harness, not full allocator or Linux resource/headroom acceptance. Existing host networks and resources are never adopted.
+This is a dedicated CI harness; full allocator and Linux resource/headroom
+acceptance remain open. Existing host networks/resources are never adopted.
 
 After the actual helpers bootstrap fresh volumes, an inspected PG16 container
 runs directly as UID 10002 with only that bridge, TLS 1.3, generated certificate/
@@ -143,14 +145,33 @@ absence of postmaster.pid. PostgreSQL documents the chosen
 [TLS configuration](https://www.postgresql.org/docs/16/runtime-config-connection.html)
 and [SIGINT shutdown](https://www.postgresql.org/docs/16/server-shutdown.html).
 
-This also corrects an older test's assertion inside the factory's redacting
-context: unexpected acceptance now raises outside that context. Seven offline
-regressions ensure unexpected acceptance/unrelated driver errors and fallback
-to absence cannot pass. All 62 offline membership tests and the isolated wheel
-boundary pass; all 854 root tests pass with three CI-only modules skipped.
-The first [live attempt 40160955766](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40160955766)
-passed all three prior lifecycle cases but caught Docker requiring an explicit
-subnet for fixed addresses. The corrected explicit subnet and real Linux
-collision observation await a fresh run. Sixteen new route parser/collector
-regressions pass (58 route checks total); Mac remains the default collector. Full topology, readiness/revocation/containment,
-operational custody and P2 exit remain open.
+Negative assertions now sit outside the factory's redacting context. Both
+factory and raw-driver probes record whether a connection was entered and fail
+if so, even when subsequent cleanup raises. Denied connection/store paths cannot
+become absent membership. The same-subject/different-key CA fixture can produce
+a low-level RSA verification error before the generic certificate error. The
+wrong-CA driver test recognizes only an enumerated set of certificate/signature/
+padding/modulus failures; unrelated errors and actual acceptance fail. This
+matches [libpq's OpenSSL error reporting](https://github.com/postgres/postgres/blob/REL_17_STABLE/src/interfaces/libpq/fe-secure-openssl.c),
+which uses the queued OpenSSL reason. Only fixed diagnostic categories are
+printed, never raw driver text or request frames.
+
+[Run 40161677145](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161677145)
+passed all four real-container cases at cda2b94 (46.06-second test phase,
+83-second job). Earlier attempts caught the need for an explicit Docker subnet
+and the overly narrow wrong-CA error expectation. The final raw-driver entry
+check is at 4b385d0; its fresh
+[run 40161796204](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796204)
+also passed all four cases in 33.27 seconds. All 870 root tests pass (three CI-only modules skipped), plus all
+72 offline membership tests, 58 route tests (16 new Linux cases included in
+870), Ruff and isolated wheel checks. Full product CI passed fd67973, f0c552d
+6bca3a3 and 0979456; the final implementation's broader run
+[40161796216](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216)
+remains in progress at this documentation checkpoint.
+
+The route collector uses a fixed bounded read-only `ip` command, empty child
+environment and strict all-table JSON parsing. Mac remains the default collector;
+Linux selection is explicit. This does not prove full Linux resource/headroom
+admission, the complete allocator/journal's physical handoff, eight-service
+readiness/revocation/containment, operational custody or P2 exit. Those remain
+the next coherent integration work, followed by governed-source approval.

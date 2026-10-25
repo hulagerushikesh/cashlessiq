@@ -4,33 +4,40 @@ Updated 25 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
-### Membership TLS acceptance prepared — 25 October
+### Membership database TLS and clean shutdown accepted — 25 October
 
-The manual Linux image workflow now builds an explicit membership test target
-and runs the real connection factory and restricted membership store against a
-fresh PostgreSQL 16 cluster initialized by the same volume/initdb/bootstrap
-helpers. An explicit internal bridge supplies the actual member/DB
-addresses before generating HBA/PKI; real Linux/Docker route observations
-must exclude collisions before creation. No host ports are published. This tests the
-member-DB edge only; the full allocator's Linux observation gates and the
-eight-service readiness barrier remain open.
+[Live Linux CI 40161796204](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796204)
+passed all four real-container cases at 4b385d0 (33.27-second test phase).
+The new case uses the actual volume/initdb/bootstrap helpers and real canonical
+membership factory/store on a fresh, explicit internal bridge. It proves TLS
+1.3, all six fictional profiles, six cross-tenant absences, nine SQL privilege
+denials, bad hostname/CA/missing-CA/password and ambient-setting denials,
+plaintext rejection, unauthorized-source HBA rejection, and clean SIGINT stop
+with a fresh read-only stopped-cluster/completion probe afterward.
 
-Acceptance covers verified TLS 1.3, all six fictional profiles, cross-tenant
-absence, nine actual SQL privilege denials, hostname/CA/missing-CA/password/
-plaintext/ambient-setting denials, an unauthorized source address, and clean
-SIGINT shutdown followed by a fresh read-only stopped-cluster probe.
-The first live run passed the three prior lifecycle cases but caught Docker
-requiring an explicit subnet for fixed addresses. That is corrected, with a
-bounded Linux route collector and the existing collision gate; a fresh run
-is pending. An older negative test could mistake its own assertion
-for a redacted denial; this is fixed, with regression tests for unexpected
-acceptance and fallback-to-absence. All 62 offline membership tests, 854 root
-tests before 16 new Linux route regressions (three CI-only modules skipped), Ruff and the isolated membership wheel
-check pass. Default membership packaging excludes both test probes.
+The bridge passes the existing collision gate using real bounded Linux routes
+and Docker network snapshots before creation. No host ports, external service,
+real credentials or local Docker mutations are involved. This is member-DB edge
+acceptance; full allocator/headroom, eight-service readiness/revocation/
+containment and operational recovery/custody remain open. P2 is still open.
 
-The preceding full product CI passed at 90a5873
-([run 40160040974](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40160040974))
-and 08c8caf (40159936102). No local Docker build/start or paid action occurred.
+Negative probes now fail if a connection was accepted, even if cleanup then
+fails. Assertions sit outside redacting contexts; database failure cannot become
+membership absence. Same-issuer wrong-CA tests recognize a closed set of
+certificate/RSA signature failures, while unrelated errors remain failures.
+Only fixed stage/reason labels may appear in diagnostics. All 870 root tests
+pass (three CI-only modules skipped), all 72 offline membership tests pass,
+and Ruff/isolated wheel checks pass. Test probes stay outside default packaging.
+The preceding [run 40161677145](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161677145)
+also passed all four cases at cda2b94.
+
+Full product CI passed fd67973 (40160954993), f0c552d (40161164066) and
+6bca3a3 (40161313431) and 0979456 (40161499895). The final implementation's
+[broader CI 40161796216](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216)
+is still running at this documentation checkpoint.
+No paid action or Snowflake query was performed. Ask before any new spend or
+payment-related action. Next: Linux resource/headroom observation and the
+integrated eight-service startup/readiness/shutdown batch.
 
 **25 October execution decision:** move disposable integration work to standard
 GitHub-hosted Linux CI, using synthetic inputs. The Mac is optional as a test
