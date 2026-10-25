@@ -91,7 +91,15 @@ DB material/data preparation, initdb and bootstrap through 19 journaled helper
 pairs. Each pair separately inspects installation and restricted read-back;
 private material travels only via bounded stdin. Teardown verifies exact
 acknowledged identities and exits before removal; UNKNOWN is not absence or a
-removal target. This candidate is not yet CI-accepted. Actual application
+removal target. [Physical CI 40187526295](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40187526295)
+passed at `f9807d7`: 18 networks, 17 volumes and all 19 helper pairs in 93.61
+seconds, with exact acknowledged helper/resource teardown and a reopened fenced
+resource journal containing 35 REMOVED entries. The first run exposed absolute
+helper imports that escaped the shared test package; relative imports corrected
+the actual material/DB frame handoff. Fresh local root regression passes 913
+tests, and helper/wire subsets pass. The package source guard now requires the
+exact relative import instead of its former absolute spelling, preserving the
+same source/dependency boundary. Actual application
 readiness, authenticated cross-service requests, revocation and bounded stop
 remain the next integration stage; operational custody/live source/P2 exit
 remain separate gates.

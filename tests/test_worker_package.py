@@ -226,11 +226,11 @@ def test_material_helper_has_only_stdlib_sources_and_no_normal_activation():
         tree = ast.parse((ROOT / f"scripts/{name}.py").read_text())
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
-                assert node.module in {
-                    "dataclasses",
-                    "hashlib",
-                    "pathlib",
-                    "scripts.composition_material",
+                assert (node.level, node.module) in {
+                    (0, "dataclasses"),
+                    (0, "hashlib"),
+                    (0, "pathlib"),
+                    (1, "composition_material"),
                 }
             elif isinstance(node, ast.Import):
                 assert all(

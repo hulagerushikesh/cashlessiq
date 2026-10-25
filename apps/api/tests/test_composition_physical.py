@@ -152,6 +152,7 @@ class PhysicalOwner:
         assert len(self.resources.observed) == 35
         for network in self.plan.networks:
             self.plan.check_network(network.edge, self.row("network", network.identifier), {})
+        print("Physical allocator: 35 resources observed through fresh Linux admission", flush=True)
         return self.plan
 
     def helper(self, module, cls, image, *args):
@@ -169,6 +170,7 @@ class PhysicalOwner:
         )
         self.helpers.append(helper)
         helper.engine = self.engine(helper.commands(), budget_ns=10_000_000_000)
+        print(f"Physical helper: {cls} {helper.role}", flush=True)
         assert helper.run() is True
         assert len(helper.owned) == 2
         return helper

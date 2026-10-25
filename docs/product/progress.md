@@ -18,6 +18,16 @@ application testing locally without a second complete stack.
 
 ### Local review navigation refreshed — 25 October
 
+**Engineering continuation:** full allocator/private-helper physical acceptance
+now [passes on disposable Linux CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40187526295)
+at `f9807d7`: 18 internal networks, 17 volumes, eight material bundles, seven state
+stores and database material/data/initdb/bootstrap through 19 helper pairs;
+exact owned teardown and reopened journal checked. The shared module/type and
+private-frame handoff defects are fixed. All 913 root tests and 198 focused API
+tests pass locally (the physical test skips outside its dedicated runner).
+Eight-service readiness/requests/revocation/containment and governed source
+remain open. See the [integration evidence](../architecture/p2-ci-integration-plan.md).
+
 Filtered queue → case → queue navigation now retains the reference,
 recommendation and page. Unknown case IDs show a recovery link without a
 substitute record. Implementation `8aa2511` passed
