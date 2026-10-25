@@ -1,8 +1,17 @@
 # Product delivery — owner dashboard
 
-Updated 24 October 2026. This page summarizes the current product plan; the
+Updated 25 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
+
+**25 October execution decision:** move disposable integration work to standard
+GitHub-hosted Linux CI, using synthetic inputs. The Mac is optional as a test
+host; its memory-pressure gate must not block Linux image validation. See the
+[CI integration sequence and spending boundary](../architecture/p2-ci-integration-plan.md).
+All three latest product CI runs, including ea18e45, passed. A manual helper
+image build/runtime smoke is now prepared; its first result is pending.
+The owner reports adding Snowflake payment details and requires approval before
+payment-related actions or new spend. No paid source access is authorized.
 
 **23 October delivery focus:** the [next-demo and validation plan](next-demo-and-validation.md)
 separates a supervised synthetic walkthrough (possible before live P2 exit) from
@@ -42,7 +51,7 @@ A dedicated PostgreSQL 16 CI service tests the valid generated bootstrap plus
 all six profiles and nine permission-denied operations (SQLSTATE 42501).
 All 35 live PostgreSQL cases passed in the database-catalog job of
 [CI 40107013580](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40107013580)
-at commit 2e9db27. The broader foundation job is still running. This uses local
+at commit 2e9db27. The broader foundation job also passed. This uses local
 admin SET ROLE, not password/TLS authentication.
 Local runs skip that opt-in destructive suite;
 it accepts no caller DSN and requires the dedicated GitHub Actions opt-in.
@@ -113,8 +122,10 @@ The new product currently runs only on this Mac at `http://localhost:3000`.
 The public hackathon website is unchanged. Local role-selection authentication
 must not be exposed publicly, even for synthetic data.
 
-The next implementation depends on an owner-approved operational target and
-custody arrangement. There is no approved external host or hosting budget.
+Operational activation depends on an owner-approved target and custody
+arrangement. Disposable synthetic integration can proceed on standard Linux CI
+under the [25 October plan](../architecture/p2-ci-integration-plan.md).
+There is no approved paid external host or hosting budget.
 The owner approved preparing the [no-purchase Mac/Docker integration design](../architecture/p2-mac-docker-integration-design.md).
 It now specifies topology, proposed manual encrypted-image custody, clock/fence
 blockers and one bounded next service-composition batch. The owner subsequently
@@ -134,7 +145,10 @@ Public release additionally needs browser OIDC configuration, hosting, secret
 delivery, rollback and deployment approval. Those are not prerequisites for
 continued local testing, nor automatically authorized by accepting this dashboard.
 
-Snowflake balance and exact expiry today are unknown. Continued work must not
-depend on renewal or payment. Preserve existing private recovery evidence; if
+The owner reports adding Snowflake payment information on 25 October; account
+status, balance and current resource usage have not been independently checked.
+Ask before payment-related actions or new spend, including warehouse/query and
+AI/serverless usage. Continued development uses synthetic fixtures without
+depending on paid access. Preserve existing private recovery evidence; if
 the source is unavailable, use labeled fixtures for development and report
 unavailability truthfully. No bulk AI calls or credit-burning work is planned.

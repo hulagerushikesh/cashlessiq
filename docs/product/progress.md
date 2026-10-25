@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 24 October 2026
+Last updated: 25 October 2026
 Current phase: **P2 / M2 — synthetic-only, read-only case workspace**
 
 This is the current-status index. The migration plan defines sequence; phase
@@ -9,6 +9,23 @@ are historical checkpoints, not the latest status. Hackathon submission is done;
 demo-video work is not part of this product plan.
 
 [Short owner dashboard: completed work, remaining phases and next decision](delivery-status.md).
+
+### Linux CI alternative and spending boundary — 25 October
+
+The owner requested an alternative to repeated Mac memory-pressure deferrals.
+Use standard GitHub-hosted Linux CI for disposable synthetic integration;
+Mac execution is optional and operational hosting remains a separate decision.
+The public repository qualifies for free standard runner compute under GitHub's
+documented terms. The [concrete sequence](../architecture/p2-ci-integration-plan.md)
+starts with a new manual, time-bounded cluster/bootstrap image smoke; its first
+result is pending. No larger runner, paid host, artifact upload or registry push
+is introduced by that workflow. Linux route/headroom collectors and full
+container lifecycle/TLS acceptance still need implementation.
+
+All latest product CI runs passed (40107078653, 40107013580, 40106920950).
+The owner reports adding Snowflake payment details; ask before payment-related
+actions or new spend. Account status and usage have not been independently
+checked. This decision does not authorize paid queries or alter P2 exit gates.
 
 ### Bootstrap catalog gate — 24 October
 
@@ -28,7 +45,7 @@ A dedicated PostgreSQL 16 CI service tests the valid generated bootstrap plus
 all six profiles and nine permission-denied operations (SQLSTATE 42501).
 All 35 live PostgreSQL cases passed in the database-catalog job of
 [CI 40107013580](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40107013580)
-at commit 2e9db27. The broader foundation job is still running. This uses local
+at commit 2e9db27. The broader foundation job also passed. This uses local
 admin SET ROLE, not password/TLS authentication.
 Local runs skip that opt-in destructive suite;
 it accepts no caller DSN and requires the dedicated GitHub Actions opt-in.

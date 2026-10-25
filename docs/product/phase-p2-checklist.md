@@ -1,9 +1,27 @@
 # Product P2 — read-only case workspace
 
 Status: In progress — synthetic-only alpha  
-Last updated: 24 October 2026
+Last updated: 25 October 2026
 
 ## Latest checkpoint — authenticated inspection
+
+### Linux CI execution choice — 25 October
+
+- [x] Latest full product CI runs verified successful: 40107078653,
+  40107013580 and 40106920950.
+- [x] Replace Mac-only disposable execution planning with the
+  [standard Linux CI sequence](../architecture/p2-ci-integration-plan.md).
+  Preserve Mac resource gates for Mac work; no wait on them for Linux builds.
+- [x] Prepare a manual, 15-minute helper image build/runtime smoke using
+  standard public-repository runner compute and no paid storage/host/source.
+- [ ] Observe the first image smoke result; then wire real initialization,
+  bootstrap and membership TLS, followed by full service containment acceptance.
+- [ ] Add explicit Linux route/resource observations before using the full
+  resource allocator on that host; do not bypass Mac checks with fabricated data.
+
+Owner reports adding Snowflake payment details. Ask before payment-related
+actions or new spend. No account status, paid query, warehouse or production
+hosting change was made. P2 completion and operational custody remain open.
 
 ### Bootstrap catalog gate — 24 October
 
@@ -23,7 +41,7 @@ A dedicated PostgreSQL 16 CI service tests the valid generated bootstrap plus
 all six profiles and nine permission-denied operations (SQLSTATE 42501).
 All 35 live PostgreSQL cases passed in the database-catalog job of
 [CI 40107013580](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40107013580)
-at commit 2e9db27. The broader foundation job is still running. This uses local
+at commit 2e9db27. The broader foundation job also passed. This uses local
 admin SET ROLE, not password/TLS authentication.
 Local runs skip that opt-in destructive suite;
 it accepts no caller DSN and requires the dedicated GitHub Actions opt-in.

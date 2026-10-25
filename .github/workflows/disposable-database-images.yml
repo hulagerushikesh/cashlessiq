@@ -1,0 +1,41 @@
+name: Disposable database image smoke
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  image-smoke:
+    # Public repository, standard runner; no larger runner or paid host.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build disposable cluster and bootstrap candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cluster_tag="ciq-disposable-cluster:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build --file scripts/Dockerfile.database-cluster-test \
+            --tag "$cluster_tag" --iidfile "$RUNNER_TEMP/cluster-image-id" .
+          cluster_id="$(cat "$RUNNER_TEMP/cluster-image-id")"
+          test "$(docker image inspect --format '{{.Id}}' "$cluster_tag")" = "$cluster_id"
+          docker build --file scripts/Dockerfile.database-bootstrap-test \
+            --build-arg "CLUSTER_IMAGE=$cluster_tag" \
+            --iidfile "$RUNNER_TEMP/bootstrap-image-id" .
+          test "$(docker image inspect --format '{{.Id}}' "$cluster_tag")" = "$cluster_id"
+      - name: Inspect exact images and check restricted runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          for role in cluster bootstrap; do
+            image_id="$(cat "$RUNNER_TEMP/${role}-image-id")"
+            test "$(docker image inspect --format '{{.Config.User}}' "$image_id")" = '10002:10002'
+            test "$(docker image inspect --format '{{json .Config.Volumes}}' "$image_id")" = 'null'
+            test "$(docker image inspect --format '{{json .Config.ExposedPorts}}' "$image_id")" = 'null'
+            timeout --signal=KILL 30s docker run --rm --network none --read-only \
+              --user 10002:10002 --cap-drop ALL --security-opt no-new-privileges \
+              --memory 128m --cpus 0.5 --pids-limit 32 --ipc private --restart no \
+              --entrypoint python "$image_id" -m scripts.composition_database_runtime
+            printf '%s image: `%s`\n\n' "$role" "$image_id" >> "$GITHUB_STEP_SUMMARY"
+          done
+          printf '%s\n' 'Image smoke only: no initdb, bootstrap, TLS readiness or full lifecycle acceptance.' >> "$GITHUB_STEP_SUMMARY"

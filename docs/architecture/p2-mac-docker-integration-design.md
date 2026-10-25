@@ -1,5 +1,11 @@
 # P2 Mac/Docker operational integration design
 
+**25 October update:** the [Linux CI execution plan](p2-ci-integration-plan.md)
+supersedes the Mac-only disposable test-host choice below. Mac memory pressure
+does not gate Linux image validation. The boundaries, lifecycle requirements and
+unapproved operational custody described here still apply. Owner approval is
+required before payment-related actions or new spend, including Snowflake usage.
+
 23 October 2026. Owner initially approved preparing this design, then explicitly
 approved the disposable implementation batch below with a Mac load check first.
 The [resource checkpoint](../product/mac-resource-check.md) defers heavy execution
