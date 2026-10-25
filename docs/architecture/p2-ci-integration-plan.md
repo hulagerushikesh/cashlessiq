@@ -76,3 +76,22 @@ readiness. Images were not published; later runs must inspect their own IDs.
 Membership TLS, integrated containment, governed live-source access, operational
 custody and P2 exit remain distinct evidence gates. No phase completion estimate
 or production activation changes with this test-host decision.
+
+### Real helper lifecycle regression — implementation prepared
+
+The manual workflow now also invokes three CI-only real-container cases using
+the built image IDs. Each uses fresh labeled named volumes, material install and
+independent read-back, empty data preparation/probe, real initdb/structural probe,
+and private-socket bootstrap. The cases cover a valid bootstrap, SQL failure and
+an effective privilege drift rejected by the catalog check. Fresh containers
+must deny repeat initialization/bootstrap; read-only probes check retained
+completion or ATTEMPTED markers and absence of a running postmaster PID file.
+The first remote result for these added lifecycle cases is pending.
+
+The test harness inspects actual image/user/mount/network/capability/resource
+configuration before starting and exact exit state afterward. Its inputs use
+generated fictional material through stdin, with no host ports or network.
+Teardown removes only acknowledged, labeled resources on the disposable runner,
+including failed test data after retention checks. This is a CI test harness,
+not the production composition journal, crash recovery owner or full allocator.
+It does not test live TLS, network policy or the eight-service readiness barrier.

@@ -38,4 +38,16 @@ jobs:
               --entrypoint python "$image_id" -m scripts.composition_database_runtime
             printf '%s image: `%s`\n\n' "$role" "$image_id" >> "$GITHUB_STEP_SUMMARY"
           done
-          printf '%s\n' 'Image smoke only: no initdb, bootstrap, TLS readiness or full lifecycle acceptance.' >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' 'Image runtime preflight passed; lifecycle tests follow below.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+      - name: Real disposable volume, initdb and bootstrap regression
+        env:
+          CIQ_DATABASE_IMAGE_TEST: '1'
+        run: |
+          uv sync --project apps/api --frozen
+          uv run --project apps/api pytest tests/integration/test_composition_database_images.py
