@@ -42,15 +42,17 @@ def factory_tls_check(action):
         if action == "factory-ambient":
             for name, value in (("PGSSLMODE", "disable"), ("PGSERVICE", "untrusted")):
                 os.environ[name] = value
+                entered = False
                 try:
                     with factory.connect():
-                        pass
+                        entered = True
                 except WorkerDenied as error:
                     assert str(error) == "Worker access denied"
                 else:
                     raise AssertionError("Ambient libpq setting was accepted")
                 finally:
                     del os.environ[name]
+                assert not entered, "Ambient libpq setting was accepted before cleanup failure"
             action = "tls-check"  # Same factory succeeds after contamination is removed.
         if action == "tls-check":
             with factory.connect() as connection:
@@ -64,13 +66,15 @@ def factory_tls_check(action):
             assert schemas == []
             print("PASS: fixed factory uses verified TLS 1.3 and empty search path")
             return
+        entered = False
         try:
             with factory.connect():
-                pass
+                entered = True
         except WorkerDenied as error:
             assert str(error) == "Worker access denied"
         else:
             raise AssertionError("Bad TLS configuration connected")
+        assert not entered, "Bad TLS configuration connected before cleanup failure"
         store = RestrictedMembershipStore(factory.connect, schema="ops")
         try:
             store.lookup(USER, TENANT)

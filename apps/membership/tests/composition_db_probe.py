@@ -27,6 +27,17 @@ CA = "/tmp/db-ca.pem"
 WRONG_CA = "/tmp/wrong-ca.pem"
 MISSING_CA = "/tmp/missing-ca.pem"
 CHECKPOINT = "input"
+# A different key with the SAME issuer name can surface a low-level RSA
+# signature error first. libpq reports OpenSSL's first queued error; requiring
+# only its generic certificate message incorrectly rejects this valid denial.
+CA_ERRORS = (
+    "certificate verify failed",
+    "certificate signature failure",
+    "invalid padding",
+    "padding check failed",
+    "block type is not 01",
+    "data too large for modulus",
+)
 
 
 def checkpoint(name):
@@ -67,13 +78,15 @@ def reason(error):
 def denied(factory, profiles):
     # The assertion must be OUTSIDE connect(): it redacts all exceptions,
     # including assertions, so raising inside could falsely pass a negative.
+    entered = False
     try:
         with factory.connect():
-            pass
+            entered = True
     except WorkerDenied as error:
         assert str(error) == "Worker access denied"
     else:
         raise AssertionError("Unexpected connection acceptance")
+    assert not entered, "Unexpected connection acceptance before cleanup failure"
     tenant, user, _ = profiles[0]
     store = RestrictedMembershipStore(factory.connect, schema="ops")
     try:
@@ -104,7 +117,10 @@ def raw_denied(config, expected, *, plaintext=False):
         ):
             pass
     except psycopg.Error as error:
-        assert expected in str(error), "Expected specific connection denial"
+        candidates = (expected,) if isinstance(expected, str) else expected
+        assert any(value in str(error).lower() for value in candidates), (
+            "Expected specific connection denial"
+        )
     else:
         raise AssertionError("Unexpected driver connection acceptance")
 
@@ -200,7 +216,7 @@ def probe(body, *, source_denied=False):
         count = privileges(factory)
         variants = (
             (replace(config, host="wrong-membership-db.test"), "does not match host name"),
-            (replace(config, ca_file=WRONG_CA), "certificate verify failed"),
+            (replace(config, ca_file=WRONG_CA), CA_ERRORS),
             (replace(config, ca_file=MISSING_CA), "does not exist"),
             (replace(config, password=config.password + "wrong"), "password authentication failed"),
         )

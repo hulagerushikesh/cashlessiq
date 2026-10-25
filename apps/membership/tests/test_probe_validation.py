@@ -32,8 +32,17 @@ def test_unexpected_factory_acceptance_cannot_be_redacted_into_pass(connected):
         probe.denied(connected, PROFILES)
 
 
+def test_accepted_connection_then_cleanup_failure_is_not_a_negative_pass(connected):
+    connected._engine.connect.return_value.__exit__.side_effect = RuntimeError("dummy cleanup")
+    with pytest.raises(AssertionError, match="Unexpected connection acceptance"):
+        probe.denied(connected, PROFILES)
+
+
 @pytest.mark.parametrize("action", ["tls-hostname", "factory-ambient"])
-def test_older_probe_cannot_redact_its_negative_assertion(connected, monkeypatch, action):
+@pytest.mark.parametrize("cleanup_failure", [False, True])
+def test_older_probe_cannot_redact_its_negative_assertion(
+    connected, monkeypatch, action, cleanup_failure
+):
     # Simulate a regression that bypasses ambient guards but retains redaction.
     def unguarded_connect(self):
         from contextlib import contextmanager
@@ -42,6 +51,8 @@ def test_older_probe_cannot_redact_its_negative_assertion(connected, monkeypatch
         def redacting():
             try:
                 yield Mock()
+                if cleanup_failure:
+                    raise RuntimeError("dummy cleanup")
             except Exception:
                 raise WorkerDenied("Worker access denied") from None
 
@@ -80,6 +91,23 @@ def test_raw_probe_requires_precise_driver_denial(monkeypatch, outcome):
     monkeypatch.setattr(probe.psycopg, "connect", connect)
     with pytest.raises(AssertionError):
         probe.raw_denied(config(), "certificate verify failed")
+    with pytest.raises(AssertionError):
+        probe.raw_denied(config(), probe.CA_ERRORS)
+
+
+@pytest.mark.parametrize(
+    "detail",
+    [
+        "certificate verify failed",
+        "invalid padding",
+        "data too large for modulus",
+    ],
+)
+def test_wrong_ca_accepts_recognized_crypto_rejection_only(monkeypatch, detail):
+    monkeypatch.setattr(
+        probe.psycopg, "connect", Mock(side_effect=psycopg.OperationalError("SSL error: " + detail))
+    )
+    probe.raw_denied(config(), probe.CA_ERRORS)
 
 
 @pytest.mark.parametrize(
