@@ -45,9 +45,10 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: '0.11.25'
+          enable-cache: false
       - name: Real disposable volume, initdb and bootstrap regression
         env:
           CIQ_DATABASE_IMAGE_TEST: '1'
         run: |
           uv sync --project apps/api --frozen
-          uv run --project apps/api pytest tests/integration/test_composition_database_images.py
+          uv run --project apps/api pytest --tb=short tests/integration/test_composition_database_images.py

@@ -26,6 +26,12 @@ MATERIAL = "/database-material"
 DATA = "/database-data"
 
 
+class PrivateFrame(bytes):
+    # Pytest otherwise includes byte arguments in a failed function's traceback.
+    def __repr__(self):
+        return "PrivateFrame(<redacted>)"
+
+
 def docker(*args, frame=None, timeout=10):
     # Never put private frames into argv, environment, files or failure messages.
     try:
@@ -84,6 +90,7 @@ class DatabaseImages:
         code=0,
         program=None,
     ):
+        frame = PrivateFrame(frame)
         name = f"ciq-db-image-{self.token}-{len(self.containers)}"
         user = "0:0" if root else "10002:10002"
         args = [
