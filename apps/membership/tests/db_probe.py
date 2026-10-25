@@ -44,9 +44,11 @@ def factory_tls_check(action):
                 os.environ[name] = value
                 try:
                     with factory.connect():
-                        raise AssertionError("Ambient libpq setting was accepted")
+                        pass
                 except WorkerDenied as error:
                     assert str(error) == "Worker access denied"
+                else:
+                    raise AssertionError("Ambient libpq setting was accepted")
                 finally:
                     del os.environ[name]
             action = "tls-check"  # Same factory succeeds after contamination is removed.
@@ -64,9 +66,11 @@ def factory_tls_check(action):
             return
         try:
             with factory.connect():
-                raise AssertionError("Bad TLS configuration connected")
+                pass
         except WorkerDenied as error:
             assert str(error) == "Worker access denied"
+        else:
+            raise AssertionError("Bad TLS configuration connected")
         store = RestrictedMembershipStore(factory.connect, schema="ops")
         try:
             store.lookup(USER, TENANT)

@@ -216,6 +216,62 @@ def test_real_initdb_bootstrap_probes_and_no_repeat(database_images, tmp_path, f
         bundle.server["bootstrap.sql"] += (
             b"GRANT TEMPORARY ON DATABASE synthetic TO membership_test;\n"
         )
+    frame, material, data = bootstrap_database(owner, tmp_path, bundle, fault=bool(fault))
+    material_ro, data_ro = (material, MATERIAL, False), (data, DATA, False)
+    data_rw = (data, DATA, True)
+    if fault:
+        owner.run(
+            "bootstrap",
+            None,
+            None,
+            frame,
+            [material_ro, data_ro],
+            expected="ATTEMPTED",
+            program=ATTEMPTED_PROBE,
+        )
+    owner.run(
+        "bootstrap",
+        "composition_database_bootstrap",
+        "verify",
+        frame,
+        [material_ro, data_ro],
+        code=1 if fault else 0,
+    )
+    # Fresh containers cannot initialize or bootstrap the same volumes twice.
+    owner.run(
+        "cluster",
+        "composition_database_cluster",
+        "initialize",
+        frame,
+        [material_ro, data_rw],
+        code=1,
+    )
+    owner.run(
+        "bootstrap",
+        "composition_database_bootstrap",
+        "bootstrap",
+        frame,
+        [material_ro, data_rw],
+        code=1,
+    )
+    if fault:
+        owner.run(
+            "bootstrap",
+            None,
+            None,
+            frame,
+            [material_ro, data_ro],
+            expected="ATTEMPTED",
+            program=ATTEMPTED_PROBE,
+        )
+    else:
+        owner.run(
+            "bootstrap", "composition_database_bootstrap", "verify", frame, [material_ro, data_ro]
+        )
+
+
+def bootstrap_database(owner, tmp_path, bundle, *, fault=False):
+    """Fresh material/data only, shared by offline-network and TLS acceptance."""
     owner.fingerprint = sha256(owner.token.encode()).hexdigest()
     tmp_path.chmod(0o700)
     staged = DatabaseStaging.expected("database", owner.fingerprint, bundle.server).provision(
@@ -271,52 +327,4 @@ def test_real_initdb_bootstrap_probes_and_no_repeat(database_images, tmp_path, f
         expected="BOOTSTRAPPED",
         code=1 if fault else 0,
     )
-    if fault:
-        owner.run(
-            "bootstrap",
-            None,
-            None,
-            frame,
-            [material_ro, data_ro],
-            expected="ATTEMPTED",
-            program=ATTEMPTED_PROBE,
-        )
-    owner.run(
-        "bootstrap",
-        "composition_database_bootstrap",
-        "verify",
-        frame,
-        [material_ro, data_ro],
-        code=1 if fault else 0,
-    )
-    # Fresh containers cannot initialize or bootstrap the same volumes twice.
-    owner.run(
-        "cluster",
-        "composition_database_cluster",
-        "initialize",
-        frame,
-        [material_ro, data_rw],
-        code=1,
-    )
-    owner.run(
-        "bootstrap",
-        "composition_database_bootstrap",
-        "bootstrap",
-        frame,
-        [material_ro, data_rw],
-        code=1,
-    )
-    if fault:
-        owner.run(
-            "bootstrap",
-            None,
-            None,
-            frame,
-            [material_ro, data_ro],
-            expected="ATTEMPTED",
-            program=ATTEMPTED_PROBE,
-        )
-    else:
-        owner.run(
-            "bootstrap", "composition_database_bootstrap", "verify", frame, [material_ro, data_ro]
-        )
+    return frame, material, data

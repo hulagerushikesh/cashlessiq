@@ -20,7 +20,8 @@ assert Path(factory.__file__).read_bytes() == Path(sys.argv[2]).read_bytes()
 for name in ('fastapi', 'alembic', 'uvicorn', 'snowflake', 'ciq_api.main',
              'ciq_api.models', 'ciq_api.auth', 'ciq_api.worker_broker',
              'ciq_api.worker_guard_broker', 'ciq_worker_runtime.mtls_probe',
-             'ciq_worker_runtime.guard_mtls_fixture', 'ciq_membership_runtime.db_probe'):
+             'ciq_worker_runtime.guard_mtls_fixture', 'ciq_membership_runtime.db_probe',
+             'ciq_membership_runtime.composition_db_probe'):
     assert importlib.util.find_spec(name) is None, name
 print('PASS: canonical membership adapter, no API/auth/broker/models/Snowflake')
 """

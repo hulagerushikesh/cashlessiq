@@ -23,6 +23,10 @@ CMD ["python", "-m", "ciq_membership_runtime"]
 FROM runtime-base AS db-test
 COPY apps/membership/tests/db_probe.py /opt/venv/lib/python3.11/site-packages/ciq_membership_runtime/db_probe.py
 
+# Fresh PG16 composition database acceptance only; absent from the candidate.
+FROM runtime-base AS composition-db-test
+COPY apps/membership/tests/composition_db_probe.py /opt/venv/lib/python3.11/site-packages/ciq_membership_runtime/composition_db_probe.py
+
 # Explicit composition test only; worker images never receive the DB adapter.
 FROM db-test AS mtls-test
 COPY apps/worker/tests/mtls_probe.py /opt/venv/lib/python3.11/site-packages/ciq_worker_runtime/mtls_probe.py
