@@ -18,4 +18,11 @@
 			header_up -Authorization
 		}
 	}
+	handle_errors {
+		header {
+			Cache-Control "no-store"
+			X-Robots-Tag "noindex, nofollow, noarchive"
+		}
+		respond "{err.status_code} {err.status_text}" {err.status_code}
+	}
 }

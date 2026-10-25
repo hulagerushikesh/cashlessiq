@@ -84,7 +84,7 @@ def main() -> None:
         assert headers["Location"] == settings["CIQ_WEB_ORIGIN"] + "/"
         cookies = SimpleCookie(headers["Set-Cookie"])
         session = cookies["ciq_session"]
-        assert session["secure"] and session["httponly"] and session["samesite"] == "strict"
+        assert session["secure"] and session["httponly"] and session["samesite"].lower() == "strict"
         cookie = f"ciq_session={session.value}"
         _, case = request("/cases/GOL001", 200, auth=basic, cookie=cookie)
         assert "95,000" in case
