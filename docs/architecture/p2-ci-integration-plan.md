@@ -116,6 +116,24 @@ until its fresh physical run passes. Test health is fictional/frozen, approval
 is test-local, and material custody assumes the exclusive disposable runner.
 No normal API/source startup, GCP deployment or operational custody is activated.
 
+The first full-service run `40188372288` completed helper preparation, then
+refused the stopped DB auxiliary because Docker initially left its configured
+NetworkID empty. The corrected pre-start check binds only an already verified
+network name/full-ID alias and requested static IP; live containers still
+require the exact full network ID and assigned IP. Twelve regressions cover all
+eight roles plus foreign/ambiguous attachment denial. Uncertain cleanup in that
+failed attempt was reported, not relabeled as clean; the disposable runner owns
+its leftovers.
+
+The next candidate additionally stops/proves DB exit before closed single-user
+test maintenance, commits processor revocation and restoration, and verifies
+that the same eight app incarnations observe those changes. An unaffected
+medical role must work after each DB restore, distinguishing revocation from
+an outage. During both DB stops, the private chain must deny without a fallback.
+No network admin grant, local SQL listener or application write route is added.
+These are startup self-tests before supervised user delivery, not a production
+availability/recovery or mid-request revocation claim.
+
 ### Database resource journal to launcher handoff — 25 October
 
 Integration review found the inactive canonical launcher expected only the

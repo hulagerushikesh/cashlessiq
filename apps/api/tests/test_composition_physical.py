@@ -280,23 +280,42 @@ class PhysicalOwner:
         attached = row["NetworkSettings"]["Networks"]
         if spec["network"] == "none":
             assert set(attached) <= {"none"}
+            assert all(
+                not row.get("IPAddress") and not row.get("GlobalIPv6Address")
+                for row in attached.values()
+            )
         else:
             assert len(attached) == 1
+            key = next(iter(attached))
             network = next(iter(attached.values()))
-            assert network["NetworkID"] == spec["network"]
+            assert key in {spec["network"], spec["network_name"]}
+            assert network["NetworkID"] == spec["network"] or (
+                network["NetworkID"] == ""
+                and row["State"]["Status"] == "created"
+                and row["State"]["Running"] is False
+                and row["State"]["Pid"] == 0
+            )
             assert network["IPAMConfig"]["IPv4Address"] == spec["address"]
+            if row["State"]["Running"]:
+                assert network["IPAddress"] == spec["address"]
         return row
 
-    def auxiliary(self, role, image, command, *, edge=None, mounts=(), interactive=False):
+    def auxiliary(
+        self, role, image, command, *, edge=None, mounts=(), interactive=False, start=True
+    ):
+        assert role in {"db", "controller", "db-admin-0", "db-admin-1"}
+        admin = role.startswith("db-admin-")
+        assert (edge is None) is admin and (not admin or (interactive and not start))
         assert self.headroom() is True
         spec = dict(
-            name=self.plan.name(role),
+            name=self.prefix + "-" + role,
             role=role,
             image=self.images[image],
             command=tuple(command),
-            user="10002:10002" if role == "db" else "10001:10001",
-            network=self.plan.network(edge).identifier,
-            address=self.plan.address(edge, role),
+            user="10002:10002" if role == "db" or admin else "10001:10001",
+            network=self.plan.network(edge).identifier if edge else "none",
+            network_name=self.prefix + "-" + edge if edge else "none",
+            address=self.plan.address(edge, role) if edge else None,
             mounts=tuple(mounts),
             interactive=interactive,
             tmpfs={"/tmp": "rw,noexec,nosuid,size=2m,mode=1777"} if role == "controller" else {},
@@ -312,8 +331,6 @@ class PhysicalOwner:
             spec["name"],
             "--network",
             spec["network"],
-            "--ip",
-            spec["address"],
             "--read-only",
             "--user",
             spec["user"],
@@ -332,6 +349,8 @@ class PhysicalOwner:
             "--restart",
             "no",
         ]
+        if edge:
+            args += ["--ip", spec["address"]]
         for key, value in spec["labels"].items():
             args += ["--label", key + "=" + value]
         for path, options in spec["tmpfs"].items():
@@ -362,9 +381,10 @@ class PhysicalOwner:
         self.aux_journal.record(
             "observe", kind="container", name=spec["name"], identity=cid, fingerprint=fingerprint
         )
-        assert self.docker("start", cid) == cid
-        row = self.attest_auxiliary(spec, cid)
-        assert row["State"]["Running"] and row["State"]["Pid"] > 0
+        if start:
+            assert self.docker("start", cid) == cid
+            row = self.attest_auxiliary(spec, cid)
+            assert row["State"]["Running"] and row["State"]["Pid"] > 0
         return cid
 
     def private(self, command, frame):
@@ -596,6 +616,7 @@ class PhysicalOwner:
                     assert summary.recommendation.state == "MISSING"
                 assert self.probe(pki, profile, tenant, foreign_id) == {"state": "DENIED"}
                 checked += 1
+        self.accept_revocation(pki)
         # These are closed synthetic readiness self-tests, not user delivery.
         # Every reader/validator route and the real membership DB was exercised.
         for service in self.launcher.services:
@@ -623,6 +644,66 @@ class PhysicalOwner:
             flush=True,
         )
 
+    def accept_revocation(self, pki):
+        # Closed startup self-tests only. Stop and prove DB exit before each
+        # single-user maintenance operation; no extra SQL grant or Unix socket.
+        # The eight app incarnations stay running, so membership cannot be cached.
+        db = self.launcher.auxiliaries["db"]
+        original = {
+            role: self.row("container", cid)["State"]["StartedAt"]
+            for role, cid in self.launcher.owned.items()
+        }
+        tenant = SOURCE_TENANTS[0]
+        processor, medical = tenant.profiles[:2]
+        for index, active in enumerate((False, True)):
+            assert self.stop_auxiliary(db) is True
+            assert self.row("container", db)["State"]["ExitCode"] == 0
+            assert self.probe(pki, medical, tenant, "GOL001") == {"state": "DENIED"}
+            helper = self.auxiliary(
+                f"db-admin-{index}",
+                "bootstrap",
+                (
+                    "/usr/lib/postgresql/16/bin/postgres",
+                    "--single",
+                    "-D",
+                    "/database-data/pgdata",
+                    "-c",
+                    "shared_buffers=16MB",
+                    "-c",
+                    "max_connections=10",
+                    "synthetic",
+                ),
+                mounts=((self.plan.database_volume("data"), "/database-data", True),),
+                interactive=True,
+                start=False,
+            )
+            sql = (
+                f"UPDATE ops.tenant_membership SET active={'true' if active else 'false'} "
+                f"WHERE user_id='{processor.user_id}' AND tenant_id='{tenant.tenant_id}';\n"
+            ).encode()
+            self.private(("start", "--attach", "--interactive", helper), sql)
+            state = self.row("container", helper)["State"]
+            assert state["Running"] is False and state["Pid"] == 0
+            assert state["ExitCode"] == 0 and not state["OOMKilled"] and not state["Error"]
+            assert self.docker("start", db) == db
+            end = min(self.deadline, time.monotonic_ns() + 15_000_000_000)
+            while True:
+                value = self.probe(pki, medical, tenant, "GOL001")
+                if value["state"] == "VERIFIED" or time.monotonic_ns() >= end:
+                    break
+                time.sleep(0.2)
+            assert value["state"] == "VERIFIED", "DB restore did not restore a fresh valid role"
+            value = self.probe(pki, processor, tenant, "GOL001")
+            assert value["state"] == ("VERIFIED" if active else "DENIED")
+        for role, cid in self.launcher.owned.items():
+            row = self.row("container", cid)
+            assert row["State"]["Running"] and row["State"]["StartedAt"] == original[role]
+        print(
+            "Physical fresh membership: revocation/restore and two DB outage denials; "
+            "app incarnations unchanged",
+            flush=True,
+        )
+
     def stop_auxiliary(self, cid):
         try:
             spec, _, _ = next(row for row in self.auxiliaries if row[1] == cid)
@@ -633,7 +714,8 @@ class PhysicalOwner:
             return (
                 row["State"]["Running"] is False
                 and row["State"]["Pid"] == 0
-                and row["State"]["Status"] == "exited"
+                and row["State"]["Status"] in {"created", "exited"}
+                and not any(row["State"].get(key) for key in ("Paused", "Restarting", "Dead"))
             )
         except Exception:
             return False

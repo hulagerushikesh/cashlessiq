@@ -39,6 +39,40 @@ def plan():
     )
 
 
+@pytest.mark.parametrize("role", inv.ROLES)
+def test_created_network_metadata_uses_only_verified_aliases_until_live_id_exists(role):
+    p = plan()
+    binding = Binding("test-attempt", p.generation, "a" * 64)
+    row = container(p, role, "d" * 64, binding)
+    for network in row["NetworkSettings"]["Networks"].values():
+        network["NetworkID"] = ""
+    assert p.check_container(role, row, running=False) == "d" * 64
+    row["State"].update(Running=True, Status="running", Pid=123)
+    with pytest.raises(ValueError):
+        p.check_container(role, row, running=True)
+
+
+@pytest.mark.parametrize("fault", ["foreign-alias", "foreign-id", "wrong-ip", "duplicate-alias"])
+def test_created_network_metadata_never_adopts_foreign_or_ambiguous_attachment(fault):
+    p = plan()
+    row = container(p, "membership", "d" * 64, Binding("test-attempt", p.generation, "a" * 64))
+    attached = row["NetworkSettings"]["Networks"]
+    key = next(iter(attached))
+    endpoint = attached[key]
+    endpoint["NetworkID"] = ""
+    if fault == "foreign-alias":
+        attached["foreign"] = attached.pop(key)
+    elif fault == "foreign-id":
+        endpoint["NetworkID"] = "f" * 64
+    elif fault == "wrong-ip":
+        endpoint["IPAMConfig"]["IPv4Address"] = "10.99.0.2"
+    else:
+        alias = next(f"{p.prefix}-{n.edge}" for n in p.networks if n.identifier == key)
+        attached[alias] = attached.pop(next(k for k in attached if k != key))
+    with pytest.raises(ValueError):
+        p.check_container("membership", row, running=False)
+
+
 def container(p, role, cid, binding, running=False):
     primary = p.attachments(role)[0][0]
     return dict(

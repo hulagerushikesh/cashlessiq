@@ -363,11 +363,25 @@ class Inventory:
             == set(self.mounts(role))
         )
         attached = row["NetworkSettings"]["Networks"]
-        _require(len(attached) == len(self.attachments(role)))
-        _require(
-            {(n["NetworkID"], n["IPAMConfig"]["IPv4Address"]) for n in attached.values()}
-            == set(self.attachments(role))
-        )
+        _require(type(attached) is dict and len(attached) == len(self.attachments(role)))
+        # Docker may leave the primary NetworkID empty until first start. Bind
+        # its configured key to the already independently inspected plan; never
+        # accept an empty ID after start or infer an arbitrary network identity.
+        aliases = {
+            alias: network.identifier
+            for network in self.networks
+            if role in EDGES[network.edge]
+            for alias in (network.identifier, f"{self.prefix}-{network.edge}")
+        }
+        configured = set()
+        for name, endpoint in attached.items():
+            _require(name in aliases and type(endpoint) is dict)
+            identifier = aliases[name]
+            _require(
+                endpoint["NetworkID"] == identifier or (not running and endpoint["NetworkID"] == "")
+            )
+            configured.add((identifier, endpoint["IPAMConfig"]["IPv4Address"]))
+        _require(configured == set(self.attachments(role)))
         _require(
             state["Running"] is running
             and not state.get("Paused")
