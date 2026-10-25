@@ -4,9 +4,7 @@ Caller supplies freshly generated test PKI/assertion key and fictional DB config
 No environment, normal app settings, profile, production key or Snowflake I/O.
 """
 
-import importlib.util
-import sys
-from pathlib import Path
+import importlib
 
 from composition_inventory_fixture import implementation as inv
 from cryptography import x509
@@ -15,11 +13,7 @@ from test_source_cases import build_test_sources
 
 from ciq_api.source_alpha import SOURCE_TENANTS
 
-_path = Path(__file__).resolve().parents[3] / "scripts/composition_material.py"
-_spec = importlib.util.spec_from_file_location("ciq_composition_material_test", _path)
-material = importlib.util.module_from_spec(_spec)
-sys.modules[_spec.name] = material
-_spec.loader.exec_module(material)
+material = importlib.import_module(inv.__package__ + ".composition_material")
 
 TLS_NAMES = {
     "membership": "membership",

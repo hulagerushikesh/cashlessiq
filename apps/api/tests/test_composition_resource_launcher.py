@@ -67,7 +67,9 @@ def provision(tmp_path, *, database=False):
     assert [(n.edge, n.identifier) for n in result.networks] == [
         (n.edge, n.identifier) for n in p.networks
     ]
-    return p, journal, fake, engine
+    # Feed the actual allocator result across the boundary, not the original
+    # mock inventory (which previously hid separate module/type identities).
+    return result, journal, fake, engine
 
 
 @pytest.mark.parametrize("database", [False, True])

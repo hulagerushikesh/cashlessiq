@@ -1,0 +1,44 @@
+name: Disposable service composition
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  composition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact disposable application and helper images
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build -f apps/worker/Dockerfile --target composition-test --iidfile "$RUNNER_TEMP/worker-image-id" .
+          docker build -f apps/membership/Dockerfile --target composition-test --iidfile "$RUNNER_TEMP/membership-image-id" .
+          broker_tag="ciq-composition-broker:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build -f apps/api/Dockerfile.broker-test --tag "$broker_tag" --iidfile "$RUNNER_TEMP/broker-image-id" .
+          broker_id="$(cat "$RUNNER_TEMP/broker-image-id")"
+          test "$(docker image inspect --format '{{.Id}}' "$broker_tag")" = "$broker_id"
+          docker build -f apps/api/Dockerfile.state-test --build-arg "CIQ_BROKER_TEST_IMAGE=$broker_tag" --iidfile "$RUNNER_TEMP/state-image-id" .
+          test "$(docker image inspect --format '{{.Id}}' "$broker_tag")" = "$broker_id"
+          docker build -f scripts/Dockerfile.material-test --iidfile "$RUNNER_TEMP/material-image-id" .
+          docker build -f scripts/Dockerfile.database-material-test --iidfile "$RUNNER_TEMP/db-material-image-id" .
+          docker build -f scripts/Dockerfile.database-data-test --iidfile "$RUNNER_TEMP/db-data-image-id" .
+          cluster_tag="ciq-composition-cluster:${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build -f scripts/Dockerfile.database-cluster-test --tag "$cluster_tag" --iidfile "$RUNNER_TEMP/cluster-image-id" .
+          cluster_id="$(cat "$RUNNER_TEMP/cluster-image-id")"
+          docker build -f scripts/Dockerfile.database-bootstrap-test --build-arg "CLUSTER_IMAGE=$cluster_tag" --iidfile "$RUNNER_TEMP/bootstrap-image-id" .
+          test "$(docker image inspect --format '{{.Id}}' "$cluster_tag")" = "$cluster_id"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+          enable-cache: false
+      - name: Real Linux allocation and private helper acceptance
+        env:
+          CIQ_COMPOSITION_TEST: '1'
+        run: |
+          uv sync --project apps/api --frozen
+          uv run --project apps/api pytest --tb=short -s apps/api/tests/test_composition_physical.py

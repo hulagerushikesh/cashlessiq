@@ -60,6 +60,42 @@ that [they cover warehouses, not serverless features or AI](https://docs.snowfla
 
 ## Evidence and remaining gates
 
+### Full allocator and private-helper candidate — 25 October
+
+The owner requested completion of engineering before GCP deployment. GCP remains
+preparation-only and unbilled. The next manual `Disposable service composition`
+workflow uses a standard public-repository Ubuntu runner, no artifact/cache
+export, no registry push and only freshly generated fictional identities.
+
+The candidate wires the real allocator to fresh Linux admission observations
+and the existing all-table route/Docker collision gate. It requires 18 internal
+bridges and 17 named volumes in the same durable resource journal. A shared test
+package now preserves exact Inventory/Material types across allocator, helper
+and launcher imports. The earlier mock handoff reused its input plan rather than
+the allocator result, masking this integration gap; it now passes the result.
+
+Linux admission reads bounded `/proc/meminfo`, `/proc/loadavg` and memory PSI,
+plus selected Docker info, full container identities and stats. It denies partial
+or changing observations and resamples before each allocation/helper stage.
+Thresholds are conservative test policy: two CPUs, 3 GiB total host/Docker RAM,
+2 GiB available/estimated spare RAM, 12 GiB free disk, one-minute load at most
+0.75 per CPU, memory PSI some/full avg10 at most 5%/1%. No cached PASS, host
+configuration change or Mac-policy relaxation. Docker CLI memory excludes cache;
+this sampled evidence is not an atomic reservation or a peak-load guarantee.
+References: [Linux proc](https://cdn.kernel.org/doc/html/latest/filesystems/proc.html),
+[Docker stats](https://docs.docker.com/reference/cli/docker/container/stats/).
+
+The physical candidate builds exact worker/membership/broker and helper image
+IDs, then exercises all eight material bundles, seven independent state stores,
+DB material/data preparation, initdb and bootstrap through 19 journaled helper
+pairs. Each pair separately inspects installation and restricted read-back;
+private material travels only via bounded stdin. Teardown verifies exact
+acknowledged identities and exits before removal; UNKNOWN is not absence or a
+removal target. This candidate is not yet CI-accepted. Actual application
+readiness, authenticated cross-service requests, revocation and bounded stop
+remain the next integration stage; operational custody/live source/P2 exit
+remain separate gates.
+
 ### Database resource journal to launcher handoff — 25 October
 
 Integration review found the inactive canonical launcher expected only the

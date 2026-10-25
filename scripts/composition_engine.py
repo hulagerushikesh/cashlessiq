@@ -31,7 +31,7 @@ else:
 
 
 def _readonly(args):
-    return args[:1] == ("inspect",) or args[:2] in {
+    return args[:1] in {("inspect",), ("info",), ("stats",)} or args[:2] in {
         ("image", "inspect"),
         ("network", "inspect"),
         ("network", "ls"),
