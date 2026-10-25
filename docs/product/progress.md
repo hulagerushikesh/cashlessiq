@@ -3,6 +3,19 @@
 Last updated: 25 October 2026
 Current phase: **P2 / M2 — synthetic-only, read-only case workspace**
 
+**25 October scope expansion:** the owner explicitly selected full MVP workflows,
+including reviewer actions, background jobs, uploads and policy management, before
+GCP deployment and joint testing. Continue that synthetic implementation while
+keeping governed live-source/production activation gates separate. GCP remains
+preparation-only; no billing linkage or paid service use is authorized.
+
+The frontend production dependency audit found `fast-uri` 3.1.8 through AJV.
+The lockfile now resolves the compatible patched 3.1.9; all 41 client contract
+tests pass and a fresh `npm audit --omit=dev` reports zero known vulnerabilities.
+The [maintainer advisory](https://github.com/advisories/GHSA-w74x-v6f9-j3xg)
+identifies 3.1.9 as patched. Existing Docker dependencies are not hot-patched;
+fresh builds pick up the lockfile. This scan is not a claim of zero application risk.
+
 This is the current-status index. The migration plan defines sequence; phase
 checklists contain verification evidence. Earlier entries in those checklists
 are historical checkpoints, not the latest status. Hackathon submission is done;
