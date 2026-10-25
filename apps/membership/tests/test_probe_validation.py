@@ -80,3 +80,21 @@ def test_raw_probe_requires_precise_driver_denial(monkeypatch, outcome):
     monkeypatch.setattr(probe.psycopg, "connect", connect)
     with pytest.raises(AssertionError):
         probe.raw_denied(config(), "certificate verify failed")
+
+
+@pytest.mark.parametrize(
+    "message,expected",
+    [
+        ("secret password authentication failed private-host", "password"),
+        ("secret invalid connection option private-token", "parameter"),
+        ("private unclassified details", "check"),
+    ],
+)
+def test_diagnostic_reason_never_returns_error_details(message, expected):
+    try:
+        raise RuntimeError(message)
+    except RuntimeError:
+        try:
+            raise WorkerDenied("Worker access denied") from None
+        except WorkerDenied as error:
+            assert probe.reason(error) == expected

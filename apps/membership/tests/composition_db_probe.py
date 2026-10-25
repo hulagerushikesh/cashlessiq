@@ -26,6 +26,35 @@ from sqlalchemy.exc import DBAPIError
 CA = "/tmp/db-ca.pem"
 WRONG_CA = "/tmp/wrong-ca.pem"
 MISSING_CA = "/tmp/missing-ca.pem"
+CHECKPOINT = "input"
+
+
+def checkpoint(name):
+    # Names come only from fixed calls below, never request fields/driver errors.
+    global CHECKPOINT
+    CHECKPOINT = name
+
+
+def reason(error):
+    """Closed diagnostic categories only; never render driver error contents."""
+    for _ in range(8):
+        message = str(error).lower()
+        for needle, category in (
+            ("certificate verify failed", "certificate"),
+            ("does not match host name", "hostname"),
+            ("password authentication failed", "password"),
+            ("pg_hba.conf rejects", "hba"),
+            ("connection refused", "refused"),
+            ("timeout", "timeout"),
+            ("invalid connection option", "parameter"),
+            ("sslcertmode", "certificate-mode"),
+        ):
+            if needle in message:
+                return category
+        error = error.__context__
+        if error is None:
+            break
+    return "check"
 
 
 def denied(factory, profiles):
@@ -125,6 +154,7 @@ def privileges(factory):
 
 
 def probe(body, *, source_denied=False):
+    checkpoint("material")
     profiles = body["profiles"]
     assert len(profiles) == 6 and len({p[0] for p in profiles}) == 2
     for path, value in ((CA, body["ca"]), (WRONG_CA, body["wrong_ca"])):
@@ -138,11 +168,14 @@ def probe(body, *, source_denied=False):
     factory = MembershipConnectionFactory(config)
     try:
         if source_denied:
+            checkpoint("source-driver")
             raw_denied(config, "pg_hba.conf rejects connection")
+            checkpoint("source-factory-store")
             denied(factory, profiles)
             return dict(state="VERIFIED", source_denials=1)
         # Only the initial, read-only connection probe retries, bounded to 5s.
         deadline = time.monotonic() + 5
+        checkpoint("initial-connection")
         while True:
             try:
                 with factory.connect() as connection:
@@ -154,7 +187,9 @@ def probe(body, *, source_denied=False):
             else:
                 assert one == 1
                 break
+        checkpoint("registry")
         accepted(factory, profiles)
+        checkpoint("privileges")
         count = privileges(factory)
         variants = (
             (replace(config, host="wrong-membership-db.test"), "does not match host name"),
@@ -162,22 +197,29 @@ def probe(body, *, source_denied=False):
             (replace(config, ca_file=MISSING_CA), "does not exist"),
             (replace(config, password=config.password + "wrong"), "password authentication failed"),
         )
-        for bad, expected in variants:
+        for name, (bad, expected) in zip(
+            ("hostname", "ca", "missing-ca", "password"), variants, strict=True
+        ):
+            checkpoint(name + "-driver")
             raw_denied(bad, expected)
+            checkpoint(name + "-factory-store")
             negative = MembershipConnectionFactory(bad)
             try:
                 denied(negative, profiles)
             finally:
                 negative.close()
+        checkpoint("plaintext")
         raw_denied(config, "no encryption", plaintext=True)
         # Ambient libpq configuration cannot override canonical TLS policy.
         for name, value in (("PGSSLMODE", "disable"), ("PGSERVICE", "untrusted")):
+            checkpoint("ambient")
             os.environ[name] = value
             try:
                 denied(factory, profiles)
             finally:
                 del os.environ[name]
         # Same factory and DB remain usable after all negative checks.
+        checkpoint("final-registry")
         accepted(factory, profiles)
         return dict(
             state="VERIFIED",
@@ -198,8 +240,11 @@ def main():
         result = probe(json.loads(body), source_denied=sys.argv[1] == "source-denied")
         print(json.dumps(result))
         return 0
-    except Exception:
-        print("Disposable membership database acceptance denied", file=sys.stderr)
+    except Exception as error:
+        print(
+            f"Disposable membership database acceptance denied at {CHECKPOINT}: {reason(error)}",
+            file=sys.stderr,
+        )
         return 1
 
 
