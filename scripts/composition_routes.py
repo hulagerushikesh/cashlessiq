@@ -1,4 +1,4 @@
-"""Opt-in bounded Mac/Docker IPv4 collision gate; no allocation or free-pool search.
+"""Opt-in bounded host/Docker IPv4 collision gate; no allocation/free-pool search.
 
 Snapshots are conservative admission evidence, not an atomic route reservation.
 The trusted owner must keep the host/daemon stable throughout physical acceptance.
@@ -59,6 +59,50 @@ def mac_routes(output):
 
 
 def host_routes(deadline_ns):
+    """Mac collector remains the default; Linux selection is explicit."""
+    return _collect(deadline_ns, ("/usr/sbin/netstat", "-rn", "-f", "inet"), mac_routes)
+
+
+def linux_routes(output):
+    """Numeric `ip -j -4 route show table all`, including local/VPN routes.
+
+    Ignore only the explicit default route. Unknown, ambiguous, empty or
+    noncanonical destinations deny rather than silently omit occupied ranges.
+    """
+    try:
+        if type(output) is not str or len(output) > 16384:
+            raise RoutesDenied()
+        rows = json.loads(output, object_pairs_hook=_unique)
+        if type(rows) is not list or not 1 <= len(rows) <= 256:
+            raise RoutesDenied()
+        result = set()
+        for row in rows:
+            if type(row) is not dict or type(row.get("dst")) is not str:
+                raise RoutesDenied()
+            destination = row["dst"]
+            if destination == "default":
+                continue
+            network = IPv4Network(destination, strict=True)
+            if destination not in {str(network), str(network.network_address)}:
+                raise RoutesDenied()
+            if network.prefixlen == 0:
+                raise RoutesDenied()
+            result.add(network)
+        if not result:
+            raise RoutesDenied()
+        return frozenset(result)
+    except Exception:
+        raise RoutesDenied() from None
+
+
+def linux_host_routes(deadline_ns):
+    """Bounded Linux observation only; does not activate the full allocator."""
+    return _collect(
+        deadline_ns, ("/usr/sbin/ip", "-j", "-4", "route", "show", "table", "all"), linux_routes
+    )
+
+
+def _collect(deadline_ns, command, parser):
     """Bounded read-only host command with empty environment and no shell."""
     budget = min(2_000_000_000, deadline_ns - time.monotonic_ns() - 2_000_000_000)
     result = BoundedActor(
@@ -67,17 +111,14 @@ def host_routes(deadline_ns):
             "-I",
             str(Path(__file__).with_name("composition_engine.py").resolve()),
             "--command",
-            "/usr/sbin/netstat",
-            "-rn",
-            "-f",
-            "inet",
+            *command,
         ),
         budget_ns=budget,
         grace_ns=300_000_000,
     ).execute()
     if set(result) != {"output"}:
         raise RoutesDenied()
-    return mac_routes(result["output"])
+    return parser(result["output"])
 
 
 def _ids(output):

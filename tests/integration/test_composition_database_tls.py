@@ -1,13 +1,14 @@
 """CI-only TLS acceptance on a fresh internal bridge; not the full allocator.
 
-Docker assigns a free subnet. Its actual ID/subnet are injected into the member
-edge before generating the HBA/PKI. No host ports or external network attachment.
+The explicit subnet must pass real Linux/Docker collision observations. Its
+actual ID is injected before HBA/PKI generation. No host ports or external NIC.
 The disposable runner owns final cleanup; this is not operational recovery.
 """
 
 import json
 import os
 import re
+import time
 from dataclasses import replace
 from ipaddress import IPv4Network
 from pathlib import Path
@@ -18,6 +19,7 @@ if os.environ.get("GITHUB_ACTIONS") != "true" or os.environ.get("CIQ_DATABASE_IM
     pytest.skip("Dedicated disposable CI image job required", allow_module_level=True)
 
 from scripts.composition_database import prepare
+from scripts.composition_routes import LIST, CollisionCheck, linux_host_routes
 from scripts.disposable_membership_db import SOURCE_PROFILES
 from tests.integration.test_composition_database_images import (
     DATA,
@@ -32,6 +34,23 @@ from tests.integration.test_composition_database_images import (
 from tests.test_composition_database import plan
 
 
+class ReadOnlyNetworks:
+    """Closed CI observation adapter; discovery never supplies cleanup targets."""
+
+    def __init__(self):
+        self.commands = {LIST}
+
+    def permit_network(self, identifier):
+        assert re.fullmatch("[0-9a-f]{64}", identifier)
+        self.commands.add(("network", "inspect", identifier))
+
+    def __call__(self, *args):
+        assert args in self.commands
+        result = docker(*args)
+        assert result.returncode == 0
+        return result.stdout.decode()
+
+
 class NetworkedDatabaseImages(DatabaseImages):
     def __init__(self):
         super().__init__()
@@ -44,6 +63,23 @@ class NetworkedDatabaseImages(DatabaseImages):
         self.images["membership"] = image
 
     def edge(self):
+        subnet = IPv4Network("172.30.255.0/29")
+        original = plan()
+        selected = replace(
+            original,
+            networks=tuple(
+                replace(n, subnet=str(subnet)) if n.edge == "member-db" else n
+                for n in original.networks
+            ),
+        )
+        assert (
+            CollisionCheck(
+                ReadOnlyNetworks(),
+                time.monotonic_ns() + 15_000_000_000,
+                route_reader=linux_host_routes,
+            )(tuple(n.subnet for n in selected.networks))
+            is True
+        )
         name = f"ciq-db-image-{self.token}-member-db"
         absent = docker("network", "inspect", name)
         assert absent.returncode == 1 and b"not found" in absent.stderr.lower()
@@ -53,6 +89,10 @@ class NetworkedDatabaseImages(DatabaseImages):
             "--driver",
             "bridge",
             "--internal",
+            "--subnet",
+            str(subnet),
+            "--gateway",
+            str(subnet.network_address + 1),
             "--label",
             f"{LABEL}={self.token}",
             name,
@@ -68,15 +108,13 @@ class NetworkedDatabaseImages(DatabaseImages):
         assert not row["Options"] and not row["Containers"] and not row["EnableIPv6"]
         assert row["IPAM"]["Driver"] == "default" and len(row["IPAM"]["Config"]) == 1
         spec = row["IPAM"]["Config"][0]
-        subnet = IPv4Network(spec["Subnet"], strict=True)
-        assert spec["Gateway"] == str(subnet.network_address + 1)
-        original = plan()
+        assert spec == {"Subnet": str(subnet), "Gateway": str(subnet.network_address + 1)}
         # Inventory validates private range/prefix and all subnet overlaps.
         return replace(
-            original,
+            selected,
             networks=tuple(
                 replace(n, identifier=network, subnet=str(subnet)) if n.edge == "member-db" else n
-                for n in original.networks
+                for n in selected.networks
             ),
         )
 

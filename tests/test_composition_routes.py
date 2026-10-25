@@ -6,10 +6,85 @@ from ipaddress import IPv4Network
 
 import pytest
 
-from scripts.composition_routes import LIST, CollisionCheck, RoutesDenied, mac_routes
+from scripts.composition_routes import LIST, CollisionCheck, RoutesDenied, linux_routes, mac_routes
 
 HEADER = "Routing tables\n\nInternet:\nDestination Gateway Flags Netif Expire\n"
 SUBNETS = tuple(f"10.81.{i}.0/29" for i in range(1, 19))
+
+
+def test_linux_all_table_routes_include_host_local_and_vpn_prefixes():
+    assert linux_routes(
+        json.dumps(
+            [
+                dict(dst="default", gateway="10.1.0.1"),
+                dict(dst="10.1.0.0/16", dev="eth0"),
+                dict(dst="10.80.0.0/16", dev="tun0"),
+                dict(dst="127.0.0.1", type="local", table="local"),
+                dict(dst="10.1.255.255", type="broadcast", table="local"),
+            ]
+        )
+    ) == frozenset(
+        IPv4Network(n)
+        for n in (
+            "10.1.0.0/16",
+            "10.80.0.0/16",
+            "127.0.0.1/32",
+            "10.1.255.255/32",
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "output",
+    [
+        None,
+        "",
+        "[]",
+        "{}",
+        '[{"dst":"default"}]',
+        "[{}]",
+        '[{"dst":"10.1.0.1/16"}]',
+        '[{"dst":"10/8"}]',
+        '[{"dst":"0.0.0.0/0"}]',
+        '[{"dst":"::1"}]',
+        '[{"dst":"10.0.0.0/8","dst":"default"}]',
+        '[{"dst":42}]',
+        "[" + ",".join('{"dst":"127.0.0.1"}' for _ in range(257)) + "]",
+        "x" * 16385,
+    ],
+)
+def test_linux_unknown_or_incomplete_observation_denies(output):
+    with pytest.raises(RoutesDenied):
+        linux_routes(output)
+
+
+def test_linux_collector_is_closed_bounded_and_explicit(monkeypatch):
+    from scripts import composition_routes
+
+    seen = {}
+
+    class Actor:
+        def __init__(self, command, **limits):
+            seen.update(command=command, limits=limits)
+
+        def execute(self):
+            return {"output": '[{"dst":"127.0.0.1"}]'}
+
+    monkeypatch.setattr(composition_routes, "BoundedActor", Actor)
+    assert composition_routes.linux_host_routes(time.monotonic_ns() + 10_000_000_000) == (
+        frozenset([IPv4Network("127.0.0.1/32")])
+    )
+    assert seen["command"][3:] == (
+        "--command",
+        "/usr/sbin/ip",
+        "-j",
+        "-4",
+        "route",
+        "show",
+        "table",
+        "all",
+    )
+    assert seen["limits"] == dict(budget_ns=2_000_000_000, grace_ns=300_000_000)
 
 
 def test_bsd_numeric_routes_expand_abbreviations_and_ignore_only_default():

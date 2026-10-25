@@ -107,4 +107,50 @@ pytest tracebacks and disables uv cache export. Its fresh
 [run 40159947450](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159947450)
 also passed all three cases. Full product CI passed the initial lifecycle
 checkpoint c1fead5 ([run 40159627351](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159627351));
-the broader run for 08c8caf is still pending at this checkpoint.
+the broader run for 08c8caf subsequently passed (40159936102), as did
+the documentation checkpoint 90a5873 (40160040974).
+
+
+### Membership database TLS acceptance prepared — 25 October
+
+The same manual workflow now also builds the explicit `composition-db-test`
+membership target, inspecting its exact image ID and nonroot identity. It is
+absent from the default candidate/wheel. A fresh internal Docker bridge uses an explicit test subnet/gateway. The
+existing collision gate now accepts an explicitly selected, bounded Linux
+`ip -j -4 route show table all` collector, alongside two real Docker network
+snapshots. Collision or incomplete/changing observation denies before creation.
+The inspected subnet/ID replace only the member-DB edge in a validated test
+inventory before generating credentials, HBA and PKI.
+This is a dedicated CI harness, not full allocator or Linux resource/headroom acceptance. Existing host networks and resources are never adopted.
+
+After the actual helpers bootstrap fresh volumes, an inspected PG16 container
+runs directly as UID 10002 with only that bridge, TLS 1.3, generated certificate/
+key/HBA, no Unix socket or published ports, read-only root/material, and writable
+owned data. Fresh UID 10001 clients receive only generated membership credentials
+and CA certificates through bounded stdin; the DB private key/admin password/SQL
+are not sent. CA files live in private client tmpfs; no secret-bearing request,
+raw driver diagnostics, image, cache or artifact is published.
+
+The real canonical factory/store must read all six seeded identities and return
+absence for cross-tenant lookups. Nine real SQL operations must fail with 42501.
+Raw-driver checks require the specific hostname, wrong CA, missing CA, password
+and plaintext rejection reasons, while factory/store checks require redacted
+denial without fallback. Ambient PG settings are rejected. A second client from
+an unauthorized source IP must be rejected by the generated HBA. The server must
+remain running throughout, then complete a bounded SIGINT fast shutdown with
+exit 0; a separate read-only helper checks the retained bootstrap marker and
+absence of postmaster.pid. PostgreSQL documents the chosen
+[TLS configuration](https://www.postgresql.org/docs/16/runtime-config-connection.html)
+and [SIGINT shutdown](https://www.postgresql.org/docs/16/server-shutdown.html).
+
+This also corrects an older test's assertion inside the factory's redacting
+context: unexpected acceptance now raises outside that context. Seven offline
+regressions ensure unexpected acceptance/unrelated driver errors and fallback
+to absence cannot pass. All 62 offline membership tests and the isolated wheel
+boundary pass; all 854 root tests pass with three CI-only modules skipped.
+The first [live attempt 40160955766](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40160955766)
+passed all three prior lifecycle cases but caught Docker requiring an explicit
+subnet for fixed addresses. The corrected explicit subnet and real Linux
+collision observation await a fresh run. Sixteen new route parser/collector
+regressions pass (58 route checks total); Mac remains the default collector. Full topology, readiness/revocation/containment,
+operational custody and P2 exit remain open.

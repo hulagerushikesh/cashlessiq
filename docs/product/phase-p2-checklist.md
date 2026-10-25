@@ -5,6 +5,34 @@ Last updated: 25 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Membership TLS acceptance prepared — 25 October
+
+The manual Linux image workflow now builds an explicit membership test target
+and runs the real connection factory and restricted membership store against a
+fresh PostgreSQL 16 cluster initialized by the same volume/initdb/bootstrap
+helpers. An explicit internal bridge supplies the actual member/DB
+addresses before generating HBA/PKI; real Linux/Docker route observations
+must exclude collisions before creation. No host ports are published. This tests the
+member-DB edge only; the full allocator's Linux observation gates and the
+eight-service readiness barrier remain open.
+
+Acceptance covers verified TLS 1.3, all six fictional profiles, cross-tenant
+absence, nine actual SQL privilege denials, hostname/CA/missing-CA/password/
+plaintext/ambient-setting denials, an unauthorized source address, and clean
+SIGINT shutdown followed by a fresh read-only stopped-cluster probe.
+The first live run passed the three prior lifecycle cases but caught Docker
+requiring an explicit subnet for fixed addresses. That is corrected, with a
+bounded Linux route collector and the existing collision gate; a fresh run
+is pending. An older negative test could mistake its own assertion
+for a redacted denial; this is fixed, with regression tests for unexpected
+acceptance and fallback-to-absence. All 62 offline membership tests, 854 root
+tests before 16 new Linux route regressions (three CI-only modules skipped), Ruff and the isolated membership wheel
+check pass. Default membership packaging excludes both test probes.
+
+The preceding full product CI passed at 90a5873
+([run 40160040974](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40160040974))
+and 08c8caf (40159936102). No local Docker build/start or paid action occurred.
+
 ### Real database helper lifecycle on Linux — 25 October
 
 - [x] Actual material install/read-back and nonroot data preparation/probe on
