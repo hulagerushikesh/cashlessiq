@@ -17,10 +17,16 @@ paid queries, reviewer writes, uploads or real documents are required for this
 round. The actual source routes remain disabled. Missing, unavailable and saved
 preview examples are presentation fixtures, not live-source acceptance.
 
-An owner-only online address remains a follow-up delivery step. Before exposing
-it, select the host and an actual owner access boundary, keep the API/database
-private, configure the correct origin/cookies and verify an unauthenticated
-visitor cannot enter. The synthetic role selector is not an owner access gate:
+An owner-only online address remains a follow-up delivery step. Rushikesh has
+selected the existing Mac first, without hosting spend. The separate
+[Mac preview package](mac-owner-preview.md) adds a production web-server target,
+owner-password gateway and private backend/database. Actual Mac startup, exact
+tunnel origin/cookies and unauthenticated remote denial still need verification.
+The package at `536e1b5` passed [37 real gateway HTTP checks](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607337)
+and [full product regression](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607340).
+Mac startup is deferred by fresh pressure/load/Docker headroom observations;
+CI success does not imply a running remote preview. The synthetic role selector
+is not an owner access gate:
 do not simply tunnel or publish the existing development app. Any new spend or
 payment action requires the owner's approval. Synthetic preview delivery does
 not depend on Snowflake identities, complete P3–P6 features or customer interviews.

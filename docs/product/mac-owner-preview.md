@@ -53,8 +53,13 @@ not stop unrelated workloads or raise Docker limits to force a pass.
    the verified gateway**, never localhost:3000 or :8000:
 
    ```sh
-   cloudflared tunnel --url http://127.0.0.1:3080
+   ./output/owner-preview/tools/cloudflared tunnel --url http://127.0.0.1:3080
    ```
+
+   The native arm64 binary has been prepared locally from official release
+   `2026.10.3`, with the release asset SHA-256 verified before extraction;
+   `--version` succeeds. The ignored `tools/verified-release.json` records its
+   provenance and checksums. It is not a global installation.
 
    This creates an outbound tunnel and prints its temporary HTTPS hostname. No
    router port forwarding, domain purchase, paid hosting or account signup is
@@ -106,8 +111,19 @@ and volumes, and publishes no image, credential or deployment artifact.
 
 Local policy tests cover invalid-origin denial before Docker, preserving
 existing credentials, deferring under low headroom and private settings files.
-Workflow results and any actual Mac/tunnel acceptance must be recorded after
-execution; creating these files alone is not acceptance.
+Implementation `536e1b5` passed [private-preview CI 40165607337](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607337):
+37 HTTP checks, built non-root standalone runtime and disposable cleanup all
+passed. [Full product CI 40165607340](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607340)
+also passed: 885 root tests (three CI skips), 72 membership, 41 client, 1,469
+backend, 26 browser, 15 source UI and 35 catalog cases, plus lint, types,
+contracts, build and containment. All 15 new preview policy tests passed locally.
+
+A fresh Mac resource check deferred startup: pressure 2, load 12.18 on eight
+CPUs and about 1.29 GiB estimated Docker headroom (less than the required 2 GiB).
+No local preview secrets were generated, and no additional containers or tunnel
+were started.
+The original app remains healthy. Actual Mac/tunnel acceptance remains open;
+CI success is not an online deployment.
 
 Mac sleep, shutdown, network loss or stopping the tunnel makes the remote
 preview unavailable. Its hostname changes on a new quick-tunnel session, so

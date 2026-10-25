@@ -4,9 +4,16 @@
 
 The owner clarified that the first online version is for personal testing before
 a customer MVP. Use the [joint acceptance checklist](owner-preview-acceptance.md).
-The existing synthetic local workspace is responding; a private online version
-still needs a selected host and owner-only access, correct origin/session
-configuration, private backend/database, rollback and smoke checks. Synthetic
+The existing synthetic local workspace is responding and the owner reports
+having tested it and walked two friends through it. Rushikesh selected this Mac
+first, without hosting spend. The [separate Mac preview package](mac-owner-preview.md)
+prepares a production web server, owner-password gateway and private backend/DB.
+The package at `536e1b5` passed [37 gateway HTTP checks and runtime verification](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607337)
+and [full product regression](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607340).
+Mac startup and an actual HTTPS tunnel still need resource admission, exact
+origin/session configuration and remote access/rollback smoke checks. Fresh Mac
+observations defer startup under pressure 2/high load/insufficient Docker headroom.
+A checksum-verified native tunnel tool is prepared, without starting a tunnel. Synthetic
 role selection alone cannot protect a remotely exposed app. Ask before new spend
 or payment actions. No online deployment is claimed.
 

@@ -122,6 +122,8 @@ to keep engineering results and Rushikesh's human feedback separate. The local
 app has been tested by Rushikesh, who also walked two friends through its
 current state. That completes the general local human-testing checkpoint by
 owner report; an owner-only online address is not deployed yet.
+The [Mac owner-preview package](docs/product/mac-owner-preview.md) prepares that
+next step with a separate built server, password gateway and private backend.
 The [case queue](http://localhost:3000/cases) now supports read-only exploration
 of three golden scenarios, calculation traces, and policy source references.
 See the [P2 checklist](docs/product/phase-p2-checklist.md) for scope and limits.

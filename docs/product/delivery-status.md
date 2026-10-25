@@ -4,7 +4,7 @@ Updated 25 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
-### Next visible goal: private owner testing — 25 October
+### Next visible goal: private online owner preview — 25 October
 
 The owner clarified that “go live” means a private preview for personal testing,
 with engineering and human checks before a customer MVP. The existing local
@@ -13,8 +13,15 @@ that he has already tested the current app and explained it to two friends.
 The general human-testing checkpoint is complete by owner report; individual
 [joint checklist](owner-preview-acceptance.md) outcomes are not reported. A
 repeat general walkthrough is not a prerequisite for continuing development.
-An owner-only online address is not deployed. It needs a selected host and real owner access boundary; publishing the local role selector is not
-sufficient. Ask before new spend or payment actions.
+An owner-only online address is not deployed. Rushikesh selected the existing
+Mac first, without hosting spend. The [Mac preview package](mac-owner-preview.md)
+prepares a separate built web server, owner-password gateway and internal
+API/database. Its [37 HTTP checks and runtime acceptance passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607337)
+at `536e1b5`; [full product CI also passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607340),
+including 885 root, 1,469 backend and 26 browser tests. Actual Mac startup is
+resource-deferred (pressure 2, high load, less than 2 GiB Docker headroom), and
+HTTPS tunnel acceptance remains open. The checksum-verified native tunnel tool
+is prepared locally; no tunnel is running. Ask before new spend/payment actions.
 
 Synthetic owner testing can proceed before governed live-source P2 exit,
 customer interviews or later reviewer-write features. Keep those scopes separate.
@@ -24,7 +31,8 @@ The revised frontend and database-resource handoff at 47341f6
 35 catalog tests; lint/contracts/types/build and containment also pass. Fresh
 local browser validation passed all 26 cases after an initial intermittent
 24/26 run and unchanged focused rerun. Owner testing is recorded separately
-from those automated checks. The local Docker-built app has not received the new copy; no Mac rebuild/start occurred.
+from those automated checks. The local Docker-built app has not received the
+new copy; no Mac rebuild/start occurred.
 The 35-resource launcher handoff is tested with real journals/fake metadata;
 full Linux resource admission/eight-service physical integration remains open.
 

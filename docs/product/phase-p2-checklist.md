@@ -24,6 +24,41 @@ Last updated: 25 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Mac owner-preview package accepted in CI — 25 October
+
+Rushikesh chose the existing Mac first, without hosting spend. The separate
+[owner-preview package](mac-owner-preview.md) now builds a non-root Next.js
+standalone server, requires an owner password on every gateway route and keeps
+web/API/database ports unpublished. Only the gateway publishes 127.0.0.1:3080;
+backend services stay on an internal network. Independent generated secrets and
+a separate database volume preserve the existing localhost:3000 app.
+
+Implementation `536e1b5` passed both [private-preview CI 40165607337](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607337)
+and [full product CI 40165607340](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40165607340).
+The preview run passed **37 HTTP checks** covering anonymous/wrong-password
+rejection, protected built assets, all three roles, origin rejection, Secure
+session-cookie headers, logout and published-port restrictions. Non-root
+runtime and absence of web source files in the standalone image also passed.
+Full regression: **885 root tests** (three CI skips), 72 membership, 41 client,
+1,469 backend, 26 browser, 15 source UI and 35 catalog cases; lint, types,
+contracts, build and supervisor containment passed. All 15 new local preview
+policy tests, web lint and TypeScript checks passed as well.
+
+CI caught and fixed Caddy executable capability compatibility, gateway entry
+network publication and private response headers on authentication errors.
+The successful final run includes those fixes and confirmed disposable cleanup.
+These HTTP checks use an explicit HTTPS origin through a loopback gateway;
+they do not prove end-to-end browser TLS or a live online address.
+
+Actual Mac startup remains deferred by a fresh read-only resource check:
+pressure 2, one-minute load 12.18 on eight CPUs and approximately 1.29 GiB
+Docker memory headroom (below the required 2 GiB). No Mac containers were
+created, rebuilt, stopped or changed. Existing login still returns 200 and API
+readiness is ready. No Snowflake query, purchase, payment action or remote
+exposure occurred. The next delivery check is admitted Mac startup followed by
+the authenticated HTTPS tunnel, exact origin, remote denial and stop checks.
+This does not close the separate governed-source/eight-service P2 gates.
+
 ### Membership database TLS and clean shutdown accepted — 25 October
 
 [Live Linux CI 40161796204](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796204)
