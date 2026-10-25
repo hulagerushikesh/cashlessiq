@@ -29,13 +29,29 @@ class MeResponse(Contract):
     schema_version: Literal[1] = 1
     user: UserView
     tenant: TenantView
-    role: Literal["processor", "medical_officer", "auditor"]
+    role: Literal[
+        "processor",
+        "medical_officer",
+        "auditor",
+        "policy_analyst",
+        "policy_approver",
+        "operations_lead",
+        "tenant_admin",
+    ]
     capabilities: list[str]
     identity_mode: Literal["local", "oidc"]
 
 
 class LocalSessionRequest(Contract):
-    profile: Literal["processor", "medical_officer", "auditor"]
+    profile: Literal[
+        "processor",
+        "medical_officer",
+        "auditor",
+        "policy_analyst",
+        "policy_approver",
+        "operations_lead",
+        "tenant_admin",
+    ]
 
 
 class TokenResponse(Contract):

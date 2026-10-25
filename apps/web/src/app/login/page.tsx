@@ -33,7 +33,8 @@ export default async function Login({
             Choose your review perspective.
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            Explore with a synthetic identity. Your role determines which clinical details you can see.
+            Explore with a synthetic identity. Your role determines which clinical details you can
+            see.
           </p>
           {error && (
             <p role="alert" className="mt-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
@@ -54,6 +55,14 @@ export default async function Login({
                   <option value="processor">Processor · Asha Deshmukh</option>
                   <option value="medical_officer">Medical officer · Dr. Neel Shah</option>
                   <option value="auditor">Auditor · Kavya Rao</option>
+                  {process.env.CIQ_SYNTHETIC_WORKFLOWS === "true" && (
+                    <>
+                      <option value="policy_analyst">Policy analyst · Mira Kulkarni</option>
+                      <option value="policy_approver">Policy approver · Arjun Mehta</option>
+                      <option value="operations_lead">Operations lead · Rohan Patil</option>
+                      <option value="tenant_admin">Tenant administrator · Sana Khan</option>
+                    </>
+                  )}
                 </select>
               </div>
               <Button className="w-full" type="submit">

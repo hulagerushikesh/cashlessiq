@@ -1,0 +1,15 @@
+# Explicit synthetic testing overlay. No cloud, paid gateways or new service needed.
+services:
+  migrate:
+    environment:
+      CIQ_SYNTHETIC_WORKFLOWS: "true"
+  api:
+    environment:
+      CIQ_SYNTHETIC_WORKFLOWS: "true"
+      CIQ_LOCAL_EMBEDDED_WORKER: "true"
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 64
+  web:
+    environment:
+      CIQ_SYNTHETIC_WORKFLOWS: "true"

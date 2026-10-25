@@ -1,4 +1,4 @@
-"""Thin HTTP layer for identity, health, and synthetic read-only cases."""
+"""HTTP boundary for identity, governed reads and opt-in synthetic MVP workflows."""
 
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from ciq_api.auth import JWTVerifier, issue_local_token, resolve_identity
+from ciq_api.body_limit import WorkflowBodyLimit
 from ciq_api.cases import CaseRepository, SyntheticCaseRepository
 from ciq_api.config import Settings
 from ciq_api.contracts import (
@@ -25,6 +26,9 @@ from ciq_api.contracts import (
     TokenResponse,
 )
 from ciq_api.database import make_engine, session_for
+from ciq_api.local_worker import start_local_worker
+from ciq_api.mvp import register_mvp
+from ciq_api.reviews import register_reviews
 from ciq_api.seed import TENANT_ID
 from ciq_api.snowflake_reads import SourceReadUnavailable
 from ciq_api.source_cases import SourceCaseRepository
@@ -44,16 +48,23 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        yield
-        database.dispose()
+        worker = start_local_worker(database) if config.local_embedded_worker else None
+        try:
+            yield
+        finally:
+            if worker:
+                worker[0].set()
+                worker[1].join(timeout=16)
+            database.dispose()
 
     app = FastAPI(title="CashlessIQ API", version="1.0.0", lifespan=lifespan)
+    app.add_middleware(WorkflowBodyLimit)
     bearer = HTTPBearer(auto_error=False)
 
     @app.middleware("http")
     async def source_cache_control(request, call_next):
         response = await call_next(request)
-        if request.url.path == "/v2/cases" or request.url.path.startswith("/v2/cases/"):
+        if request.url.path == "/v2/cases" or request.url.path.startswith(("/v2/cases/", "/v3/")):
             response.headers["Cache-Control"] = "no-store"
         return response
 
@@ -95,7 +106,7 @@ def create_app(
                 revision = connection.execute(
                     text("SELECT version_num FROM alembic_version")
                 ).scalar()
-                if revision != "0001_identity":
+                if revision != "0003_mvp":
                     raise ValueError("Database migration required")
             return HealthResponse(status="ready")
         except (SQLAlchemyError, ValueError):
@@ -192,4 +203,6 @@ def create_app(
             response.headers["Cache-Control"] = "no-store"
             return TokenResponse(access_token=token, expires_in=1800)
 
+    register_reviews(app, config, identity, get_session, case_repository)
+    register_mvp(app, config, identity, get_session, case_repository)
     return app

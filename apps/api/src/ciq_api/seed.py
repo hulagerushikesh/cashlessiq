@@ -16,6 +16,14 @@ PROFILES = {
 }
 
 
+MVP_PROFILES = {
+    "policy_analyst": ("00000000-0000-4000-8000-000000000014", "Mira Kulkarni"),
+    "policy_approver": ("00000000-0000-4000-8000-000000000015", "Arjun Mehta"),
+    "operations_lead": ("00000000-0000-4000-8000-000000000016", "Rohan Patil"),
+    "tenant_admin": ("00000000-0000-4000-8000-000000000017", "Sana Khan"),
+}
+
+
 def seed(settings: Settings, *, include_source_tenants: bool = False) -> None:
     if settings.environment not in {"local", "test"} or settings.auth_mode != "local":
         raise RuntimeError("Synthetic seed requires local/test identity mode")
@@ -25,7 +33,9 @@ def seed(settings: Settings, *, include_source_tenants: bool = False) -> None:
             if session.get(Tenant, TENANT_ID) is None:
                 session.add(Tenant(id=TENANT_ID, name="Sahyadri Health TPA · Sandbox"))
                 session.flush()
-            for profile, (user_id, name) in PROFILES.items():
+            for profile, (user_id, name) in (
+                PROFILES | (MVP_PROFILES if settings.synthetic_workflows else {})
+            ).items():
                 user_uuid = UUID(user_id)
                 if session.get(AppUser, user_uuid) is None:
                     session.add(

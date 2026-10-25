@@ -4,7 +4,38 @@ Updated 25 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
-### Current target: local two-person testing; GCP preparation only — 25 October
+### Synthetic MVP workflows implemented locally — 25 October
+
+The owner's expanded scope is now implemented for fictional private testing:
+reviewer commands and immutable audit/outbox, durable assessment jobs and retries,
+PDF quarantine/extraction, versioned fact correction, two-person policy approval
+and activation, access administration and local reporting. See the
+[workflow and recovery guide](synthetic-mvp-testing.md).
+
+Local validation passed 913 root tests, the 1,511-test broader API run, the final
+30 focused MVP/reviewer tests, 41 client tests, all 26 existing browser checks and
+the two new end-to-end MVP browser checks. The browser flow uses five different
+synthetic perspectives and covers policy proposal, approval, activation,
+assessment, final medical review, restricted notes and PDF download. The extra
+outbox rollback regression passes in the final focused run. Fresh full CI follows.
+
+The current localhost app uses the existing API/web images with read-only source
+and locked pure Python dependencies. API readiness passes at migration
+`0003_mvp`; the API and local worker share a 512 MiB container. Database and Redis
+incarnations are unchanged. The owner-only pre-MVP backup was successfully
+restored in a temporary database, migrated forward and seeded for all seven
+roles, then the temporary database was removed. No second stack or heavy build
+was started. Earlier local extraction failures were caused by isolated parser
+imports not seeing the development dependency mount; the parser now receives
+only that explicit trusted module path, with no database/auth environment.
+
+The full synthetic eight-service source chain also
+[passed physical Linux acceptance](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40201098649),
+including fresh membership revocation/restore, outage denial and owned cleanup.
+Operational source custody and real external gateways remain unactivated.
+GCP billing, paid service use and deployment remain deferred by owner decision.
+
+### Earlier checkpoint: local two-person testing; GCP preparation only — 25 October
 
 Local navigation follow-up: filtered queue links now carry the bounded reference,
 recommendation and page into case detail, and “Back to case queue” restores that

@@ -1,0 +1,1231 @@
+{
+  "command_id": "00000000-0000-4000-8000-000000000020",
+  "product_id": "AS_NIA_V02_2425",
+  "version": "V02 2024-25",
+  "name": "Arogya Sanjeevani Policy, The New India Assurance Co. Ltd",
+  "effective_from": "2024-10-01",
+  "effective_to": null,
+  "reason": "Synthetic MVP baseline imported from reviewed rule and clause register; human review required before activation.",
+  "clauses": [
+    {
+      "clause_id": "NIA-4.1-A",
+      "title": "Hospitalization - room rent",
+      "text": "Synthetic reference: 4.1 Hospitalization - room rent. Verify original policy wording before a real-data pilot.",
+      "page": 7
+    },
+    {
+      "clause_id": "NIA-4.1-B",
+      "title": "Hospitalization - ICU/ICCU",
+      "text": "Synthetic reference: 4.1 Hospitalization - ICU/ICCU. Verify original policy wording before a real-data pilot.",
+      "page": 7
+    },
+    {
+      "clause_id": "NIA-4.1-NOTE-B",
+      "title": "Proportionate deduction",
+      "text": "Synthetic reference: 4.1 Note Proportionate deduction. Verify original policy wording before a real-data pilot.",
+      "page": 8
+    },
+    {
+      "clause_id": "NIA-4.3",
+      "title": "Cataract treatment",
+      "text": "Synthetic reference: 4.3 Cataract treatment. Verify original policy wording before a real-data pilot.",
+      "page": 8
+    },
+    {
+      "clause_id": "NIA-6.1",
+      "title": "Pre-existing diseases",
+      "text": "Synthetic reference: 6.1 Pre-existing diseases. Verify original policy wording before a real-data pilot.",
+      "page": 9
+    },
+    {
+      "clause_id": "NIA-6.2-24",
+      "title": "24-month specific waiting period",
+      "text": "Synthetic reference: 6.2(i) 24-month specific waiting period. Verify original policy wording before a real-data pilot.",
+      "page": 10
+    },
+    {
+      "clause_id": "NIA-6.2-36",
+      "title": "36-month specific waiting period",
+      "text": "Synthetic reference: 6.2(ii) 36-month specific waiting period. Verify original policy wording before a real-data pilot.",
+      "page": 10
+    },
+    {
+      "clause_id": "NIA-6.3",
+      "title": "First thirty days waiting period",
+      "text": "Synthetic reference: 6.3 First thirty days waiting period. Verify original policy wording before a real-data pilot.",
+      "page": 10
+    },
+    {
+      "clause_id": "NIA-7.12",
+      "title": "Refractive error exclusion",
+      "text": "Synthetic reference: 7.12 Refractive error exclusion. Verify original policy wording before a real-data pilot.",
+      "page": 12
+    },
+    {
+      "clause_id": "NIA-9.5",
+      "title": "Co-payment",
+      "text": "Synthetic reference: 9.5 Co-payment. Verify original policy wording before a real-data pilot.",
+      "page": 15
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "RULE_ROOM",
+      "rule_type": "ROOM_RENT_CAP",
+      "clause_id": "NIA-4.1-A",
+      "params": {
+        "pct_of_si": 2,
+        "max_inr_per_day": 5000
+      }
+    },
+    {
+      "rule_id": "RULE_ICU",
+      "rule_type": "ICU_CAP",
+      "clause_id": "NIA-4.1-B",
+      "params": {
+        "pct_of_si": 5,
+        "max_inr_per_day": 10000
+      }
+    },
+    {
+      "rule_id": "RULE_PROP",
+      "rule_type": "PROPORTIONATE_DEDUCTION",
+      "clause_id": "NIA-4.1-NOTE-B",
+      "params": {
+        "applies_to": [
+          "procedure and professional fees",
+          "surgery and implant",
+          "hernia repair package",
+          "debridement and medical care",
+          "medical management"
+        ],
+        "exempt_items": [
+          "medicines"
+        ]
+      }
+    },
+    {
+      "rule_id": "RULE_CATARACT",
+      "rule_type": "PROCEDURE_SUBLIMIT",
+      "clause_id": "NIA-4.3",
+      "params": {
+        "procedure": "cataract",
+        "pct_of_si": 25,
+        "max_inr": 40000,
+        "basis": "per_eye_per_policy_year"
+      }
+    },
+    {
+      "rule_id": "RULE_PED",
+      "rule_type": "WAITING_PED",
+      "clause_id": "NIA-6.1",
+      "params": {
+        "months": 36
+      }
+    },
+    {
+      "rule_id": "RULE_SPECIFIC_24",
+      "rule_type": "WAITING_SPECIFIC",
+      "clause_id": "NIA-6.2-24",
+      "params": {
+        "months": 24,
+        "conditions": [
+          "cataract",
+          "hernia",
+          "gallstones",
+          "non_infective_arthritis"
+        ],
+        "accident_exempt": true
+      }
+    },
+    {
+      "rule_id": "RULE_SPECIFIC_36",
+      "rule_type": "WAITING_SPECIFIC",
+      "clause_id": "NIA-6.2-36",
+      "params": {
+        "months": 36,
+        "conditions": [
+          "joint_replacement",
+          "osteoarthritis",
+          "osteoporosis"
+        ],
+        "accident_exempt": true
+      }
+    },
+    {
+      "rule_id": "RULE_INITIAL",
+      "rule_type": "WAITING_INITIAL",
+      "clause_id": "NIA-6.3",
+      "params": {
+        "days": 30,
+        "accident_exempt": true
+      }
+    },
+    {
+      "rule_id": "RULE_EXCLUSION",
+      "rule_type": "EXCLUSION",
+      "clause_id": "NIA-7.12",
+      "params": {
+        "condition": "refractive_error_below_7_5_dioptres"
+      }
+    },
+    {
+      "rule_id": "RULE_COPAY",
+      "rule_type": "COPAY",
+      "clause_id": "NIA-9.5",
+      "params": {
+        "pct": 5
+      }
+    }
+  ],
+  "examples": [
+    {
+      "name": "GOL001",
+      "facts": {
+        "member_reference": "SYN-GOL001",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute appendicitis",
+        "icd10_code": "K35.8",
+        "procedure": "Laparoscopic appendicectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 95000
+    },
+    {
+      "name": "GOL002",
+      "facts": {
+        "member_reference": "SYN-GOL002",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute appendicitis",
+        "icd10_code": "K35.8",
+        "procedure": "Laparoscopic appendicectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 95000
+    },
+    {
+      "name": "GOL003",
+      "facts": {
+        "member_reference": "SYN-GOL003",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute appendicitis",
+        "icd10_code": "K35.8",
+        "procedure": "Laparoscopic appendicectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 95000
+    },
+    {
+      "name": "GOL004",
+      "facts": {
+        "member_reference": "SYN-GOL004",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute appendicitis",
+        "icd10_code": "K35.8",
+        "procedure": "Laparoscopic appendicectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 95000
+    },
+    {
+      "name": "GOL005",
+      "facts": {
+        "member_reference": "SYN-GOL005",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute appendicitis",
+        "icd10_code": "K35.8",
+        "procedure": "Laparoscopic appendicectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 95000
+    },
+    {
+      "name": "GOL006",
+      "facts": {
+        "member_reference": "SYN-GOL006",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute appendicitis",
+        "icd10_code": "K35.8",
+        "procedure": "Laparoscopic appendicectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 12000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 68000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 20000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Stable patient with imaging-confirmed appendicitis; elective laparoscopic treatment advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 95000
+    },
+    {
+      "name": "GOL007",
+      "facts": {
+        "member_reference": "SYN-GOL007",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute cholecystitis",
+        "icd10_code": "K81.0",
+        "procedure": "Laparoscopic cholecystectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Private deluxe",
+        "room_rent_per_day_inr": 8000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000
+          }
+        ],
+        "estimated_total_inr": 120000,
+        "clinical_note": "Symptomatic gallbladder inflammation; surgery planned after routine clearance.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 79800
+    },
+    {
+      "name": "GOL008",
+      "facts": {
+        "member_reference": "SYN-GOL008",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute cholecystitis",
+        "icd10_code": "K81.0",
+        "procedure": "Laparoscopic cholecystectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Private deluxe",
+        "room_rent_per_day_inr": 8000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000
+          }
+        ],
+        "estimated_total_inr": 120000,
+        "clinical_note": "Symptomatic gallbladder inflammation; surgery planned after routine clearance.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 79800
+    },
+    {
+      "name": "GOL009",
+      "facts": {
+        "member_reference": "SYN-GOL009",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute cholecystitis",
+        "icd10_code": "K81.0",
+        "procedure": "Laparoscopic cholecystectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Private deluxe",
+        "room_rent_per_day_inr": 8000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000
+          }
+        ],
+        "estimated_total_inr": 120000,
+        "clinical_note": "Symptomatic gallbladder inflammation; surgery planned after routine clearance.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 79800
+    },
+    {
+      "name": "GOL010",
+      "facts": {
+        "member_reference": "SYN-GOL010",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute cholecystitis",
+        "icd10_code": "K81.0",
+        "procedure": "Laparoscopic cholecystectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Private deluxe",
+        "room_rent_per_day_inr": 8000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000
+          }
+        ],
+        "estimated_total_inr": 120000,
+        "clinical_note": "Symptomatic gallbladder inflammation; surgery planned after routine clearance.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 79800
+    },
+    {
+      "name": "GOL011",
+      "facts": {
+        "member_reference": "SYN-GOL011",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute cholecystitis",
+        "icd10_code": "K81.0",
+        "procedure": "Laparoscopic cholecystectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Private deluxe",
+        "room_rent_per_day_inr": 8000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 24000
+          },
+          {
+            "item": "Procedure and professional fees",
+            "claimed_inr": 72000
+          },
+          {
+            "item": "Medicines and diagnostics",
+            "claimed_inr": 24000
+          }
+        ],
+        "estimated_total_inr": 120000,
+        "clinical_note": "Symptomatic gallbladder inflammation; surgery planned after routine clearance.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 79800
+    },
+    {
+      "name": "GOL012",
+      "facts": {
+        "member_reference": "SYN-GOL012",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Age-related cataract",
+        "icd10_code": "H25.9",
+        "procedure": "Phacoemulsification with lens implant - one eye",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 1,
+        "room_category": "Day care",
+        "room_rent_per_day_inr": 0,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Cataract package",
+            "claimed_inr": 60000
+          }
+        ],
+        "estimated_total_inr": 60000,
+        "clinical_note": "Reduced visual acuity from unilateral age-related cataract; day-care surgery advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 38000
+    },
+    {
+      "name": "GOL013",
+      "facts": {
+        "member_reference": "SYN-GOL013",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Age-related cataract",
+        "icd10_code": "H25.9",
+        "procedure": "Phacoemulsification with lens implant - one eye",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 1,
+        "room_category": "Day care",
+        "room_rent_per_day_inr": 0,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Cataract package",
+            "claimed_inr": 60000
+          }
+        ],
+        "estimated_total_inr": 60000,
+        "clinical_note": "Reduced visual acuity from unilateral age-related cataract; day-care surgery advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 38000
+    },
+    {
+      "name": "GOL014",
+      "facts": {
+        "member_reference": "SYN-GOL014",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Age-related cataract",
+        "icd10_code": "H25.9",
+        "procedure": "Phacoemulsification with lens implant - one eye",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 1,
+        "room_category": "Day care",
+        "room_rent_per_day_inr": 0,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Cataract package",
+            "claimed_inr": 60000
+          }
+        ],
+        "estimated_total_inr": 60000,
+        "clinical_note": "Reduced visual acuity from unilateral age-related cataract; day-care surgery advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 38000
+    },
+    {
+      "name": "GOL015",
+      "facts": {
+        "member_reference": "SYN-GOL015",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Age-related cataract",
+        "icd10_code": "H25.9",
+        "procedure": "Phacoemulsification with lens implant - one eye",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 1,
+        "room_category": "Day care",
+        "room_rent_per_day_inr": 0,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Cataract package",
+            "claimed_inr": 60000
+          }
+        ],
+        "estimated_total_inr": 60000,
+        "clinical_note": "Reduced visual acuity from unilateral age-related cataract; day-care surgery advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 38000
+    },
+    {
+      "name": "GOL016",
+      "facts": {
+        "member_reference": "SYN-GOL016",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-09-15",
+        "continuous_cover_since": "2026-09-15",
+        "diagnosis": "Viral pneumonia",
+        "icd10_code": "J12.9",
+        "procedure": "Inpatient medical management",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 4,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 3500,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 14000
+          },
+          {
+            "item": "Medical management",
+            "claimed_inr": 36000
+          }
+        ],
+        "estimated_total_inr": 50000,
+        "clinical_note": "Fever and radiographic infiltrates; admission requested for monitored treatment.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL017",
+      "facts": {
+        "member_reference": "SYN-GOL017",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-09-15",
+        "continuous_cover_since": "2026-09-15",
+        "diagnosis": "Viral pneumonia",
+        "icd10_code": "J12.9",
+        "procedure": "Inpatient medical management",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 4,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 3500,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 14000
+          },
+          {
+            "item": "Medical management",
+            "claimed_inr": 36000
+          }
+        ],
+        "estimated_total_inr": 50000,
+        "clinical_note": "Fever and radiographic infiltrates; admission requested for monitored treatment.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL018",
+      "facts": {
+        "member_reference": "SYN-GOL018",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-09-15",
+        "continuous_cover_since": "2026-09-15",
+        "diagnosis": "Viral pneumonia",
+        "icd10_code": "J12.9",
+        "procedure": "Inpatient medical management",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 4,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 3500,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 14000
+          },
+          {
+            "item": "Medical management",
+            "claimed_inr": 36000
+          }
+        ],
+        "estimated_total_inr": 50000,
+        "clinical_note": "Fever and radiographic infiltrates; admission requested for monitored treatment.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL019",
+      "facts": {
+        "member_reference": "SYN-GOL019",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-09-15",
+        "continuous_cover_since": "2026-09-15",
+        "diagnosis": "Closed fracture of forearm after road accident",
+        "icd10_code": "S52.9",
+        "procedure": "Open reduction and internal fixation",
+        "is_emergency": true,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 2,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 8000
+          },
+          {
+            "item": "Surgery and implant",
+            "claimed_inr": 92000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Acute traumatic fracture following a documented road accident; urgent fixation advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 95000
+    },
+    {
+      "name": "GOL020",
+      "facts": {
+        "member_reference": "SYN-GOL020",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-09-15",
+        "continuous_cover_since": "2026-09-15",
+        "diagnosis": "Closed fracture of forearm after road accident",
+        "icd10_code": "S52.9",
+        "procedure": "Open reduction and internal fixation",
+        "is_emergency": true,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 2,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 8000
+          },
+          {
+            "item": "Surgery and implant",
+            "claimed_inr": 92000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Acute traumatic fracture following a documented road accident; urgent fixation advised.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 95000
+    },
+    {
+      "name": "GOL021",
+      "facts": {
+        "member_reference": "SYN-GOL021",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-01-01",
+        "continuous_cover_since": "2026-01-01",
+        "diagnosis": "Inguinal hernia",
+        "icd10_code": "K40.9",
+        "procedure": "Laparoscopic hernia repair",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 2,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 8000
+          },
+          {
+            "item": "Hernia repair package",
+            "claimed_inr": 72000
+          }
+        ],
+        "estimated_total_inr": 80000,
+        "clinical_note": "Reducible non-obstructed hernia; elective repair requested.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL022",
+      "facts": {
+        "member_reference": "SYN-GOL022",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-01-01",
+        "continuous_cover_since": "2026-01-01",
+        "diagnosis": "Inguinal hernia",
+        "icd10_code": "K40.9",
+        "procedure": "Laparoscopic hernia repair",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 2,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 8000
+          },
+          {
+            "item": "Hernia repair package",
+            "claimed_inr": 72000
+          }
+        ],
+        "estimated_total_inr": 80000,
+        "clinical_note": "Reducible non-obstructed hernia; elective repair requested.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL023",
+      "facts": {
+        "member_reference": "SYN-GOL023",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-01-01",
+        "continuous_cover_since": "2026-01-01",
+        "diagnosis": "Inguinal hernia",
+        "icd10_code": "K40.9",
+        "procedure": "Laparoscopic hernia repair",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 2,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 8000
+          },
+          {
+            "item": "Hernia repair package",
+            "claimed_inr": 72000
+          }
+        ],
+        "estimated_total_inr": 80000,
+        "clinical_note": "Reducible non-obstructed hernia; elective repair requested.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL024",
+      "facts": {
+        "member_reference": "SYN-GOL024",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-01-01",
+        "continuous_cover_since": "2026-01-01",
+        "diagnosis": "Type 2 diabetes with foot complication",
+        "icd10_code": "E11.6",
+        "procedure": "Debridement and inpatient glycaemic management",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 5,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 3500,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 17500
+          },
+          {
+            "item": "Debridement and medical care",
+            "claimed_inr": 62500
+          }
+        ],
+        "estimated_total_inr": 80000,
+        "clinical_note": "Declared diabetes predates policy inception; admission requested for infected foot wound.",
+        "declared_conditions": [
+          {
+            "icd10_code": "E11.6",
+            "condition_name": "Type 2 diabetes with foot complication",
+            "first_diagnosed_on": "2024-01-01",
+            "declared_at_proposal": true
+          }
+        ]
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL025",
+      "facts": {
+        "member_reference": "SYN-GOL025",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-01-01",
+        "continuous_cover_since": "2026-01-01",
+        "diagnosis": "Type 2 diabetes with foot complication",
+        "icd10_code": "E11.6",
+        "procedure": "Debridement and inpatient glycaemic management",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 5,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 3500,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 17500
+          },
+          {
+            "item": "Debridement and medical care",
+            "claimed_inr": 62500
+          }
+        ],
+        "estimated_total_inr": 80000,
+        "clinical_note": "Declared diabetes predates policy inception; admission requested for infected foot wound.",
+        "declared_conditions": [
+          {
+            "icd10_code": "E11.6",
+            "condition_name": "Type 2 diabetes with foot complication",
+            "first_diagnosed_on": "2024-01-01",
+            "declared_at_proposal": true
+          }
+        ]
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL026",
+      "facts": {
+        "member_reference": "SYN-GOL026",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2026-01-01",
+        "continuous_cover_since": "2026-01-01",
+        "diagnosis": "Type 2 diabetes with foot complication",
+        "icd10_code": "E11.6",
+        "procedure": "Debridement and inpatient glycaemic management",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 5,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 3500,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Room and nursing",
+            "claimed_inr": 17500
+          },
+          {
+            "item": "Debridement and medical care",
+            "claimed_inr": 62500
+          }
+        ],
+        "estimated_total_inr": 80000,
+        "clinical_note": "Declared diabetes predates policy inception; admission requested for infected foot wound.",
+        "declared_conditions": [
+          {
+            "icd10_code": "E11.6",
+            "condition_name": "Type 2 diabetes with foot complication",
+            "first_diagnosed_on": "2024-01-01",
+            "declared_at_proposal": true
+          }
+        ]
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL027",
+      "facts": {
+        "member_reference": "SYN-GOL027",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute appendicitis",
+        "icd10_code": "K35.8",
+        "procedure": "Laparoscopic appendicectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [],
+        "estimated_total_inr": 90000,
+        "clinical_note": "Cost break-up has not been supplied by the hospital.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "QUERY",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL028",
+      "facts": {
+        "member_reference": "SYN-GOL028",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": null,
+        "icd10_code": null,
+        "procedure": "Diagnostic laparoscopy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 2,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Hospital package",
+            "claimed_inr": 70000
+          }
+        ],
+        "estimated_total_inr": 70000,
+        "clinical_note": "Definitive diagnosis is absent from the submitted request.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "QUERY",
+      "expected_payable_inr": null
+    },
+    {
+      "name": "GOL029",
+      "facts": {
+        "member_reference": "SYN-GOL029",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 45000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Acute appendicitis",
+        "icd10_code": "K35.8",
+        "procedure": "Laparoscopic appendicectomy",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 3,
+        "room_category": "Twin sharing",
+        "room_rent_per_day_inr": 4000,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Hospital package",
+            "claimed_inr": 100000
+          }
+        ],
+        "estimated_total_inr": 100000,
+        "clinical_note": "Treatment is covered, but prior paid claims leave only INR 45,000 available.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "APPROVE_WITH_DEDUCTIONS",
+      "expected_payable_inr": 45000
+    },
+    {
+      "name": "GOL030",
+      "facts": {
+        "member_reference": "SYN-GOL030",
+        "sum_insured_inr": 500000,
+        "si_remaining_inr": 500000,
+        "inception_date": "2023-01-01",
+        "continuous_cover_since": "2023-01-01",
+        "diagnosis": "Refractive error of 3 dioptres",
+        "icd10_code": "H52.1",
+        "procedure": "Refractive eye surgery",
+        "is_emergency": false,
+        "admission_date": "2026-10-02",
+        "planned_los_days": 1,
+        "room_category": "Day care",
+        "room_rent_per_day_inr": 0,
+        "icu_days": 0,
+        "cost_breakup": [
+          {
+            "item": "Refractive surgery package",
+            "claimed_inr": 50000
+          }
+        ],
+        "estimated_total_inr": 50000,
+        "clinical_note": "Elective correction requested for refractive error below 7.5 dioptres.",
+        "declared_conditions": []
+      },
+      "expected_outcome": "REFER",
+      "expected_payable_inr": null
+    }
+  ]
+}

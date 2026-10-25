@@ -55,6 +55,12 @@ jobs:
           npm run test:browser
       - name: Offline source API-to-UI integration
         run: make product-test-source-ui
+      - name: Synthetic MVP human workflows
+        timeout-minutes: 8
+        run: |
+          docker compose --env-file .env.product.local -f compose.product.yml -f compose.mvp.yml up --no-build --pull never --no-deps --detach --wait api web
+          docker compose --env-file .env.product.local -f compose.product.yml -f compose.mvp.yml exec -T api .venv/bin/python -m ciq_api.seed
+          npm run test:mvp
       - name: Failure diagnostics
         if: failure()
         run: make product-logs

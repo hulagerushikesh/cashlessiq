@@ -16,9 +16,13 @@ from ciq_api.models import AppUser, Membership, Tenant
 
 LOCAL_ISSUER = "urn:cashlessiq:local"
 CAPABILITIES = {
-    "processor": ["case:read", "case:draft", "case:query"],
+    "processor": ["case:read", "case:draft", "case:query", "case:refer"],
     "medical_officer": ["case:read", "case:draft", "case:query", "case:refer", "case:approve"],
     "auditor": ["case:read", "audit:read"],
+    "policy_analyst": ["case:read", "policy:propose"],
+    "policy_approver": ["case:read", "policy:approve"],
+    "operations_lead": ["case:read", "case:assign", "operations:read"],
+    "tenant_admin": ["case:read", "membership:manage"],
 }
 
 

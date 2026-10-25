@@ -2,6 +2,7 @@
 
 from alembic import context
 
+from ciq_api import mvp_models, review_models  # noqa: F401 — register workflow metadata
 from ciq_api.config import Settings
 from ciq_api.database import make_engine
 from ciq_api.models import Base

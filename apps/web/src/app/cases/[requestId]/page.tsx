@@ -42,9 +42,16 @@ export default async function CasePage({
         <OutcomeBadge outcome={record.outcome} />
       </div>
       <p className="mt-3 text-sm text-slate-500">
-        Draft recommendation only. Human review is required; final actions are unavailable in this
-        alpha.
+        Draft recommendation only. Human review is required.
       </p>
+      {process.env.CIQ_SYNTHETIC_WORKFLOWS === "true" && (
+        <Link
+          className="mt-4 inline-block rounded-lg bg-teal-800 px-4 py-2 text-sm text-white"
+          href={`/reviews/${encodeURIComponent(requestId)}`}
+        >
+          Open reviewer workflow
+        </Link>
+      )}
       <div className="mt-7 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-6">
           <section

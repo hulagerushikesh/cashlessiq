@@ -1,6 +1,234 @@
 {
   "components": {
     "schemas": {
+      "Amendment": {
+        "additionalProperties": false,
+        "properties": {
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "expected_version": {
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "facts": {
+            "$ref": "#/components/schemas/AssessmentInput"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "reason",
+          "expected_version",
+          "facts"
+        ],
+        "title": "Amendment",
+        "type": "object"
+      },
+      "AssessmentInput": {
+        "additionalProperties": false,
+        "properties": {
+          "admission_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admission Date"
+          },
+          "clinical_note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clinical Note"
+          },
+          "continuous_cover_since": {
+            "format": "date",
+            "title": "Continuous Cover Since",
+            "type": "string"
+          },
+          "cost_breakup": {
+            "items": {
+              "$ref": "#/components/schemas/CostInput"
+            },
+            "maxItems": 50,
+            "title": "Cost Breakup",
+            "type": "array"
+          },
+          "declared_conditions": {
+            "items": {
+              "$ref": "#/components/schemas/ConditionInput"
+            },
+            "maxItems": 20,
+            "title": "Declared Conditions",
+            "type": "array"
+          },
+          "diagnosis": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diagnosis"
+          },
+          "estimated_total_inr": {
+            "anyOf": [
+              {
+                "maximum": 100000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Total Inr"
+          },
+          "icd10_code": {
+            "anyOf": [
+              {
+                "maxLength": 30,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icd10 Code"
+          },
+          "icu_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 0,
+            "title": "Icu Days"
+          },
+          "inception_date": {
+            "format": "date",
+            "title": "Inception Date",
+            "type": "string"
+          },
+          "is_emergency": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Emergency"
+          },
+          "member_reference": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^SYN-[A-Za-z0-9-]+$",
+            "title": "Member Reference",
+            "type": "string"
+          },
+          "planned_los_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Los Days"
+          },
+          "procedure": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Procedure"
+          },
+          "room_category": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Category"
+          },
+          "room_rent_per_day_inr": {
+            "anyOf": [
+              {
+                "maximum": 100000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Rent Per Day Inr"
+          },
+          "si_remaining_inr": {
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Si Remaining Inr",
+            "type": "integer"
+          },
+          "sum_insured_inr": {
+            "maximum": 100000000.0,
+            "minimum": 1.0,
+            "title": "Sum Insured Inr",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "member_reference",
+          "sum_insured_inr",
+          "si_remaining_inr",
+          "inception_date",
+          "continuous_cover_since"
+        ],
+        "title": "AssessmentInput",
+        "type": "object"
+      },
       "CalculationLine": {
         "additionalProperties": false,
         "properties": {
@@ -349,6 +577,98 @@
         "title": "Citation",
         "type": "object"
       },
+      "ClauseInput": {
+        "additionalProperties": false,
+        "properties": {
+          "clause_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Clause Id",
+            "type": "string"
+          },
+          "page": {
+            "maximum": 2000.0,
+            "minimum": 1.0,
+            "title": "Page",
+            "type": "integer"
+          },
+          "text": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clause_id",
+          "title",
+          "text",
+          "page"
+        ],
+        "title": "ClauseInput",
+        "type": "object"
+      },
+      "ConditionInput": {
+        "additionalProperties": false,
+        "properties": {
+          "condition_name": {
+            "maxLength": 120,
+            "title": "Condition Name",
+            "type": "string"
+          },
+          "declared_at_proposal": {
+            "title": "Declared At Proposal",
+            "type": "boolean"
+          },
+          "first_diagnosed_on": {
+            "format": "date",
+            "title": "First Diagnosed On",
+            "type": "string"
+          },
+          "icd10_code": {
+            "maxLength": 30,
+            "title": "Icd10 Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "icd10_code",
+          "condition_name",
+          "first_diagnosed_on",
+          "declared_at_proposal"
+        ],
+        "title": "ConditionInput",
+        "type": "object"
+      },
+      "CostInput": {
+        "additionalProperties": false,
+        "properties": {
+          "claimed_inr": {
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Claimed Inr",
+            "type": "integer"
+          },
+          "item": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Item",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "claimed_inr"
+        ],
+        "title": "CostInput",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -403,7 +723,11 @@
             "enum": [
               "processor",
               "medical_officer",
-              "auditor"
+              "auditor",
+              "policy_analyst",
+              "policy_approver",
+              "operations_lead",
+              "tenant_admin"
             ],
             "title": "Role",
             "type": "string"
@@ -431,6 +755,66 @@
         "title": "MeResponse",
         "type": "object"
       },
+      "MembershipCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "expected_active": {
+            "title": "Expected Active",
+            "type": "boolean"
+          },
+          "expected_role": {
+            "enum": [
+              "processor",
+              "medical_officer",
+              "auditor",
+              "policy_analyst",
+              "policy_approver",
+              "operations_lead",
+              "tenant_admin"
+            ],
+            "title": "Expected Role",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "processor",
+              "medical_officer",
+              "auditor",
+              "policy_analyst",
+              "policy_approver",
+              "operations_lead",
+              "tenant_admin"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "reason",
+          "expected_role",
+          "role",
+          "expected_active",
+          "active"
+        ],
+        "title": "MembershipCommand",
+        "type": "object"
+      },
       "MissingSourceRecommendation": {
         "additionalProperties": false,
         "properties": {
@@ -442,6 +826,50 @@
           }
         },
         "title": "MissingSourceRecommendation",
+        "type": "object"
+      },
+      "PolicyAction": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "approve",
+              "reject",
+              "activate"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "expected_activation": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Activation"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "reason",
+          "action"
+        ],
+        "title": "PolicyAction",
         "type": "object"
       },
       "PolicyCheck": {
@@ -529,6 +957,612 @@
           "source_url"
         ],
         "title": "PolicyEvidence",
+        "type": "object"
+      },
+      "PolicyProposal": {
+        "additionalProperties": false,
+        "properties": {
+          "clauses": {
+            "items": {
+              "$ref": "#/components/schemas/ClauseInput"
+            },
+            "maxItems": 40,
+            "minItems": 1,
+            "title": "Clauses",
+            "type": "array"
+          },
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "effective_from": {
+            "format": "date",
+            "title": "Effective From",
+            "type": "string"
+          },
+          "effective_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective To"
+          },
+          "examples": {
+            "items": {
+              "$ref": "#/components/schemas/RegressionExample"
+            },
+            "maxItems": 50,
+            "minItems": 3,
+            "title": "Examples",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "product_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleInput"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Rules",
+            "type": "array"
+          },
+          "version": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          },
+          "wording_document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wording Document Id"
+          }
+        },
+        "required": [
+          "command_id",
+          "product_id",
+          "version",
+          "name",
+          "effective_from",
+          "reason",
+          "clauses",
+          "rules",
+          "examples"
+        ],
+        "title": "PolicyProposal",
+        "type": "object"
+      },
+      "RegressionExample": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_outcome": {
+            "enum": [
+              "APPROVE",
+              "APPROVE_WITH_DEDUCTIONS",
+              "QUERY",
+              "REFER"
+            ],
+            "title": "Expected Outcome",
+            "type": "string"
+          },
+          "expected_payable_inr": {
+            "anyOf": [
+              {
+                "maximum": 100000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Payable Inr"
+          },
+          "facts": {
+            "$ref": "#/components/schemas/AssessmentInput"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "facts",
+          "expected_outcome"
+        ],
+        "title": "RegressionExample",
+        "type": "object"
+      },
+      "RequestSubmission": {
+        "additionalProperties": false,
+        "properties": {
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "facts": {
+            "$ref": "#/components/schemas/AssessmentInput"
+          },
+          "priority": {
+            "default": "normal",
+            "enum": [
+              "normal",
+              "urgent"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "product_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "synthetic_data": {
+            "const": true,
+            "title": "Synthetic Data",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "command_id",
+          "product_id",
+          "synthetic_data",
+          "facts"
+        ],
+        "title": "RequestSubmission",
+        "type": "object"
+      },
+      "RetryCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "reason"
+        ],
+        "title": "RetryCommand",
+        "type": "object"
+      },
+      "ReviewAuditView": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "assign",
+                  "comment",
+                  "query",
+                  "refer",
+                  "approve",
+                  "approve_with_deductions",
+                  "reopen",
+                  "resume"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "amend",
+                "type": "string"
+              }
+            ],
+            "title": "Action"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/UserView"
+          },
+          "actor_role": {
+            "title": "Actor Role",
+            "type": "string"
+          },
+          "aggregate_version": {
+            "title": "Aggregate Version",
+            "type": "integer"
+          },
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          }
+        },
+        "required": [
+          "event_id",
+          "aggregate_version",
+          "actor",
+          "actor_role",
+          "action",
+          "occurred_at",
+          "payload"
+        ],
+        "title": "ReviewAuditView",
+        "type": "object"
+      },
+      "ReviewCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "assign",
+              "comment",
+              "query",
+              "refer",
+              "approve",
+              "approve_with_deductions",
+              "reopen",
+              "resume"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "assignee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id"
+          },
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "expected_version": {
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Note",
+            "type": "string"
+          },
+          "payable_inr": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payable Inr"
+          },
+          "visibility": {
+            "default": "team",
+            "enum": [
+              "team",
+              "clinical"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_version",
+          "action"
+        ],
+        "title": "ReviewCommand",
+        "type": "object"
+      },
+      "ReviewCommentView": {
+        "additionalProperties": false,
+        "properties": {
+          "actor": {
+            "$ref": "#/components/schemas/UserView"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "team",
+              "clinical"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "actor",
+          "visibility",
+          "body",
+          "created_at"
+        ],
+        "title": "ReviewCommentView",
+        "type": "object"
+      },
+      "ReviewPeople": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserView"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReviewPeople",
+        "type": "object"
+      },
+      "ReviewReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 3,
+            "default": 3,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "DRAFT_READY",
+              "IN_REVIEW",
+              "NEEDS_INFORMATION",
+              "REFERRED",
+              "APPROVED",
+              "APPROVED_WITH_DEDUCTIONS"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "request_id",
+          "version",
+          "state",
+          "event_id"
+        ],
+        "title": "ReviewReceipt",
+        "type": "object"
+      },
+      "ReviewView": {
+        "additionalProperties": false,
+        "properties": {
+          "assignee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "audit": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewAuditView"
+            },
+            "title": "Audit",
+            "type": "array"
+          },
+          "audit_total": {
+            "default": 0,
+            "title": "Audit Total",
+            "type": "integer"
+          },
+          "clinical_notes_restricted": {
+            "title": "Clinical Notes Restricted",
+            "type": "boolean"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewCommentView"
+            },
+            "title": "Comments",
+            "type": "array"
+          },
+          "comments_total": {
+            "default": 0,
+            "title": "Comments Total",
+            "type": "integer"
+          },
+          "data_mode": {
+            "const": "synthetic_workflow",
+            "default": "synthetic_workflow",
+            "title": "Data Mode",
+            "type": "string"
+          },
+          "final_payable_inr": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Payable Inr"
+          },
+          "history_page": {
+            "default": 1,
+            "title": "History Page",
+            "type": "integer"
+          },
+          "history_page_size": {
+            "default": 50,
+            "title": "History Page Size",
+            "type": "integer"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 3,
+            "default": 3,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "DRAFT_READY",
+              "IN_REVIEW",
+              "NEEDS_INFORMATION",
+              "REFERRED",
+              "APPROVED",
+              "APPROVED_WITH_DEDUCTIONS"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "request_id",
+          "version",
+          "state",
+          "assignee",
+          "final_payable_inr",
+          "comments",
+          "clinical_notes_restricted",
+          "audit"
+        ],
+        "title": "ReviewView",
+        "type": "object"
+      },
+      "RuleInput": {
+        "additionalProperties": false,
+        "properties": {
+          "clause_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Clause Id",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          },
+          "rule_id": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "rule_type": {
+            "enum": [
+              "ROOM_RENT_CAP",
+              "ICU_CAP",
+              "PROPORTIONATE_DEDUCTION",
+              "PROCEDURE_SUBLIMIT",
+              "WAITING_PED",
+              "WAITING_SPECIFIC",
+              "WAITING_INITIAL",
+              "EXCLUSION",
+              "COPAY"
+            ],
+            "title": "Rule Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "rule_type",
+          "clause_id",
+          "params"
+        ],
+        "title": "RuleInput",
         "type": "object"
       },
       "SavedSourceRecommendation": {
@@ -1303,6 +2337,1040 @@
           }
         ],
         "summary": "Get Source Case"
+      }
+    },
+    "/v3/admin/memberships": {
+      "get": {
+        "operationId": "list_memberships",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Members",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/admin/memberships/{user_id}": {
+      "post": {
+        "operationId": "change_membership",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MembershipCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Change Member",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/analytics": {
+      "get": {
+        "operationId": "read_local_analytics",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Analytics",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/documents/{document_id}/content": {
+      "get": {
+        "operationId": "download_document",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/events": {
+      "get": {
+        "operationId": "list_governance_events",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Events",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/jobs": {
+      "get": {
+        "operationId": "list_jobs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Jobs",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/jobs/{job_id}": {
+      "get": {
+        "operationId": "get_job",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Job Detail",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/jobs/{job_id}/retry": {
+      "post": {
+        "operationId": "retry_job",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetryCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Retry",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/policies": {
+      "get": {
+        "operationId": "list_policies",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Policies",
+        "tags": [
+          "synthetic MVP"
+        ]
+      },
+      "post": {
+        "operationId": "propose_policy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyProposal"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Propose",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/policies/{policy_id}": {
+      "get": {
+        "operationId": "get_policy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Policy",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/policies/{policy_id}/commands": {
+      "post": {
+        "operationId": "command_policy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyAction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Policy Command",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/policy-documents": {
+      "get": {
+        "operationId": "list_policy_documents",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Policy Documents",
+        "tags": [
+          "synthetic MVP"
+        ]
+      },
+      "post": {
+        "operationId": "upload_policy_document",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Synthetic-Data",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "X-Synthetic-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload Policy",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/policy-template": {
+      "get": {
+        "operationId": "get_policy_template",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Template",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/requests": {
+      "get": {
+        "operationId": "list_submitted_requests",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Requests",
+        "tags": [
+          "synthetic MVP"
+        ]
+      },
+      "post": {
+        "operationId": "submit_request",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSubmission"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/requests/{request_id}": {
+      "get": {
+        "operationId": "get_submitted_request",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Request Detail",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/requests/{request_id}/amend": {
+      "post": {
+        "operationId": "amend_request",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Amendment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Amend",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/requests/{request_id}/documents": {
+      "get": {
+        "operationId": "list_documents",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Documents",
+        "tags": [
+          "synthetic MVP"
+        ]
+      },
+      "post": {
+        "operationId": "upload_document",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Synthetic-Data",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "X-Synthetic-Data",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload",
+        "tags": [
+          "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/reviews/people": {
+      "get": {
+        "operationId": "list_review_people",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewPeople"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "People",
+        "tags": [
+          "synthetic review workflows"
+        ]
+      }
+    },
+    "/v3/reviews/{request_id}": {
+      "get": {
+        "operationId": "get_review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "history_page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "History Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read",
+        "tags": [
+          "synthetic review workflows"
+        ]
+      }
+    },
+    "/v3/reviews/{request_id}/commands": {
+      "post": {
+        "operationId": "command_review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Command",
+        "tags": [
+          "synthetic review workflows"
+        ]
       }
     }
   }

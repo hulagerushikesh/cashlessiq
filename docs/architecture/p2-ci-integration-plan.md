@@ -272,3 +272,21 @@ Linux selection is explicit. This does not prove full Linux resource/headroom
 admission, the complete allocator/journal's physical handoff, eight-service
 readiness/revocation/containment, operational custody or P2 exit. Those remain
 the next coherent integration work, followed by governed-source approval.
+
+
+### Full physical chain accepted — 25 October
+
+[Run 40201098649](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40201098649)
+at `14ff9e4` passed the complete opt-in synthetic chain in 216.94 seconds:
+35 independently observed networks/volumes, 19 installer/readback helper pairs,
+eight exact application incarnations, six tenant-role routes, six foreign-case
+denials, live membership revocation/restoration without app restarts, two DB
+outage denials, supervised delivery, all-eight stop and owned resource cleanup.
+This supersedes the earlier open physical-integration checkpoints above.
+
+The final fixes preserve complete Docker inspection metadata using compact JSON
+within the existing bounded actor frame, permit independently bound configured
+endpoints before start/after stop, and prove auxiliary stop from fresh exact-ID
+state rather than treating CLI display text as ownership or shutdown evidence.
+Mac heavy acceptance remains deferred. Operational custody and live governed
+source authority are not implied by this synthetic CI acceptance.

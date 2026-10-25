@@ -11,7 +11,14 @@ export async function POST(request: NextRequest) {
   const profile = form.get("profile");
   if (
     typeof profile !== "string" ||
-    !["processor", "medical_officer", "auditor"].includes(profile)
+    ![
+      "processor",
+      "medical_officer",
+      "auditor",
+      ...(process.env.CIQ_SYNTHETIC_WORKFLOWS === "true"
+        ? ["policy_analyst", "policy_approver", "operations_lead", "tenant_admin"]
+        : []),
+    ].includes(profile)
   ) {
     return new Response("Invalid profile", { status: 400 });
   }

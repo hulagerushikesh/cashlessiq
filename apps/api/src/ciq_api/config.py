@@ -16,9 +16,17 @@ class Settings(BaseSettings):
     oidc_issuer: str = ""
     oidc_audience: str = "cashlessiq-api"
     oidc_jwks_url: str = ""
+    synthetic_workflows: bool = False
+    local_embedded_worker: bool = False
 
     @model_validator(mode="after")
     def validate_auth(self) -> "Settings":
+        if self.local_embedded_worker and not self.synthetic_workflows:
+            raise ValueError("Local embedded worker requires synthetic workflows")
+        if self.synthetic_workflows and (
+            self.environment not in {"local", "test"} or self.auth_mode != "local"
+        ):
+            raise ValueError("Synthetic workflows require local/test local identity")
         if self.auth_mode == "local":
             if self.environment not in {"local", "test"}:
                 raise ValueError("Local identity is allowed only in local/test environments")

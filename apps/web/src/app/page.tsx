@@ -18,9 +18,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { currentIdentity } from "@/lib/server-api";
 
-const roles = { processor: "Processor", medical_officer: "Medical officer", auditor: "Auditor" };
+const roles = {
+  processor: "Processor",
+  medical_officer: "Medical officer",
+  auditor: "Auditor",
+  policy_analyst: "Policy analyst",
+  policy_approver: "Policy approver",
+  operations_lead: "Operations lead",
+  tenant_admin: "Tenant administrator",
+};
 
 export default async function Workspace() {
+  const mvp = process.env.CIQ_SYNTHETIC_WORKFLOWS === "true";
   const session = await currentIdentity();
   const identity = session.state === "ready" ? session.identity : null;
   return (
@@ -170,7 +179,9 @@ export default async function Workspace() {
               </h2>
               <p className="mt-3 max-w-md text-sm leading-7 text-slate-500">
                 {identity
-                  ? "Your organisation and role are verified. Explore three synthetic cases, deterministic calculations and policy references in the read-only alpha."
+                  ? mvp
+                    ? "Your organisation and role are verified. Test synthetic request intake, policy approval and human review in the testing workspace."
+                    : "Your organisation and role are verified. Explore three synthetic cases, deterministic calculations and policy references in the read-only alpha."
                   : "Enter the synthetic sandbox to explore the workspace as a processor, medical officer or auditor."}
               </p>
               <div className="mt-7">
@@ -189,6 +200,14 @@ export default async function Workspace() {
                   </Button>
                 )}
               </div>
+              {identity && mvp && (
+                <Link
+                  href="/workflows"
+                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-teal-800"
+                >
+                  Open testing workspace <ArrowRight size={16} />
+                </Link>
+              )}
               {identity && (
                 <Link
                   href="/cases"
@@ -255,12 +274,12 @@ export default async function Workspace() {
               <Sparkles size={18} className="mt-0.5 text-slate-400" />
               <div>
                 <h2 id="next-title" className="text-sm font-medium">
-                  Explore the read-only alpha
+                  {mvp ? "Test the synthetic MVP" : "Explore the read-only alpha"}
                 </h2>
                 <p className="mt-1.5 text-xs leading-6 text-slate-500">
-                  Try the case queue, calculations and policy references with fictional cases.
-                  The state preview also shows saved, missing and unavailable recommendations.
-                  Reviewer actions are not available yet.
+                  {mvp
+                    ? "Use fictional data to test policy proposals, background assessments, supporting documents and reviewer actions. Human review is required for every final decision."
+                    : "Try the case queue, calculations and policy references with fictional cases. The state preview also shows saved, missing and unavailable recommendations. Reviewer actions are not available yet."}
                 </p>
               </div>
             </div>

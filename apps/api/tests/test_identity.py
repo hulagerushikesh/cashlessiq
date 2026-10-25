@@ -143,7 +143,7 @@ def test_oidc_mode_does_not_expose_local_bootstrap(engine):
         )
 
 
-def test_migration_can_be_applied_twice_and_reversed(engine):
+def test_migration_is_repeatable_and_preserves_append_only_history(engine):
     from pathlib import Path
 
     config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
@@ -152,7 +152,7 @@ def test_migration_can_be_applied_twice_and_reversed(engine):
         command.upgrade(config, "head")
         command.upgrade(config, "head")
         command.check(config)
-        command.downgrade(config, "base")
-        assert "tenant" not in inspect(connection).get_table_names()
-        command.upgrade(config, "head")
+        with pytest.raises(RuntimeError, match="forward-only"):
+            command.downgrade(config, "base")
+        assert "review_audit" in inspect(connection).get_table_names()
         assert "tenant_membership" in inspect(connection).get_table_names()

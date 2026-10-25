@@ -52,6 +52,9 @@ export function CaseWorkspace({ identity, children }: { identity: Identity; chil
           </Link>
           <nav aria-label="Workspace navigation" className="flex items-center gap-5 text-sm">
             <Link href="/">Overview</Link>
+            {process.env.CIQ_SYNTHETIC_WORKFLOWS === "true" && (
+              <Link href="/workflows">Testing workspace</Link>
+            )}
             <Link href="/cases" className="font-semibold text-teal-800">
               Case queue
             </Link>
@@ -79,7 +82,9 @@ export function CaseWorkspace({ identity, children }: { identity: Identity; chil
           <span>{identity.tenant.name}</span>
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900">
             <LockKeyhole size={13} />
-            Synthetic alpha · Read-only · No live assessment
+            {process.env.CIQ_SYNTHETIC_WORKFLOWS === "true"
+              ? "Synthetic MVP · Human review required"
+              : "Synthetic alpha · Read-only · No live assessment"}
           </span>
         </div>
         {children}
