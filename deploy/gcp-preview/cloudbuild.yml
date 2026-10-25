@@ -1,0 +1,29 @@
+# Manual submission only after approval of GCP spend; never builds on the test VM.
+timeout: 900s
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --platform=linux/amd64
+      - --target=production
+      - -f
+      - apps/web/Dockerfile
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/ciq-preview/web:${_REVISION}
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --platform=linux/amd64
+      - -f
+      - apps/api/Dockerfile
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/ciq-preview/api:${_REVISION}
+      - .
+images:
+  - us-central1-docker.pkg.dev/$PROJECT_ID/ciq-preview/web:${_REVISION}
+  - us-central1-docker.pkg.dev/$PROJECT_ID/ciq-preview/api:${_REVISION}
+substitutions:
+  _REVISION: review-before-deploy
+options:
+  logging: CLOUD_LOGGING_ONLY

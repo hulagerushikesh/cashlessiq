@@ -1,5 +1,10 @@
 # Private owner preview from the existing Mac
 
+**Current decision:** the owner subsequently selected a dedicated GCP target
+for an independent preview. [The small testing plan](gcp-private-testing.md)
+records that local Docker is sufficient and a duplicate local stack is not
+required. The instructions below retain the earlier Mac-specific option.
+
 25 October 2026. Rushikesh selected **this Mac first, without hosting spend**.
 He has already tested the current local app and explained it to two friends.
 This package prepares the next delivery step; it does not require repeating that

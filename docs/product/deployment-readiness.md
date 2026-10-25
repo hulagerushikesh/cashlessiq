@@ -1,6 +1,19 @@
 # Product deployment: concrete remaining work
 
-## Current target — private owner preview, 25 October
+## Current target — two-person testing and optional GCP, 25 October
+
+The current local Docker stack is sufficient for owner/engineering testing.
+Its development web server was observed at about 2.4 GiB; the built preview
+passed 37 HTTP checks under explicit limits and reported about 190 MiB combined
+service usage afterward. This is a snapshot, not a peak-load guarantee.
+
+The owner selected a dedicated GCP project. `cashlessiq-dev-rush` is created,
+with billing disabled and the CLI default unchanged. The [GCP plan](gcp-private-testing.md)
+prepares one e2-small/2 GiB VM, a 20 GiB standard disk and an initial eight-hour
+STOP limit. Billing linkage, the bounded remote build and actual provisioning
+still require financial approval. No paid deployment has occurred.
+
+## Earlier Mac preview preparation — 25 October
 
 The owner clarified that the first online version is for personal testing before
 a customer MVP. Use the [joint acceptance checklist](owner-preview-acceptance.md).

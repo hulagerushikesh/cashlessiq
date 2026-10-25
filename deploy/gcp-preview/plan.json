@@ -1,0 +1,60 @@
+{
+  "purpose": "Private fictional-data testing by the owner before an MVP",
+  "project_id": "cashlessiq-dev-rush",
+  "project_billing_enabled": false,
+  "financial_approval": "pending",
+  "region": "us-central1",
+  "zone": "us-central1-a",
+  "instance": {
+    "name": "ciq-private-test",
+    "machine_type": "e2-small",
+    "memory_gib": 2,
+    "boot_disk_type": "pd-standard",
+    "boot_disk_gib": 20,
+    "image_family": "debian-12",
+    "image_project": "debian-cloud",
+    "public_ipv4": "ephemeral",
+    "service_account": "registry-read-only, no project-wide editor access",
+    "provisioned": false,
+    "max_run_duration_seconds": 28800,
+    "termination_action": "STOP"
+  },
+  "network": {
+    "name": "ciq-preview",
+    "subnet": "ciq-preview-us-central1",
+    "subnet_cidr": "10.42.0.0/24",
+    "ssh_ingress": "IAP source 35.235.240.0/20, TCP 22 only",
+    "public_app_api_database_ports": [],
+    "gateway_bind": "127.0.0.1:3080",
+    "browser_access": "outbound HTTPS tunnel to the owner-password gateway"
+  },
+  "runtime": {
+    "compose_files": [
+      "compose.owner-preview.yml",
+      "compose.preview-small.yml",
+      "compose.gcp-preview.yml"
+    ],
+    "steady_container_memory_ceiling_mib": 1152,
+    "build_on_runtime_vm": false,
+    "database": "single local PostgreSQL container and persistent Docker volume",
+    "customer_data_allowed": false,
+    "replicas": 1
+  },
+  "build": {
+    "configuration": "deploy/gcp-preview/cloudbuild.yml",
+    "registry": "us-central1-docker.pkg.dev/cashlessiq-dev-rush/ciq-preview",
+    "timeout_seconds": 900,
+    "deployment_images": "exact registry SHA-256 digests after acceptance"
+  },
+  "cost_estimate_usd": {
+    "basis": "730 hours/month, on-demand US pricing, no credits or free allowances assumed",
+    "vm_per_hour": 0.016752855,
+    "ipv4_per_hour": 0.005,
+    "disk_per_month_estimate": 0.8,
+    "base_total_per_month_estimate": 16.68,
+    "additional": "image/source storage, builds, bandwidth, logging and applicable taxes",
+    "proposed_operating_budget_before_tax": 20,
+    "hard_billing_cap": false,
+    "first_eight_hour_compute_and_ipv4_estimate": 0.18
+  }
+}

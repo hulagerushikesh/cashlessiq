@@ -24,6 +24,33 @@ Last updated: 25 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Two-person runtime verified; dedicated GCP target prepared — 25 October
+
+The owner clarified that this is private development/testing before an MVP,
+with hardly two testers. Local Docker is sufficient for current testing; a
+second local app/database stack is unnecessary. A read-only snapshot found the
+current development web server at about 2.4 GiB versus API 82 MiB, PostgreSQL
+38 MiB and Redis 10 MiB. This is not evidence that the application needs a large
+server; the development compiler and a duplicate stack drove the local concern.
+
+The built preview at `f28cb66` passed [37 HTTP checks under explicit small-runtime limits](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40180267477).
+Final observed usage: web 74.13 MiB, API 73.82 MiB, PostgreSQL 30.03 MiB and
+gateway 11.53 MiB — about 190 MiB combined. These are post-check snapshots,
+not peak-load measurements. Steady container ceilings total 1,152 MiB; builds
+remain separate. [Full product regression 40180267473 passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40180267473).
+The first bounded run found a Compose JSON string/number mismatch in the
+configuration assertion; it was corrected without changing the resource limits.
+
+The owner chose a dedicated GCP project. `cashlessiq-dev-rush` now exists as
+CashlessIQ Private Test, and billing was independently confirmed disabled. The
+CLI default Atlas RAG project was not changed. [The reviewable GCP plan](gcp-private-testing.md)
+proposes one e2-small/2 GiB VM, 20 GiB standard disk, private app/backend and
+an initial eight-hour automatic STOP. Full-month base estimate is about
+US$16.68 before variable usage/tax; the initial eight-hour VM/IPv4 estimate is
+about US$0.18 plus build/storage. Financial approval is still required before
+billing linkage, remote builds, image storage or VM provisioning. No paid
+resources, Snowflake queries or customer activation were performed.
+
 ### Mac owner-preview package accepted in CI — 25 October
 
 Rushikesh chose the existing Mac first, without hosting spend. The separate

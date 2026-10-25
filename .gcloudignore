@@ -1,0 +1,6 @@
+.gcloudignore
+.git
+#!include:.gitignore
+submission
+output
+tmp

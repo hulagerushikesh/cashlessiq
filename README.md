@@ -122,8 +122,12 @@ to keep engineering results and Rushikesh's human feedback separate. The local
 app has been tested by Rushikesh, who also walked two friends through its
 current state. That completes the general local human-testing checkpoint by
 owner report; an owner-only online address is not deployed yet.
-The [Mac owner-preview package](docs/product/mac-owner-preview.md) prepares that
-next step with a separate built server, password gateway and private backend.
+The [two-person testing/GCP plan](docs/product/gcp-private-testing.md) records
+37 passing checks under small-runtime limits and a final approximately 190 MiB
+combined service snapshot. Local Docker is sufficient for current testing; a
+dedicated GCP project is prepared without billing for an independent preview.
+The earlier [Mac preview package](docs/product/mac-owner-preview.md) remains an
+optional route, not a prerequisite to keep developing.
 The [case queue](http://localhost:3000/cases) now supports read-only exploration
 of three golden scenarios, calculation traces, and policy source references.
 See the [P2 checklist](docs/product/phase-p2-checklist.md) for scope and limits.

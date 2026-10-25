@@ -5,6 +5,16 @@ Rushikesh to test, with engineering and human checks before a customer MVP.
 It does not mean customer access or real patient data. This is the next visible
 delivery goal; full governed-source P2 integration continues separately.
 
+## Current hosting decision — 25 October
+
+Local Docker is sufficient for the current two-person application testing.
+The owner has selected a dedicated GCP project for an independent preview;
+it is created with billing disabled. The [small GCP package](gcp-private-testing.md)
+records the cost proposal, 37 passing checks under small-runtime limits and
+remaining remote acceptance. No paid deployment has occurred. The Mac-specific
+package below is an earlier prepared option, not a requirement to run a second
+local stack before continuing development.
+
 ## Access and scope
 
 The existing [local sign-in](http://localhost:3000/login) is available on this

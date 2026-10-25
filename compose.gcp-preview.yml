@@ -1,0 +1,9 @@
+# Use after the approved remote build; image values must be exact registry digests.
+# Always combine with the base preview + small-runtime files and --no-build.
+services:
+  migrate:
+    image: ${CIQ_PREVIEW_API_IMAGE:?Exact approved API image digest required}
+  api:
+    image: ${CIQ_PREVIEW_API_IMAGE:?Exact approved API image digest required}
+  web:
+    image: ${CIQ_PREVIEW_WEB_IMAGE:?Exact approved web image digest required}
