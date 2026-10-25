@@ -485,7 +485,7 @@ class PhysicalOwner:
                 for s in self.resources.specs
                 if s["kind"] == "volume"
             ),
-            ("inspect", "{incarnation}"),
+            ("inspect", "--format", "[{{json .}}]", "{incarnation}"),
             ("start", "{incarnation}"),
             ("stop", "--time", "30", "{incarnation}"),
         ]
@@ -521,6 +521,11 @@ class PhysicalOwner:
 
         class AdmittedEngine:
             def __call__(self, *args):
+                # Docker pretty-prints many per-edge runtime fields after start.
+                # Compact the same complete object within the fixed actor frame;
+                # do not drop any ownership, mount, state or network metadata.
+                if args[:1] == ("inspect",):
+                    args = ("inspect", "--format", "[{{json .}}]", args[-1])
                 if args[:1] == ("create",):
                     try:
                         assert owner.headroom() is True
