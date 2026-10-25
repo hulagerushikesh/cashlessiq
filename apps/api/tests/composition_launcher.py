@@ -5,6 +5,9 @@ They MUST be run in bounded owned actors with an independent watchdog before
 physical acceptance. This adapter alone does not contain a blocked Docker call.
 It neither builds/provisions resources nor manufactures readiness receipts.
 Optional journal wiring is explicit; no-journal callers remain model-only tests.
+Explicit database mode requires the complete observed 35-resource journal and
+rechecks both DB volume identities/options before each application create.
+It does not attest database readiness or bootstrap contents.
 """
 
 import json
@@ -38,9 +41,11 @@ class OwnedContainer:
 
 
 class Launcher:
-    def __init__(self, plan, *, engine, material_check, auxiliaries, journal=None):
+    def __init__(self, plan, *, engine, material_check, auxiliaries, journal=None, database=False):
         if type(plan) is not Inventory or not callable(engine) or not callable(material_check):
             raise ValueError("Invalid disposable launcher")
+        if type(database) is not bool or (database and journal is None):
+            raise ValueError("Invalid disposable database resource authority")
         if (
             type(auxiliaries) is not dict
             or set(auxiliaries) != {"db", "controller"}
@@ -55,6 +60,7 @@ class Launcher:
         self.closed = False
         self._image_configs = {}
         self.journal = journal
+        self.database = database
         self._observed, self._stopped = set(), set()
         self._fenced = False
         self.services = tuple(
@@ -68,7 +74,8 @@ class Launcher:
             for role in ROLES
         )
         if journal is not None:
-            # A fresh header or this invocation's fully observed resource batch;
+            # A model-only fresh header or this invocation's fully observed batch;
+            # explicit DB mode always requires the complete observed batch.
             # never resume a container attempt or a fenced/partial provision.
             journal.check()
             header, *events = journal.events
@@ -79,6 +86,11 @@ class Launcher:
                 for role in ROLES
                 for kind in (("material",) if role == "membership" else ("material", "state"))
             }
+            if database:
+                expected |= {
+                    ("volume", plan.database_volume(kind)): plan.database_volume(kind)
+                    for kind in ("material", "data")
+                }
             reserved, observed = {}, {}
             for event in events:
                 key = (event.get("kind"), event.get("name"))
@@ -89,8 +101,10 @@ class Launcher:
                 if key in target:
                     raise ValueError("Disposable journal must be fresh")
                 target[key] = event["identity"]
-            if header != {"version": 1, "prefix": plan.prefix} or (
-                events and (set(reserved) != set(expected) or observed != expected)
+            if (
+                (database and not events)
+                or header != {"version": 1, "prefix": plan.prefix}
+                or (events and (set(reserved) != set(expected) or observed != expected))
             ):
                 raise ValueError("Disposable journal must be fresh")
             for role in ROLES:
@@ -176,6 +190,11 @@ class Launcher:
                     self._read("network", "inspect", self.plan.network(edge).identifier),
                     owners,
                 )
+            if self.database:
+                for kind in ("material", "data"):
+                    self.plan.check_database_volume(
+                        kind, self._read("volume", "inspect", self.plan.database_volume(kind))
+                    )
             for role in ROLES:
                 for kind in ("material",) if role == "membership" else ("material", "state"):
                     self.plan.check_volume(

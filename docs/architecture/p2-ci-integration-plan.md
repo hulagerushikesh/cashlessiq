@@ -60,6 +60,25 @@ that [they cover warehouses, not serverless features or AI](https://docs.snowfla
 
 ## Evidence and remaining gates
 
+### Database resource journal to launcher handoff — 25 October
+
+Integration review found the inactive canonical launcher expected only the
+original 33 resources, so it rejected the allocator's new 35-resource database
+batch. Explicit `database=True` now requires a complete observed journal for all
+18 networks, 15 app volumes and both DB volumes. Missing/header-only authority,
+the wrong selected batch and incomplete/fenced/mismatched journals are refused.
+Both database volume names, ownership labels, local driver/scope and absence of
+unapproved options are independently rechecked before application creation.
+No-journal DB mode is refused; legacy model-only callers remain unchanged.
+
+All 180 focused launcher/resource/controller/journal/engine tests pass locally,
+including 11 added cases. Resource-journal handoff and missing/foreign/drifting
+DB volume refusals use fake daemon metadata and real private journals. No Docker
+command or real container lifecycle is proved by this adapter change. Database
+bootstrap/readiness evidence remains separate, and Linux headroom/full-service
+physical integration is still open. Repository Ruff and changed-file formatting
+pass. The latest full product CI for the owner-preview copy is tracked separately.
+
 The existing product workflow already runs the sandbox Docker stack, API/DB,
 browser checks and disposable process containment on Linux. All three latest
 checkpoints passed: [ea18e45](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40107078653),

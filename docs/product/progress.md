@@ -12,6 +12,14 @@ demo-video work is not part of this product plan.
 
 ### Private owner preview before a customer MVP — 25 October
 
+The next integration handoff is repaired offline: explicit database mode accepts
+the fully observed 35-resource allocator journal instead of expecting the older
+33-resource batch. It refuses absent/header-only authority or a mismatched batch
+and rechecks both database volume identities/options before app creation. All
+180 focused launcher/resource/journal/controller/engine tests pass (11 new cases),
+with Ruff/format checks. These use real private journals and fake Docker metadata;
+full Linux headroom and physical eight-service lifecycle acceptance remain open.
+
 “Go live” now explicitly means personal owner testing, with engineering and human
 acceptance before a customer MVP. The [joint checklist](owner-preview-acceptance.md)
 records the test scope, expected screens and pending human results. Local login

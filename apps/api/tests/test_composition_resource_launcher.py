@@ -13,12 +13,26 @@ from ciq_api.offline_supervisor import Binding, inventory
 resources = importlib.import_module(ledger.__package__ + ".composition_resources")
 
 
-def test_complete_resources_feed_same_attempt_launcher_without_resetting_journal(tmp_path):
+def provision(tmp_path, *, database=False):
     p = plan()
     parent = tmp_path / "private"
     parent.mkdir(mode=0o700)
     journal = ledger.Journal(parent, p.prefix)
     fake = FakeDocker(p)
+    if database:
+        for kind in ("material", "data"):
+            name = p.database_volume(kind)
+            fake.volumes[name] = dict(
+                Name=name,
+                Driver="local",
+                Scope="local",
+                Options={},
+                Labels={
+                    resources.LABEL: p.prefix,
+                    resources.LABEL + ".role": "database",
+                    resources.LABEL + ".kind": kind,
+                },
+            )
     created = set()
 
     def engine(*args):
@@ -47,27 +61,112 @@ def test_complete_resources_feed_same_attempt_launcher_without_resetting_journal
         engine=engine,
         headroom=lambda: True,
         collision_check=lambda _: True,
+        database=database,
     )
     result = batch.provision()
     assert [(n.edge, n.identifier) for n in result.networks] == [
         (n.edge, n.identifier) for n in p.networks
     ]
+    return p, journal, fake, engine
+
+
+@pytest.mark.parametrize("database", [False, True])
+def test_complete_resources_feed_same_attempt_launcher_without_resetting_journal(
+    tmp_path, database
+):
+    p, journal, fake, engine = provision(tmp_path, database=database)
     launcher = Launcher(
         p,
         engine=engine,
         material_check=lambda *args: True,
         auxiliaries={"db": "f" * 64, "controller": "e" * 64},
         journal=journal,
+        database=database,
     )
     fake.binding = Binding("disposable-attempt", p.generation, inventory(launcher.services))
     launcher(launcher.services[0], fake.binding)
     assert not launcher.cleanup(1_000_000_000)
     journal.close()
     recovery = ledger.inspect(journal.root)
-    assert recovery.fenced and len(recovery.resources) == 41
-    assert sum(r[-1] == "PRESENT" for r in recovery.resources) == 33
+    assert recovery.fenced and len(recovery.resources) == (43 if database else 41)
+    assert sum(r[-1] == "PRESENT" for r in recovery.resources) == (35 if database else 33)
     assert sum(r[-1] == "STOPPED" for r in recovery.resources) == 1
     assert sum(r[-1] == "UNKNOWN" for r in recovery.resources) == 7
+
+
+@pytest.mark.parametrize("database", [False, True])
+def test_database_selection_must_match_observed_resource_batch(tmp_path, database):
+    p, journal, fake, engine = provision(tmp_path, database=database)
+    before = list(journal.events)
+    fake.calls.clear()
+    with pytest.raises(ValueError, match="must be fresh"):
+        Launcher(
+            p,
+            engine=engine,
+            material_check=lambda *args: True,
+            auxiliaries={"db": "f" * 64, "controller": "e" * 64},
+            journal=journal,
+            database=not database,
+        )
+    assert journal.events == before and not fake.calls
+    journal.close()
+
+
+@pytest.mark.parametrize("empty", [False, True])
+def test_database_requires_observed_resources_not_a_missing_or_header_only_journal(tmp_path, empty):
+    p = plan()
+    parent = tmp_path / "private"
+    parent.mkdir(mode=0o700)
+    journal = ledger.Journal(parent, p.prefix) if empty else None
+    fake = FakeDocker(p)
+    try:
+        with pytest.raises(ValueError):
+            Launcher(
+                p,
+                engine=fake,
+                material_check=lambda *args: True,
+                auxiliaries={"db": "f" * 64, "controller": "e" * 64},
+                journal=journal,
+                database=True,
+            )
+        assert not fake.calls
+        if journal is not None:
+            assert len(journal.events) == 1
+    finally:
+        if journal is not None:
+            journal.close()
+
+
+@pytest.mark.parametrize("kind", ["material", "data"])
+@pytest.mark.parametrize("fault", ["foreign-label", "options", "missing"])
+def test_database_volume_drift_prevents_application_creation(tmp_path, kind, fault):
+    p, journal, fake, engine = provision(tmp_path, database=True)
+    name = p.database_volume(kind)
+    if fault == "foreign-label":
+        fake.volumes[name]["Labels"][resources.LABEL] = "unrelated"
+    elif fault == "options":
+        fake.volumes[name]["Options"] = {"device": "/unapproved"}
+    else:
+        del fake.volumes[name]
+    launcher = Launcher(
+        p,
+        engine=engine,
+        material_check=lambda *args: True,
+        auxiliaries={"db": "f" * 64, "controller": "e" * 64},
+        journal=journal,
+        database=True,
+    )
+    binding = Binding("disposable-attempt", p.generation, inventory(launcher.services))
+    assert launcher.verify(launcher.services) is False
+    with pytest.raises(ValueError, match="Disposable launch failed; stopped review required"):
+        launcher(launcher.services[0], binding)
+    assert not fake.rows and not any(call[0] == "create" for call in fake.calls)
+    assert launcher.closed
+    journal.close()
+    recovery = ledger.inspect(journal.root)
+    assert recovery.fenced
+    # Preflight refusal must not turn observed DB volumes into stopped/removed.
+    assert all(r[-1] == "PRESENT" for r in recovery.resources if r[0][0] != "container")
 
 
 @pytest.mark.parametrize("fault", ["partial", "fenced", "wrong-id"])
