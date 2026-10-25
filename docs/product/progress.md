@@ -27,7 +27,11 @@ The owner-preview copy at 59f42d8 also passed its full run (40163582801).
 
 “Go live” now explicitly means personal owner testing, with engineering and human
 acceptance before a customer MVP. The [joint checklist](owner-preview-acceptance.md)
-records the test scope, expected screens and pending human results. Local login
+records the test scope and expected screens. Rushikesh now confirms he has
+already tested the current app and explained its state to two friends. The
+general local human-testing checkpoint is complete by owner report; per-row
+results and independent feedback from the friends are not reported. Do not
+require a repeat general walkthrough before continuing development. Local login
 returns 200 and the API is ready. Owner-only online hosting/access remains to be
 configured; no paid action or deployment occurred. This synthetic preview does
 not require closing the separate governed-source or later reviewer-write gates.

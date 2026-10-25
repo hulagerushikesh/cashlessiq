@@ -3,7 +3,12 @@
 **25 October clarification:** the next “live” goal is a private preview for the
 owner, followed by engineering and human checks before a customer MVP. Use the
 [joint acceptance checklist](owner-preview-acceptance.md) to record this round.
-The local app is available now; an owner-only online address has not been deployed.
+Rushikesh subsequently confirmed that he has already tested the current app
+and explained its state to two friends. The general local human-testing
+checkpoint is complete by owner report; use these checks for targeted follow-up
+rather than requiring a repeat general walkthrough. Per-check outcomes and
+independent friend feedback are not reported. The local app is available now;
+an owner-only online address has not been deployed.
 
 23 October 2026. This is an authenticated **local development sandbox**, not a
 public release, live Snowflake workspace or completed P2 acceptance. No Linux

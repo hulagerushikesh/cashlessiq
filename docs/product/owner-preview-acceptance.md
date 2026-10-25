@@ -25,26 +25,35 @@ do not simply tunnel or publish the existing development app. Any new spend or
 payment action requires the owner's approval. Synthetic preview delivery does
 not depend on Snowflake identities, complete P3–P6 features or customer interviews.
 
-## Run one human pass — about 15–20 minutes
+## Owner testing reported complete — 25 October
 
-Sign out before switching roles. Record PASS, ISSUE or NOT TESTED for each ID;
-do not infer a human pass from automated tests. The detailed
+Rushikesh confirms that he has already tested the current application himself
+and explained its current state to two friends. Record the current local human
+testing checkpoint as completed by owner report; do not request the same general
+walkthrough again as a prerequisite for continuing development. The friends
+were walkthrough participants; no independent test results or specific feedback
+from them have been reported.
+
+The report does not provide individual O01–O12 outcomes, so those rows are
+NOT REPORTED rather than NOT TESTED or an inferred PASS. Keep them as a
+reference for targeted regression checks and future issue reports. Sign out
+before switching roles; do not infer human results from automated tests. The detailed
 [local alpha guide](local-alpha-testing.md) explains the two fixture datasets.
 
 | ID | Action | Expected behavior | Owner result |
 | --- | --- | --- | --- |
-| O01 | Sign in as Processor / Asha | Correct name, Processor and Sahyadri sandbox organisation | NOT TESTED |
-| O02 | Open queue, then GOL001 | Three fictional cases; draft payable ₹95,000 with calculation and policy references | NOT TESTED |
-| O03 | Follow NIA-9.5 | Relevant on-page reference is reachable; no promise of retrieving a policy PDF | NOT TESTED |
-| O04 | Open GOL027 and GOL024 | Frozen query/referral outcomes; payable “Not calculated”, never ₹0 | NOT TESTED |
-| O05 | Filter QUERY, search a nonexistent reference, then Reset | GOL027 only, then clear empty state, then all three cases restored | NOT TESTED |
-| O06 | Inspect GOL001 as Processor, Medical officer and Auditor | Clinical narrative only for the medical officer; sign-in identity changes correctly | NOT TESTED |
-| O07 | Open `/source-preview`; compare Saved, Missing and Unavailable | Fixture banner stays visible; absent recommendation is different from unknown status; failure never shows a fallback amount | NOT TESTED |
-| O08 | Open Evidence preview; filter a clause and clear the filter | References return after clearing; placeholder links are labelled and are not actual policy documents | NOT TESTED |
-| O09 | Sign out, then revisit `/cases/GOL001` | Sign-in screen; no case amount or clinical narrative | NOT TESTED |
-| O10 | Use a narrow browser window | Queue/detail/preview remain readable without horizontal page scrolling | NOT TESTED |
-| O11 | Look for approve, send-query, refer, upload or assignment actions | These actions are unavailable; read-only scope is understandable | NOT TESTED |
-| O12 | Explain the case and amount in your own words | Record anything confusing, missing or difficult to trust; this is human judgment, not an automated assertion | NOT TESTED |
+| O01 | Sign in as Processor / Asha | Correct name, Processor and Sahyadri sandbox organisation | NOT REPORTED |
+| O02 | Open queue, then GOL001 | Three fictional cases; draft payable ₹95,000 with calculation and policy references | NOT REPORTED |
+| O03 | Follow NIA-9.5 | Relevant on-page reference is reachable; no promise of retrieving a policy PDF | NOT REPORTED |
+| O04 | Open GOL027 and GOL024 | Frozen query/referral outcomes; payable “Not calculated”, never ₹0 | NOT REPORTED |
+| O05 | Filter QUERY, search a nonexistent reference, then Reset | GOL027 only, then clear empty state, then all three cases restored | NOT REPORTED |
+| O06 | Inspect GOL001 as Processor, Medical officer and Auditor | Clinical narrative only for the medical officer; sign-in identity changes correctly | NOT REPORTED |
+| O07 | Open `/source-preview`; compare Saved, Missing and Unavailable | Fixture banner stays visible; absent recommendation is different from unknown status; failure never shows a fallback amount | NOT REPORTED |
+| O08 | Open Evidence preview; filter a clause and clear the filter | References return after clearing; placeholder links are labelled and are not actual policy documents | NOT REPORTED |
+| O09 | Sign out, then revisit `/cases/GOL001` | Sign-in screen; no case amount or clinical narrative | NOT REPORTED |
+| O10 | Use a narrow browser window | Queue/detail/preview remain readable without horizontal page scrolling | NOT REPORTED |
+| O11 | Look for approve, send-query, refer, upload or assignment actions | These actions are unavailable; read-only scope is understandable | NOT REPORTED |
+| O12 | Explain the case and amount in your own words | Record anything confusing, missing or difficult to trust; this is human judgment, not an automated assertion | NOT REPORTED |
 
 ## Engineering and human evidence
 
@@ -83,8 +92,10 @@ clean initial run. A subsequent complete single-worker run passed all 26 cases
 in 33.8 seconds. Current web lint and TypeScript checks pass. These local checks
 exercise the existing Docker-built revision; CI checks the changed web source.
 
-Owner results above remain pending. Earlier acceptance of the 23 October local
-baseline does not automatically accept this round or an online deployment.
+The owner subsequently confirmed completion of testing the current app and a
+walkthrough with two friends. This is direct owner evidence, separate from CI.
+It covers the current local application; it does not establish acceptance of
+undeployed source revisions, an online deployment or live-source integration.
 
 ## Report and close an issue
 
@@ -93,6 +104,8 @@ A screenshot is useful for layout; exclude cookies, tokens, passwords and real
 medical records. Engineering reproduces and fixes the issue, reruns the affected
 checks, then the owner retests that ID. Keep automated and owner results separate.
 
-This round is accepted when engineering checks pass, all owner rows are reviewed
-and blocking issues are fixed and retested. Acceptance means the tested synthetic
-scope is usable for the owner. It does not close live-source P2 or a customer MVP.
+The current general human-testing checkpoint is complete by owner report.
+Continue development without requiring another full walkthrough of the same
+application. Any reported issue or changed behavior should receive a targeted
+engineering check and owner retest. Per-row outcomes remain unspecified; this
+checkpoint does not close live-source P2 or a customer MVP.

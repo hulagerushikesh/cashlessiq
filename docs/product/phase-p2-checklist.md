@@ -2,7 +2,10 @@
 
 **25 October owner preview:** the owner clarified that the next live target is
 private personal testing before a customer MVP. The [joint checklist](owner-preview-acceptance.md)
-keeps engineering and human results separate; owner results remain pending.
+keeps engineering and human results separate. Rushikesh confirms that he has
+already tested the current app and explained it to two friends; the general
+local human-testing checkpoint is complete by owner report. Individual checklist
+results and independent test results from the friends are not reported.
 The local app responds, and all 26 browser checks passed a fresh complete rerun.
 The corrected overview/sign-in copy passed
 [full product CI 40163582801](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163582801).
@@ -13,7 +16,8 @@ The subsequent 35-resource DB-journal/launcher handoff at 47341f6
 [passed full product CI 40163767366](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163767366),
 including 1,469 backend and 26 browser tests. Its 180 focused local tests use real
 private journals and fake daemon metadata; complete physical integration and
-Linux headroom admission remain open. No deployment or human acceptance claim.
+Linux headroom admission remain open. No deployment or live-source acceptance
+is established by the local owner report.
 
 Status: In progress — synthetic-only alpha  
 Last updated: 25 October 2026

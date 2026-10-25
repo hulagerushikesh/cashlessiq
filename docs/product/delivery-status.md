@@ -8,10 +8,12 @@ Hackathon submission is finished and is not counted as product delivery.
 
 The owner clarified that “go live” means a private preview for personal testing,
 with engineering and human checks before a customer MVP. The existing local
-synthetic workspace responds (login HTTP 200, API ready). Follow the
-[joint owner checklist](owner-preview-acceptance.md); this round's human results
-remain pending. An owner-only online address is not deployed. It needs a selected
-host and real owner access boundary; publishing the local role selector is not
+synthetic workspace responds (login HTTP 200, API ready). Rushikesh confirms
+that he has already tested the current app and explained it to two friends.
+The general human-testing checkpoint is complete by owner report; individual
+[joint checklist](owner-preview-acceptance.md) outcomes are not reported. A
+repeat general walkthrough is not a prerequisite for continuing development.
+An owner-only online address is not deployed. It needs a selected host and real owner access boundary; publishing the local role selector is not
 sufficient. Ask before new spend or payment actions.
 
 Synthetic owner testing can proceed before governed live-source P2 exit,
@@ -21,12 +23,12 @@ The revised frontend and database-resource handoff at 47341f6
 1,469 backend, 26 browser, 15 source UI, 870 root, 72 membership, 41 client and
 35 catalog tests; lint/contracts/types/build and containment also pass. Fresh
 local browser validation passed all 26 cases after an initial intermittent
-24/26 run and unchanged focused rerun. Owner results remain pending. The local
-Docker-built app has not received the new copy; no Mac rebuild/start occurred.
+24/26 run and unchanged focused rerun. Owner testing is recorded separately
+from those automated checks. The local Docker-built app has not received the new copy; no Mac rebuild/start occurred.
 The 35-resource launcher handoff is tested with real journals/fake metadata;
 full Linux resource admission/eight-service physical integration remains open.
 
-The latest full [product CI at 6cb02c1 passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161931233),
+The earlier full [product CI at 6cb02c1 passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161931233),
 including the API/browser/source-contract checks. The previously pending
 [40161796216 passed too](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216).
 
