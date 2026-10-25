@@ -749,7 +749,9 @@ class PhysicalOwner:
             spec, _, _ = next(row for row in self.auxiliaries if row[1] == cid)
             row = self.attest_auxiliary(spec, cid)
             if row["State"]["Running"]:
-                assert self.docker("stop", "--time", "5", cid) == cid
+                # A CLI acknowledgement is not a stop proof. Require a successful
+                # exact-ID operation, then independently attest terminal state.
+                self.docker("stop", "--time", "5", cid)
             row = self.attest_auxiliary(spec, cid)
             return (
                 row["State"]["Running"] is False
