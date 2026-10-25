@@ -10,6 +10,31 @@ demo-video work is not part of this product plan.
 
 [Short owner dashboard: completed work, remaining phases and next decision](delivery-status.md).
 
+### Real database helper acceptance on Linux — 25 October
+
+The [manual image/lifecycle run 40159814345](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159814345)
+passed all three real-container cases at add3318 (59-second job). Fresh named
+volumes now exercise actual material install/read-back, UID/GID 10002 data
+preparation/probe, PostgreSQL 16 initdb/structural probe and private-socket
+schema/grant/catalog bootstrap. Valid completion is independently read back;
+SQL and catalog failures retain ATTEMPTED. Fresh containers deny repeat initdb
+and bootstrap, preserving the completed/failed marker and stopped cluster.
+
+Live Docker inspection exposed canonical CAP_CHOWN spelling. The shared helper
+coordinator accepts only that exact alias for the existing CHOWN singleton;
+six regression cases reject privilege expansion or ambiguous capability values.
+All 854 local root tests pass, with two CI-only modules skipped; repository Ruff
+checks pass. Follow-up 08c8caf redacts request-frame repr/tracebacks and disables
+uv cache export; [run 40159947450](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159947450)
+also passed all three real-container cases. Full product CI passed c1fead5
+(40159627351); the broader run for 08c8caf is still pending at this checkpoint.
+
+The CI harness checks exact images, users, mounts, network-none, capability and
+resource settings plus stopped exit state. It removes only its own acknowledged
+labeled CI resources. It is not full journal/allocator recovery acceptance.
+Membership TLS, Linux full-allocator observations and integrated eight-service
+readiness/containment remain open. No Mac Docker mutation or paid access.
+
 ### Linux CI alternative and spending boundary — 25 October
 
 The owner requested an alternative to repeated Mac memory-pressure deferrals.
@@ -17,11 +42,12 @@ Use standard GitHub-hosted Linux CI for disposable synthetic integration;
 Mac execution is optional and operational hosting remains a separate decision.
 The public repository qualifies for free standard runner compute under GitHub's
 documented terms. The [concrete sequence](../architecture/p2-ci-integration-plan.md)
-starts with a new manual, time-bounded cluster/bootstrap image smoke;
+started with a new manual, time-bounded cluster/bootstrap image smoke;
 [run 40158980750 passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40158980750)
 at df213a7 on Ubuntu 24.04 in 27 seconds. Both image recipes built and passed
 configuration plus restricted account/binary runtime checks against exact IDs.
-This is not initialization, TLS or full composition acceptance.
+That initial run was image smoke only; real initialization/bootstrap evidence
+is recorded in the newer checkpoint above. TLS/full composition remain open.
 No larger runner, paid host, artifact upload or registry push
 is introduced by that workflow. Linux route/headroom collectors and full
 container lifecycle/TLS acceptance still need implementation.

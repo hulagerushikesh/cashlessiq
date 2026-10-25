@@ -12,7 +12,17 @@ All three preceding product CI runs, including ea18e45, passed. The new manual
 helper image build/runtime smoke also
 [passed on Linux](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40158980750)
 at df213a7: both images built and passed restricted identity/binary checks.
-Initialization, TLS readiness and full composition acceptance remain pending.
+Real initialization/bootstrap subsequently passed in
+[run 40159814345](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159814345)
+at add3318: three cases cover successful completion, retained SQL/catalog
+failures and denied repeat attempts, using fresh volumes and separate probes.
+This also identified/fixed Docker's canonical CAP_CHOWN metadata spelling.
+All 854 local root tests and repository Ruff checks pass (two CI modules skip
+locally). Follow-up 08c8caf tightens test-frame redaction and disables cache
+export; its [fresh lifecycle run passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159947450).
+Full product CI passed c1fead5 (40159627351); the broader run for 08c8caf is
+still pending at this checkpoint. TLS readiness and full composition
+acceptance remain pending; this CI harness is not the full allocator/recovery owner.
 The owner reports adding Snowflake payment details and requires approval before
 payment-related actions or new spend. No paid source access is authorized.
 

@@ -5,6 +5,26 @@ Last updated: 25 October 2026
 
 ## Latest checkpoint — authenticated inspection
 
+### Real database helper lifecycle on Linux — 25 October
+
+- [x] Actual material install/read-back and nonroot data preparation/probe on
+  fresh Docker named volumes.
+- [x] Actual PostgreSQL 16 initdb and independent stopped-cluster structural probe.
+- [x] Valid private-socket bootstrap/catalog gate and independent completion probe.
+- [x] SQL/catalog failures retain ATTEMPTED, stop PostgreSQL and deny fresh-container
+  repeat attempts; successful bootstrap also denies repeat initdb/bootstrap.
+- [x] Three real-container cases passed in
+  [run 40159814345](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159814345)
+  at add3318 (59-second job). Six offline capability regression cases added after
+  observing Docker's canonical CAP_CHOWN metadata. All 854 local root tests and
+  Ruff checks pass; two opt-in CI modules skip locally.
+- [x] Follow-up 08c8caf [CI passed all three lifecycle cases](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159947450)
+  with request-frame redaction, short tracebacks and uv cache export disabled.
+  Full product CI passed c1fead5 (40159627351); the broader run for 08c8caf is
+  still pending at this checkpoint.
+- [ ] Membership TLS, full Linux allocator observations and eight-service
+  readiness/containment. CI test teardown is not operational recovery acceptance.
+
 ### Linux CI execution choice — 25 October
 
 - [x] Latest full product CI runs verified successful: 40107078653,
@@ -17,8 +37,9 @@ Last updated: 25 October 2026
 - [x] First [image smoke passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40158980750)
   at df213a7: both recipes built, configuration checked and restricted PostgreSQL
   account/binary preflight passed against exact image IDs (27-second Linux job).
-- [ ] Wire real initialization, bootstrap and membership TLS, followed by full
-  service containment acceptance. Image smoke does not close those checks.
+- [x] Wire real initialization/bootstrap (see newer checkpoint above).
+- [ ] Membership TLS, followed by full service containment acceptance.
+  Image smoke alone does not close those checks.
 - [ ] Add explicit Linux route/resource observations before using the full
   resource allocator on that host; do not bypass Mac checks with fabricated data.
 

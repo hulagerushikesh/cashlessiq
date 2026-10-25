@@ -43,9 +43,10 @@ that [they cover warehouses, not serverless features or AI](https://docs.snowfla
    15-minute image smoke. It uses a run-specific local tag for the wrapper build,
    verifies the base tag's ID before/after, and runs checks against exact IDs.
    It does not publish or establish a reusable trusted image digest.
-2. Extend Linux CI to the real disposable volume preparation, initdb, bootstrap
-   and membership TLS connection, including permission and connection denials.
-   Use generated test identities and fixed fictional source inputs only.
+2. Real disposable volume preparation, initdb and private-socket bootstrap now
+   pass on Linux CI (see evidence below). Next add the membership TLS connection,
+   including permission and connection denials. Use generated test identities
+   and fixed fictional source inputs only.
 3. Wire and verify the complete owned service lifecycle: readiness barrier,
    tenant/role behavior, revocation, stop, uncertain completion and containment.
    The current Mac route/headroom collectors need explicit Linux equivalents
@@ -77,7 +78,7 @@ Membership TLS, integrated containment, governed live-source access, operational
 custody and P2 exit remain distinct evidence gates. No phase completion estimate
 or production activation changes with this test-host decision.
 
-### Real helper lifecycle regression — implementation prepared
+### Real helper lifecycle regression — 25 October
 
 The manual workflow now also invokes three CI-only real-container cases using
 the built image IDs. Each uses fresh labeled named volumes, material install and
@@ -86,7 +87,13 @@ and private-socket bootstrap. The cases cover a valid bootstrap, SQL failure and
 an effective privilege drift rejected by the catalog check. Fresh containers
 must deny repeat initialization/bootstrap; read-only probes check retained
 completion or ATTEMPTED markers and absence of a running postmaster PID file.
-The first remote result for these added lifecycle cases is pending.
+[Run 40159814345](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159814345)
+passed all three real-container cases at add3318 in a 59-second job. The first
+attempt caught Docker's canonical CAP_CHOWN spelling; the shared helper
+coordinator now accepts only the exact singleton CHOWN/CAP_CHOWN aliases.
+Six offline regression cases accept either spelling and reject extra,
+duplicate, lowercase or non-list capabilities. All 854 local root tests pass
+(two CI-only modules skipped); repository Ruff checks pass.
 
 The test harness inspects actual image/user/mount/network/capability/resource
 configuration before starting and exact exit state afterward. Its inputs use
@@ -95,3 +102,9 @@ Teardown removes only acknowledged, labeled resources on the disposable runner,
 including failed test data after retention checks. This is a CI test harness,
 not the production composition journal, crash recovery owner or full allocator.
 It does not test live TLS, network policy or the eight-service readiness barrier.
+Follow-up 08c8caf redacts byte-frame repr in failed test arguments, selects short
+pytest tracebacks and disables uv cache export. Its fresh
+[run 40159947450](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159947450)
+also passed all three cases. Full product CI passed the initial lifecycle
+checkpoint c1fead5 ([run 40159627351](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40159627351));
+the broader run for 08c8caf is still pending at this checkpoint.
