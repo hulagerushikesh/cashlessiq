@@ -17,12 +17,16 @@ Use standard GitHub-hosted Linux CI for disposable synthetic integration;
 Mac execution is optional and operational hosting remains a separate decision.
 The public repository qualifies for free standard runner compute under GitHub's
 documented terms. The [concrete sequence](../architecture/p2-ci-integration-plan.md)
-starts with a new manual, time-bounded cluster/bootstrap image smoke; its first
-result is pending. No larger runner, paid host, artifact upload or registry push
+starts with a new manual, time-bounded cluster/bootstrap image smoke;
+[run 40158980750 passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40158980750)
+at df213a7 on Ubuntu 24.04 in 27 seconds. Both image recipes built and passed
+configuration plus restricted account/binary runtime checks against exact IDs.
+This is not initialization, TLS or full composition acceptance.
+No larger runner, paid host, artifact upload or registry push
 is introduced by that workflow. Linux route/headroom collectors and full
 container lifecycle/TLS acceptance still need implementation.
 
-All latest product CI runs passed (40107078653, 40107013580, 40106920950).
+All preceding product CI runs passed (40107078653, 40107013580, 40106920950).
 The owner reports adding Snowflake payment details; ask before payment-related
 actions or new spend. Account status and usage have not been independently
 checked. This decision does not authorize paid queries or alter P2 exit gates.

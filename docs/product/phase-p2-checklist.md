@@ -14,8 +14,11 @@ Last updated: 25 October 2026
   Preserve Mac resource gates for Mac work; no wait on them for Linux builds.
 - [x] Prepare a manual, 15-minute helper image build/runtime smoke using
   standard public-repository runner compute and no paid storage/host/source.
-- [ ] Observe the first image smoke result; then wire real initialization,
-  bootstrap and membership TLS, followed by full service containment acceptance.
+- [x] First [image smoke passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40158980750)
+  at df213a7: both recipes built, configuration checked and restricted PostgreSQL
+  account/binary preflight passed against exact image IDs (27-second Linux job).
+- [ ] Wire real initialization, bootstrap and membership TLS, followed by full
+  service containment acceptance. Image smoke does not close those checks.
 - [ ] Add explicit Linux route/resource observations before using the full
   resource allocator on that host; do not bypass Mac checks with fabricated data.
 

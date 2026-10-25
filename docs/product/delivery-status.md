@@ -8,8 +8,11 @@ Hackathon submission is finished and is not counted as product delivery.
 GitHub-hosted Linux CI, using synthetic inputs. The Mac is optional as a test
 host; its memory-pressure gate must not block Linux image validation. See the
 [CI integration sequence and spending boundary](../architecture/p2-ci-integration-plan.md).
-All three latest product CI runs, including ea18e45, passed. A manual helper
-image build/runtime smoke is now prepared; its first result is pending.
+All three preceding product CI runs, including ea18e45, passed. The new manual
+helper image build/runtime smoke also
+[passed on Linux](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40158980750)
+at df213a7: both images built and passed restricted identity/binary checks.
+Initialization, TLS readiness and full composition acceptance remain pending.
 The owner reports adding Snowflake payment details and requires approval before
 payment-related actions or new spend. No paid source access is authorized.
 

@@ -66,7 +66,13 @@ and [170bdb4](https://github.com/hulagerushikesh/cashlessiq/actions/runs/4010692
 The separate PostgreSQL job includes 35 live catalog/membership privilege cases.
 These do not yet prove the helper images or the full isolated topology.
 
-At this decision checkpoint the new image smoke has not yet run. Image smoke,
-membership TLS, integrated containment, governed live-source access, operational
+The new [image smoke 40158980750](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40158980750)
+passed at df213a7 on a standard Ubuntu 24.04 runner (27-second job). Both actual
+cluster/bootstrap recipes built, image configuration checks passed, and both
+exact image IDs passed the existing PostgreSQL 16 account/binary preflight
+under the restricted runtime flags above. No local Docker build/start occurred.
+This closes that CI image packaging/runtime smoke, not initialization or database
+readiness. Images were not published; later runs must inspect their own IDs.
+Membership TLS, integrated containment, governed live-source access, operational
 custody and P2 exit remain distinct evidence gates. No phase completion estimate
 or production activation changes with this test-host decision.
