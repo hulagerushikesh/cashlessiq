@@ -1,0 +1,20 @@
+# Runtime budget for a two-person synthetic preview. Builds run separately in CI.
+# These are container ceilings, not a proof of total VM capacity or load capacity.
+services:
+  db:
+    mem_limit: 256m
+    cpus: 0.25
+  migrate:
+    mem_limit: 256m
+    cpus: 0.5
+  api:
+    mem_limit: 256m
+    cpus: 0.5
+  web:
+    mem_limit: 512m
+    cpus: 0.5
+    environment:
+      NODE_OPTIONS: --max-old-space-size=256
+  gateway:
+    mem_limit: 128m
+    cpus: 0.25

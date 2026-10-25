@@ -67,6 +67,8 @@ def compose(*args: str) -> None:
             str(ENV_FILE),
             "-f",
             "compose.owner-preview.yml",
+            "-f",
+            "compose.preview-small.yml",
             *args,
         ],
         cwd=ROOT,

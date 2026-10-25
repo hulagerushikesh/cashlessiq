@@ -9,6 +9,7 @@ on:
       - 'package*.json'
       - '.dockerignore'
       - 'compose.owner-preview.yml'
+      - 'compose.preview-small.yml'
       - 'deploy/owner-preview/**'
       - 'scripts/owner_preview.py'
       - 'scripts/check_owner_preview.py'
@@ -31,12 +32,12 @@ jobs:
         run: python -m scripts.owner_preview up
       - name: Verify non-root standalone runtime
         run: |
-          docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml exec -T web node -e "const assert=require('node:assert'); assert.notEqual(process.getuid(),0); assert.equal(process.env.NODE_ENV,'production'); assert(!require('node:fs').existsSync('/app/apps/web/src'));"
+          docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml exec -T web node -e "const assert=require('node:assert'); assert.notEqual(process.getuid(),0); assert.equal(process.env.NODE_ENV,'production'); assert(!require('node:fs').existsSync('/app/apps/web/src'));"
       - name: Owner gate, static assets, roles, origin and secure-cookie checks
         run: python -m scripts.check_owner_preview
       - name: Failure diagnostics
         if: failure() && steps.prepare.outcome == 'success'
-        run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml logs --tail 40 web api migrate gateway
+        run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml logs --tail 40 web api migrate gateway
       - name: Stop only disposable preview stack
         if: always() && steps.prepare.outcome == 'success'
-        run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml down --volumes
+        run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml down --volumes

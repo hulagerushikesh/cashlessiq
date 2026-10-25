@@ -119,6 +119,8 @@ def main() -> None:
                 ".env.owner-preview.local",
                 "-f",
                 "compose.owner-preview.yml",
+                "-f",
+                "compose.preview-small.yml",
                 "config",
                 "--format",
                 "json",
@@ -134,12 +136,39 @@ def main() -> None:
             assert not values.get("ports"), service
             assert set(values["networks"]) == {"preview"}, service
     assert config["networks"]["preview"]["internal"] is True
+    expected_mib = {"db": 256, "migrate": 256, "api": 256, "web": 512, "gateway": 128}
+    for service, mib in expected_mib.items():
+        assert config["services"][service]["mem_limit"] == mib * 1024 * 1024, service
     ports = config["services"]["gateway"]["ports"]
     assert len(ports) == 1 and ports[0]["host_ip"] == "127.0.0.1" and ports[0]["target"] == 8080
     print(
         f"Owner-preview acceptance: {checks} HTTP checks passed; "
         "only gateway loopback is published."
     )
+    # Report only task-owned runtime metrics, never configuration or environments.
+    result = subprocess.run(
+        [
+            "docker",
+            "compose",
+            "--env-file",
+            ".env.owner-preview.local",
+            "-f",
+            "compose.owner-preview.yml",
+            "-f",
+            "compose.preview-small.yml",
+            "stats",
+            "--no-stream",
+            "--format",
+            "json",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    rows = [json.loads(line) for line in result.stdout.splitlines() if line]
+    assert len(rows) == 4, "Expected the four running preview services"
+    for row in rows:
+        print(f"Runtime footprint: {row['Name']} | {row['MemUsage']} | CPU {row['CPUPerc']}")
 
 
 if __name__ == "__main__":
