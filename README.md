@@ -116,6 +116,10 @@ make product-up
 Open [localhost:3000](http://localhost:3000) and choose a synthetic reviewer role.
 Use the [10-minute local alpha testing guide](docs/product/local-alpha-testing.md)
 for the three role journeys, expected values and issue-reporting checklist.
+The next live milestone is a **private owner preview before a customer MVP**.
+Use the [joint acceptance checklist](docs/product/owner-preview-acceptance.md)
+to keep engineering results and Rushikesh's human feedback separate. The local
+app can be tested now; an owner-only online address is not deployed yet.
 The [case queue](http://localhost:3000/cases) now supports read-only exploration
 of three golden scenarios, calculation traces, and policy source references.
 See the [P2 checklist](docs/product/phase-p2-checklist.md) for scope and limits.

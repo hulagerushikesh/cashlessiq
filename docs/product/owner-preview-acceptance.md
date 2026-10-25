@@ -48,13 +48,24 @@ do not infer a human pass from automated tests. The detailed
 
 ## Engineering and human evidence
 
-The latest checked full product CI at `6cb02c1`
-[passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161931233):
+The owner-preview copy at `59f42d8`
+[passed full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163582801):
 root/lint, domain boundary, offline membership, supervisor containment,
 contracts/types/build, API/PostgreSQL, browser and source-contract UI checks.
+That run passed 870 root tests, 72 offline membership tests, 41 client tests,
+1,458 backend tests, 26 browser tests, 15 source UI tests and 35 catalog cases.
 The previously pending implementation run
 [40161796216 also passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216).
 These are engineering checks, not owner acceptance or hosted preview evidence.
+
+The subsequent database-handoff implementation at `47341f6` also
+[passed the full workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163767366).
+It includes the revised frontend and increases backend coverage to 1,469 passing
+tests; root 870 (three CI-only modules skipped), membership 72, client 41,
+browser 26, source UI 15 and catalog 35 also pass. Lint, contracts, types,
+build and supervisor containment pass. The 180 focused local handoff/launcher
+tests use fake Docker metadata; full eight-service physical integration remains
+separate. No online owner preview or human pass is inferred from CI success.
 
 The 25 October browser walkthrough found an obsolete overview card claiming the
 queue/evidence screens were still future work. The source now describes the
@@ -68,7 +79,8 @@ passed on the first single-worker run. Auditor sign-out reached the test's
 30-second limit, and mobile Evidence navigation did not reach its destination.
 Both cases passed when rerun together (2/2 in 6.6 seconds) without source, timeout
 or assertion changes. Record these as intermittent observations, not an initial
-clean 26/26 run. Current web lint and TypeScript checks pass. These local checks
+clean initial run. A subsequent complete single-worker run passed all 26 cases
+in 33.8 seconds. Current web lint and TypeScript checks pass. These local checks
 exercise the existing Docker-built revision; CI checks the changed web source.
 
 Owner results above remain pending. Earlier acceptance of the 23 October local

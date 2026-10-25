@@ -77,7 +77,11 @@ DB volume refusals use fake daemon metadata and real private journals. No Docker
 command or real container lifecycle is proved by this adapter change. Database
 bootstrap/readiness evidence remains separate, and Linux headroom/full-service
 physical integration is still open. Repository Ruff and changed-file formatting
-pass. The latest full product CI for the owner-preview copy is tracked separately.
+pass. Implementation 47341f6
+[passed full product CI 40163767366](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163767366),
+including 1,469 backend and 26 browser tests. The revised owner-preview frontend
+at 59f42d8 also passed its full workflow (40163582801). These do not replace the
+still-required real 35-resource/eight-service Linux admission and lifecycle run.
 
 The existing product workflow already runs the sandbox Docker stack, API/DB,
 browser checks and disposable process containment on Linux. All three latest

@@ -1,5 +1,20 @@
 # Product P2 — read-only case workspace
 
+**25 October owner preview:** the owner clarified that the next live target is
+private personal testing before a customer MVP. The [joint checklist](owner-preview-acceptance.md)
+keeps engineering and human results separate; owner results remain pending.
+The local app responds, and all 26 browser checks passed a fresh complete rerun.
+The corrected overview/sign-in copy passed
+[full product CI 40163582801](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163582801).
+An owner-only online address is not deployed. Ask before new spend/payment actions.
+Synthetic owner testing does not require completing the governed-source P2 gates
+or later reviewer-write features.
+The subsequent 35-resource DB-journal/launcher handoff at 47341f6
+[passed full product CI 40163767366](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163767366),
+including 1,469 backend and 26 browser tests. Its 180 focused local tests use real
+private journals and fake daemon metadata; complete physical integration and
+Linux headroom admission remain open. No deployment or human acceptance claim.
+
 Status: In progress — synthetic-only alpha  
 Last updated: 25 October 2026
 
@@ -35,7 +50,7 @@ also passed all four cases at cda2b94.
 Full product CI passed fd67973 (40160954993), f0c552d (40161164066) and
 6bca3a3 (40161313431) and 0979456 (40161499895). The final implementation's
 [broader CI 40161796216](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216)
-is still running at this documentation checkpoint.
+subsequently passed, as did the 6cb02c1 documentation checkpoint (40161931233).
 No paid action or Snowflake query was performed. Ask before any new spend or
 payment-related action. Next: Linux resource/headroom observation and the
 integrated eight-service startup/readiness/shutdown batch.

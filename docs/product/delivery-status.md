@@ -16,6 +16,16 @@ sufficient. Ask before new spend or payment actions.
 
 Synthetic owner testing can proceed before governed live-source P2 exit,
 customer interviews or later reviewer-write features. Keep those scopes separate.
+The revised frontend and database-resource handoff at 47341f6
+[passed full CI 40163767366](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163767366):
+1,469 backend, 26 browser, 15 source UI, 870 root, 72 membership, 41 client and
+35 catalog tests; lint/contracts/types/build and containment also pass. Fresh
+local browser validation passed all 26 cases after an initial intermittent
+24/26 run and unchanged focused rerun. Owner results remain pending. The local
+Docker-built app has not received the new copy; no Mac rebuild/start occurred.
+The 35-resource launcher handoff is tested with real journals/fake metadata;
+full Linux resource admission/eight-service physical integration remains open.
+
 The latest full [product CI at 6cb02c1 passed](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161931233),
 including the API/browser/source-contract checks. The previously pending
 [40161796216 passed too](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216).
@@ -50,7 +60,7 @@ also passed all four cases at cda2b94.
 Full product CI passed fd67973 (40160954993), f0c552d (40161164066) and
 6bca3a3 (40161313431) and 0979456 (40161499895). The final implementation's
 [broader CI 40161796216](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216)
-is still running at this documentation checkpoint.
+subsequently passed, as did the 6cb02c1 documentation checkpoint (40161931233).
 No paid action or Snowflake query was performed. Ask before any new spend or
 payment-related action. Next: Linux resource/headroom observation and the
 integrated eight-service startup/readiness/shutdown batch.

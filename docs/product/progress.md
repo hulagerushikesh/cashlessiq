@@ -19,6 +19,11 @@ and rechecks both database volume identities/options before app creation. All
 180 focused launcher/resource/journal/controller/engine tests pass (11 new cases),
 with Ruff/format checks. These use real private journals and fake Docker metadata;
 full Linux headroom and physical eight-service lifecycle acceptance remain open.
+The full implementation at 47341f6 subsequently
+[passed product CI 40163767366](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40163767366):
+870 root (three CI skips), 72 membership, 41 client, 1,469 backend, 26 browser,
+15 source UI and 35 catalog tests, plus lint/contracts/types/build/containment.
+The owner-preview copy at 59f42d8 also passed its full run (40163582801).
 
 “Go live” now explicitly means personal owner testing, with engineering and human
 acceptance before a customer MVP. The [joint checklist](owner-preview-acceptance.md)
@@ -33,8 +38,9 @@ The owner walkthrough exposed stale overview/sign-in descriptions. The current
 web source describes the working read-only alpha, links directly to its state
 preview and describes role-specific clinical visibility. Local browser checks
 passed 24/26 initially; the two intermittent sign-out/mobile-navigation cases
-passed unchanged on a focused rerun (2/2, 6.6 seconds). Web lint and TypeScript
-pass. The local Docker-built app has not been rebuilt for the copy change;
+passed unchanged on a focused rerun (2/2, 6.6 seconds). A subsequent complete run
+passed all 26 cases in 33.8 seconds. Web lint and TypeScript pass.
+The local Docker-built app has not been rebuilt for the copy change;
 changed-source CI acceptance is recorded separately when available. No human
 acceptance is inferred from these checks.
 
@@ -68,7 +74,7 @@ also passed all four cases at cda2b94.
 Full product CI passed fd67973 (40160954993), f0c552d (40161164066) and
 6bca3a3 (40161313431) and 0979456 (40161499895). The final implementation's
 [broader CI 40161796216](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40161796216)
-is still running at this documentation checkpoint.
+subsequently passed, as did the 6cb02c1 documentation checkpoint (40161931233).
 No paid action or Snowflake query was performed. Ask before any new spend or
 payment-related action. Next: Linux resource/headroom observation and the
 integrated eight-service startup/readiness/shutdown batch.
