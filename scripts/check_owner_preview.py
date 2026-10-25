@@ -138,7 +138,7 @@ def main() -> None:
     assert config["networks"]["preview"]["internal"] is True
     expected_mib = {"db": 256, "migrate": 256, "api": 256, "web": 512, "gateway": 128}
     for service, mib in expected_mib.items():
-        assert config["services"][service]["mem_limit"] == mib * 1024 * 1024, service
+        assert int(config["services"][service]["mem_limit"]) == mib * 1024 * 1024, service
     ports = config["services"]["gateway"]["ports"]
     assert len(ports) == 1 and ports[0]["host_ip"] == "127.0.0.1" and ports[0]["target"] == 8080
     print(

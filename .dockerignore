@@ -6,6 +6,7 @@
 **/.env*
 .env*
 submission
+output
 data_gen/output
 tmp
 **/.pytest_cache
