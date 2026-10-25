@@ -1,0 +1,74 @@
+name: cashlessiq-owner-preview
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: cashlessiq
+      POSTGRES_USER: ciq
+      POSTGRES_PASSWORD: ${CIQ_DB_PASSWORD:?Owner-preview secrets required}
+    volumes: ["owner-preview-db:/var/lib/postgresql/data"]
+    networks: [preview]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ciq -d cashlessiq"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment: &preview-api-environment
+      CIQ_ENVIRONMENT: local
+      CIQ_AUTH_MODE: local
+      CIQ_DATABASE_URL: postgresql+psycopg://ciq:${CIQ_DB_PASSWORD}@db:5432/cashlessiq
+      CIQ_LOCAL_AUTH_SECRET: ${CIQ_LOCAL_AUTH_SECRET:?Owner-preview secrets required}
+    command: ["sh", "-c", ".venv/bin/alembic upgrade head && .venv/bin/python -m ciq_api.seed"]
+    networks: [preview]
+    depends_on:
+      db: { condition: service_healthy }
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment: *preview-api-environment
+    networks: [preview]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", ".venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: production
+    environment:
+      CIQ_ENVIRONMENT: local
+      CIQ_AUTH_MODE: local
+      CIQ_API_URL: http://api:8000
+      CIQ_WEB_ORIGIN: ${CIQ_WEB_ORIGIN:?Exact HTTPS preview origin required}
+      CIQ_LOCAL_AUTH_SECRET: ${CIQ_LOCAL_AUTH_SECRET}
+    networks: [preview]
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/login').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  gateway:
+    image: caddy:2-alpine
+    environment:
+      CIQ_PREVIEW_PASSWORD_HASH: ${CIQ_PREVIEW_PASSWORD_HASH:?Owner password hash required}
+    volumes: ["./deploy/owner-preview/Caddyfile:/etc/caddy/Caddyfile:ro"]
+    ports: ["127.0.0.1:3080:8080"]
+    networks: [preview]
+    depends_on:
+      web: { condition: service_healthy }
+volumes:
+  owner-preview-db:
+networks:
+  preview:
+    internal: true
