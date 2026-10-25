@@ -2,7 +2,7 @@
   "purpose": "Private fictional-data testing by the owner before an MVP",
   "project_id": "cashlessiq-dev-rush",
   "project_billing_enabled": false,
-  "financial_approval": "pending",
+  "financial_approval": "not_authorized_preparation_only",
   "region": "us-central1",
   "zone": "us-central1-a",
   "instance": {
@@ -56,5 +56,7 @@
     "proposed_operating_budget_before_tax": 20,
     "hard_billing_cap": false,
     "first_eight_hour_compute_and_ipv4_estimate": 0.18
-  }
+  },
+  "current_execution_mode": "local_testing",
+  "cloud_deployment_authorized": false
 }

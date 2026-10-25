@@ -4,7 +4,7 @@ Updated 25 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
-### Current target: two-person testing, small optional GCP preview — 25 October
+### Current target: local two-person testing; GCP preparation only — 25 October
 
 Local Docker already supports the current tests. The production-server preview
 passed [37 HTTP checks under small limits](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40180267477),
@@ -15,9 +15,10 @@ measurement or a need for a large server. Full regression at `f28cb66` passed.
 The owner selected a dedicated GCP project; `cashlessiq-dev-rush` is created
 without billing. The [GCP review package](gcp-private-testing.md) proposes a
 2 GiB e2-small VM and initial eight-hour STOP limit, not a customer platform.
-Financial approval remains pending: about US$0.18 initial eight-hour VM/IPv4
-usage plus build/storage, or about US$16.68/month base if always on, before
-variable usage/tax. No VM, paid build, registry or cloud app has been deployed.
+The owner chose **keep local testing; GCP preparation only**. The proposed paid
+eight-hour test is not authorized. Retain the prepared unbilled project and
+files; do not link billing, submit cloud builds or provision cloud resources.
+No VM, paid build, registry or cloud app has been deployed.
 
 ### Earlier Mac preview preparation — 25 October
 

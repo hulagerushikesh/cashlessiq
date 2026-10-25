@@ -1,5 +1,11 @@
 # Two-person testing: existing Docker and a small GCP preview
 
+**Owner decision — 25 October:** keep local testing; GCP preparation only.
+The owner declined the proposed paid eight-hour test. Billing linkage, cloud
+builds, registry storage and VM deployment are not authorized. Keep the existing
+unbilled GCP project and prepared files for a future decision; continue current
+application testing locally without a second complete stack.
+
 25 October 2026. The current target is private testing by Rushikesh and the
 engineering agent, before an MVP. Customer scale, marketing, SEO and delivery
 planning remain later work; none requires a large server today. Capacity should
@@ -61,7 +67,7 @@ creating a managed database merely for these two testers is unnecessary now.
 One small VM reuses the tested stack with fewer application changes. Cloud Run
 can be revisited when the application or operating needs change.
 
-## Cost proposal for approval, not a free-tier promise
+## Future cost reference — paid deployment not authorized
 
 Using 730 running hours/month and published US on-demand rates, without assuming
 any account credits or shared free allowances:
@@ -100,7 +106,7 @@ retained disks still incur storage charges. Stop it between testing periods
 when convenient. The app remains unavailable while stopped. This is a private
 test environment with no uptime promise.
 
-## Deployment sequence after financial approval
+## Future deployment sequence — requires a new owner decision
 
 1. Link the approved billing account to this dedicated project, enable only the
    needed Compute/Build/Registry/IAP services and set the reviewed cost alerts.
@@ -124,7 +130,8 @@ test environment with no uptime promise.
    already completed general owner walkthrough.
 
 No commands in this document have provisioned a paid deployment. The resource
-plan and build configuration are preparation for that approval.
+plan and build configuration remain preparation only; no financial approval is
+currently pending or granted.
 
 References checked on 25 October: [E2 machine sizes](https://docs.cloud.google.com/compute/docs/general-purpose-machines),
 [VM pricing](https://cloud.google.com/products/compute/pricing/general-purpose),

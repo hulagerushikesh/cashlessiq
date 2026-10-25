@@ -10,6 +10,12 @@ demo-video work is not part of this product plan.
 
 [Short owner dashboard: completed work, remaining phases and next decision](delivery-status.md).
 
+**Owner decision — 25 October:** keep local testing; GCP preparation only.
+The owner declined the proposed paid eight-hour test. Billing linkage, cloud
+builds, registry storage and VM deployment are not authorized. Keep the existing
+unbilled GCP project and prepared files for a future decision; continue current
+application testing locally without a second complete stack.
+
 ### Two-person runtime verified; dedicated GCP target prepared — 25 October
 
 The owner clarified that this is private development/testing before an MVP,

@@ -8,8 +8,9 @@ delivery goal; full governed-source P2 integration continues separately.
 ## Current hosting decision — 25 October
 
 Local Docker is sufficient for the current two-person application testing.
-The owner has selected a dedicated GCP project for an independent preview;
-it is created with billing disabled. The [small GCP package](gcp-private-testing.md)
+The owner chose **keep local testing; GCP preparation only** after reviewing
+the cost proposal. The dedicated GCP project is created with billing disabled;
+the paid test and deployment are not authorized. The [small GCP package](gcp-private-testing.md)
 records the cost proposal, 37 passing checks under small-runtime limits and
 remaining remote acceptance. No paid deployment has occurred. The Mac-specific
 package below is an earlier prepared option, not a requirement to run a second

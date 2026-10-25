@@ -116,7 +116,7 @@ make product-up
 Open [localhost:3000](http://localhost:3000) and choose a synthetic reviewer role.
 Use the [10-minute local alpha testing guide](docs/product/local-alpha-testing.md)
 for the three role journeys, expected values and issue-reporting checklist.
-The next live milestone is a **private owner preview before a customer MVP**.
+The current focus is **local owner/engineering testing before a customer MVP**.
 Use the [joint acceptance checklist](docs/product/owner-preview-acceptance.md)
 to keep engineering results and Rushikesh's human feedback separate. The local
 app has been tested by Rushikesh, who also walked two friends through its
@@ -125,7 +125,8 @@ owner report; an owner-only online address is not deployed yet.
 The [two-person testing/GCP plan](docs/product/gcp-private-testing.md) records
 37 passing checks under small-runtime limits and a final approximately 190 MiB
 combined service snapshot. Local Docker is sufficient for current testing; a
-dedicated GCP project is prepared without billing for an independent preview.
+dedicated GCP project is prepared without billing. The owner chose **local
+testing; GCP preparation only**. No paid cloud test or deployment is authorized.
 The earlier [Mac preview package](docs/product/mac-owner-preview.md) remains an
 optional route, not a prerequisite to keep developing.
 The [case queue](http://localhost:3000/cases) now supports read-only exploration
