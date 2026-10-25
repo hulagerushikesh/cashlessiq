@@ -544,7 +544,12 @@ class PhysicalOwner:
             cancel=lambda *_: self.stop_auxiliary(client),
         )
         self.controller = controller
-        assert controller.start(binding.attempt) == binding
+        try:
+            assert controller.start(binding.attempt) == binding
+        except Exception:
+            print("Physical launch denied at closed stage: " + repr(launcher.stage), flush=True)
+            print("Acknowledged application roles: " + repr(sorted(launcher.owned)), flush=True)
+            raise
         assert controller.supervisor.state is State.STARTING and len(launcher.owned) == 8
         self.client = client
         print(

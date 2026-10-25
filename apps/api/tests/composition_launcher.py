@@ -63,6 +63,7 @@ class Launcher:
         self.database = database
         self._observed, self._stopped = set(), set()
         self._fenced = False
+        self.stage = ("idle", "")  # Closed public diagnostic tags, never engine output.
         self.services = tuple(
             Service(
                 role,
@@ -173,6 +174,7 @@ class Launcher:
             if self.journal is not None:
                 self.journal.check()
             for kind, identifier in self.plan.images:
+                self.stage = ("image", kind)
                 row = self._read("image", "inspect", identifier)
                 if (
                     row["Id"] != identifier
@@ -185,6 +187,7 @@ class Launcher:
                 )
             owners = {**self.auxiliaries, **self.owned}
             for edge in EDGES:
+                self.stage = ("network", edge)
                 self.plan.check_network(
                     edge,
                     self._read("network", "inspect", self.plan.network(edge).identifier),
@@ -192,14 +195,17 @@ class Launcher:
                 )
             if self.database:
                 for kind in ("material", "data"):
+                    self.stage = ("database-volume", kind)
                     self.plan.check_database_volume(
                         kind, self._read("volume", "inspect", self.plan.database_volume(kind))
                     )
             for role in ROLES:
                 for kind in ("material",) if role == "membership" else ("material", "state"):
+                    self.stage = ("volume", role)
                     self.plan.check_volume(
                         role, kind, self._read("volume", "inspect", self.plan.volume(role, kind))
                     )
+                self.stage = ("material", role)
                 if self.material_check(role, self.plan.descriptor(role)) is not True:
                     return False
             return True
@@ -224,6 +230,7 @@ class Launcher:
         try:
             if not self.verify(self.services):
                 raise ValueError("Disposable preflight denied")
+            self.stage = ("name", role)
             if self.engine(
                 "container",
                 "ls",
@@ -238,6 +245,7 @@ class Launcher:
                 self.journal.check()
             self.allocating.add(role)
             args = self.plan.create_arguments(role)
+            self.stage = ("create", role)
             cid = self.engine(
                 *args[:-1],
                 "--label",
@@ -254,13 +262,16 @@ class Launcher:
             if self._observe(role, self._read("inspect", cid)) != cid:
                 raise ValueError("Disposable incarnation mismatch")
             for network, address in self.plan.attachments(role)[1:]:
+                self.stage = ("attach", role)
                 self.engine("network", "connect", "--ip", address, network, cid)
             row = self._read("inspect", cid)
+            self.stage = ("configured", role)
             self._identity(role, row)
             self._runtime_config(role, row)
             if self.plan.check_container(role, row, running=False) != cid:
                 raise ValueError("Disposable incarnation mismatch")
             self.engine("start", cid)
+            self.stage = ("running", role)
             row = self._read("inspect", cid)
             self._identity(role, row)
             self._runtime_config(role, row)
