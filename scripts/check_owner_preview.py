@@ -132,6 +132,8 @@ def main() -> None:
     for service, values in config["services"].items():
         if service != "gateway":
             assert not values.get("ports"), service
+            assert set(values["networks"]) == {"preview"}, service
+    assert config["networks"]["preview"]["internal"] is True
     ports = config["services"]["gateway"]["ports"]
     assert len(ports) == 1 and ports[0]["host_ip"] == "127.0.0.1" and ports[0]["target"] == 8080
     print(
