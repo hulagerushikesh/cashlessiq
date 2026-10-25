@@ -36,7 +36,7 @@ jobs:
         with:
           version: '0.11.25'
           enable-cache: false
-      - name: Real Linux allocation and private helper acceptance
+      - name: Real Linux eight-service lifecycle acceptance
         env:
           CIQ_COMPOSITION_TEST: '1'
         run: |

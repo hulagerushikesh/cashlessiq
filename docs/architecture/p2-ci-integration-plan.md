@@ -104,6 +104,18 @@ readiness, authenticated cross-service requests, revocation and bounded stop
 remain the next integration stage; operational custody/live source/P2 exit
 remain separate gates.
 
+The next eight-service candidate uses newly generated per-role certificates with
+exact private-IP SANs. It starts PostgreSQL with verified TLS and no Unix socket,
+plus an isolated controller test peer on only the controller–broker edge. The
+canonical resource journal feeds the canonical launcher/controller directly.
+Admission is rechecked before every app create. Functional self-tests exercise
+both tenants/all three roles and foreign-case denial before bound readiness
+receipts permit supervised delivery. All eight normal exits must be zero and
+non-OOM; helper/app/auxiliary journals remain separate. This is still a candidate
+until its fresh physical run passes. Test health is fictional/frozen, approval
+is test-local, and material custody assumes the exclusive disposable runner.
+No normal API/source startup, GCP deployment or operational custody is activated.
+
 ### Database resource journal to launcher handoff — 25 October
 
 Integration review found the inactive canonical launcher expected only the

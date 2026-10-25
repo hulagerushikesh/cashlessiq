@@ -10,6 +10,7 @@ COPY packages/domain /app/packages/domain
 COPY src/cashlessiq/decision_schema.py src/cashlessiq/source_decision.py src/cashlessiq/source_history.py src/cashlessiq/source_recommendation.py /app/src/cashlessiq/
 RUN uv sync --frozen --no-dev
 COPY apps/api/tests/broker_composition_service.py apps/api/tests/broker_composition_fixture.py apps/worker/tests/guard_mtls_fixture.py /opt/ciq-composition/
+COPY apps/api/tests/composition_client.py /opt/ciq-composition/
 USER 10001:10001
 WORKDIR /tmp
 ENTRYPOINT ["/app/apps/api/.venv/bin/python", "/opt/ciq-composition/broker_composition_service.py"]

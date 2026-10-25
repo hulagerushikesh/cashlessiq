@@ -32,6 +32,7 @@
 !apps/api/tests/
 !apps/api/tests/broker_composition_service.py
 !apps/api/tests/broker_composition_fixture.py
+!apps/api/tests/composition_client.py
 !apps/worker/
 !apps/worker/tests/
 !apps/worker/tests/guard_mtls_fixture.py

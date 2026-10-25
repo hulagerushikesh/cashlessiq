@@ -14,8 +14,8 @@ import subprocess
 import sys
 import time
 from hashlib import sha256
-from ipaddress import IPv4Network
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -27,11 +27,29 @@ if (
 ):
     pytest.skip("Dedicated disposable Linux composition job required", allow_module_level=True)
 
+from composition_controller import Controller
 from composition_inventory_fixture import implementation as inv
 from composition_journal_fixture import implementation as ledger
+from composition_launcher import Launcher
 from composition_material_fixture import TLS_NAMES, bundles
+from composition_physical_pki import SUBNETS
+from composition_physical_pki import create as create_pki
+from guard_supervisor_fixture import FixtureApproval
+from pydantic import SecretStr
 from test_worker_guard_mtls import assertion_key as assertion_key
-from test_worker_transport import pki as pki
+
+from ciq_api.auth import issue_local_token
+from ciq_api.offline_supervisor import (
+    Binding,
+    Limits,
+    Ready,
+    Sample,
+    State,
+    SupervisorDenied,
+    inventory,
+)
+from ciq_api.source_alpha import SOURCE_TENANTS
+from ciq_api.validation_worker import SummaryObservation
 
 
 def owner_module(name):
@@ -87,7 +105,11 @@ class PhysicalOwner:
         parent.mkdir(mode=0o700)
         self.journal = ledger.Journal(parent, self.prefix)
         self.helpers = []
-        subnets = tuple(IPv4Network("172.30.252.0/24").subnets(new_prefix=29))[:18]
+        self.auxiliaries = []
+        aux_parent = root / "auxiliaries"
+        aux_parent.mkdir(mode=0o700)
+        self.aux_journal = ledger.Journal(aux_parent, self.prefix)
+        self.launcher = self.controller = None
         headroom_engine = self.engine(headroom_module.COMMANDS, budget_ns=5_000_000_000)
         self.headroom = headroom_module.LinuxHeadroom(headroom_engine, self.deadline, root)
         collision = routes.CollisionCheck(
@@ -97,7 +119,7 @@ class PhysicalOwner:
             prefix=self.prefix,
             images=tuple((kind, self.images[kind]) for kind in ("worker", "membership", "broker")),
             pins=tuple((role, pki[1][name][2]) for role, name in TLS_NAMES.items()),
-            subnets={edge: str(subnet) for edge, subnet in zip(inv.EDGES, subnets, strict=True)},
+            subnets={edge: str(subnet) for edge, subnet in SUBNETS.items()},
             journal=self.journal,
             engine=Unconfigured(),
             headroom=self.headroom,
@@ -191,9 +213,15 @@ class PhysicalOwner:
             db_config=json.loads(bundle.membership["db.json"]),
             db_ca=bundle.membership["db-ca.pem"],
         )
+        self.staged = {}
+        self.material_helpers = {}
+        self.bundle = bundle
         for role, (spec, data) in generated.items():
             staged = spec.provision(staging, data)
-            self.helper("composition_helpers", "Helpers", "material", staged)
+            self.staged[role] = staged
+            self.material_helpers[role] = self.helper(
+                "composition_helpers", "Helpers", "material", staged
+            )
             if role != "membership":
                 self.helper("composition_state_helpers", "StateHelpers", "state", role)
         self.helper("composition_database_helpers", "DatabaseHelpers", "db-material", staged_db)
@@ -211,9 +239,448 @@ class PhysicalOwner:
         # Every initializer has a separate restricted read-back and durable exit.
         assert sum(len(helper.owned) for helper in self.helpers) == 38
 
+    def attest_auxiliary(self, spec, cid):
+        row = self.row("container", cid)
+        assert row["Id"] == cid and row["Name"] == "/" + spec["name"]
+        assert row["Image"] == spec["image"] and row["Config"]["Labels"] == spec["labels"]
+        config, host = row["Config"], row["HostConfig"]
+        assert config["User"] == spec["user"]
+        assert config["Entrypoint"] == [spec["command"][0]]
+        assert config["Cmd"] == list(spec["command"][1:])
+        assert config["OpenStdin"] is spec["interactive"] and not config["Tty"]
+        assert not config.get("ExposedPorts")
+        assert host["ReadonlyRootfs"] and not host["Privileged"]
+        assert host["CapDrop"] == ["ALL"] and not host.get("CapAdd")
+        assert host["SecurityOpt"] == ["no-new-privileges"]
+        assert host["Memory"] == 128 * 1024**2 and host["NanoCpus"] == 500_000_000
+        assert host["PidsLimit"] == 32 and host["IpcMode"] == "private"
+        assert host["RestartPolicy"] == {"Name": "no", "MaximumRetryCount": 0}
+        assert host["NetworkMode"] == spec["network"] and row["RestartCount"] == 0
+        assert not any(
+            host.get(key)
+            for key in (
+                "Binds",
+                "PortBindings",
+                "PublishAllPorts",
+                "ExtraHosts",
+                "Links",
+                "Devices",
+                "DeviceRequests",
+                "DeviceCgroupRules",
+                "GroupAdd",
+                "PidMode",
+                "VolumesFrom",
+                "Sysctls",
+            )
+        )
+        assert (host.get("Tmpfs") or {}) == spec["tmpfs"]
+        assert sorted((m["Name"], m["Destination"], m["RW"]) for m in row["Mounts"]) == sorted(
+            spec["mounts"]
+        )
+        attached = row["NetworkSettings"]["Networks"]
+        if spec["network"] == "none":
+            assert set(attached) <= {"none"}
+        else:
+            assert len(attached) == 1
+            network = next(iter(attached.values()))
+            assert network["NetworkID"] == spec["network"]
+            assert network["IPAMConfig"]["IPv4Address"] == spec["address"]
+        return row
+
+    def auxiliary(self, role, image, command, *, edge=None, mounts=(), interactive=False):
+        assert self.headroom() is True
+        spec = dict(
+            name=self.plan.name(role),
+            role=role,
+            image=self.images[image],
+            command=tuple(command),
+            user="10002:10002" if role == "db" else "10001:10001",
+            network=self.plan.network(edge).identifier,
+            address=self.plan.address(edge, role),
+            mounts=tuple(mounts),
+            interactive=interactive,
+            tmpfs={"/tmp": "rw,noexec,nosuid,size=2m,mode=1777"} if role == "controller" else {},
+            labels={inv.LABEL: self.prefix, inv.LABEL + ".role": role},
+        )
+        fingerprint = sha256(inv.canonical(spec)).hexdigest()
+        self.aux_journal.record(
+            "reserve", kind="container", name=spec["name"], fingerprint=fingerprint
+        )
+        args = [
+            "create",
+            "--name",
+            spec["name"],
+            "--network",
+            spec["network"],
+            "--ip",
+            spec["address"],
+            "--read-only",
+            "--user",
+            spec["user"],
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--memory",
+            str(128 * 1024**2),
+            "--cpus",
+            "0.5",
+            "--pids-limit",
+            "32",
+            "--ipc",
+            "private",
+            "--restart",
+            "no",
+        ]
+        for key, value in spec["labels"].items():
+            args += ["--label", key + "=" + value]
+        for path, options in spec["tmpfs"].items():
+            args += ["--tmpfs", path + ":" + options]
+        for name, path, writable in mounts:
+            args += [
+                "--mount",
+                f"type=volume,src={name},dst={path}" + ("" if writable else ",readonly"),
+            ]
+        if interactive:
+            args += ["--interactive"]
+        if role == "db":
+            args += ["--stop-signal", "SIGINT"]
+        args += ["--entrypoint", command[0], spec["image"], *command[1:]]
+        assert not self.docker(
+            "container",
+            "ls",
+            "-a",
+            "--filter",
+            "name=^" + spec["name"] + "$",
+            "--format",
+            "{{.ID}}",
+        )
+        cid = self.docker(*args)
+        assert re.fullmatch("[0-9a-f]{64}", cid)
+        self.auxiliaries.append((spec, cid, fingerprint))
+        self.attest_auxiliary(spec, cid)
+        self.aux_journal.record(
+            "observe", kind="container", name=spec["name"], identity=cid, fingerprint=fingerprint
+        )
+        assert self.docker("start", cid) == cid
+        row = self.attest_auxiliary(spec, cid)
+        assert row["State"]["Running"] and row["State"]["Pid"] > 0
+        return cid
+
+    def private(self, command, frame):
+        task = owner_module("bounded_composition_actor").BoundedActor(
+            (
+                sys.executable,
+                "-I",
+                str(Path(engine_module.__file__).resolve()),
+                "--private-command",
+                self.binary,
+                "--host",
+                "unix:///var/run/docker.sock",
+                "--config",
+                str(self.config),
+                *command,
+            ),
+            budget_ns=min(10_000_000_000, self.deadline - time.monotonic_ns() - 2_000_000_000),
+            grace_ns=300_000_000,
+        )
+        result = task.execute(private_input=frame)
+        assert set(result) == {"output"}
+        return result["output"]
+
+    def material_check(self, role, descriptor):
+        assert descriptor == self.plan.descriptor(role)
+        assert self.staged[role].verify(role, self.plan.fingerprint(role)) is True
+        helper = self.material_helpers[role]
+        # Fresh metadata for the exact successful install/read-back pair. The
+        # exclusive runner creates no other writable material mounts; app mounts
+        # are read-only. State is deliberately independent and mutable.
+        for mode, cid in helper.owned.items():
+            helper._check(self.row("container", cid), mode, exited=True)
+        return True
+
+    def start_services(self):
+        address = self.plan.address("member-db", "db")
+        settings = (
+            "listen_addresses=" + address,
+            "port=5432",
+            "unix_socket_directories=",
+            "hba_file=/database-material/pg_hba.conf",
+            "ssl=on",
+            "ssl_cert_file=/database-material/server.pem",
+            "ssl_key_file=/database-material/server.key",
+            "ssl_min_protocol_version=TLSv1.3",
+            "password_encryption=scram-sha-256",
+            "logging_collector=off",
+            "log_statement=none",
+            "log_min_error_statement=panic",
+            "shared_buffers=16MB",
+            "max_connections=10",
+            "fsync=on",
+            "synchronous_commit=on",
+            "statement_timeout=3000",
+            "idle_in_transaction_session_timeout=3000",
+        )
+        command = ["/usr/lib/postgresql/16/bin/postgres", "-D", "/database-data/pgdata"]
+        for setting in settings:
+            command += ["-c", setting]
+        db = self.auxiliary(
+            "db",
+            "bootstrap",
+            command,
+            edge="member-db",
+            mounts=(
+                (self.plan.database_volume("material"), "/database-material", False),
+                (self.plan.database_volume("data"), "/database-data", True),
+            ),
+        )
+        client = self.auxiliary(
+            "controller",
+            "broker",
+            (
+                "/app/apps/api/.venv/bin/python",
+                "/opt/ciq-composition/composition_client.py",
+                "hold",
+            ),
+            edge="controller-broker",
+        )
+        launcher = Launcher(
+            self.plan,
+            engine=Unconfigured(),
+            material_check=self.material_check,
+            auxiliaries={"db": db, "controller": client},
+            journal=self.journal,
+            database=True,
+        )
+        self.launcher = launcher
+        binding = Binding(
+            "physical-" + uuid4().hex[:12], self.plan.generation, inventory(launcher.services)
+        )
+        commands = [
+            *(("image", "inspect", image) for _, image in self.plan.images),
+            *(("network", "inspect", n.identifier) for n in self.plan.networks),
+            *(
+                ("volume", "inspect", s["name"])
+                for s in self.resources.specs
+                if s["kind"] == "volume"
+            ),
+            ("inspect", "{incarnation}"),
+            ("start", "{incarnation}"),
+            ("stop", "--time", "30", "{incarnation}"),
+        ]
+        for role in inv.ROLES:
+            commands.append(
+                (
+                    "container",
+                    "ls",
+                    "-a",
+                    "--filter",
+                    "name=^" + self.plan.name(role) + "$",
+                    "--format",
+                    "{{.ID}}",
+                )
+            )
+            args = self.plan.create_arguments(role)
+            commands.append(
+                (
+                    *args[:-1],
+                    "--label",
+                    f"{inv.LABEL}.attempt={binding.attempt}",
+                    "--label",
+                    f"{inv.LABEL}.fingerprint={binding.fingerprint}",
+                    args[-1],
+                )
+            )
+            for network, ip in self.plan.attachments(role)[1:]:
+                commands.append(("network", "connect", "--ip", ip, network, "{incarnation}"))
+        # The material callback also inspects acknowledged helper IDs, in a
+        # separate owner read channel; app transport registers only eight CIDs.
+        bounded = self.engine(tuple(commands))
+        owner = self
+
+        class AdmittedEngine:
+            def __call__(self, *args):
+                if args[:1] == ("create",):
+                    try:
+                        assert owner.headroom() is True
+                    except Exception:
+                        bounded.fenced = True
+                        raise
+                return bounded(*args)
+
+            def permit_incarnation(self, cid):
+                bounded.permit_incarnation(cid)
+
+        launcher.engine = AdmittedEngine()
+        approval = FixtureApproval()
+        approval.pending.add(binding)
+        domain = "physical-test-monotonic"
+        controller = Controller(
+            launcher,
+            limits=Limits(180_000_000_000, 30_000_000_000, 30_000_000_000, 300_000_000_000, 1, 128),
+            domain=domain,
+            approval=approval,
+            clock=lambda: Sample(domain, time.monotonic_ns()),
+            cancel=lambda *_: self.stop_auxiliary(client),
+        )
+        self.controller = controller
+        assert controller.start(binding.attempt) == binding
+        assert controller.supervisor.state is State.STARTING and len(launcher.owned) == 8
+        self.client = client
+        print(
+            "Physical application launch: all eight exact service incarnations running", flush=True
+        )
+
+    def probe(self, pki, profile, tenant, request_id, *, token=None):
+        settings = SimpleNamespace(
+            auth_mode="local",
+            environment="test",
+            oidc_audience="cashlessiq-api",
+            local_auth_secret=SecretStr("fictional-composition-local-auth-secret"),
+        )
+        token = (
+            token
+            if token is not None
+            else issue_local_token(settings, profile.subject, tenant.tenant_id)
+        )
+        frame = inv.canonical(
+            dict(
+                address=self.plan.address("controller-broker", "broker"),
+                pin=dict(self.plan.pins)["broker"],
+                ca=pki[0].read_text(),
+                certificate=pki[1]["controller"][0].read_text(),
+                private_key=pki[1]["controller"][1].read_text(),
+                token=token,
+                request_id=request_id,
+            )
+        )
+        result = self.private(
+            (
+                "exec",
+                "--interactive",
+                self.client,
+                "/app/apps/api/.venv/bin/python",
+                "/opt/ciq-composition/composition_client.py",
+                "summary",
+            ),
+            frame,
+        )
+        value = json.loads(result)
+        assert type(value) is dict and value.get("state") in {"VERIFIED", "DENIED"}
+        return value
+
+    def accept_requests(self, pki):
+        c = self.controller
+        checked = 0
+        for index, tenant in enumerate(SOURCE_TENANTS):
+            request_id = "GOL001" if index == 0 else "GOL024"
+            foreign_id = "GOL024" if index == 0 else "GOL001"
+            for profile in tenant.profiles:
+                end = min(self.deadline, time.monotonic_ns() + 30_000_000_000)
+                while True:
+                    value = self.probe(pki, profile, tenant, request_id)
+                    if value["state"] == "VERIFIED" or time.monotonic_ns() >= end:
+                        break
+                    # Retry only a closed readiness read, never allocation or
+                    # initialization. No self-test result is delivered to users.
+                    time.sleep(0.2)
+                assert value["state"] == "VERIFIED", "Functional private-chain readiness failed"
+                summary = SummaryObservation.model_validate(value["summary"])
+                assert summary.tpa_id == tenant.tpa_id and summary.request_id == request_id
+                if index == 0:
+                    assert (
+                        summary.recommendation.state == "SAVED"
+                        and summary.recommendation.payable_inr == 95000
+                    )
+                else:
+                    assert summary.recommendation.state == "MISSING"
+                assert self.probe(pki, profile, tenant, foreign_id) == {"state": "DENIED"}
+                checked += 1
+        # These are closed synthetic readiness self-tests, not user delivery.
+        # Every reader/validator route and the real membership DB was exercised.
+        for service in self.launcher.services:
+            with pytest.raises(SupervisorDenied):
+                c.admit("GOL001")
+            c.acknowledge(Ready(c.supervisor.binding, service, self.launcher.owned[service.role]))
+        assert c.supervisor.state is State.READY
+        for index, tenant in enumerate(SOURCE_TENANTS):
+            for profile in tenant.profiles:
+                request_id = "GOL001" if index == 0 else "GOL027"
+                operation = c.admit(request_id)
+                value = self.probe(pki, profile, tenant, request_id)
+                assert value["state"] == "VERIFIED"
+                summary = SummaryObservation.model_validate(value["summary"])
+                assert c.complete(operation, summary) == summary
+        assert c.supervisor.active_count == 0
+        assert c.stop() is True and c.supervisor.state is State.STOPPED
+        assert len(self.launcher._stopped) == 8
+        for cid in self.launcher.owned.values():
+            state = self.row("container", cid)["State"]
+            assert state["ExitCode"] == 0 and not state["OOMKilled"] and not state["Error"]
+        print(
+            f"Physical readiness/delivery: {checked} tenant-role routes, "
+            "six foreign-case denials, six supervised results, all-eight stop",
+            flush=True,
+        )
+
+    def stop_auxiliary(self, cid):
+        try:
+            spec, _, _ = next(row for row in self.auxiliaries if row[1] == cid)
+            row = self.attest_auxiliary(spec, cid)
+            if row["State"]["Running"]:
+                assert self.docker("stop", "--time", "5", cid) == cid
+            row = self.attest_auxiliary(spec, cid)
+            return (
+                row["State"]["Running"] is False
+                and row["State"]["Pid"] == 0
+                and row["State"]["Status"] == "exited"
+            )
+        except Exception:
+            return False
+
     def close(self):
         # Only known full IDs with a fresh exact helper check qualify for removal.
         clean = True
+        if self.controller is not None:
+            try:
+                assert self.controller.stop() is True
+                for role, cid in self.launcher.owned.items():
+                    row = self.row("container", cid)
+                    assert self.launcher._identity(role, row) == cid
+                    assert row["State"]["Running"] is False and row["State"]["Pid"] == 0
+                    assert self.docker("container", "rm", cid) == cid
+                    self.journal.record(
+                        "removed",
+                        kind="container",
+                        name=self.plan.name(role),
+                        identity=cid,
+                        fingerprint=self.plan.fingerprint(role),
+                    )
+            except Exception:
+                clean = False
+        if not ledger.fold(self.aux_journal.events)[2]:
+            self.aux_journal.fence()
+        for spec, cid, fingerprint in reversed(self.auxiliaries):
+            try:
+                assert self.stop_auxiliary(cid) is True
+                self.aux_journal.record(
+                    "stopped",
+                    kind="container",
+                    name=spec["name"],
+                    identity=cid,
+                    fingerprint=fingerprint,
+                )
+                assert self.docker("container", "rm", cid) == cid
+                self.aux_journal.record(
+                    "removed",
+                    kind="container",
+                    name=spec["name"],
+                    identity=cid,
+                    fingerprint=fingerprint,
+                )
+            except Exception:
+                clean = False
+        self.aux_journal.close()
         for helper in reversed(self.helpers):
             try:
                 assert helper.contain() is True
@@ -266,15 +733,18 @@ class PhysicalOwner:
         assert clean, "Uncertain resources retained for disposable runner teardown"
 
 
-def test_real_allocator_and_all_private_helper_handoffs(tmp_path, pki, assertion_key):
+def test_real_disposable_eight_service_chain(tmp_path, assertion_key):
+    pki = create_pki(tmp_path / "pki")
     owner = PhysicalOwner(tmp_path, pki)
     try:
         owner.allocate()
         owner.prepare(pki, assertion_key)
+        owner.start_services()
+        owner.accept_requests(pki)
         assert owner.headroom.samples >= 36
-        print("Physical acceptance: 18 networks, 17 volumes, 19 helper pairs verified")
+        print("Physical acceptance: 35 resources, 19 helper pairs and eight-service chain verified")
     finally:
         owner.close()
     recovered = ledger.inspect(owner.journal.root)
-    assert recovered.fenced and len(recovered.resources) == 35
+    assert recovered.fenced and len(recovered.resources) == 43
     assert {row[-1] for row in recovered.resources} == {"REMOVED"}
