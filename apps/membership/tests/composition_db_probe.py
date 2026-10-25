@@ -99,6 +99,7 @@ def denied(factory, profiles):
 
 def raw_denied(config, expected, *, plaintext=False):
     """Precise libpq reason rules out an unrelated server/network outage."""
+    entered = False
     try:
         with psycopg.connect(
             host=config.host,
@@ -115,7 +116,7 @@ def raw_denied(config, expected, *, plaintext=False):
             gssencmode="disable",
             connect_timeout=2,
         ):
-            pass
+            entered = True
     except psycopg.Error as error:
         candidates = (expected,) if isinstance(expected, str) else expected
         assert any(value in str(error).lower() for value in candidates), (
@@ -123,6 +124,7 @@ def raw_denied(config, expected, *, plaintext=False):
         )
     else:
         raise AssertionError("Unexpected driver connection acceptance")
+    assert not entered, "Unexpected driver connection acceptance before cleanup failure"
 
 
 def accepted(factory, profiles):

@@ -81,11 +81,15 @@ def test_actual_factory_and_store_denials_pass(monkeypatch):
     assert factory.connect.call_count == 2
 
 
-@pytest.mark.parametrize("outcome", ["accepted", "unrelated-error"])
+@pytest.mark.parametrize("outcome", ["accepted", "unrelated-error", "close-error"])
 def test_raw_probe_requires_precise_driver_denial(monkeypatch, outcome):
     connect = Mock()
-    if outcome == "accepted":
+    if outcome in {"accepted", "close-error"}:
         connect.return_value = Mock(__enter__=Mock(), __exit__=Mock(return_value=False))
+        if outcome == "close-error":
+            connect.return_value.__exit__.side_effect = psycopg.OperationalError(
+                "SSL error: certificate verify failed"
+            )
     else:
         connect.side_effect = psycopg.OperationalError("connection refused")
     monkeypatch.setattr(probe.psycopg, "connect", connect)
