@@ -6,6 +6,14 @@ Hackathon submission is finished and is not counted as product delivery.
 
 ### Current target: local two-person testing; GCP preparation only — 25 October
 
+Local navigation follow-up: filtered queue links now carry the bounded reference,
+recommendation and page into case detail, and “Back to case queue” restores that
+context. Unknown case IDs have a workspace recovery page with a queue link,
+without a substitute recommendation. Existing browser journeys now check the
+filtered round trip and unknown-case recovery. Local lint/types pass; the new
+build/browser run is pending. The running Docker web image is unchanged until
+a resource-admitted refresh; current sign-in and API readiness still respond.
+
 Local Docker already supports the current tests. The production-server preview
 passed [37 HTTP checks under small limits](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40180267477),
 with a final combined service snapshot of about 190 MiB, versus the current

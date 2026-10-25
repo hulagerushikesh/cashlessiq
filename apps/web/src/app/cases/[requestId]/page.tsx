@@ -2,10 +2,18 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ExternalLink, FileText, LockKeyhole } from "lucide-react";
 import { sessionApi } from "@/lib/server-api";
+import { caseQueueState, caseQueueUrl } from "@/lib/case-navigation";
 import { CaseServiceError, OutcomeBadge, rupees } from "@/components/case-workspace";
 
-export default async function CasePage({ params }: { params: Promise<{ requestId: string }> }) {
+export default async function CasePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ requestId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { requestId } = await params;
+  const queueUrl = caseQueueUrl(caseQueueState(await searchParams));
   const api = await sessionApi();
   if (!api) redirect("/login");
   const result = await api
@@ -20,7 +28,7 @@ export default async function CasePage({ params }: { params: Promise<{ requestId
   const record = result.data;
   return (
     <>
-      <Link href="/cases" className="inline-flex items-center gap-2 text-sm text-teal-800">
+      <Link href={queueUrl} className="inline-flex items-center gap-2 text-sm text-teal-800">
         <ArrowLeft size={15} />
         Back to case queue
       </Link>

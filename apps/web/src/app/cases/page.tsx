@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, Search } from "lucide-react";
-import type { Outcome } from "@cashlessiq/api-client";
 import { sessionApi } from "@/lib/server-api";
+import { caseQueueQuery, caseQueueState, caseQueueUrl } from "@/lib/case-navigation";
 import { CaseServiceError, OutcomeBadge, outcomeLabels, rupees } from "@/components/case-workspace";
 import { Button } from "@/components/ui/button";
 
@@ -11,14 +11,8 @@ export default async function Cases({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
-  const search = typeof params.search === "string" ? params.search.slice(0, 80) : "";
-  const outcome =
-    typeof params.outcome === "string" && Object.hasOwn(outcomeLabels, params.outcome)
-      ? (params.outcome as Outcome)
-      : undefined;
-  const parsed = Number(params.page ?? 1);
-  const page = Number.isInteger(parsed) && parsed > 0 && parsed <= 10000 ? parsed : 1;
+  const queue = caseQueueState(await searchParams);
+  const { search, outcome, page } = queue;
   const api = await sessionApi();
   if (!api) redirect("/login");
   const result = await api
@@ -30,8 +24,8 @@ export default async function Cases({
   if (result?.response.status === 401 || result?.response.status === 403) redirect("/login");
   if (!result?.data) return <CaseServiceError />;
   const data = result.data;
-  const pageUrl = (next: number) =>
-    `/cases?${new URLSearchParams({ search, ...(outcome ? { outcome } : {}), page: String(next) })}`;
+  const pageUrl = (next: number) => caseQueueUrl({ ...queue, page: next });
+  const queueQuery = caseQueueQuery(queue);
   return (
     <>
       <p className="text-xs font-semibold uppercase tracking-[.16em] text-teal-700">
@@ -44,7 +38,9 @@ export default async function Cases({
             Inspect a request, follow its calculation, and verify the evidence.
           </p>
         </div>
-        <p className="text-sm text-slate-500">{data.total} matching synthetic cases</p>
+        <p className="text-sm text-slate-500">
+          {data.total} matching synthetic {data.total === 1 ? "case" : "cases"}
+        </p>
       </div>
       <div className="mt-6 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm leading-6 text-slate-600">
         Fixed golden snapshots, not a live operational queue. Assignment, SLA clocks, uploads and
@@ -102,7 +98,7 @@ export default async function Cases({
           data.items.map((item) => (
             <Link
               key={item.request_id}
-              href={`/cases/${item.request_id}`}
+              href={`/cases/${item.request_id}${queueQuery ? `?${queueQuery}` : ""}`}
               className="grid gap-4 border-t border-slate-100 p-5 transition-colors hover:bg-teal-50/40 focus-visible:outline-2 focus-visible:outline-teal-700 md:grid-cols-[1.1fr_1fr_1fr_auto] md:items-center"
               aria-label={`Open ${item.request_id}`}
             >

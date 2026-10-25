@@ -59,6 +59,14 @@ test("queue filters and empty state", async ({ page }) => {
   await page.getByRole("button", { name: "Apply filters" }).click();
   await expect(page.getByRole("link", { name: "Open GOL027" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Open GOL001" })).toHaveCount(0);
+  await page.getByLabel("Request or member reference").fill("SYN-GOL027");
+  await page.getByRole("button", { name: "Apply filters" }).click();
+  await page.getByRole("link", { name: "Open GOL027" }).click();
+  await page.getByRole("link", { name: "Back to case queue" }).click();
+  await expect(page.getByLabel("Request or member reference")).toHaveValue("SYN-GOL027");
+  await expect(page.getByRole("combobox", { name: "Recommendation", exact: true }))
+    .toHaveValue("QUERY");
+  await expect(page.getByText("1 matching synthetic case", { exact: true })).toBeVisible();
   await page.getByLabel("Request or member reference").fill("no-match");
   await page.getByRole("button", { name: "Apply filters" }).click();
   await expect(page.getByRole("heading", { name: "No matching cases" })).toBeVisible();
@@ -75,7 +83,10 @@ test("anonymous case access redirects to sign-in", async ({ page }) => {
 test("unknown case is not found", async ({ page }) => {
   await signIn(page, "processor");
   await page.goto("/cases/UNKNOWN");
-  await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Case not found" })).toBeVisible();
+  await expect(page.getByText("₹95,000", { exact: true })).toHaveCount(0);
+  await page.getByRole("link", { name: "Back to case queue" }).click();
+  await expect(page.getByRole("heading", { name: "Case queue", exact: true })).toBeVisible();
 });
 
 test("case queue and detail fit a mobile screen", async ({ page }) => {
