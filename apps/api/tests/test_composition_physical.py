@@ -757,7 +757,10 @@ class PhysicalOwner:
                 and row["State"]["Status"] in {"created", "exited"}
                 and not any(row["State"].get(key) for key in ("Paused", "Restarting", "Dead"))
             )
-        except Exception:
+        except Exception as failure:
+            for frame in traceback.extract_tb(failure.__traceback__):
+                if Path(frame.filename).name == "test_composition_physical.py":
+                    print(f"Owned auxiliary validation: {frame.lineno} {frame.name}", flush=True)
             return False
 
     def close(self):
