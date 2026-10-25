@@ -91,6 +91,10 @@ def prepare(origin: str) -> None:
             "--read-only",
             "--cap-drop",
             "ALL",
+            # The official Caddy binary has this file capability; omitting it
+            # from Docker's bounding set can prevent exec before hashing starts.
+            "--cap-add",
+            "NET_BIND_SERVICE",
             "--security-opt",
             "no-new-privileges",
             CADDY_IMAGE,
