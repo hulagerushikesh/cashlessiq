@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import time
+import traceback
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
@@ -546,9 +547,38 @@ class PhysicalOwner:
         self.controller = controller
         try:
             assert controller.start(binding.attempt) == binding
-        except Exception:
+        except Exception as failure:
             print("Physical launch denied at closed stage: " + repr(launcher.stage), flush=True)
             print("Acknowledged application roles: " + repr(sorted(launcher.owned)), flush=True)
+            seen = set()
+            cause = failure
+            while cause is not None and id(cause) not in seen:
+                seen.add(id(cause))
+                for frame in traceback.extract_tb(cause.__traceback__):
+                    if Path(frame.filename).name in {
+                        "composition_inventory.py",
+                        "composition_launcher.py",
+                    }:
+                        print(
+                            f"Owned validation location: {Path(frame.filename).name}:"
+                            f"{frame.lineno} {frame.name}",
+                            flush=True,
+                        )
+                cause = cause.__context__
+            for role, cid in launcher.owned.items():
+                state = self.row("container", cid)["State"]
+                print(
+                    "Owned runtime state: "
+                    + json.dumps(
+                        {
+                            "role": role,
+                            "running": state["Running"],
+                            "exit": state["ExitCode"],
+                            "oom": state["OOMKilled"],
+                        }
+                    ),
+                    flush=True,
+                )
             raise
         assert controller.supervisor.state is State.STARTING and len(launcher.owned) == 8
         self.client = client
