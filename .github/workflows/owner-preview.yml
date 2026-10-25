@@ -25,6 +25,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Generate disposable preview credentials
+        id: prepare
         run: python -m scripts.owner_preview prepare --origin https://owner-preview.example.test
       - name: Build and start isolated production-server preview
         run: python -m scripts.owner_preview up
@@ -34,8 +35,8 @@ jobs:
       - name: Owner gate, static assets, roles, origin and secure-cookie checks
         run: python -m scripts.check_owner_preview
       - name: Failure diagnostics
-        if: failure()
+        if: failure() && steps.prepare.outcome == 'success'
         run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml logs --tail 40 web api migrate gateway
       - name: Stop only disposable preview stack
-        if: always()
+        if: always() && steps.prepare.outcome == 'success'
         run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml down --volumes

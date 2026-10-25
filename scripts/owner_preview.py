@@ -97,7 +97,7 @@ def prepare(origin: str) -> None:
             "caddy",
             "hash-password",
         ],
-        input=password,
+        input=password + "\n",
         text=True,
         capture_output=True,
         timeout=60,
