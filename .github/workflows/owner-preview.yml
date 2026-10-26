@@ -57,6 +57,14 @@ jobs:
           docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml -f compose.mvp.yml exec -T api .venv/bin/python -m ciq_api.seed
           npm run test:mvp
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}'
+      - name: Restore full MVP backup and restart disposable preview
+        run: python -m scripts.check_mvp_recovery --stack preview --restart-preview-ci
+      - name: Verify saved workflow through browser after restart
+        env:
+          MVP_BASE_URL: http://127.0.0.1:3080
+          MVP_OWNER_PASSWORD_FILE: output/owner-preview/owner-password.txt
+          MVP_RECOVERY_CHECKPOINT: output/owner-preview/recovery-checkpoint.json
+        run: npx playwright test -c playwright.mvp.config.ts tests/mvp_browser/recovery.spec.ts
       - name: Failure diagnostics
         if: failure() && steps.prepare.outcome == 'success'
         run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml logs --tail 40 web api migrate gateway

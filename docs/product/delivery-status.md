@@ -4,6 +4,15 @@ Updated 26 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Current data recovery check — 26 October
+
+The [current-MVP recovery rehearsal](mvp-recovery-rehearsal.md) now makes a
+consistent private backup of the existing synthetic database, restores it into
+a temporary database, and compares all table contents and schema columns.
+The local owner app stays available. Disposable preview CI also exercises a
+database/application restart and reopens the saved workflow in a browser.
+This is a private testing recovery check; GCP remains preparation only.
+
 ### Current: easier synthetic testing — 26 October
 
 Owner feedback exposed missing workflow navigation and confusing inactive-policy

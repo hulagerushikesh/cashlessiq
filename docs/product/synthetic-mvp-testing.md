@@ -126,6 +126,11 @@ these are the newly added workflows to exercise next.
 
 ## Boundaries and recovery
 
+The [current-MVP recovery rehearsal](mvp-recovery-rehearsal.md) verifies an
+exact backup/restore of the existing synthetic data in a temporary database.
+Its separate disposable preview check restarts services and reopens a saved
+human workflow. The local application is not restarted by this check.
+
 - Fictional data only. This is not customer, production or medical validation.
 - No Snowflake publishing, model calls, paid OCR, cloud deployment or billing
   changes. The outbox projects into local PostgreSQL with event deduplication.
