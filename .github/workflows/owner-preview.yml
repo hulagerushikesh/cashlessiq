@@ -58,6 +58,10 @@ jobs:
           npm run test:mvp
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}'
       - name: Restore full MVP backup and restart disposable preview
+        env:
+          # Match the bounded loopback browser origin selected in the step above.
+          # The separate HTTPS-origin and secure-cookie checks already ran.
+          CIQ_WEB_ORIGIN: http://127.0.0.1:3080
         run: python -m scripts.check_mvp_recovery --stack preview --restart-preview-ci
       - name: Verify saved workflow through browser after restart
         env:
