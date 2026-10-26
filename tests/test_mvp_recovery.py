@@ -12,6 +12,7 @@ def test_restart_is_disallowed_outside_disposable_preview_ci(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     with pytest.raises(ValueError, match="disposable GitHub CI"):
         recovery.require_restart_permission("product")
+    monkeypatch.delenv("GITHUB_ACTIONS")
     with pytest.raises(ValueError, match="disposable GitHub CI"):
         recovery.fresh_volume_preview(None, {})
 
