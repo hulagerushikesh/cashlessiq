@@ -1,7 +1,7 @@
-"""Back up the current synthetic MVP and verify a restore in an owned temporary DB.
+"""Back up the current synthetic MVP and verify an isolated restore.
 
 The active database is read only throughout. Optional service restart acceptance
-is limited to the disposable GitHub Actions owner-preview stack.
+and fresh-volume acceptance are limited to disposable GitHub Actions preview stacks.
 """
 
 import argparse
@@ -17,6 +17,7 @@ from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
 PROBE = (ROOT / "scripts/mvp_recovery_probe.py").read_text()
+FRESH_PROJECT = "cashlessiq-recovery-ci"
 
 
 def command(args, **kwargs):
@@ -178,6 +179,173 @@ def require_restart_permission(stack):
         raise ValueError("Service restart rehearsal is limited to disposable GitHub CI preview")
 
 
+def fresh_compose_prefix():
+    return [
+        "docker",
+        "compose",
+        "-p",
+        FRESH_PROJECT,
+        "--env-file",
+        ".env.owner-preview.local",
+        "-f",
+        "compose.owner-preview.yml",
+        "-f",
+        "compose.preview-small.yml",
+        "-f",
+        "compose.mvp.yml",
+    ]
+
+
+def fresh_preview_env():
+    return {
+        **os.environ,
+        "CIQ_PREVIEW_PORT": "3081",
+        "CIQ_WEB_ORIGIN": "http://127.0.0.1:3081",
+    }
+
+
+def require_empty_fresh_project():
+    containers = command(
+        [
+            "docker",
+            "ps",
+            "-a",
+            "-q",
+            "--filter",
+            f"label=com.docker.compose.project={FRESH_PROJECT}",
+        ],
+        stdout=subprocess.PIPE,
+    ).stdout.strip()
+    volume = subprocess.run(
+        ["docker", "volume", "inspect", f"{FRESH_PROJECT}_owner-preview-db"],
+        cwd=ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        timeout=10,
+        check=False,
+    )
+    if containers or volume.returncode == 0:
+        raise ValueError("Fresh recovery project or volume already exists")
+
+
+def fresh_volume_preview(path, expected):
+    """Restore to a new PostgreSQL volume and launch an independent CI preview."""
+    require_restart_permission("preview")
+    require_empty_fresh_project()
+    prefix, env = fresh_compose_prefix(), fresh_preview_env()
+    try:
+        # Compose's default build-image names contain the project name. Reuse
+        # images already built for the original preview; never build or pull.
+        for service in ("api", "web"):
+            source = (
+                command(
+                    [*compose_prefix("preview"), "images", "-q", service],
+                    stdout=subprocess.PIPE,
+                    env=os.environ,
+                )
+                .stdout.decode()
+                .strip()
+            )
+            if not re.fullmatch(r"(?:sha256:)?[a-f0-9]{12,64}", source):
+                raise ValueError("Expected one existing preview image")
+            command(["docker", "tag", source, f"{FRESH_PROJECT}-{service}:latest"])
+        command(
+            [
+                *prefix,
+                "up",
+                "--no-build",
+                "--pull",
+                "never",
+                "--no-deps",
+                "--detach",
+                "--wait",
+                "--wait-timeout",
+                "90",
+                "db",
+            ],
+            stdout=subprocess.PIPE,
+            env=env,
+        )
+        db = command([*prefix, "ps", "-q", "db"], stdout=subprocess.PIPE, env=env)
+        db = db.stdout.decode().strip()
+        if not re.fullmatch(r"[a-f0-9]{64}", db):
+            raise ValueError("Expected one fresh recovery database container")
+        row = json.loads(command(["docker", "inspect", db], stdout=subprocess.PIPE).stdout)[0]
+        mounts = row["Mounts"]
+        if (
+            row["Config"]["Labels"].get("com.docker.compose.project") != FRESH_PROJECT
+            or row["Config"]["Labels"].get("com.docker.compose.service") != "db"
+            or len(mounts) != 1
+            or mounts[0].get("Name") != f"{FRESH_PROJECT}_owner-preview-db"
+            or mounts[0].get("Destination") != "/var/lib/postgresql/data"
+        ):
+            raise ValueError("Fresh recovery database/volume ownership mismatch")
+        # Recreate only the new project's initial database from template0,
+        # matching the temporary-DB restore path. No application is running.
+        command(["docker", "exec", db, "dropdb", "-U", "ciq", "cashlessiq"])
+        command(["docker", "exec", db, "createdb", "-U", "ciq", "-T", "template0", "cashlessiq"])
+        with path.open("rb") as source:
+            command(
+                [
+                    "docker",
+                    "exec",
+                    "-i",
+                    db,
+                    "pg_restore",
+                    "-U",
+                    "ciq",
+                    "--no-owner",
+                    "--no-privileges",
+                    "--exit-on-error",
+                    "-d",
+                    "cashlessiq",
+                ],
+                stdin=source,
+                stdout=subprocess.PIPE,
+            )
+        result = command(
+            [
+                *prefix,
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "api",
+                "/app/apps/api/.venv/bin/python",
+                "-c",
+                PROBE,
+                "fresh",
+            ],
+            stdout=subprocess.PIPE,
+            env=env,
+        )
+        verify_manifest(expected, json.loads(result.stdout)["manifest"])
+        command(
+            [
+                *prefix,
+                "up",
+                "--no-build",
+                "--pull",
+                "never",
+                "--no-deps",
+                "--detach",
+                "--wait",
+                "--wait-timeout",
+                "120",
+                "api",
+                "web",
+                "gateway",
+            ],
+            stdout=subprocess.PIPE,
+            env=env,
+        )
+        print("Fresh PostgreSQL volume restored; recovered preview ready on loopback 3081.")
+    except Exception:
+        # This project is CI-only and was verified absent before creation.
+        command([*prefix, "down", "--volumes"], stdout=subprocess.PIPE, env=env)
+        raise
+
+
 def restart_preview():
     # No local entry point reaches this mutation without the explicit CI-only guard.
     require_restart_permission("preview")
@@ -271,8 +439,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stack", choices=["product", "preview"], default="product")
     parser.add_argument("--restart-preview-ci", action="store_true")
+    parser.add_argument("--fresh-volume-preview-ci", action="store_true")
     args = parser.parse_args()
-    if args.restart_preview_ci:
+    if args.restart_preview_ci or args.fresh_volume_preview_ci:
         require_restart_permission(args.stack)
     ids = owned_containers(args.stack)
     directory = ROOT / "output/mvp-recovery" / uuid4().hex
@@ -286,6 +455,8 @@ def main():
     print(f"Private backup retained: {path}")
     if args.restart_preview_ci:
         restart_preview()
+    if args.fresh_volume_preview_ci:
+        fresh_volume_preview(path, frame["manifest"])
 
 
 if __name__ == "__main__":

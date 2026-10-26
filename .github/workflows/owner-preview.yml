@@ -17,6 +17,8 @@ on:
       - 'deploy/owner-preview/**'
       - 'scripts/owner_preview.py'
       - 'scripts/check_owner_preview.py'
+      - 'scripts/check_mvp_recovery.py'
+      - 'scripts/mvp_recovery_probe.py'
       - '.github/workflows/owner-preview.yml'
 permissions:
   contents: read
@@ -57,21 +59,34 @@ jobs:
           docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml -f compose.mvp.yml exec -T api .venv/bin/python -m ciq_api.seed
           npm run test:mvp
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}'
-      - name: Restore full MVP backup and restart disposable preview
+      - name: Restore full MVP backup, restart preview and recover a fresh volume
+        id: recovery
         env:
           # Match the bounded loopback browser origin selected in the step above.
           # The separate HTTPS-origin and secure-cookie checks already ran.
           CIQ_WEB_ORIGIN: http://127.0.0.1:3080
-        run: python -m scripts.check_mvp_recovery --stack preview --restart-preview-ci
+        run: python -m scripts.check_mvp_recovery --stack preview --restart-preview-ci --fresh-volume-preview-ci
       - name: Verify saved workflow through browser after restart
         env:
           MVP_BASE_URL: http://127.0.0.1:3080
           MVP_OWNER_PASSWORD_FILE: output/owner-preview/owner-password.txt
           MVP_RECOVERY_CHECKPOINT: output/owner-preview/recovery-checkpoint.json
         run: npx playwright test -c playwright.mvp.config.ts tests/mvp_browser/recovery.spec.ts
+      - name: Verify saved workflow through browser on restored volume
+        env:
+          MVP_BASE_URL: http://127.0.0.1:3081
+          MVP_OWNER_PASSWORD_FILE: output/owner-preview/owner-password.txt
+          MVP_RECOVERY_CHECKPOINT: output/owner-preview/recovery-checkpoint.json
+        run: npx playwright test -c playwright.mvp.config.ts tests/mvp_browser/recovery.spec.ts
       - name: Failure diagnostics
         if: failure() && steps.prepare.outcome == 'success'
         run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml logs --tail 40 web api migrate gateway
+      - name: Remove only the fresh-volume CI preview
+        if: always() && steps.recovery.outcome == 'success'
+        env:
+          CIQ_PREVIEW_PORT: '3081'
+          CIQ_WEB_ORIGIN: http://127.0.0.1:3081
+        run: docker compose -p cashlessiq-recovery-ci --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml -f compose.mvp.yml down --volumes
       - name: Stop only disposable preview stack
         if: always() && steps.prepare.outcome == 'success'
         run: docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml down --volumes

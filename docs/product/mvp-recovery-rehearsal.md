@@ -26,10 +26,19 @@ request, active pinned policy, extracted PDF and saved medical review. The
 restart option refuses to run outside the dedicated preview stack on GitHub
 Actions. CI removes its entire disposable stack afterward.
 
+The same CI job now also creates a **second, independent Compose project with a
+new empty PostgreSQL volume**. It restores the saved dump there before starting
+that project's API, web and loopback gateway, compares all 17 table manifests,
+then repeats the fresh-browser saved-workflow check on port 3081. The original
+preview remains available on port 3080. Both CI volumes are removed after the
+test. This exercises recovery when the original database volume is unavailable,
+without deleting the owner's local data or requiring cloud infrastructure.
+
 This proves that the current synthetic data can be backed up and restored, and
-that the disposable preview can restart with saved data. It does not yet prove
-an off-machine backup, disaster recovery after loss of the source volume,
-application compatibility with a future migration, or uptime during restart.
+that the disposable preview can restart with saved data. The fresh-volume step
+checks a replacement volume in the same CI runner; it does not yet prove
+off-machine backup custody, loss of the whole host, application compatibility
+with a future migration, or uptime during restart.
 The owner should keep using the local app for testing; no GCP resource, billing
 link or paid service is involved.
 

@@ -26,7 +26,7 @@ def main():
         or url.database != "cashlessiq"
         or url.host != "db"
         or not (
-            target in {"source", "checkpoint"}
+            target in {"source", "checkpoint", "fresh"}
             or re.fullmatch(r"ciq_rehearsal_[a-f0-9]{24}", target)
         )
     ):
@@ -36,7 +36,7 @@ def main():
         port=url.port or 5432,
         user=url.username,
         password=url.password,
-        dbname=url.database if target in {"source", "checkpoint"} else target,
+        dbname=url.database if target in {"source", "checkpoint", "fresh"} else target,
         connect_timeout=3,
         options=(
             "-c statement_timeout=30000 -c lock_timeout=3000 "

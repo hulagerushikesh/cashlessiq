@@ -63,7 +63,7 @@ services:
     environment:
       CIQ_PREVIEW_PASSWORD_HASH: ${CIQ_PREVIEW_PASSWORD_HASH:?Owner password hash required}
     volumes: ["./deploy/owner-preview/Caddyfile:/etc/caddy/Caddyfile:ro"]
-    ports: ["127.0.0.1:3080:8080"]
+    ports: ["127.0.0.1:${CIQ_PREVIEW_PORT:-3080}:8080"]
     networks: [preview, entry]
     depends_on:
       web: { condition: service_healthy }

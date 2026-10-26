@@ -3,7 +3,8 @@ import { expect, test } from "@playwright/test";
 import { mvpBrowserOptions } from "./runtime";
 
 // The normal browser suite creates a completed fictional journey. CI sets this
-// only after restoring its database backup and restarting the preview services.
+// only after restoring its database backup and restarting preview services. The
+// same check is then run against a second preview restored onto a fresh volume.
 if (process.env.MVP_RECOVERY_CHECKPOINT) {
   const checkpoint = JSON.parse(readFileSync(process.env.MVP_RECOVERY_CHECKPOINT, "utf8")) as {
     requestId: string;
@@ -11,7 +12,7 @@ if (process.env.MVP_RECOVERY_CHECKPOINT) {
     documentId: string;
   };
 
-  test("saved workflow survives a database and application restart", async ({ browser }) => {
+  test("saved workflow survives recovery and a fresh browser session", async ({ browser }) => {
     const context = await browser.newContext(mvpBrowserOptions());
     try {
       const page = await context.newPage();
