@@ -1,3 +1,4 @@
+import { WorkflowForm } from "@/components/workflow-form";
 import { randomUUID } from "node:crypto";
 import { mvpApi } from "@/lib/mvp-api";
 import { CaseServiceError } from "@/components/case-workspace";
@@ -28,7 +29,7 @@ export default async function Members({
         </p>
       )}
       {members.items.map((m) => (
-        <form
+        <WorkflowForm
           key={m.user_id}
           action="/workflows/commands"
           method="post"
@@ -77,7 +78,7 @@ export default async function Members({
           <button type="submit" className="rounded bg-teal-800 p-3 text-white">
             Save access
           </button>
-        </form>
+        </WorkflowForm>
       ))}
     </>
   );

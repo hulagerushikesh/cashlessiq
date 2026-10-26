@@ -1,5 +1,18 @@
 // Only fixed public messages reach the browser. Never echo API bodies or submitted facts.
 export const workflowErrors: Record<string, string> = {
+  review_conflict:
+    "The case changed. Your action was not applied. Open the latest record and review its state before submitting again.",
+  review_validation:
+    "Action was not saved. Check your role, assignment, state, amount and reason, then retry.",
+  session:
+    "Your session has ended. Sign in again before submitting. Your entries remain in this tab until you leave or reload it.",
+  cost_total:
+    "The cost lines must add up to the estimated total. Update the total or correct the expense amounts.",
+  remaining_cover: "Remaining cover cannot exceed the sum insured.",
+  cover_dates: "Policy inception and continuous cover must start on or before admission.",
+  icu_days: "ICU days cannot exceed the planned length of stay.",
+  connection:
+    "The save could not be confirmed. Check the record before changing these entries; retrying unchanged entries uses the same command ID to prevent duplicate work.",
   inactive_policy:
     "This policy is approved but not active. A policy approver must activate it in the policy library before you can submit a request.",
   admission_date:
@@ -23,6 +36,10 @@ export const workflowErrors: Record<string, string> = {
 };
 
 export const apiWorkflowErrors: Record<string, string> = {
+  "Value error, Cost lines must equal the estimated total": "cost_total",
+  "Value error, Remaining cover exceeds sum insured": "remaining_cover",
+  "Value error, Cover cannot start after admission": "cover_dates",
+  "Value error, ICU days exceed planned stay": "icu_days",
   "No approved active policy for this product": "inactive_policy",
   "Policy is not effective for this admission": "admission_date",
   "This product version already exists; propose a new version": "duplicate_policy",

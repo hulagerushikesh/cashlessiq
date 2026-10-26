@@ -1,3 +1,5 @@
+import { FactsEditor, type Facts } from "@/components/assessment-fields";
+import { WorkflowForm } from "@/components/workflow-form";
 import { WorkflowFeedback } from "@/components/workflow-feedback";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
@@ -7,7 +9,7 @@ import { CaseServiceError, rupees } from "@/components/case-workspace";
 
 type RequestDetail = {
   request_id: string;
-  facts: Record<string, unknown>;
+  facts: Facts;
   assessment: {
     outcome: string;
     payable_inr: number | null;
@@ -141,7 +143,7 @@ export default async function RequestPage({
         </section>
       )}
       {write && (
-        <form
+        <WorkflowForm
           action="/workflows/commands"
           method="post"
           encType="multipart/form-data"
@@ -173,7 +175,7 @@ export default async function RequestPage({
           <button type="submit" className="mt-4 rounded-lg bg-teal-800 p-3 text-white">
             Upload for extraction
           </button>
-        </form>
+        </WorkflowForm>
       )}
       <section className={panel}>
         <h2 className="text-xl font-semibold">Supporting documents</h2>
@@ -201,7 +203,7 @@ export default async function RequestPage({
         medical &&
         review?.state === "NEEDS_INFORMATION" &&
         review.assignee?.id === session.identity.user.id && (
-          <form action="/workflows/commands" method="post" className={panel}>
+          <WorkflowForm action="/workflows/commands" method="post" className={panel}>
             <h2 className="text-xl font-semibold">Correct facts and reassess</h2>
             <p className="mt-2 text-sm text-slate-500">
               Transcribe verified information from the supporting document. The previous facts and
@@ -211,16 +213,9 @@ export default async function RequestPage({
             <input type="hidden" name="id" value={id} />
             <input type="hidden" name="command_id" value={randomUUID()} />
             <input type="hidden" name="expected_version" value={review.version} />
-            <label className="mt-4 block text-sm">
-              Updated structured facts
-              <textarea
-                name="facts"
-                required
-                rows={18}
-                className="mt-2 w-full rounded border p-3 font-mono text-xs"
-                defaultValue={JSON.stringify(record.facts, null, 2)}
-              />
-            </label>
+            <div className="mt-4">
+              <FactsEditor initial={record.facts} />
+            </div>
             <label className="mt-4 block text-sm">
               Reason
               <textarea
@@ -233,7 +228,7 @@ export default async function RequestPage({
             <button type="submit" className="mt-4 rounded-lg bg-teal-800 p-3 text-white">
               Save facts and queue reassessment
             </button>
-          </form>
+          </WorkflowForm>
         )}
     </>
   );

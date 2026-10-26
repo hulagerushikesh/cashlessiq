@@ -7,7 +7,13 @@ export async function POST(request: NextRequest) {
   const origin = process.env.CIQ_WEB_ORIGIN ?? "http://localhost:3000";
   if (request.headers.get("origin") !== origin) return new Response("Forbidden", { status: 403 });
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  if (!token) return NextResponse.redirect(new URL("/login", origin), 303);
+  if (!token)
+    return request.headers.get("accept") === "application/json"
+      ? NextResponse.json(
+          { result: "failed", error: "session" },
+          { status: 401, headers: { "Cache-Control": "no-store" } },
+        )
+      : NextResponse.redirect(new URL("/login", origin), 303);
   let destination = new URL("/workflows", origin);
   try {
     const form = await boundedForm(request, 3 * 1024 * 1024);
@@ -51,26 +57,28 @@ export async function POST(request: NextRequest) {
         product_id: form.get("product_id"),
         synthetic_data: form.get("synthetic_data") === "true",
         priority: form.get("priority"),
-        facts: {
-          member_reference: form.get("member_reference"),
-          inception_date: form.get("inception_date"),
-          continuous_cover_since: form.get("continuous_cover_since"),
-          admission_date: form.get("admission_date") || null,
-          sum_insured_inr: integer("sum_insured_inr"),
-          si_remaining_inr: integer("si_remaining_inr"),
-          diagnosis: form.get("diagnosis") || null,
-          procedure: form.get("procedure") || null,
-          room_category: form.get("room_category") || null,
-          room_rent_per_day_inr: form.get("room_rent_per_day_inr")
-            ? integer("room_rent_per_day_inr")
-            : null,
-          planned_los_days: form.get("planned_los_days") ? integer("planned_los_days") : null,
-          cost_breakup: JSON.parse(String(form.get("cost_breakup"))),
-          estimated_total_inr: form.get("estimated_total_inr")
-            ? integer("estimated_total_inr")
-            : null,
-          clinical_note: form.get("clinical_note") || null,
-        },
+        facts: form.has("facts")
+          ? JSON.parse(String(form.get("facts")))
+          : {
+              member_reference: form.get("member_reference"),
+              inception_date: form.get("inception_date"),
+              continuous_cover_since: form.get("continuous_cover_since"),
+              admission_date: form.get("admission_date") || null,
+              sum_insured_inr: integer("sum_insured_inr"),
+              si_remaining_inr: integer("si_remaining_inr"),
+              diagnosis: form.get("diagnosis") || null,
+              procedure: form.get("procedure") || null,
+              room_category: form.get("room_category") || null,
+              room_rent_per_day_inr: form.get("room_rent_per_day_inr")
+                ? integer("room_rent_per_day_inr")
+                : null,
+              planned_los_days: form.get("planned_los_days") ? integer("planned_los_days") : null,
+              cost_breakup: JSON.parse(String(form.get("cost_breakup"))),
+              estimated_total_inr: form.get("estimated_total_inr")
+                ? integer("estimated_total_inr")
+                : null,
+              clinical_note: form.get("clinical_note") || null,
+            },
       });
     } else if (operation === "amend") {
       path = `requests/${id}/amend`;
@@ -156,6 +164,16 @@ export async function POST(request: NextRequest) {
         if (typeof data?.detail === "string" && Object.hasOwn(apiWorkflowErrors, data.detail))
           error = apiWorkflowErrors[data.detail];
       }
+      if (response.status === 422) {
+        const data = await response.json().catch(() => null);
+        const known = Array.isArray(data?.detail)
+          ? data.detail.find(
+              (item: { msg?: unknown }) =>
+                typeof item?.msg === "string" && Object.hasOwn(apiWorkflowErrors, item.msg),
+            )
+          : undefined;
+        if (known) error = apiWorkflowErrors[known.msg];
+      }
       if (error) destination.searchParams.set("error", error);
     }
   } catch (error) {
@@ -166,7 +184,14 @@ export async function POST(request: NextRequest) {
     )
       destination.searchParams.set("error", "validation");
   }
-  const result = NextResponse.redirect(destination, 303);
+  const result =
+    request.headers.get("accept") === "application/json"
+      ? NextResponse.json({
+          result: destination.searchParams.get("result"),
+          error: destination.searchParams.get("error"),
+          location: `${destination.pathname}${destination.search}`,
+        })
+      : NextResponse.redirect(destination, 303);
   result.headers.set("Cache-Control", "no-store");
   return result;
 }

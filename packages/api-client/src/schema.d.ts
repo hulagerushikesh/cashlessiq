@@ -1695,6 +1695,9 @@ export interface operations {
         parameters: {
             query?: {
                 active_only?: boolean;
+                page?: number;
+                page_size?: number;
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -1897,6 +1900,8 @@ export interface operations {
         parameters: {
             query?: {
                 page?: number;
+                page_size?: number;
+                q?: string;
             };
             header?: never;
             path?: never;

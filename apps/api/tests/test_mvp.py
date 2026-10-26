@@ -22,7 +22,15 @@ from ciq_api.main import create_app
 from ciq_api.models import AppUser, Membership, Tenant
 from ciq_api.mvp import lock_who
 from ciq_api.mvp_contracts import PolicyProposal
-from ciq_api.mvp_models import AnalyticsEvent, CaseInputRevision, DocumentUpload, MvpEvent, WorkJob
+from ciq_api.mvp_models import (
+    AnalyticsEvent,
+    CaseInputRevision,
+    DocumentUpload,
+    MvpEvent,
+    PolicyVersion,
+    SubmittedCase,
+    WorkJob,
+)
 from ciq_api.reviews import lock_actor
 from ciq_api.seed import MVP_PROFILES, PROFILES, TENANT_ID
 
@@ -81,6 +89,72 @@ def submission(facts=None):
         "synthetic_data": True,
         "facts": facts or template()["examples"][0]["facts"],
     }
+
+
+def test_workflow_lists_paginate_and_search_without_crossing_tenants(mvp, settings, engine):
+    policy = active_policy(mvp, settings, engine)
+    other_tenant = uuid4()
+    with Session(engine) as db, db.begin():
+        db.add(Tenant(id=other_tenant, name="Other synthetic tenant"))
+        db.flush()
+        for tenant, count in [(TENANT_ID, 55), (other_tenant, 1)]:
+            for index in range(count):
+                definition = template()
+                definition["name"] = "List title"
+                version = PolicyVersion(
+                    id=uuid4(),
+                    tenant_id=tenant,
+                    product_id=f"LIST_{index:03}",
+                    version="List version",
+                    author_id=UUID(MVP_PROFILES["policy_analyst"][0]),
+                    command_id=uuid4(),
+                    fingerprint="0" * 64,
+                    proposal=definition,
+                )
+                db.add(version)
+                db.flush()
+                db.add(
+                    SubmittedCase(
+                        tenant_id=tenant,
+                        request_id=f"REQ-LIST-{index:03}",
+                        actor_id=UUID(PROFILES["processor"][0]),
+                        command_id=uuid4(),
+                        fingerprint="0" * 64,
+                        policy_id=version.id,
+                        inputs={"member_reference": f"SYN-LIST-{index:03}"},
+                        priority="normal",
+                        due_at=datetime.now(UTC),
+                    )
+                )
+    for path, identifier in [("policies", "id"), ("requests", "request_id")]:
+        seen = set()
+        for page, expected_size in [(1, 20), (2, 20), (3, 15)]:
+            result = mvp.get(
+                f"/v3/{path}?q=list&page_size=20&page={page}", headers=bearer(settings)
+            ).json()
+            assert result["total"] == 55 and result["page"] == page
+            assert result["page_size"] == 20 and len(result["items"]) == expected_size
+            ids = {row[identifier] for row in result["items"]}
+            assert not ids & seen
+            seen |= ids
+        assert len(seen) == 55
+        for query in ["%", "' OR 1=1 --"]:
+            assert (
+                mvp.get(f"/v3/{path}", params={"q": query}, headers=bearer(settings)).json()[
+                    "total"
+                ]
+                == 0
+            )
+        for params in [{"page": 0}, {"page": 10001}, {"page_size": 51}, {"q": "x" * 121}]:
+            assert (
+                mvp.get(f"/v3/{path}", params=params, headers=bearer(settings)).status_code == 422
+            )
+    assert mvp.get("/v3/policies?q=LIST_054", headers=bearer(settings)).json()["total"] == 1
+    assert mvp.get("/v3/policies?q=title", headers=bearer(settings)).json()["total"] == 55
+    assert mvp.get("/v3/policies?q=version", headers=bearer(settings)).json()["total"] == 55
+    assert mvp.get("/v3/requests?q=syn-list-054", headers=bearer(settings)).json()["total"] == 1
+    active = mvp.get("/v3/policies?active_only=true", headers=bearer(settings)).json()
+    assert active["total"] == 1 and active["items"][0]["id"] == policy["policy_id"]
 
 
 def test_complete_submitted_request_assessment_review_and_analytics(mvp, settings, engine):

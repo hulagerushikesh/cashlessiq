@@ -1,3 +1,4 @@
+import { WorkflowForm } from "@/components/workflow-form";
 import { WorkflowFeedback } from "@/components/workflow-feedback";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
@@ -157,7 +158,12 @@ export default async function PolicyPage({
         ))}
       </section>
       {canApprove && (
-        <form id="policy-decision" action="/workflows/commands" method="post" className={panel}>
+        <WorkflowForm
+          id="policy-decision"
+          action="/workflows/commands"
+          method="post"
+          className={panel}
+        >
           <input type="hidden" name="operation" value="policy" />
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="command_id" value={randomUUID()} />
@@ -192,7 +198,7 @@ export default async function PolicyPage({
           >
             Save policy decision
           </button>
-        </form>
+        </WorkflowForm>
       )}
     </>
   );

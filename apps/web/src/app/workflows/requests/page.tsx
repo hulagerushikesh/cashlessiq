@@ -1,12 +1,18 @@
+import { WorkflowPagination, listQuery, type PageResult } from "@/components/workflow-pagination";
 import Link from "next/link";
 import { currentIdentity } from "@/lib/server-api";
 import { mvpApi, type RequestSummary } from "@/lib/mvp-api";
 import { CaseServiceError } from "@/components/case-workspace";
 import { RequestList } from "@/components/workflow-lists";
 
-export default async function Requests() {
+export default async function Requests({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}) {
+  const query = listQuery(await searchParams);
   const [requests, session] = await Promise.all([
-    mvpApi<{ items: RequestSummary[] }>("requests"),
+    mvpApi<PageResult<RequestSummary>>(`requests?${query}`),
     currentIdentity(),
   ]);
   if (!requests || session.state !== "ready") return <CaseServiceError />;
@@ -25,6 +31,12 @@ export default async function Requests() {
           Submit a request
         </Link>
       )}
+      <WorkflowPagination
+        result={requests}
+        path="/workflows/requests"
+        q={query.get("q") ?? ""}
+        label="Search synthetic member reference or request ID"
+      />
       <RequestList items={requests.items} />
     </>
   );

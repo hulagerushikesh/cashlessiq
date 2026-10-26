@@ -1,3 +1,5 @@
+import { PolicyEditor, type PolicyDefinition } from "@/components/policy-editor";
+import { WorkflowForm } from "@/components/workflow-form";
 import { randomUUID } from "node:crypto";
 import { mvpApi } from "@/lib/mvp-api";
 import { CaseServiceError } from "@/components/case-workspace";
@@ -21,7 +23,7 @@ export default async function NewPolicy({
   const documents = await mvpApi<{
     items: { id: string; state: string; text: string | null; digest: string }[];
   }>("policy-documents");
-  const template = await mvpApi<Record<string, unknown>>("policy-template");
+  const template = await mvpApi<PolicyDefinition>("policy-template");
   if (!template) return <CaseServiceError />;
   return (
     <>
@@ -31,15 +33,15 @@ export default async function NewPolicy({
         success="PDF uploaded. Refresh shortly to check extraction progress."
       />
       <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-        Enter a product ID and version to test the synthetic baseline. Advanced rule editing and a
-        wording PDF are optional. A different person must review the diff and passing regression
-        results before activation.
+        Enter a product ID and version to test the synthetic baseline. Rule editing and a wording
+        PDF are optional; use the labelled fields below to make changes. A different person must
+        review the diff and passing regression results before activation.
       </p>
       <details className="mt-6 max-w-5xl rounded-xl border bg-white p-4">
         <summary className="cursor-pointer text-sm font-medium">
           Optional: upload fictional policy wording PDF
         </summary>
-        <form
+        <WorkflowForm
           action="/workflows/commands"
           method="post"
           encType="multipart/form-data"
@@ -65,7 +67,7 @@ export default async function NewPolicy({
           <button type="submit" className="rounded-lg bg-teal-800 p-3 text-white">
             Upload wording for extraction
           </button>
-        </form>
+        </WorkflowForm>
       </details>
       {documents?.items.map((d) => (
         <article key={d.id} className="mt-4 max-w-5xl rounded-xl border bg-white p-4 text-sm">
@@ -78,7 +80,7 @@ export default async function NewPolicy({
           )}
         </article>
       ))}
-      <form
+      <WorkflowForm
         action="/workflows/commands"
         method="post"
         className="mt-6 max-w-5xl space-y-5 rounded-xl border bg-white p-6"
@@ -119,26 +121,7 @@ export default async function NewPolicy({
               ))}
           </select>
         </label>
-        <details className="rounded-lg border p-4">
-          <summary className="cursor-pointer text-sm font-medium">
-            Advanced policy rules and regression examples
-          </summary>
-          <p className="mt-3 text-sm text-slate-600">
-            Leave these defaults unchanged for the first walkthrough. Product ID and version come
-            from the fields above.
-          </p>
-          <label className="mt-3 block text-sm">
-            Versioned policy definition
-            <textarea
-              name="proposal"
-              required
-              spellCheck={false}
-              rows={24}
-              className="mt-2 w-full rounded-lg border p-3 font-mono text-xs"
-              defaultValue={JSON.stringify(template, null, 2)}
-            />
-          </label>
-        </details>
+        <PolicyEditor initial={template} />
         <label className="block text-sm">
           Proposal reason
           <textarea
@@ -151,7 +134,7 @@ export default async function NewPolicy({
         <button type="submit" className="rounded-lg bg-teal-800 p-3 text-white">
           Save proposal and run regressions
         </button>
-      </form>
+      </WorkflowForm>
     </>
   );
 }

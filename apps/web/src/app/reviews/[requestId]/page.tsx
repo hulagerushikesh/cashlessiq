@@ -1,3 +1,4 @@
+import { WorkflowForm } from "@/components/workflow-form";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { randomUUID } from "node:crypto";
@@ -85,7 +86,7 @@ export default async function ReviewPage({
             Reviewer actions
           </h2>
           {!final && (
-            <form
+            <WorkflowForm
               action={`/reviews/${encodeURIComponent(requestId)}/commands`}
               method="post"
               className="mt-4 grid gap-3 sm:grid-cols-2"
@@ -117,9 +118,9 @@ export default async function ReviewPage({
               <button type="submit" className="rounded-lg bg-teal-800 p-2 text-white">
                 {manager ? "Save assignment" : "Claim case"}
               </button>
-            </form>
+            </WorkflowForm>
           )}
-          <form
+          <WorkflowForm
             action={`/reviews/${encodeURIComponent(requestId)}/commands`}
             method="post"
             className="mt-6 grid gap-3"
@@ -177,7 +178,7 @@ export default async function ReviewPage({
             <button type="submit" className="rounded-lg bg-teal-800 p-2 text-white">
               Save reviewer action
             </button>
-          </form>
+          </WorkflowForm>
         </section>
       )}
       <section className={panel}>

@@ -8,7 +8,7 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from ciq_api.assessment import fingerprint
@@ -196,13 +196,29 @@ def register_mvp(app, config, identity, get_session, case_repository):
             raise HTTPException(404, "Case not found")
 
     @router.get("/requests", operation_id="list_submitted_requests")
-    def requests(who: Identity, db: Database, page: Annotated[int, Query(ge=1, le=10000)] = 1):
+    def requests(
+        who: Identity,
+        db: Database,
+        page: Annotated[int, Query(ge=1, le=10000)] = 1,
+        page_size: Annotated[int, Query(ge=1, le=50)] = 50,
+        q: Annotated[str, Query(max_length=120)] = "",
+    ):
+        filters = [SubmittedCase.tenant_id == who.tenant.id]
+        if q.strip():
+            filters.append(
+                or_(
+                    SubmittedCase.request_id.icontains(q.strip(), autoescape=True),
+                    SubmittedCase.inputs["member_reference"]
+                    .as_string()
+                    .icontains(q.strip(), autoescape=True),
+                )
+            )
         rows = db.scalars(
             select(SubmittedCase)
-            .where(SubmittedCase.tenant_id == who.tenant.id)
+            .where(*filters)
             .order_by(SubmittedCase.due_at, SubmittedCase.request_id)
-            .offset((page - 1) * 50)
-            .limit(50)
+            .offset((page - 1) * page_size)
+            .limit(page_size)
         ).all()
         from ciq_api.review_models import ReviewCase
 
@@ -213,12 +229,8 @@ def register_mvp(app, config, identity, get_session, case_repository):
             for u in db.scalars(select(AppUser).where(AppUser.id.in_(assignee_ids)))
         }
         return {
-            "total": db.scalar(
-                select(func.count())
-                .select_from(SubmittedCase)
-                .where(SubmittedCase.tenant_id == who.tenant.id)
-            ),
-            "page_size": 50,
+            "total": db.scalar(select(func.count()).select_from(SubmittedCase).where(*filters)),
+            "page_size": page_size,
             "items": [
                 {
                     "request_id": r.request_id,
@@ -544,7 +556,14 @@ def register_mvp(app, config, identity, get_session, case_repository):
         return response
 
     @router.get("/policies", operation_id="list_policies")
-    def policies(who: Identity, db: Database, active_only: bool = False):
+    def policies(
+        who: Identity,
+        db: Database,
+        active_only: bool = False,
+        page: Annotated[int, Query(ge=1, le=10000)] = 1,
+        page_size: Annotated[int, Query(ge=1, le=50)] = 50,
+        q: Annotated[str, Query(max_length=120)] = "",
+    ):
         query = select(PolicyVersion)
         if active_only:
             query = query.join(
@@ -552,10 +571,22 @@ def register_mvp(app, config, identity, get_session, case_repository):
                 (PolicyActive.tenant_id == PolicyVersion.tenant_id)
                 & (PolicyActive.version_id == PolicyVersion.id),
             )
+        query = query.where(PolicyVersion.tenant_id == who.tenant.id)
+        if q.strip():
+            query = query.where(
+                or_(
+                    PolicyVersion.product_id.icontains(q.strip(), autoescape=True),
+                    PolicyVersion.version.icontains(q.strip(), autoescape=True),
+                    PolicyVersion.proposal["name"]
+                    .as_string()
+                    .icontains(q.strip(), autoescape=True),
+                )
+            )
+        total = db.scalar(select(func.count()).select_from(query.subquery()))
         rows = db.scalars(
-            query.where(PolicyVersion.tenant_id == who.tenant.id)
-            .order_by(PolicyVersion.created_at.desc())
-            .limit(50)
+            query.order_by(PolicyVersion.created_at.desc(), PolicyVersion.id.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
         ).all()
         active_ids = set(
             db.scalars(
@@ -563,6 +594,9 @@ def register_mvp(app, config, identity, get_session, case_repository):
             )
         )
         return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
             "items": [
                 {
                     "id": p.id,
@@ -576,7 +610,7 @@ def register_mvp(app, config, identity, get_session, case_repository):
                     "author_id": p.author_id,
                 }
                 for p in rows
-            ]
+            ],
         }
 
     @router.get("/policies/{policy_id}", operation_id="get_policy")

@@ -77,7 +77,7 @@ now exercised by the agent; the owner can focus on usability feedback.
 
 1. Open `http://localhost:3000`, sign in as the policy analyst and use **New policy**
    in the visible workflow navigation. Enter a unique product ID and version,
-   leave advanced rules unchanged, add a reason, and save the proposal. No JSON
+   leave the baseline rules unchanged, add a reason, and save the proposal. No JSON
    editing or manual address-bar navigation is required for this walkthrough.
    An optional fictional wording PDF is available under the upload disclosure.
 2. Sign out and enter as the policy approver. Open **Policy library**, choose the
@@ -106,13 +106,20 @@ referral/resume, a stale conflicting tab and saved-decision persistence. Seven
 role checks traverse the UI at 390 px, including governance/access pages where
 permitted. A separate regression checks inactive-policy intake filtering,
 authoritative denial of a stale form and actionable duplicate-version feedback.
+Additional checks cover form retention after real validation and a connection
+failure, safe handling without scripts, policy clause/rule/example editing, and
+searches that traverse two pages at mobile widths.
 
 Owner feedback on 26 October exposed a missing policy-list route, locked legacy
 sidebar placeholders, a stale read-only badge, and approved-but-inactive versions
 appearing in intake. Dedicated library, request and job pages plus shared role-aware
 navigation now address these. Fixed error codes explain known failures without
-exposing raw API messages or submitted clinical data. Failed creation returns to
-its originating form (fields reset); proposal product/version have normal inputs.
+exposing raw API messages or submitted clinical data. Failed saves now retain the
+mounted form's entries, including reasons, costs and conditions; leaving/reloading
+still loses unsaved entries. No clinical draft is stored in browser storage or a
+URL. Policy clauses, supported rule parameters, regression examples and queried
+request facts now have normal editing controls. Policy/request lists include
+server-side search, counts and previous/next pages (20 rows per UI page).
 The ordinary browser suite remains an independent check of the frozen golden
 recommendations. Owner testing of the earlier read-only UI is already complete;
 these are the newly added workflows to exercise next.

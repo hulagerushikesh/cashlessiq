@@ -1,12 +1,18 @@
+import { WorkflowPagination, listQuery, type PageResult } from "@/components/workflow-pagination";
 import Link from "next/link";
 import { currentIdentity } from "@/lib/server-api";
 import { mvpApi, type Policy } from "@/lib/mvp-api";
 import { CaseServiceError } from "@/components/case-workspace";
 import { PolicyList } from "@/components/workflow-lists";
 
-export default async function Policies() {
+export default async function Policies({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}) {
+  const query = listQuery(await searchParams);
   const [policies, session] = await Promise.all([
-    mvpApi<{ items: Policy[] }>("policies"),
+    mvpApi<PageResult<Policy>>(`policies?${query}`),
     currentIdentity(),
   ]);
   if (!policies || session.state !== "ready") return <CaseServiceError />;
@@ -25,6 +31,12 @@ export default async function Policies() {
           Propose a policy version
         </Link>
       )}
+      <WorkflowPagination
+        result={policies}
+        path="/workflows/policies"
+        q={query.get("q") ?? ""}
+        label="Search product, version or policy name"
+      />
       <PolicyList items={policies.items} />
     </>
   );

@@ -43,6 +43,8 @@ test("policy approval, queued assessment, human decision and document visibility
       .getByRole("navigation", { name: "Workflow navigation" })
       .getByRole("link", { name: "Policy library", exact: true })
       .click();
+    await approver.page.getByLabel("Search product, version or policy name").fill(product);
+    await approver.page.getByRole("button", { name: "Search", exact: true }).click();
     await approver.page.getByRole("link", { name: `${product} · ${product}`, exact: true }).click();
     await approver.page.getByLabel("Review decision").selectOption("approve");
     await approver.page
@@ -75,6 +77,10 @@ test("policy approval, queued assessment, human decision and document visibility
       .getByRole("navigation", { name: "Workflow navigation" })
       .getByRole("link", { name: "Submitted requests", exact: true })
       .click();
+    await medical.page
+      .getByLabel("Search synthetic member reference or request ID")
+      .fill(product.replaceAll("_", "-"));
+    await medical.page.getByRole("button", { name: "Search", exact: true }).click();
     await medical.page
       .getByRole("link", { name: `SYN-${product.replaceAll("_", "-")}`, exact: true })
       .click();
@@ -109,6 +115,10 @@ test("policy approval, queued assessment, human decision and document visibility
       .getByRole("navigation", { name: "Workflow navigation" })
       .getByRole("link", { name: "Submitted requests", exact: true })
       .click();
+    await auditor.page
+      .getByLabel("Search synthetic member reference or request ID")
+      .fill(product.replaceAll("_", "-"));
+    await auditor.page.getByRole("button", { name: "Search", exact: true }).click();
     await auditor.page
       .getByRole("link", { name: `SYN-${product.replaceAll("_", "-")}`, exact: true })
       .click();
@@ -167,11 +177,9 @@ test("policy approval, queued assessment, human decision and document visibility
     ).toHaveCount(0);
     await staleTab.close();
     await medical.page.getByRole("link", { name: "Supporting documents and assessment" }).click();
-    const corrected = JSON.parse(
-      await medical.page.getByLabel("Updated structured facts").inputValue(),
-    );
-    corrected.clinical_note = "Fictional follow-up checked by the medical reviewer";
-    await medical.page.getByLabel("Updated structured facts").fill(JSON.stringify(corrected));
+    await medical.page
+      .getByLabel("Clinical note", { exact: true })
+      .fill("Fictional follow-up checked by the medical reviewer");
     await medical.page
       .getByLabel("Reason", { exact: true })
       .fill("Correct fictional note while retaining previous facts");
@@ -314,6 +322,8 @@ test("unactivated policies are excluded from intake and duplicate proposals expl
       .getByRole("navigation", { name: "Workflow navigation" })
       .getByRole("link", { name: "Policy library", exact: true })
       .click();
+    await approver.page.getByLabel("Search product, version or policy name").fill(product);
+    await approver.page.getByRole("button", { name: "Search", exact: true }).click();
     await approver.page.getByRole("link", { name: `${product} · V1`, exact: true }).click();
     await approver.page
       .getByLabel("Reason", { exact: true })
@@ -362,11 +372,239 @@ test("unactivated policies are excluded from intake and duplicate proposals expl
       "/workflows/new?result=conflict&error=inactive_policy",
     );
     await newPolicy();
-    await expect(analyst.page).toHaveURL(/\/workflows\/policies\/new\?/);
-    await expect(analyst.page.getByRole("alert")).toHaveText(
+    await expect(analyst.page.getByLabel("Policy product ID")).toHaveValue(product);
+    await expect(analyst.page.getByLabel("Proposal reason")).toHaveValue(
+      "Synthetic unactivated policy test",
+    );
+    await expect(analyst.page).toHaveURL(/\/workflows\/policies\/new$/);
+    await expect(analyst.page.getByRole("alert", { name: "Form error" })).toHaveText(
       /This product and version already exist/,
     );
   } finally {
     await Promise.allSettled([analyst, approver, processor].map((p) => p.context.close()));
+  }
+});
+
+test("request validation and connection errors retain all entries until a successful retry", async ({
+  browser,
+}) => {
+  const actor = await login(browser, "processor");
+  try {
+    const page = actor.page;
+    await page
+      .getByRole("navigation", { name: "Workflow navigation" })
+      .getByRole("link", { name: "New request", exact: true })
+      .click();
+    const member = `SYN-RETAIN-${Date.now()}`;
+    await page.getByLabel("Synthetic member reference").fill(member);
+    await page.getByLabel("Clinical note", { exact: true }).fill("Fictional retained note");
+    await page.getByRole("button", { name: "Add expense", exact: true }).click();
+    await page.getByLabel("Expense 4", { exact: true }).fill("Fictional additional charge");
+    await page.getByLabel("Claimed INR", { exact: true }).nth(3).fill("100");
+    await page.getByRole("button", { name: "Add declared condition" }).click();
+    await page.getByLabel("Condition name 1", { exact: true }).fill("Fictional prior condition");
+    await page.getByLabel("First diagnosed on 1", { exact: true }).fill("2020-01-01");
+    await page.getByLabel("Declared at proposal 1", { exact: true }).check();
+    await page.getByLabel("I confirm").check();
+    await page.getByRole("button", { name: "Queue assessment" }).click();
+    await expect(page.getByRole("alert", { name: "Form error" })).toContainText(
+      "cost lines must add up",
+    );
+    await expect(page.getByLabel("Synthetic member reference")).toHaveValue(member);
+    await expect(page.getByLabel("Clinical note", { exact: true })).toHaveValue(
+      "Fictional retained note",
+    );
+    await expect(page.getByLabel("Expense 4", { exact: true })).toHaveValue(
+      "Fictional additional charge",
+    );
+    await expect(page.getByLabel("Claimed INR", { exact: true }).nth(3)).toHaveValue("100");
+    await expect(page.getByLabel("Condition name 1", { exact: true })).toHaveValue(
+      "Fictional prior condition",
+    );
+    await expect(page.getByLabel("Declared at proposal 1", { exact: true })).toBeChecked();
+    await expect(page).toHaveURL(/\/workflows\/new$/);
+    expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
+    await page.getByRole("button", { name: "Remove expense 1", exact: true }).click();
+    await expect(page.getByLabel("Expense 1", { exact: true })).toHaveValue(
+      "Procedure and professional fees",
+    );
+    await page.getByLabel("Estimated total in INR").fill("88100");
+    const commandId = await page.locator('input[name="command_id"]').inputValue();
+    await page.route("**/workflows/commands", (route) => route.abort("failed"));
+    await page.getByRole("button", { name: "Queue assessment" }).click();
+    await expect(page.getByRole("alert", { name: "Form error" })).toContainText(
+      "save could not be confirmed",
+    );
+    await expect(page.getByLabel("Clinical note", { exact: true })).toHaveValue(
+      "Fictional retained note",
+    );
+    await expect(page.locator('input[name="command_id"]')).toHaveValue(commandId);
+    await page.unroute("**/workflows/commands");
+    await page.getByRole("button", { name: "Queue assessment" }).click();
+    await expect(page).toHaveURL(/\/workflows\/requests\/REQ-/);
+    const withoutScripts = await browser.newContext({
+      ...mvpBrowserOptions(),
+      storageState: await actor.context.storageState(),
+      javaScriptEnabled: false,
+    });
+    try {
+      const plain = await withoutScripts.newPage();
+      await plain.goto("/workflows/new");
+      await expect(
+        plain.getByText("Enable JavaScript to edit and submit this form safely."),
+      ).toBeVisible();
+      await expect(plain.getByRole("button", { name: "Queue assessment" })).toBeDisabled();
+    } finally {
+      await withoutScripts.close();
+    }
+  } finally {
+    await actor.context.close();
+  }
+});
+
+test("policy clauses, typed rules and regression examples can be edited without JSON", async ({
+  browser,
+}) => {
+  const actor = await login(browser, "policy_analyst");
+  try {
+    const page = actor.page;
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page
+      .getByRole("navigation", { name: "Workflow navigation" })
+      .getByRole("link", { name: "New policy", exact: true })
+      .click();
+    await page.getByLabel("Policy product ID").fill(`MVP_EDIT_${Date.now()}`);
+    await page.getByLabel("Policy name", { exact: true }).fill("Synthetic edited policy");
+    await page.getByLabel("Proposal reason").fill("Verify ordinary authoring controls");
+    await page.getByText("Policy clauses", { exact: true }).click();
+    await page.getByLabel("Clause ID", { exact: true }).fill("UI-ROOM");
+    await page.getByLabel("Clause title", { exact: true }).fill("Synthetic edited room clause");
+    await expect(page.getByRole("button", { name: "Remove selected clause" })).toBeDisabled();
+    await page.getByRole("button", { name: "Add clause", exact: true }).click();
+    await page.getByRole("button", { name: "Remove selected clause" }).click();
+    await page.getByText("Policy rules", { exact: true }).click();
+    await expect(page.getByLabel("Supporting clause")).toHaveValue("UI-ROOM");
+    await page.getByLabel("Maximum INR per day").fill("5001");
+    await page.getByLabel("Maximum INR per day").fill("5000");
+    await page
+      .getByLabel("Rule to edit")
+      .selectOption({ label: "RULE_PROP · Proportionate deduction" });
+    const applies = page.getByLabel("Applies to (one item per line)");
+    const originalItems = await applies.inputValue();
+    await applies.fill(`${originalItems}\nfictional unmatched expense`);
+    await page
+      .getByLabel("Rule to edit")
+      .selectOption({ label: "RULE_INITIAL · Initial waiting period" });
+    await page.getByLabel("Accidents exempt").selectOption("false");
+    await page.getByLabel("Accidents exempt").selectOption("true");
+    await page.getByRole("button", { name: "Add rule", exact: true }).click();
+    await page.getByRole("button", { name: "Remove selected rule" }).click();
+    await page.getByText("Regression examples", { exact: true }).click();
+    await page.getByRole("button", { name: "Duplicate selected example" }).click();
+    await page.getByLabel("Example name").fill("UI-FICTIONAL-COPY");
+    await page
+      .getByLabel("Clinical note", { exact: true })
+      .fill("Fictional regression note edited through the form");
+    await page.getByLabel("Example to edit").selectOption({ label: "GOL001" });
+    await page.getByLabel("Example to edit").selectOption({ label: "UI-FICTIONAL-COPY" });
+    await expect(page.getByLabel("Clinical note", { exact: true })).toHaveValue(
+      "Fictional regression note edited through the form",
+    );
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.getByRole("button", { name: "Save proposal and run regressions" }).click();
+    await expect(page).toHaveURL(/\/workflows\/policies\/[a-f0-9-]+/);
+    await waitFor(page, "succeeded · Passed · 31 cases");
+    await expect(page.getByText(/Synthetic edited room clause · Page 7/)).toBeVisible();
+    await expect(page.getByText(/fictional unmatched expense/)).toBeVisible();
+    await page.screenshot({ path: "test-results/mvp/edited-policy.png", fullPage: true });
+  } finally {
+    await actor.context.close();
+  }
+});
+
+test("policy and request searches span multiple pages and keep the search on navigation", async ({
+  browser,
+}) => {
+  const analyst = await login(browser, "policy_analyst");
+  const processor = await login(browser, "processor");
+  const prefix = `PAGING-${Date.now()}`;
+  try {
+    await analyst.page
+      .getByRole("navigation", { name: "Workflow navigation" })
+      .getByRole("link", { name: "New policy", exact: true })
+      .click();
+    const proposal = await analyst.page.locator('input[name="proposal"]').inputValue();
+    await processor.page
+      .getByRole("navigation", { name: "Workflow navigation" })
+      .getByRole("link", { name: "New request", exact: true })
+      .click();
+    const product = await processor.page.getByLabel("Policy product").inputValue();
+    expect(product).not.toBe("");
+    const facts = JSON.parse(await processor.page.locator('input[name="facts"]').inputValue());
+    // Create owned fictional fixtures through real mutation routes; pagination itself is exercised in the UI.
+    for (let index = 0; index < 21; index++) {
+      const post = async (page: Page, form: Record<string, string>) => {
+        const response = await page.request.post("/workflows/commands", {
+          headers: { Origin: new URL(page.url()).origin, Accept: "application/json" },
+          form,
+        });
+        expect((await response.json()).result).toBe("saved");
+      };
+      await post(analyst.page, {
+        operation: "propose",
+        command_id: crypto.randomUUID(),
+        product_id: `${prefix}-${index}`,
+        version: "V1",
+        proposal,
+        reason: "Synthetic pagination fixture",
+      });
+      await post(processor.page, {
+        operation: "submit",
+        command_id: crypto.randomUUID(),
+        product_id: product,
+        synthetic_data: "true",
+        priority: "normal",
+        facts: JSON.stringify({ ...facts, member_reference: `SYN-${prefix}-${index}` }),
+      });
+    }
+    for (const [actor, link, label] of [
+      [analyst, "Policy library", "Search product, version or policy name"],
+      [processor, "Submitted requests", "Search synthetic member reference or request ID"],
+    ] as const) {
+      await actor.page.setViewportSize({ width: 390, height: 844 });
+      await actor.page
+        .getByRole("navigation", { name: "Workflow navigation" })
+        .getByRole("link", { name: link, exact: true })
+        .click();
+      await actor.page.getByLabel(label).fill(prefix);
+      await actor.page.getByRole("button", { name: "Search", exact: true }).click();
+      await expect(actor.page.getByRole("navigation", { name: "List pagination" })).toContainText(
+        "21 results · Page 1 of 2",
+      );
+      await actor.page.getByRole("link", { name: "Next page", exact: true }).click();
+      await expect(actor.page.getByRole("navigation", { name: "List pagination" })).toContainText(
+        "21 results · Page 2 of 2",
+      );
+      await expect(actor.page.getByLabel(label)).toHaveValue(prefix);
+      await expect(actor.page.getByRole("link", { name: "Next page", exact: true })).toHaveCount(0);
+      await actor.page.getByRole("link", { name: "Previous page", exact: true }).click();
+      await expect(actor.page.getByRole("navigation", { name: "List pagination" })).toContainText(
+        "Page 1 of 2",
+      );
+      await actor.page.getByLabel(label).fill("NO-SUCH-FICTIONAL-RECORD");
+      await actor.page.getByRole("button", { name: "Search", exact: true }).click();
+      await expect(actor.page.getByRole("navigation", { name: "List pagination" })).toContainText(
+        "0 results",
+      );
+      expect(
+        await actor.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      ).toBe(true);
+      await actor.page.getByRole("link", { name: "Clear search", exact: true }).click();
+      await expect(actor.page.getByLabel(label)).toHaveValue("");
+    }
+  } finally {
+    await Promise.allSettled([analyst.context.close(), processor.context.close()]);
   }
 });

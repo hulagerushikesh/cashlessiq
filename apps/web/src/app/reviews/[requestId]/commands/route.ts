@@ -11,7 +11,13 @@ export async function POST(
   if (Number(request.headers.get("content-length") ?? 0) > 16384)
     return new Response("Too large", { status: 413 });
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  if (!token) return NextResponse.redirect(new URL("/login", origin), 303);
+  if (!token)
+    return request.headers.get("accept") === "application/json"
+      ? NextResponse.json(
+          { result: "failed", error: "session" },
+          { status: 401, headers: { "Cache-Control": "no-store" } },
+        )
+      : NextResponse.redirect(new URL("/login", origin), 303);
   const { requestId } = await context.params;
   const destination = new URL(`/reviews/${encodeURIComponent(requestId)}`, origin);
   try {
@@ -49,7 +55,15 @@ export async function POST(
   } catch {
     destination.searchParams.set("result", "failed");
   }
-  const result = NextResponse.redirect(destination, 303);
+  const state = destination.searchParams.get("result");
+  const result =
+    request.headers.get("accept") === "application/json"
+      ? NextResponse.json({
+          result: state,
+          error: state === "conflict" ? "review_conflict" : "review_validation",
+          location: `${destination.pathname}${destination.search}`,
+        })
+      : NextResponse.redirect(destination, 303);
   result.headers.set("Cache-Control", "no-store");
   return result;
 }

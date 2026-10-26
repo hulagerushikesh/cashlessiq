@@ -1,3 +1,4 @@
+import { WorkflowForm } from "@/components/workflow-form";
 import Link from "next/link";
 import { randomUUID } from "node:crypto";
 import { rupees } from "@/components/case-workspace";
@@ -9,8 +10,8 @@ export function RequestList({ items }: { items: RequestSummary[] }) {
       <h2 className="text-xl font-semibold">Submitted requests</h2>
       {items.length === 0 && (
         <p className="mt-3 text-sm text-slate-500">
-          No requests submitted yet. An analyst and a different approver must first activate a
-          policy.
+          No requests on this page. Clear the search or return to the first page. For a new request,
+          an analyst and a different approver must first activate a policy.
         </p>
       )}
       {items.map((r) => (
@@ -48,7 +49,8 @@ export function PolicyList({ items }: { items: Policy[] }) {
       <h2 className="text-xl font-semibold">Policy versions</h2>
       {items.length === 0 && (
         <p className="mt-3 text-sm text-slate-600">
-          No policy versions yet. A policy analyst can create the first proposal.
+          No policy versions on this page. Clear the search or return to the first page. A policy
+          analyst can create a new proposal.
         </p>
       )}
       {items.map((p) => (
@@ -94,7 +96,7 @@ export function JobList({ items, operations = false }: { items: Job[]; operation
             </p>
           )}
           {operations && j.state === "dead" && (
-            <form action="/workflows/commands" method="post" className="mt-3 flex gap-2">
+            <WorkflowForm action="/workflows/commands" method="post" className="mt-3 flex gap-2">
               <input type="hidden" name="operation" value="retry" />
               <input type="hidden" name="id" value={j.id} />
               <input type="hidden" name="command_id" value={randomUUID()} />
@@ -109,7 +111,7 @@ export function JobList({ items, operations = false }: { items: Job[]; operation
               <button type="submit" className="rounded bg-teal-800 p-2 text-white">
                 Retry job
               </button>
-            </form>
+            </WorkflowForm>
           )}
         </article>
       ))}
