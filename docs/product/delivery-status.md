@@ -10,13 +10,16 @@ The [current-MVP recovery rehearsal](mvp-recovery-rehearsal.md) now makes a
 consistent private backup of the existing synthetic database, restores it into
 a temporary database, and compares all table contents and schema columns.
 The local owner app stays available. Disposable preview CI also exercises a
-database/application restart and reopens the saved workflow in a browser.
+database/application restart and reopens the saved workflow in a browser. It now
+restores the same backup into an independent, empty PostgreSQL volume in a
+second disposable preview and reopens that workflow there too.
 This is a private testing recovery check; GCP remains preparation only.
-The [accepted preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40291695183)
-passed all 17 table comparisons and the fresh-browser recovery check.
-[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40291695193)
-also passed at `0aa135a`, including 915 root, 1,521 API, 26 browser, 15 source
-UI and 13 MVP browser checks.
+The [accepted preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40330569264)
+passed all 17 table comparisons, the restart check and both fresh-browser
+recovery checks. [Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40331362155)
+passed at `a64f8d1`, including 916 root, 1,521 API, 26 browser, 15 source UI
+and 13 MVP browser checks. These are same-runner, synthetic recovery checks;
+off-machine backup custody is still unverified.
 
 ### Current: easier synthetic testing — 26 October
 

@@ -59,3 +59,20 @@ The same accepted revision passed
 915 root tests, 1,521 API tests, 72 membership checks, 35 PostgreSQL catalog
 checks, 41 client checks, 26 existing browser checks, 15 source UI checks and
 13 MVP browser checks, plus the type, lint, contract and production build gates.
+
+## Fresh-volume result
+
+The accepted [fresh-volume preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40330569264)
+at `7181939` passed all 13 initial MVP browser journeys, restored and matched
+all 17 tables in a temporary database, restarted the original database and app,
+and restored the same dump into a separate PostgreSQL volume. A fresh browser
+reopened the saved request, policy, PDF and final review on both the restarted
+original preview and the recovered preview. Each recovery browser check passed.
+CI removed both disposable volumes afterward.
+
+[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40331362155)
+passed at `a64f8d1`: 916 root tests, 1,521 API tests, 72 membership checks,
+35 catalog checks, 41 client checks, 26 browser checks, 15 source UI checks and
+13 MVP browser checks, plus types, lint, contracts and build. The prior full
+run at `7181939` caught a guard-test mistake under GitHub's CI environment;
+`a64f8d1` corrected that test without changing the accepted recovery behavior.
