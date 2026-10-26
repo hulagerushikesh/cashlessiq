@@ -71,22 +71,44 @@ Do not start a second stack, increase Docker resources or bypass heavy preflight
 
 ## Human test sequence
 
-1. Open `http://localhost:3000`, sign in as the policy analyst and open the
-   testing workspace. Propose a version, optionally using an extracted fictional
-   PDF. Wait for regression results.
-2. Sign out and enter as the policy approver. Inspect the diff and results,
-   approve, then activate the version with a reason.
-3. Enter as the processor, submit a fictional request and wait for its draft.
-4. Enter as the medical officer, claim it, inspect evidence, and submit an
-   approval or query/referral with a reason. Test a conflicting browser tab.
-5. Upload a fictional PDF. Only medical officers can read clinical document
-   text or download a released clinical PDF. A query can be corrected and
-   reassessed while preserving previous facts.
-6. Enter as auditor to inspect history; operations lead to inspect jobs; tenant
-   administrator to test suspension and immediate session revocation.
+1. Open `http://localhost:3000`, sign in as the policy analyst and use **New policy**
+   in the visible workflow navigation. Enter a unique product ID and version,
+   leave advanced rules unchanged, add a reason, and save the proposal. No JSON
+   editing or manual address-bar navigation is required for this walkthrough.
+   An optional fictional wording PDF is available under the upload disclosure.
+2. Sign out and enter as the policy approver. Open **Policy library**, choose the
+   product/version, inspect its clauses and all 30 regression results, approve,
+   then activate with a reason. **Approved** and **active** are separate states;
+   an approved-but-inactive version is clearly labelled and excluded from intake.
+3. Enter as the processor, use **New request**, choose the active product, keep the
+   fictional defaults, confirm fictional data, and queue assessment. Refresh after
+   processing; the baseline yields a deductions draft of INR 95,000.
+4. Enter as the medical officer, use **Submitted requests**, open the member
+   reference, and select **Open reviewer workflow**. Assign it to yourself,
+   inspect evidence, then record a reasoned approval or query/referral.
+5. Upload a fictional PDF from the request page. Only medical officers can read
+   clinical document text or download a released clinical PDF. A query can be
+   corrected and reassessed while preserving previous facts.
+6. Enter as auditor to inspect history; operations lead to inspect **Background
+   jobs**; tenant administrator to use **Manage tenant access**. Role changes and
+   revocation have immediate effect. These navigation controls also work at
+   mobile widths. Sign out to select a different synthetic role.
 
 `npm run test:mvp` automates policy proposal/approval/activation, queued
 assessment, final human review, restricted comments, extraction and download.
+The main journey now begins at home and follows visible navigation and case
+links. It also covers reopening, a query, corrected facts and reassessment,
+referral/resume, a stale conflicting tab and saved-decision persistence. Seven
+role checks traverse the UI at 390 px, including governance/access pages where
+permitted. A separate regression checks inactive-policy intake filtering,
+authoritative denial of a stale form and actionable duplicate-version feedback.
+
+Owner feedback on 26 October exposed a missing policy-list route, locked legacy
+sidebar placeholders, a stale read-only badge, and approved-but-inactive versions
+appearing in intake. Dedicated library, request and job pages plus shared role-aware
+navigation now address these. Fixed error codes explain known failures without
+exposing raw API messages or submitted clinical data. Failed creation returns to
+its originating form (fields reset); proposal product/version have normal inputs.
 The ordinary browser suite remains an independent check of the frozen golden
 recommendations. Owner testing of the earlier read-only UI is already complete;
 these are the newly added workflows to exercise next.

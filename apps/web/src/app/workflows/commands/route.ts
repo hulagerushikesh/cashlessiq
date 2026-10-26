@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { apiUrl, SESSION_COOKIE } from "@/lib/server-api";
 import { boundedForm } from "@/lib/bounded-form";
+import { apiWorkflowErrors } from "@/lib/workflow-feedback";
 
 export async function POST(request: NextRequest) {
   const origin = process.env.CIQ_WEB_ORIGIN ?? "http://localhost:3000";
@@ -21,15 +22,19 @@ export async function POST(request: NextRequest) {
     const command_id = form.get("command_id");
     const reason = form.get("reason");
     if (operation === "propose") {
+      destination = new URL("/workflows/policies/new", origin);
       path = "policies";
       const proposal = JSON.parse(String(form.get("proposal")));
       body = JSON.stringify({
         ...proposal,
+        product_id: form.get("product_id"),
+        version: form.get("version"),
         command_id,
         reason,
         wording_document_id: form.get("wording_document_id") || null,
       });
     } else if (operation === "submit") {
+      destination = new URL("/workflows/new", origin);
       path = "requests";
       const integer = (name: string) => {
         const value = form.get(name);
@@ -86,6 +91,7 @@ export async function POST(request: NextRequest) {
         expected_activation: form.get("expected_activation") || null,
       });
     } else if (operation === "retry") {
+      destination = new URL("/workflows/jobs", origin);
       path = `jobs/${id}/retry`;
       body = JSON.stringify({ command_id, reason });
     } else if (operation === "member") {
@@ -101,13 +107,19 @@ export async function POST(request: NextRequest) {
       });
     } else if (operation === "upload" || operation === "policy-upload") {
       const file = form.get("document");
-      if (!(file instanceof File) || file.size > 2 * 1024 * 1024 || file.type !== "application/pdf")
-        throw new Error("Unsupported upload");
-      path = operation === "policy-upload" ? "policy-documents" : `requests/${id}/documents`;
       destination = new URL(
         operation === "policy-upload" ? "/workflows/policies/new" : `/workflows/requests/${id}`,
         origin,
       );
+      if (
+        !(file instanceof File) ||
+        file.size > 2 * 1024 * 1024 ||
+        file.type !== "application/pdf"
+      ) {
+        destination.searchParams.set("error", "upload");
+        throw new Error("Unsupported upload");
+      }
+      path = operation === "policy-upload" ? "policy-documents" : `requests/${id}/documents`;
       headers["Content-Type"] = "application/pdf";
       headers["Idempotency-Key"] = String(command_id);
       headers["X-Synthetic-Data"] = form.get("synthetic_data") === "true" ? "true" : "false";
@@ -135,8 +147,24 @@ export async function POST(request: NextRequest) {
       "result",
       response.ok ? "saved" : response.status === 409 ? "conflict" : "failed",
     );
-  } catch {
+    if (!response.ok) {
+      let error =
+        response.status === 403 ? "role" : response.status === 422 ? "validation" : undefined;
+      // Map exact known server messages to fixed UI codes; never expose arbitrary response text.
+      if (response.status === 409) {
+        const data = await response.json().catch(() => null);
+        if (typeof data?.detail === "string" && Object.hasOwn(apiWorkflowErrors, data.detail))
+          error = apiWorkflowErrors[data.detail];
+      }
+      if (error) destination.searchParams.set("error", error);
+    }
+  } catch (error) {
     destination.searchParams.set("result", "failed");
+    if (
+      error instanceof SyntaxError ||
+      (error instanceof Error && error.message === "Invalid integer")
+    )
+      destination.searchParams.set("error", "validation");
   }
   const result = NextResponse.redirect(destination, 303);
   result.headers.set("Cache-Control", "no-store");

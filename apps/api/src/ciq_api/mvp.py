@@ -544,13 +544,24 @@ def register_mvp(app, config, identity, get_session, case_repository):
         return response
 
     @router.get("/policies", operation_id="list_policies")
-    def policies(who: Identity, db: Database):
+    def policies(who: Identity, db: Database, active_only: bool = False):
+        query = select(PolicyVersion)
+        if active_only:
+            query = query.join(
+                PolicyActive,
+                (PolicyActive.tenant_id == PolicyVersion.tenant_id)
+                & (PolicyActive.version_id == PolicyVersion.id),
+            )
         rows = db.scalars(
-            select(PolicyVersion)
-            .where(PolicyVersion.tenant_id == who.tenant.id)
+            query.where(PolicyVersion.tenant_id == who.tenant.id)
             .order_by(PolicyVersion.created_at.desc())
             .limit(50)
         ).all()
+        active_ids = set(
+            db.scalars(
+                select(PolicyActive.version_id).where(PolicyActive.tenant_id == who.tenant.id)
+            )
+        )
         return {
             "items": [
                 {
@@ -559,6 +570,9 @@ def register_mvp(app, config, identity, get_session, case_repository):
                     "version": p.version,
                     "name": p.proposal["name"],
                     "status": policy_status(db, p),
+                    "active": p.id in active_ids,
+                    "effective_from": p.proposal["effective_from"],
+                    "effective_to": p.proposal.get("effective_to"),
                     "author_id": p.author_id,
                 }
                 for p in rows

@@ -1,3 +1,4 @@
+import { WorkflowFeedback } from "@/components/workflow-feedback";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { mvpApi } from "@/lib/mvp-api";
@@ -39,7 +40,7 @@ export default async function RequestPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ result?: string }>;
+  searchParams: Promise<{ result?: string; error?: string }>;
 }) {
   const { id } = await params;
   const [record, documents, session, review] = await Promise.all([
@@ -61,7 +62,7 @@ export default async function RequestPage({
     if (!old?.data) return <CaseServiceError />;
     golden = true;
   }
-  const { result } = await searchParams;
+  const feedback = await searchParams;
   const medical = session.identity.role === "medical_officer";
   const write = medical || session.identity.role === "processor";
   const panel = "mt-6 rounded-xl border border-slate-200 bg-white p-6";
@@ -71,13 +72,10 @@ export default async function RequestPage({
         Back to testing workspace
       </Link>
       <h1 className="mt-5 break-words text-3xl font-semibold">Request {id}</h1>
-      {result && (
-        <p role="status" className="mt-4 rounded bg-amber-50 p-4">
-          {result === "saved"
-            ? "Action saved. Background processing may still be pending."
-            : "Action was not saved. Check the current version, assignment and form, then retry."}
-        </p>
-      )}
+      <WorkflowFeedback
+        {...feedback}
+        success="Action saved. Background processing may still be pending."
+      />
       {(review || golden) && (
         <Link
           className="mt-4 inline-block rounded-lg bg-teal-800 px-4 py-2 text-sm text-white"

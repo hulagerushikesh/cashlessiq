@@ -580,3 +580,30 @@ def test_chunked_json_is_bounded_before_parsing_or_writing(mvp, settings, engine
     assert result.headers["cache-control"] == "no-store"
     with Session(engine) as db:
         assert db.scalar(select(func.count()).select_from(MvpEvent)) == 0
+
+
+def test_policy_intake_list_separates_approval_from_activation(mvp, settings, engine):
+    first = propose(mvp, settings)
+    assert run_once(engine)
+    assert policy_action(mvp, settings, first["policy_id"], "approve").status_code == 200
+    auth = bearer(settings)
+    listed = mvp.get("/v3/policies", headers=auth).json()["items"]
+    assert len(listed) == 1 and listed[0]["status"] == "approved"
+    assert listed[0]["active"] is False
+    assert mvp.get("/v3/policies?active_only=true", headers=auth).json()["items"] == []
+    assert mvp.post("/v3/requests", headers=auth, json=submission()).status_code == 409
+    assert policy_action(mvp, settings, first["policy_id"], "activate").status_code == 200
+    available = mvp.get("/v3/policies?active_only=true", headers=auth).json()["items"]
+    assert [p["id"] for p in available] == [first["policy_id"]]
+    assert available[0]["active"] is True
+    assert available[0]["effective_from"] == template()["effective_from"]
+    assert available[0]["effective_to"] == template()["effective_to"]
+    # A newer unactivated version must not hide or replace the active version in intake.
+    next_proposal = template()
+    next_proposal["version"] = "V-next"
+    second = propose(mvp, settings, next_proposal)
+    assert run_once(engine)
+    assert policy_action(mvp, settings, second["policy_id"], "approve").status_code == 200
+    assert [
+        p["id"] for p in mvp.get("/v3/policies?active_only=true", headers=auth).json()["items"]
+    ] == [first["policy_id"]]

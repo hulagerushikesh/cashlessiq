@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, Layers3, LockKeyhole } from "lucide-react";
 import type { ReactNode } from "react";
 import type { Identity, Outcome } from "@cashlessiq/api-client";
+import { roleLabels } from "@/lib/workflow-roles";
+import { WorkflowNavigation } from "@/components/workflow-navigation";
 import { Button } from "@/components/ui/button";
 
 export const outcomeLabels: Record<Outcome, string> = {
@@ -50,11 +52,11 @@ export function CaseWorkspace({ identity, children }: { identity: Identity; chil
             <Layers3 className="text-teal-800" size={24} />
             CashlessIQ
           </Link>
-          <nav aria-label="Workspace navigation" className="flex items-center gap-5 text-sm">
+          <nav
+            aria-label="Workspace navigation"
+            className="flex flex-wrap items-center gap-5 text-sm"
+          >
             <Link href="/">Overview</Link>
-            {process.env.CIQ_SYNTHETIC_WORKFLOWS === "true" && (
-              <Link href="/workflows">Testing workspace</Link>
-            )}
             <Link href="/cases" className="font-semibold text-teal-800">
               Case queue
             </Link>
@@ -68,7 +70,10 @@ export function CaseWorkspace({ identity, children }: { identity: Identity; chil
               )}
           </nav>
           <div className="flex items-center gap-4 text-sm">
-            <span>{identity.user.display_name}</span>
+            <span>
+              {identity.user.display_name}
+              <span className="block text-xs text-slate-500">{roleLabels[identity.role]}</span>
+            </span>
             <form action="/auth/logout" method="post">
               <Button variant="outline" size="sm">
                 Sign out
@@ -76,6 +81,9 @@ export function CaseWorkspace({ identity, children }: { identity: Identity; chil
             </form>
           </div>
         </div>
+        {process.env.CIQ_SYNTHETIC_WORKFLOWS === "true" && (
+          <WorkflowNavigation role={identity.role} />
+        )}
       </header>
       <main id="case-workspace" className="mx-auto max-w-[1480px] px-5 py-7 lg:px-9 lg:py-10">
         <div className="mb-7 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">

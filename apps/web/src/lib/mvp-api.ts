@@ -31,6 +31,9 @@ export type Policy = {
   version: string;
   name: string;
   status: string;
+  active: boolean;
+  effective_from: string;
+  effective_to: string | null;
   author_id: string;
 };
 export type RequestSummary = {

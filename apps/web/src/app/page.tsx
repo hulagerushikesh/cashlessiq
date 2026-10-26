@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { currentIdentity } from "@/lib/server-api";
+import { WorkflowNavigation } from "@/components/workflow-navigation";
 
 const roles = {
   processor: "Processor",
@@ -60,7 +61,10 @@ export default async function Workspace() {
             {identity ? "Synthetic sandbox" : "Sign in to your workspace"}
           </p>
         </div>
-        <nav aria-label="Main navigation" className="mt-7 hidden space-y-2 text-sm lg:block">
+        <nav
+          aria-label="Main navigation"
+          className="mt-7 flex flex-wrap gap-2 text-sm lg:block lg:space-y-2"
+        >
           <Link
             href="/"
             aria-current="page"
@@ -75,21 +79,23 @@ export default async function Workspace() {
             <ClipboardCheck size={18} />
             Case queue
           </Link>
-          {[
-            { title: "Policy library", icon: BookOpen },
-            { title: "Audit history", icon: ShieldCheck },
-          ].map(({ title, icon: Icon }) => (
-            <div
-              key={title}
-              className="flex items-center gap-3 px-3 py-3 text-slate-400"
-              aria-disabled="true"
-            >
-              <Icon size={18} />
-              <span>{title}</span>
-              <LockKeyhole className="ml-auto" size={12} />
-            </div>
-          ))}
+          {!mvp &&
+            [
+              { title: "Policy library", icon: BookOpen },
+              { title: "Audit history", icon: ShieldCheck },
+            ].map(({ title, icon: Icon }) => (
+              <div
+                key={title}
+                className="flex items-center gap-3 px-3 py-3 text-slate-400"
+                aria-disabled="true"
+              >
+                <Icon size={18} />
+                <span>{title}</span>
+                <LockKeyhole className="ml-auto" size={12} />
+              </div>
+            ))}
         </nav>
+        {mvp && identity && <WorkflowNavigation role={identity.role} vertical />}
         <div className="mt-8 hidden border-t border-slate-100 px-2 pt-5 lg:mt-auto lg:block">
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800">
             <CircleDot size={11} /> Development workspace
@@ -152,7 +158,8 @@ export default async function Workspace() {
               </p>
             </div>
             <span className="mt-2 flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-              <span className="size-1.5 rounded-full bg-teal-600" /> Read-only alpha
+              <span className="size-1.5 rounded-full bg-teal-600" />{" "}
+              {mvp ? "Synthetic MVP" : "Read-only alpha"}
             </span>
           </div>
           {session.state === "unavailable" && (
@@ -174,7 +181,7 @@ export default async function Workspace() {
               </div>
               <h2 id="welcome-title" className="text-2xl font-semibold tracking-tight">
                 {identity
-                  ? `Welcome, ${identity.user.display_name.split(" ")[0]}.`
+                  ? `Welcome, ${identity.user.display_name}.`
                   : "Your workspace starts with you."}
               </h2>
               <p className="mt-3 max-w-md text-sm leading-7 text-slate-500">
@@ -203,7 +210,7 @@ export default async function Workspace() {
               {identity && mvp && (
                 <Link
                   href="/workflows"
-                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-teal-800"
+                  className="mr-5 mt-5 inline-flex items-center gap-2 text-sm font-semibold text-teal-800"
                 >
                   Open testing workspace <ArrowRight size={16} />
                 </Link>
@@ -211,7 +218,7 @@ export default async function Workspace() {
               {identity && (
                 <Link
                   href="/cases"
-                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-teal-800"
+                  className="mr-5 mt-5 inline-flex items-center gap-2 text-sm font-semibold text-teal-800"
                 >
                   Open case queue <ArrowRight size={16} />
                 </Link>

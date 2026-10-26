@@ -1,3 +1,4 @@
+import { WorkflowFeedback } from "@/components/workflow-feedback";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { mvpApi } from "@/lib/mvp-api";
@@ -47,7 +48,7 @@ export default async function PolicyPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ result?: string }>;
+  searchParams: Promise<{ result?: string; error?: string }>;
 }) {
   const { id } = await params;
   const [policy, session] = await Promise.all([
@@ -55,7 +56,7 @@ export default async function PolicyPage({
     currentIdentity(),
   ]);
   if (!policy || session.state !== "ready") return <CaseServiceError />;
-  const { result } = await searchParams;
+  const feedback = await searchParams;
   const canApprove =
     session.identity.role === "policy_approver" && session.identity.user.id !== policy.author_id;
   const panel = "mt-6 rounded-xl border border-slate-200 bg-white p-6";
@@ -72,12 +73,23 @@ export default async function PolicyPage({
         Effective {policy.proposal.effective_from} to{" "}
         {policy.proposal.effective_to ?? "no end date"}
       </p>
-      {result && (
-        <p role="status" className="mt-4 rounded bg-amber-50 p-4">
-          {result === "saved"
-            ? "Policy action saved."
-            : "Policy action was not saved. Check the review decision, regression results, effective dates and current active version."}
+      <WorkflowFeedback {...feedback} success="Policy action saved." />
+      {!policy.active && policy.status === "approved" && (
+        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
+          Approved, awaiting activation. New requests cannot use this version yet.{" "}
+          {canApprove ? (
+            <a href="#policy-decision" className="font-semibold underline">
+              Activate this version below
+            </a>
+          ) : (
+            "Sign in as a policy approver to activate it."
+          )}
         </p>
+      )}
+      {canApprove && policy.status === "proposed" && (
+        <a href="#policy-decision" className="mt-4 inline-block text-sm text-teal-800 underline">
+          Go to policy review decision
+        </a>
       )}
       <section className={panel}>
         <h2 className="text-xl font-semibold">Proposal reason</h2>
@@ -145,7 +157,7 @@ export default async function PolicyPage({
         ))}
       </section>
       {canApprove && (
-        <form action="/workflows/commands" method="post" className={panel}>
+        <form id="policy-decision" action="/workflows/commands" method="post" className={panel}>
           <input type="hidden" name="operation" value="policy" />
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="command_id" value={randomUUID()} />
