@@ -32,3 +32,21 @@ an off-machine backup, disaster recovery after loss of the source volume,
 application compatibility with a future migration, or uptime during restart.
 The owner should keep using the local app for testing; no GCP resource, billing
 link or paid service is involved.
+
+## Verified result
+
+The existing local sandbox restored and matched all **17** MVP public tables in
+a separate temporary database; its database and application services were not
+restarted. The accepted code at `0aa135a` passed
+[disposable owner-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40291695183):
+37 gateway HTTP checks, 13 full MVP browser journeys, a consistent backup and
+restore matching all 17 tables, a database restart with all tables still equal,
+and one fresh-browser check that reopened the previously saved request, active
+policy, released fictional PDF and final review. The preview volume and services
+were removed after the run.
+
+The same accepted revision passed
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40291695193):
+915 root tests, 1,521 API tests, 72 membership checks, 35 PostgreSQL catalog
+checks, 41 client checks, 26 existing browser checks, 15 source UI checks and
+13 MVP browser checks, plus the type, lint, contract and production build gates.

@@ -12,6 +12,11 @@ a temporary database, and compares all table contents and schema columns.
 The local owner app stays available. Disposable preview CI also exercises a
 database/application restart and reopens the saved workflow in a browser.
 This is a private testing recovery check; GCP remains preparation only.
+The [accepted preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40291695183)
+passed all 17 table comparisons and the fresh-browser recovery check.
+[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40291695193)
+also passed at `0aa135a`, including 915 root, 1,521 API, 26 browser, 15 source
+UI and 13 MVP browser checks.
 
 ### Current: easier synthetic testing — 26 October
 
