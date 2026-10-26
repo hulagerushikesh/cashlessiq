@@ -71,6 +71,10 @@ Do not start a second stack, increase Docker resources or bypass heavy preflight
 
 ## Human test sequence
 
+The [26 October UI testing report](ui-testing-2026-10-26.md) records the owner
+navigation findings, fixes and fresh CI validation. Functional workflow testing is
+now exercised by the agent; the owner can focus on usability feedback.
+
 1. Open `http://localhost:3000`, sign in as the policy analyst and use **New policy**
    in the visible workflow navigation. Enter a unique product ID and version,
    leave advanced rules unchanged, add a reason, and save the proposal. No JSON
