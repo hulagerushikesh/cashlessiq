@@ -109,3 +109,21 @@ production build, types, lint and containment checks passed. The API suite took
   Local screenshot evidence is `output/ui-testing/form-recovery.png`.
 - No schema migration or database recreation was needed. Only the existing API
   was restarted to load the search endpoints. No cloud or paid service was used.
+
+
+Code `7c1ea94` passes the fresh
+[production preview 40277868633](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40277868633):
+all 37 owner-gate/origin/cookie checks and all 13 expanded MVP browser tests
+(1.1 minutes for the browser phase). The standalone app ran behind the private
+owner gate under the existing constrained container limits. The disposable CI
+preview was removed after validation; no GCP deployment occurred.
+
+
+The same code passes
+[full product CI 40277868637](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40277868637):
+913 root tests (three skips), 1,521 API tests (one opt-in skip), 72 membership
+checks, 35 database-catalog checks, 41 client tests, 26 existing browser tests,
+15 source-integration browser tests and all 13 expanded MVP browser tests.
+Contract drift, type checks, lint, the production build and containment also pass.
+The API phase took 158.34 seconds; the MVP browser phase took 1.4 minutes.
+These are disposable synthetic CI results, not deployment or customer acceptance.

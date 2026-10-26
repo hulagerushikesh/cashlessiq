@@ -1,8 +1,32 @@
 # Product delivery — owner dashboard
 
-Updated 25 October 2026. This page summarizes the current product plan; the
+Updated 26 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
+
+### Current: easier synthetic testing — 26 October
+
+Owner feedback exposed missing workflow navigation and confusing inactive-policy
+intake. Those routes, role-specific links and errors are fixed. The next usability
+batch at `7c1ea94` replaces JSON editing with normal controls for policy clauses,
+supported rule parameters, regression examples and request fact corrections.
+Failed saves retain entries in the open form; these are not durable drafts.
+Policy/request lists now provide tenant-scoped search and previous/next pages.
+
+Local verification passes 13 MVP browser, 26 existing browser, 41 client and 24
+focused MVP API tests, plus types, lint, Ruff and generated contracts. The agent
+also verified rejection/correction/retry in the actual app browser. See the
+[current UI testing report](ui-testing-2026-10-26.md) for the evidence and limits.
+The fresh [production preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40277868633)
+passes all 37 gate checks and all 13 MVP browser tests on the standalone server.
+The [full product run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40277868637)
+also passes: 913 root, 1,521 API, 72 membership, 35 catalog, 41 client,
+26 existing browser, 15 source UI and all 13 MVP browser tests, plus
+contracts/types/lint/build/containment.
+
+Local synthetic testing remains ready. GCP, billing, live data and paid gateways
+remain unactivated; the owner can focus on usability rather than repeating the
+technical test suite.
 
 ### Synthetic MVP workflows implemented locally — 25 October
 
