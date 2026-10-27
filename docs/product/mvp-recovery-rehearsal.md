@@ -102,3 +102,8 @@ The temporary database was removed;
 the original app still returned HTTP 200. The verifier's focused tests reject
 same-size dump corruption, missing hash metadata, public file permissions and
 symlinks. This is a local package-integrity check, not an off-machine backup.
+The code also passed the
+[disposable private preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40511629064),
+including the full MVP journey, backup/restore, restart and fresh-volume browser
+recovery. [Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40511628981)
+passed its foundation and database-catalog jobs at `80fe291`.

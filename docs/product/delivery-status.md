@@ -13,6 +13,9 @@ again restored and matched all 17 tables; a private copy of its new backup
 passed offline verification and the owner app remained available. This detects
 accidental copy damage. External encrypted custody and recovery on another host
 remain unverified; no GCP or Snowflake action was taken.
+The [private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40511629064)
+and [full product run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40511628981)
+both passed for `80fe291`.
 
 ### Current data recovery check — 26 October
 
