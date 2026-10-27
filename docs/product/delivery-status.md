@@ -16,6 +16,8 @@ temporary key and copy were removed.
 The [recovery guide](mvp-recovery-rehearsal.md) includes the exact transfer and
 verification commands. The recipient key, off-machine destination and an actual
 retrieval/recovery exercise remain to be chosen and performed.
+The [full product CI run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40514442472)
+passed at `0323f7c`, including root, database, API and browser workflow checks.
 
 ### Current backup integrity — 27 October
 
