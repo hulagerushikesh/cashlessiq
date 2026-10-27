@@ -69,6 +69,9 @@ The current 17-table local backup completed one temporary-key encryption,
 decryption and package-verification round trip on this Mac; its temporary key
 and recovered copy were removed. This validates the helper against real
 synthetic backup bytes, not cross-host key custody.
+The automated transfer check also encrypts with a public-key-only GPG home,
+confirms that home cannot decrypt, and recovers with a separate private-key
+home. Both homes remain disposable and on one test host.
 
 The disposable GitHub owner-preview workflow adds a second check. After its
 normal end-to-end browser suite creates a complete fictional journey, it runs

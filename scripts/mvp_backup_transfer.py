@@ -74,7 +74,7 @@ def encrypt_backup(source: Path, output: Path, recipient: str, *, home: Path | N
             process.stdin.close()
             if process.wait(timeout=30) != 0:
                 raise ValueError("GPG encryption failed")
-        except (OSError, BrokenPipeError, subprocess.TimeoutExpired):
+        except (OSError, subprocess.TimeoutExpired, tarfile.TarError):
             process.kill()
             process.wait()
             raise ValueError("GPG encryption failed") from None

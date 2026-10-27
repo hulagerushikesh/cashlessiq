@@ -116,6 +116,46 @@ def test_encryption_rejects_missing_recipient_without_output(backup, gpg_key, tm
     assert not encrypted.exists()
 
 
+def test_public_key_only_export_recovers_with_separate_private_keyring(backup, gpg_key, tmp_path):
+    private_home, fingerprint = gpg_key
+    public_key = subprocess.check_output(
+        ["gpg", "--no-options", "--homedir", str(private_home), "--export", fingerprint],
+        timeout=10,
+    )
+    with tempfile.TemporaryDirectory(prefix="ciq-public-", dir="/tmp") as temporary:
+        public_home = Path(temporary)
+        subprocess.run(
+            ["gpg", "--no-options", "--homedir", str(public_home), "--batch", "--import"],
+            input=public_key,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+        )
+        secrets = subprocess.run(
+            [
+                "gpg",
+                "--no-options",
+                "--homedir",
+                str(public_home),
+                "--with-colons",
+                "--list-secret-keys",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        assert "sec:" not in secrets.stdout
+        encrypted = tmp_path / "public-key-only.gpg"
+        encrypt_backup(backup, encrypted, fingerprint, home=public_home)
+        with pytest.raises(ValueError, match="GPG decryption failed"):
+            decrypt_backup(encrypted, tmp_path / "no-private-key", home=public_home)
+        recovered = tmp_path / "separate-keyring-recovery"
+        decrypt_backup(encrypted, recovered, home=private_home)
+        assert verify_package(recovered) == verify_package(backup)
+
+
 def test_encrypted_transfer_rejects_corruption_and_wrong_key(backup, gpg_key, tmp_path):
     home, fingerprint = gpg_key
     encrypted = tmp_path / "bundle.gpg"
