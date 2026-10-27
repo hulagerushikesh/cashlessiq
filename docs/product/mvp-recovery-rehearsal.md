@@ -33,6 +33,43 @@ detects accidental damage, but a manifest stored beside its dump is not a
 cryptographic signature against someone who can alter both. No remote copy or
 off-machine custody has yet been completed.
 
+For an owner-selected off-machine destination, the local transfer helper can
+encrypt a verified backup to a single GPG file. First make an encryption-capable
+GPG public key available and check its **full fingerprint** with the key owner.
+Keep the corresponding private key and its recovery method somewhere other than
+the backup destination. The helper does not generate, export or upload keys.
+
+```sh
+python -m scripts.mvp_backup_transfer encrypt \
+  output/mvp-recovery/REPLACE_WITH_BACKUP_ID \
+  /path/to/private/backup.gpg \
+  --recipient REPLACE_WITH_FULL_40_CHARACTER_FINGERPRINT
+```
+
+Only the verified `current.dump` and `verified.json` are included. The GPG file
+is created privately and never overwrites an existing path. Copy that encrypted
+file to the chosen storage by the owner's usual method. On a recovery host with
+the matching private key, decrypt into a **new** private directory:
+
+```sh
+python -m scripts.mvp_backup_transfer decrypt \
+  /path/to/backup.gpg \
+  /path/to/new-recovered-backup
+python -m scripts.verify_mvp_backup /path/to/new-recovered-backup
+```
+
+The helper bounds decrypted size, rejects unexpected archive members, and runs
+the independent manifest check before exposing the recovered directory. It does
+not restore a database. An exported GPG file is not an off-machine backup until
+it has been copied, retrieved and decrypted with the intended recovery key on a
+different host; those steps remain unverified for the owner's data. Losing that
+private key can make the encrypted backup unrecoverable. The synthetic-only
+limit and manifest authenticity limitation above still apply.
+The current 17-table local backup completed one temporary-key encryption,
+decryption and package-verification round trip on this Mac; its temporary key
+and recovered copy were removed. This validates the helper against real
+synthetic backup bytes, not cross-host key custody.
+
 The disposable GitHub owner-preview workflow adds a second check. After its
 normal end-to-end browser suite creates a complete fictional journey, it runs
 the same backup/restore comparison. It then stops application writers, verifies

@@ -4,6 +4,19 @@ Updated 27 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Encrypted transfer preparation — 27 October
+
+The verified synthetic backup can now be wrapped in a single private GPG file
+for an owner-selected recipient key, then decrypted into a new directory with
+archive-entry and manifest checks. This is an offline helper: no key was created
+for the owner, no backup was uploaded, and no different-host recovery is claimed.
+An ephemeral local test key encrypted and decrypted the current 17-table
+synthetic backup; the recovered package passed independent verification and the
+temporary key and copy were removed.
+The [recovery guide](mvp-recovery-rehearsal.md) includes the exact transfer and
+verification commands. The recipient key, off-machine destination and an actual
+retrieval/recovery exercise remain to be chosen and performed.
+
 ### Current backup integrity — 27 October
 
 New synthetic MVP backups bind the verified table inventory to the exact dump
