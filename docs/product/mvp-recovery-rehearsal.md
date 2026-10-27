@@ -17,6 +17,22 @@ restarted. The uniquely named private dump and hash manifest remain under ignore
 this rehearsal is limited to synthetic data. Backups contain the full fictional
 records and should be handled as private files.
 
+Each new `verified.json` binds the restored table inventory to the exact
+`current.dump` byte count and SHA-256 digest. After copying both files together
+to a private directory on another local filesystem, check the copy offline with:
+
+```sh
+python -m scripts.verify_mvp_backup /path/to/copied-backup-directory
+```
+
+The verifier needs no Docker, database or credentials. It refuses missing or
+legacy manifests, changed dump bytes, symlinks and group/world-readable files.
+Use a private filesystem that preserves restrictive file permissions (directory
+0700, files 0600); encrypt before transferring beyond this Mac. A matching hash
+detects accidental damage, but a manifest stored beside its dump is not a
+cryptographic signature against someone who can alter both. No remote copy or
+off-machine custody has yet been completed.
+
 The disposable GitHub owner-preview workflow adds a second check. After its
 normal end-to-end browser suite creates a complete fictional journey, it runs
 the same backup/restore comparison. It then stops application writers, verifies
@@ -76,3 +92,13 @@ passed at `a64f8d1`: 916 root tests, 1,521 API tests, 72 membership checks,
 13 MVP browser checks, plus types, lint, contracts and build. The prior full
 run at `7181939` caught a guard-test mistake under GitHub's CI environment;
 `a64f8d1` corrected that test without changing the accepted recovery behavior.
+
+## Local copy-integrity checkpoint — 27 October
+
+The current local synthetic database was backed up, restored into a temporary
+database and compared across all 17 tables. The resulting dump and manifest
+passed the independent offline verifier, including a separate private copy.
+The temporary database was removed;
+the original app still returned HTTP 200. The verifier's focused tests reject
+same-size dump corruption, missing hash metadata, public file permissions and
+symlinks. This is a local package-integrity check, not an off-machine backup.

@@ -1,8 +1,18 @@
 # Product delivery — owner dashboard
 
-Updated 26 October 2026. This page summarizes the current product plan; the
+Updated 27 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
+
+### Current backup integrity — 27 October
+
+New synthetic MVP backups bind the verified table inventory to the exact dump
+bytes with a SHA-256 digest. A standalone, Docker-free command checks a private
+copied backup before it is considered for restore. The current local database
+again restored and matched all 17 tables; a private copy of its new backup
+passed offline verification and the owner app remained available. This detects
+accidental copy damage. External encrypted custody and recovery on another host
+remain unverified; no GCP or Snowflake action was taken.
 
 ### Current data recovery check — 26 October
 

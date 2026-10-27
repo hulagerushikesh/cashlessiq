@@ -18,6 +18,7 @@ on:
       - 'scripts/owner_preview.py'
       - 'scripts/check_owner_preview.py'
       - 'scripts/check_mvp_recovery.py'
+      - 'scripts/verify_mvp_backup.py'
       - 'scripts/mvp_recovery_probe.py'
       - '.github/workflows/owner-preview.yml'
 permissions:

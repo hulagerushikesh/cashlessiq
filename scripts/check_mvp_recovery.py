@@ -5,6 +5,7 @@ and fresh-volume acceptance are limited to disposable GitHub Actions preview sta
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -14,6 +15,8 @@ import sys
 import time
 from pathlib import Path
 from uuid import uuid4
+
+from scripts.verify_mvp_backup import verify_package
 
 ROOT = Path(__file__).resolve().parents[1]
 PROBE = (ROOT / "scripts/mvp_recovery_probe.py").read_text()
@@ -448,9 +451,20 @@ def main():
     directory.mkdir(parents=True, mode=0o700)
     path, frame = backup(ids, directory)
     restore(ids, path, frame["manifest"])
+    with path.open("rb") as source:
+        digest = hashlib.file_digest(source, "sha256").hexdigest()
     with (directory / "verified.json").open("x") as output:
         os.chmod(output.name, 0o600)
-        json.dump({"schema": "0003_mvp", "tables": frame["manifest"]}, output, indent=2)
+        json.dump(
+            {
+                "schema": "0003_mvp",
+                "tables": frame["manifest"],
+                "dump": {"file": "current.dump", "bytes": path.stat().st_size, "sha256": digest},
+            },
+            output,
+            indent=2,
+        )
+    verify_package(directory)
     print(f"Current MVP backup restored and matched {len(frame['manifest'])} tables.")
     print(f"Private backup retained: {path}")
     if args.restart_preview_ci:

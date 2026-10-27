@@ -130,6 +130,9 @@ The [current-MVP recovery rehearsal](mvp-recovery-rehearsal.md) verifies an
 exact backup/restore of the existing synthetic data in a temporary database.
 Its separate disposable preview check restarts services and reopens a saved
 human workflow. The local application is not restarted by this check.
+New backups include a dump-byte digest and can be checked after a private copy
+with `python -m scripts.verify_mvp_backup /path/to/copied-backup-directory`.
+See the recovery guide for copy permissions and the remaining custody limits.
 
 - Fictional data only. This is not customer, production or medical validation.
 - No Snowflake publishing, model calls, paid OCR, cloud deployment or billing
