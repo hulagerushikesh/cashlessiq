@@ -1,6 +1,6 @@
 # Product delivery — owner dashboard
 
-Updated 27 October 2026. This page summarizes the current product plan; the
+Updated 28 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
@@ -9,8 +9,12 @@ Hackathon submission is finished and is not counted as product delivery.
 The disposable owner-preview recovery now decrypts a verified GPG backup with
 a separate temporary private keyring and restores the decrypted dump into its
 second, empty PostgreSQL volume. Its browser check reopens the saved synthetic
-workflow from that volume. The integration is being validated in CI; it remains
-same-runner testing, not off-machine custody or a GCP deployment.
+workflow from that volume. The [private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40693580097)
+passed the complete workflow, encrypted restore, both recovery browser checks
+and owned cleanup at `c4b5fcc`. The separate
+[product foundation run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40693580136)
+passed its database, API and browser jobs. This remains same-runner testing,
+not off-machine custody or a GCP deployment.
 
 ### Encrypted transfer preparation — 27 October
 

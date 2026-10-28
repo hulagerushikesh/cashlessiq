@@ -97,6 +97,9 @@ with the private keyring, checks the recovered manifest and uses **that recovere
 dump** for the second volume. Temporary keyrings and plaintext transfer files
 are removed after the restore. This is a same-runner CI recovery test; it does
 not establish external custody or recovery on a different host.
+The [accepted run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40693580097)
+passed the encrypted restore, then reopened the saved synthetic request, policy,
+PDF and final review in a fresh browser on the restored volume.
 
 This proves that the current synthetic data can be backed up and restored, and
 that the disposable preview can restart with saved data. The fresh-volume step
