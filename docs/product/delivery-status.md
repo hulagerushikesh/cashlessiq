@@ -14,6 +14,11 @@ worker needs 512 MiB, making the steady container ceiling **1,408 MiB** on the
 proposed 2 GiB VM. The first remote run still needs a current cost review,
 explicit billing/provisioning approval and observed host-memory acceptance;
 no GCP resource was started or charged by this correction.
+The [private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40700195977)
+passed the new preflight, full MVP browser workflow and encrypted fresh-volume
+recovery at `f402286`. The separate
+[product foundation run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40700195755)
+passed its database, API and browser jobs at the same revision.
 
 ### Encrypted-to-volume CI integration — 28 October
 
