@@ -10,12 +10,15 @@ on:
       - '.dockerignore'
       - 'compose.owner-preview.yml'
       - 'compose.preview-small.yml'
+      - 'compose.gcp-preview.yml'
       - 'compose.mvp.yml'
       - 'playwright.mvp.config.ts'
       - 'tests/mvp_browser/**'
       - 'tests/fixtures/mvp/**'
       - 'deploy/owner-preview/**'
+      - 'deploy/gcp-preview/**'
       - 'scripts/owner_preview.py'
+      - 'scripts/check_gcp_preview_plan.py'
       - 'scripts/check_owner_preview.py'
       - 'scripts/check_mvp_recovery.py'
       - 'scripts/mvp_backup_transfer.py'
@@ -33,6 +36,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Check GCP MVP composition without cloud calls
+        run: python -m scripts.check_gcp_preview_plan
       - name: Generate disposable preview credentials
         id: prepare
         run: python -m scripts.owner_preview prepare --origin https://owner-preview.example.test

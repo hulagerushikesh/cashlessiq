@@ -32,9 +32,10 @@
     "compose_files": [
       "compose.owner-preview.yml",
       "compose.preview-small.yml",
+      "compose.mvp.yml",
       "compose.gcp-preview.yml"
     ],
-    "steady_container_memory_ceiling_mib": 1152,
+    "steady_container_memory_ceiling_mib": 1408,
     "build_on_runtime_vm": false,
     "database": "single local PostgreSQL container and persistent Docker volume",
     "customer_data_allowed": false,

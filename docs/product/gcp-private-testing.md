@@ -48,17 +48,23 @@ network permits SSH only through Google's IAP source range; app/API/database
 ports stay private. Browser access uses an outbound HTTPS tunnel terminating
 at the owner-password gateway. No domain purchase is required for testing.
 
-`compose.preview-small.yml` caps web at 512 MiB, API at 256 MiB, database at
-256 MiB and gateway at 128 MiB: **1,152 MiB combined steady container ceilings**.
-The one-time migration has a separate 256 MiB ceiling and completes before API
-and web startup. This leaves room in a 2 GiB VM for the OS and Docker, but is not
-a guarantee of whole-VM behavior or sustained traffic capacity. [CI 40180267477](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40180267477)
-passed all 37 HTTP checks under these limits at `f28cb66`. Its final snapshot
+The full synthetic MVP also needs `compose.mvp.yml`. That overlay raises the
+API/embedded-worker limit to 512 MiB. The effective steady limits are web 512 MiB,
+API 512 MiB, database 256 MiB and gateway 128 MiB: **1,408 MiB combined**.
+The one-time migration has a separate 256 MiB limit and completes before API
+and web startup. This leaves less room in a 2 GiB VM for the OS and Docker than
+the earlier read-only plan; remote acceptance must check actual host memory and
+the VM size may need review if it cannot stay healthy. [CI 40180267477](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40180267477)
+passed all 37 HTTP checks under the earlier 1,152 MiB read-only limits at
+`f28cb66`. Its final snapshot
 reported web **74.13 MiB**, API **73.82 MiB**, database **30.03 MiB** and gateway
 **11.53 MiB**, approximately **190 MiB combined**. This is a runtime snapshot
 after the checks, not a peak measurement or a whole-VM capacity guarantee.
 [Full product CI 40180267473](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40180267473)
-also passed all regression stages.
+also passed all regression stages. The later full MVP browser and recovery tests
+passed with the 512 MiB API ceiling on a disposable Linux preview. Run
+`python -m scripts.check_gcp_preview_plan` to validate the four-file GCP
+composition locally without a cloud API call, build or container start.
 
 Cloud Run can scale HTTP services to zero, but the current API requires
 PostgreSQL-backed membership. Its instance filesystem is ephemeral. Moving
@@ -120,9 +126,11 @@ test environment with no uptime promise.
    accepted web/API image digests.
 5. Prepare independent preview secrets on that VM. Set
    `CIQ_PREVIEW_API_IMAGE` and `CIQ_PREVIEW_WEB_IMAGE` to those exact digests in
-   its private preview environment. Start with the three Compose files and
+   its private preview environment. Start with **all four** Compose files in the
+   plan, including `compose.mvp.yml`, using
    `up --no-build --pull always --detach --wait`. The GCP overlay selects the
-   prebuilt images; it does not change the current local app.
+   prebuilt images and the MVP overlay enables the synthetic workflows; this
+   does not change the current local app.
 6. Verify local password denial first, start the HTTPS tunnel to gateway port
    3080, configure its exact origin, then verify remote anonymous denial,
    three synthetic roles, secure cookies, sign-out, runtime memory and stopping
@@ -133,7 +141,23 @@ No commands in this document have provisioned a paid deployment. The resource
 plan and build configuration remain preparation only; no financial approval is
 currently pending or granted.
 
-References checked on 25 October: [E2 machine sizes](https://docs.cloud.google.com/compute/docs/general-purpose-machines),
+## Current go/no-go checkpoint — 28 October
+
+The synthetic MVP is ready for a bounded private cloud acceptance run once the
+four-file preflight and preview CI pass at the chosen revision. The remaining
+first-deployment work is operational: recheck the current price, agree on a spend
+and test window, link billing, set budget alerts, create the reviewed resources,
+start the exact image digests and HTTPS tunnel, then test anonymous denial,
+roles, workflows, cookies, memory and the eight-hour STOP. A budget alert is
+not a spending cap. No customer or real medical data should be used.
+
+The owner can choose the first test window and acceptable spend while engineering
+prepares the package. Billing linkage, cloud builds and provisioning still need
+the owner's explicit approval before execution. A successful remote acceptance
+would make the private site available during the agreed VM run window; it would
+not establish a customer-ready release.
+
+Price references rechecked on 28 October: [E2 machine sizes](https://docs.cloud.google.com/compute/docs/general-purpose-machines),
 [VM pricing](https://cloud.google.com/products/compute/pricing/general-purpose),
 [disk pricing](https://cloud.google.com/compute/disks-image-pricing),
 [IPv4 pricing](https://cloud.google.com/vpc/network-pricing#ipaddress),

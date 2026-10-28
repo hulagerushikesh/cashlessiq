@@ -4,6 +4,17 @@ Updated 28 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### GCP MVP composition corrected — 28 October
+
+The first GCP preview must include the synthetic MVP overlay as well as the
+owner gateway, small-runtime and GCP image overlays. A no-cloud preflight now
+checks the complete Compose configuration, exact digest placeholders, workflow
+flags, loopback-only gateway and effective memory ceilings. The API/embedded
+worker needs 512 MiB, making the steady container ceiling **1,408 MiB** on the
+proposed 2 GiB VM. The first remote run still needs a current cost review,
+explicit billing/provisioning approval and observed host-memory acceptance;
+no GCP resource was started or charged by this correction.
+
 ### Encrypted-to-volume CI integration — 28 October
 
 The disposable owner-preview recovery now decrypts a verified GPG backup with
