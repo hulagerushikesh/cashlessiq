@@ -4,6 +4,14 @@ Updated 27 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Encrypted-to-volume CI integration — 28 October
+
+The disposable owner-preview recovery now decrypts a verified GPG backup with
+a separate temporary private keyring and restores the decrypted dump into its
+second, empty PostgreSQL volume. Its browser check reopens the saved synthetic
+workflow from that volume. The integration is being validated in CI; it remains
+same-runner testing, not off-machine custody or a GCP deployment.
+
 ### Encrypted transfer preparation — 27 October
 
 The verified synthetic backup can now be wrapped in a single private GPG file

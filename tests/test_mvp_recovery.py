@@ -74,6 +74,18 @@ def test_copied_backup_verifies_without_database_or_docker(tmp_path):
     assert verify_package(copied) == manifest
 
 
+def test_disposable_transfer_supplies_verified_dump_for_volume_restore(tmp_path, monkeypatch):
+    if shutil.which("gpg") is None or shutil.which("gpgconf") is None:
+        pytest.skip("GPG is not installed")
+    source, manifest = _sample_package(tmp_path)
+    monkeypatch.setattr(recovery, "require_restart_permission", lambda stack: None)
+    with recovery.recovered_transfer_dump(source, manifest["tables"]) as restored_dump:
+        assert restored_dump.read_bytes() == (source / "current.dump").read_bytes()
+        assert restored_dump.parent != source
+        assert verify_package(restored_dump.parent) == manifest
+    assert not restored_dump.exists()
+
+
 def test_copied_backup_rejects_damage_and_missing_hash(tmp_path):
     source, _ = _sample_package(tmp_path)
     dump = source / "current.dump"

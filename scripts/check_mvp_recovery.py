@@ -12,10 +12,13 @@ import re
 import select
 import subprocess
 import sys
+import tempfile
 import time
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from uuid import uuid4
 
+from scripts.mvp_backup_transfer import decrypt_backup, encrypt_backup
 from scripts.verify_mvp_backup import verify_package
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -231,6 +234,79 @@ def require_empty_fresh_project():
         raise ValueError("Fresh recovery project or volume already exists")
 
 
+@contextmanager
+def recovered_transfer_dump(directory: Path, expected: dict):
+    """Exercise separate encryption/recovery keyrings before CI volume restore."""
+    require_restart_permission("preview")
+    # GPG agent sockets have a short Unix path limit on macOS test hosts.
+    with tempfile.TemporaryDirectory(prefix="ciq-tx-", dir="/tmp") as temporary:
+        root = Path(temporary)
+        private_home, public_home = root / "private-keyring", root / "public-keyring"
+        private_home.mkdir(mode=0o700)
+        public_home.mkdir(mode=0o700)
+        try:
+            command(
+                [
+                    "gpg",
+                    "--no-options",
+                    "--homedir",
+                    str(private_home),
+                    "--batch",
+                    "--pinentry-mode",
+                    "loopback",
+                    "--passphrase",
+                    "",
+                    "--quick-generate-key",
+                    "CashlessIQ CI recovery <ciq-recovery@example.invalid>",
+                    "rsa2048",
+                    "encr",
+                    "0",
+                ],
+                stdout=subprocess.DEVNULL,
+            )
+            listing = command(
+                [
+                    "gpg",
+                    "--no-options",
+                    "--homedir",
+                    str(private_home),
+                    "--with-colons",
+                    "--list-keys",
+                ],
+                stdout=subprocess.PIPE,
+            ).stdout.decode()
+            fingerprints = [
+                row.split(":")[9] for row in listing.splitlines() if row.startswith("fpr:")
+            ]
+            if len(fingerprints) != 1 or not re.fullmatch(r"[A-Fa-f0-9]{40}", fingerprints[0]):
+                raise ValueError("Expected one disposable recovery key")
+            fingerprint = fingerprints[0]
+            public_key = command(
+                ["gpg", "--no-options", "--homedir", str(private_home), "--export", fingerprint],
+                stdout=subprocess.PIPE,
+            ).stdout
+            command(
+                ["gpg", "--no-options", "--homedir", str(public_home), "--batch", "--import"],
+                input=public_key,
+                stdout=subprocess.DEVNULL,
+            )
+            encrypted, recovered = root / "backup.gpg", root / "recovered"
+            encrypt_backup(directory, encrypted, fingerprint, home=public_home)
+            decrypt_backup(encrypted, recovered, home=private_home)
+            if verify_package(recovered)["tables"] != expected:
+                raise RuntimeError("Transferred backup manifest does not match source snapshot")
+            yield recovered / "current.dump"
+        finally:
+            for home in (private_home, public_home):
+                subprocess.run(
+                    ["gpgconf", "--homedir", str(home), "--kill", "gpg-agent"],
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=10,
+                )
+
+
 def fresh_volume_preview(path, expected):
     """Restore to a new PostgreSQL volume and launch an independent CI preview."""
     require_restart_permission("preview")
@@ -443,7 +519,10 @@ def main():
     parser.add_argument("--stack", choices=["product", "preview"], default="product")
     parser.add_argument("--restart-preview-ci", action="store_true")
     parser.add_argument("--fresh-volume-preview-ci", action="store_true")
+    parser.add_argument("--encrypted-transfer-preview-ci", action="store_true")
     args = parser.parse_args()
+    if args.encrypted_transfer_preview_ci and not args.fresh_volume_preview_ci:
+        raise ValueError("Encrypted CI transfer requires a fresh-volume recovery")
     if args.restart_preview_ci or args.fresh_volume_preview_ci:
         require_restart_permission(args.stack)
     ids = owned_containers(args.stack)
@@ -470,7 +549,13 @@ def main():
     if args.restart_preview_ci:
         restart_preview()
     if args.fresh_volume_preview_ci:
-        fresh_volume_preview(path, frame["manifest"])
+        transfer = (
+            recovered_transfer_dump(directory, frame["manifest"])
+            if args.encrypted_transfer_preview_ci
+            else nullcontext(path)
+        )
+        with transfer as restore_path:
+            fresh_volume_preview(restore_path, frame["manifest"])
 
 
 if __name__ == "__main__":

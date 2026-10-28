@@ -90,6 +90,14 @@ preview remains available on port 3080. Both CI volumes are removed after the
 test. This exercises recovery when the original database volume is unavailable,
 without deleting the owner's local data or requiring cloud infrastructure.
 
+The fresh-volume job now routes those same backup bytes through the encrypted
+transfer helper first: it generates a disposable GPG key, imports only its public
+key into a separate encryption keyring, encrypts the verified package, decrypts
+with the private keyring, checks the recovered manifest and uses **that recovered
+dump** for the second volume. Temporary keyrings and plaintext transfer files
+are removed after the restore. This is a same-runner CI recovery test; it does
+not establish external custody or recovery on a different host.
+
 This proves that the current synthetic data can be backed up and restored, and
 that the disposable preview can restart with saved data. The fresh-volume step
 checks a replacement volume in the same CI runner; it does not yet prove

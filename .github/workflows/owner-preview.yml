@@ -18,6 +18,7 @@ on:
       - 'scripts/owner_preview.py'
       - 'scripts/check_owner_preview.py'
       - 'scripts/check_mvp_recovery.py'
+      - 'scripts/mvp_backup_transfer.py'
       - 'scripts/verify_mvp_backup.py'
       - 'scripts/mvp_recovery_probe.py'
       - '.github/workflows/owner-preview.yml'
@@ -60,13 +61,13 @@ jobs:
           docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml -f compose.mvp.yml exec -T api .venv/bin/python -m ciq_api.seed
           npm run test:mvp
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}'
-      - name: Restore full MVP backup, restart preview and recover a fresh volume
+      - name: Restore encrypted MVP backup into a fresh preview volume
         id: recovery
         env:
           # Match the bounded loopback browser origin selected in the step above.
           # The separate HTTPS-origin and secure-cookie checks already ran.
           CIQ_WEB_ORIGIN: http://127.0.0.1:3080
-        run: python -m scripts.check_mvp_recovery --stack preview --restart-preview-ci --fresh-volume-preview-ci
+        run: python -m scripts.check_mvp_recovery --stack preview --restart-preview-ci --fresh-volume-preview-ci --encrypted-transfer-preview-ci
       - name: Verify saved workflow through browser after restart
         env:
           MVP_BASE_URL: http://127.0.0.1:3080
