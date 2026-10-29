@@ -165,9 +165,18 @@ def test_complete_submitted_request_assessment_review_and_analytics(mvp, setting
     assert mvp.post("/v3/requests", headers=bearer(settings), json=payload).json() == first.json()
     case = first.json()["request_id"]
     assert mvp.get(f"/v3/reviews/{case}", headers=bearer(settings)).status_code == 409
+    pending = mvp.get(f"/v3/requests/{case}", headers=bearer(settings)).json()
+    assert pending["assessment"] is None
+    assert pending["assessment_job"] == {
+        "id": first.json()["job_id"],
+        "state": "queued",
+        "attempts": 0,
+    }
     assert run_once(engine)
     detail = mvp.get(f"/v3/requests/{case}", headers=bearer(settings)).json()
     assert detail["assessment"]["payable_inr"] == 95000
+    assert detail["assessment_job"]["state"] == "succeeded"
+    assert set(detail["assessment_job"]) == {"id", "state", "attempts"}
     assert "diagnosis" not in detail["facts"] and "clinical_note" not in detail["facts"]
     assert (
         command(
@@ -349,6 +358,10 @@ def test_pdf_quarantine_restrictions_and_no_automatic_fact_promotion(
     assert response.status_code == 202, response.text
     assert mvp.post(endpoint, headers=headers, content=content).json() == response.json()
     document = response.json()["document_id"]
+    pending = mvp.get(endpoint, headers=bearer(settings)).json()["items"][0]
+    assert pending["state"] == "quarantined" and pending["text"] is None
+    assert pending["processing_job"]["state"] == "queued"
+    assert set(pending["processing_job"]) == {"id", "state", "attempts"}
     assert (
         mvp.get(
             f"/v3/documents/{document}/content", headers=bearer(settings, "medical_officer")
@@ -362,6 +375,7 @@ def test_pdf_quarantine_restrictions_and_no_automatic_fact_promotion(
     assert mvp.get(f"/v3/documents/{document}/content", headers=bearer(settings)).status_code == 403
     view = mvp.get("/v3/requests/GOL001/documents", headers=bearer(settings)).json()
     assert view["items"][0]["text"] is None
+    assert view["items"][0]["processing_job"]["state"] == "succeeded"
 
 
 def test_upload_size_header_tenant_scope_and_document_idempotency(mvp, settings, engine):
@@ -515,6 +529,10 @@ def test_query_correction_keeps_inputs_history_and_requires_latest_version(mvp, 
         mvp.post(endpoint, headers=bearer(settings, "medical_officer"), json=amendment).json()
         == result.json()
     )
+    pending = mvp.get(f"/v3/requests/{case}", headers=bearer(settings)).json()
+    assert pending["assessment"] is None  # Never display the previous assessment as current.
+    assert pending["assessment_job"]["id"] == result.json()["job_id"]
+    assert pending["assessment_job"]["state"] == "queued"
     assert run_once(engine)
     assert (
         mvp.post(
@@ -681,3 +699,53 @@ def test_policy_intake_list_separates_approval_from_activation(mvp, settings, en
     assert [
         p["id"] for p in mvp.get("/v3/policies?active_only=true", headers=auth).json()["items"]
     ] == [first["policy_id"]]
+
+
+def test_processing_metadata_stays_scoped_and_shows_dead_extraction(mvp, settings, engine):
+    from ciq_api.mvp import processing_jobs
+
+    foreign = uuid4()
+    with Session(engine) as db, db.begin():
+        db.add(Tenant(id=foreign, name="Other fictional tenant"))
+        db.flush()
+        for tenant, when, state in [
+            (TENANT_ID, datetime.now(UTC) - timedelta(days=1), "succeeded"),
+            (TENANT_ID, datetime.now(UTC), "dead"),
+            (foreign, datetime.now(UTC) + timedelta(days=1), "running"),
+        ]:
+            db.add(
+                WorkJob(
+                    id=uuid4(),
+                    tenant_id=tenant,
+                    actor_id=UUID(PROFILES["processor"][0]),
+                    kind="assessment",
+                    subject_id="REQ-SHARED",
+                    state=state,
+                    attempts=3,
+                    payload={"inputs": {"clinical_note": "must never be in metadata"}},
+                    created_at=when,
+                )
+            )
+    with Session(engine) as db:
+        metadata = processing_jobs(db, TENANT_ID, "assessment", ["REQ-SHARED"])
+        assert metadata["REQ-SHARED"]["state"] == "dead"
+        assert set(metadata["REQ-SHARED"]) == {"id", "state", "attempts"}
+        assert processing_jobs(db, TENANT_ID, "extraction", ["REQ-SHARED"]) == {}
+        assert processing_jobs(db, TENANT_ID, "assessment", []) == {}
+    uploaded = mvp.post(
+        "/v3/requests/GOL001/documents",
+        headers=bearer(settings)
+        | {
+            "Content-Type": "application/pdf",
+            "Idempotency-Key": str(uuid4()),
+            "X-Synthetic-Data": "true",
+        },
+        content=pdf(),
+    ).json()
+    with Session(engine) as db, db.begin():
+        job = db.get(WorkJob, UUID(uploaded["job_id"]))
+        job.state, job.attempts = "dead", 3
+    item = mvp.get("/v3/requests/GOL001/documents", headers=bearer(settings)).json()["items"][0]
+    assert item["state"] == "quarantined"
+    assert item["processing_job"]["state"] == "dead"
+    assert item["text"] is None

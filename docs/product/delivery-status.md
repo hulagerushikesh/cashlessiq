@@ -4,6 +4,22 @@ Updated 29 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Saturday testing preparation — 29 October
+
+The owner selected **Saturday, 31 October** for joint testing and GCP use.
+Engineering continues with Docker off and cloud spending unapproved until the
+specific cost/window decision. The [Saturday sequence](saturday-testing-2026-10-31.md)
+covers the remaining operational acceptance without repeating earlier owner tests.
+
+A new usability increment updates read panels for assessments, supporting PDFs,
+policy regressions and policy wording without reloading forms. Pending work has
+bounded foreground checks; hidden/offline tabs pause, failures stop checking and
+specific jobs have inspect/retry pages. Form entries and action versions remain
+mounted. New tests exercise these limits, role projections, worker completion
+races and browser form preservation. Full disposable CI acceptance is pending
+for this new revision; the accepted engineering baseline below remains historical.
+No Docker or paid GCP resource has been started.
+
 ### GCP handoff checks accepted in CI — 29 October
 
 Final engineering revision `dd459e8` passes

@@ -89,6 +89,13 @@ export function JobList({ items, operations = false }: { items: Job[]; operation
           <p>
             {j.kind} · {j.state} · {j.attempts} attempts
           </p>
+          <Link
+            href={`/workflows/jobs/${j.id}`}
+            className="mt-2 inline-block break-all text-teal-800 underline"
+          >
+            Job {j.id}
+          </Link>
+          <p className="mt-1 break-all text-xs text-slate-500">Reference {j.subject_id}</p>
           {j.error_code && (
             <p className="mt-1 text-amber-800">
               Processing could not finish. An operations reviewer can retry after resolving the

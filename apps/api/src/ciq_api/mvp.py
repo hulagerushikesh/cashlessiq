@@ -149,6 +149,27 @@ def regression_job(db, policy):
     )
 
 
+def processing_jobs(db, tenant_id, kind, subject_ids):
+    """Latest public job metadata only; payloads/results stay behind role projections."""
+    jobs = db.scalars(
+        select(WorkJob)
+        .where(
+            WorkJob.tenant_id == tenant_id,
+            WorkJob.kind == kind,
+            WorkJob.subject_id.in_(subject_ids),
+        )
+        .distinct(WorkJob.subject_id)
+        .order_by(WorkJob.subject_id, WorkJob.created_at.desc(), WorkJob.id.desc())
+    )
+    latest = {}
+    for job in jobs:
+        latest.setdefault(
+            job.subject_id,
+            {"id": str(job.id), "state": job.state, "attempts": job.attempts},
+        )
+    return latest
+
+
 def policy_view(db, policy):
     job = regression_job(db, policy)
     active = db.get(PolicyActive, (policy.tenant_id, policy.product_id))
@@ -352,6 +373,9 @@ def register_mvp(app, config, identity, get_session, case_repository):
             "request_id": request_id,
             "facts": facts,
             "assessment": result,
+            "assessment_job": processing_jobs(db, who.tenant.id, "assessment", [request_id]).get(
+                request_id
+            ),
             "clinical_restricted": who.role != "medical_officer",
             "due_at": case.due_at,
         }
@@ -482,6 +506,7 @@ def register_mvp(app, config, identity, get_session, case_repository):
         return {
             "id": job.id,
             "kind": job.kind,
+            "subject_id": job.subject_id,
             "state": job.state,
             "attempts": job.attempts,
             "error_code": job.error_code,
@@ -763,9 +788,16 @@ def register_mvp(app, config, identity, get_session, case_repository):
             .order_by(DocumentUpload.created_at.desc())
             .limit(50)
         ).all()
+        processing = processing_jobs(db, who.tenant.id, "extraction", [str(d.id) for d in rows])
         return {
             "items": [
-                {"id": d.id, "digest": d.digest, "state": d.state, "text": d.extracted_text}
+                {
+                    "id": d.id,
+                    "digest": d.digest,
+                    "state": d.state,
+                    "text": d.extracted_text,
+                    "processing_job": processing.get(str(d.id)),
+                }
                 for d in rows
             ]
         }
@@ -781,6 +813,7 @@ def register_mvp(app, config, identity, get_session, case_repository):
             .order_by(DocumentUpload.created_at)
             .limit(50)
         ).all()
+        processing = processing_jobs(db, who.tenant.id, "extraction", [str(d.id) for d in rows])
         return {
             "items": [
                 {
@@ -788,6 +821,7 @@ def register_mvp(app, config, identity, get_session, case_repository):
                     "digest": d.digest,
                     "state": d.state,
                     "text": d.extracted_text if who.role == "medical_officer" else None,
+                    "processing_job": processing.get(str(d.id)),
                 }
                 for d in rows
             ],

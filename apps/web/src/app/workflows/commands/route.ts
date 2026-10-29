@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
         expected_activation: form.get("expected_activation") || null,
       });
     } else if (operation === "retry") {
-      destination = new URL("/workflows/jobs", origin);
+      destination = new URL(`/workflows/jobs/${id}`, origin);
       path = `jobs/${id}/retry`;
       body = JSON.stringify({ command_id, reason });
     } else if (operation === "member") {

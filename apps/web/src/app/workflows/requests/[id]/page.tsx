@@ -5,35 +5,14 @@ import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { mvpApi } from "@/lib/mvp-api";
 import { currentIdentity, sessionApi } from "@/lib/server-api";
-import { CaseServiceError, rupees } from "@/components/case-workspace";
+import { CaseServiceError } from "@/components/case-workspace";
 
-type RequestDetail = {
+import { RequestResults, SupportingDocuments } from "@/components/background-progress";
+import type { RequestProgress, Documents } from "@/lib/workflow-progress";
+
+type RequestDetail = Omit<RequestProgress, "documents"> & {
   request_id: string;
   facts: Facts;
-  assessment: {
-    outcome: string;
-    payable_inr: number | null;
-    policy_version: string;
-    policy_id: string;
-    input_digest: string;
-    rules_digest: string;
-    queries?: string[];
-    refer_reasons?: string[];
-    payable?: {
-      lines: {
-        item: string;
-        payable_inr: number;
-        reason: string;
-        calc: string;
-        citations: { id: string }[];
-      }[];
-    } | null;
-  } | null;
-  clinical_restricted: boolean;
-};
-type Documents = {
-  clinical_restricted: boolean;
-  items: { id: string; state: string; digest: string; text: string | null }[];
 };
 type Review = { version: number; state: string; assignee: { id: string } | null };
 
@@ -78,69 +57,24 @@ export default async function RequestPage({
         {...feedback}
         success="Action saved. Background processing may still be pending."
       />
-      {(review || golden) && (
+      {golden && (
         <Link
-          className="mt-4 inline-block rounded-lg bg-teal-800 px-4 py-2 text-sm text-white"
+          className="mt-4 inline-block text-teal-800 underline"
           href={`/reviews/${encodeURIComponent(id)}`}
         >
           Open reviewer workflow
         </Link>
       )}
       {record && (
-        <section className={panel}>
-          <h2 className="text-xl font-semibold">Assessment</h2>
-          {record.assessment ? (
-            <>
-              <p className="mt-3">
-                {record.assessment.outcome.replaceAll("_", " ")} ·{" "}
-                {rupees(record.assessment.payable_inr)}
-              </p>
-              <p className="mt-2 text-sm text-slate-500">
-                Policy {record.assessment.policy_version} · Deterministic calculation · Human review
-                required
-              </p>
-              <Link
-                href={`/workflows/policies/${record.assessment.policy_id}`}
-                className="mt-3 inline-block text-sm text-teal-800 underline"
-              >
-                View pinned policy clauses and wording
-              </Link>
-              {record.assessment.queries?.map((q) => (
-                <p key={q} className="mt-3 text-sm text-amber-800">
-                  {q}
-                </p>
-              ))}
-              {record.assessment.refer_reasons?.map((q) => (
-                <p key={q} className="mt-3 text-sm text-amber-800">
-                  {q}
-                </p>
-              ))}
-              {record.assessment.payable?.lines.map((line) => (
-                <article key={line.item} className="mt-4 border-t pt-4 text-sm">
-                  <h3 className="font-semibold">
-                    {line.item} · {rupees(line.payable_inr)}
-                  </h3>
-                  <p className="mt-2">{line.reason}</p>
-                  <p className="mt-2 font-mono text-xs">{line.calc}</p>
-                  <p className="mt-2 text-xs text-teal-800">
-                    {line.citations.map((c) => c.id).join(" · ")}
-                  </p>
-                </article>
-              ))}
-            </>
-          ) : (
-            <p className="mt-3 text-sm text-slate-600">
-              Assessment queued or processing. Refresh shortly. Check background jobs if processing
-              cannot finish.
-            </p>
-          )}
-          {record.clinical_restricted && (
-            <p className="mt-3 text-sm text-slate-500">
-              Clinical facts, detailed policy checks and document text are restricted to medical
-              officers.
-            </p>
-          )}
-        </section>
+        <RequestResults
+          id={id}
+          initial={{
+            assessment: record.assessment,
+            assessment_job: record.assessment_job,
+            clinical_restricted: record.clinical_restricted,
+            documents,
+          }}
+        />
       )}
       {write && (
         <WorkflowForm
@@ -177,28 +111,7 @@ export default async function RequestPage({
           </button>
         </WorkflowForm>
       )}
-      <section className={panel}>
-        <h2 className="text-xl font-semibold">Supporting documents</h2>
-        {documents.items.map((d) => (
-          <article key={d.id} className="mt-4 border-t pt-4 text-sm">
-            <p>{d.state.replaceAll("_", " ")}</p>
-            <p className="mt-1 break-all text-xs text-slate-500">SHA-256 {d.digest}</p>
-            {medical && d.state === "extracted" && (
-              <a
-                href={`/workflows/documents/${d.id}`}
-                className="mt-3 inline-block text-teal-800 underline"
-              >
-                Download PDF
-              </a>
-            )}
-            {d.text && (
-              <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-3 font-sans text-sm">
-                {d.text}
-              </pre>
-            )}
-          </article>
-        ))}
-      </section>
+      {golden && <SupportingDocuments documents={documents} />}
       {record &&
         medical &&
         review?.state === "NEEDS_INFORMATION" &&

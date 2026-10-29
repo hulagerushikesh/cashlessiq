@@ -27,15 +27,7 @@ export function OutcomeBadge({ outcome }: { outcome: Outcome }) {
   );
 }
 
-export function rupees(amount: number | null) {
-  return amount === null
-    ? "Not calculated"
-    : new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-      }).format(amount);
-}
+export { rupees } from "@/lib/money";
 
 export function CaseWorkspace({ identity, children }: { identity: Identity; children: ReactNode }) {
   return (

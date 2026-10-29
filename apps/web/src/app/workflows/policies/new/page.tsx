@@ -1,3 +1,5 @@
+import { PolicyWording } from "@/components/background-progress";
+import type { Documents } from "@/lib/workflow-progress";
 import { PolicyEditor, type PolicyDefinition } from "@/components/policy-editor";
 import { WorkflowForm } from "@/components/workflow-form";
 import { randomUUID } from "node:crypto";
@@ -20,17 +22,15 @@ export default async function NewPolicy({
         Sign out to choose the analyst role.
       </p>
     );
-  const documents = await mvpApi<{
-    items: { id: string; state: string; text: string | null; digest: string }[];
-  }>("policy-documents");
+  const documents = await mvpApi<Pick<Documents, "items">>("policy-documents");
   const template = await mvpApi<PolicyDefinition>("policy-template");
-  if (!template) return <CaseServiceError />;
+  if (!template || !documents) return <CaseServiceError />;
   return (
     <>
       <h1 className="text-3xl font-semibold">Propose a policy version</h1>
       <WorkflowFeedback
         {...(await searchParams)}
-        success="PDF uploaded. Refresh shortly to check extraction progress."
+        success="PDF uploaded. Extraction progress updates below; only safely extracted wording can be selected."
       />
       <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
         Enter a product ID and version to test the synthetic baseline. Rule editing and a wording
@@ -69,17 +69,6 @@ export default async function NewPolicy({
           </button>
         </WorkflowForm>
       </details>
-      {documents?.items.map((d) => (
-        <article key={d.id} className="mt-4 max-w-5xl rounded-xl border bg-white p-4 text-sm">
-          <p>{d.state.replaceAll("_", " ")}</p>
-          <p className="mt-2 break-all text-xs text-slate-500">SHA-256 {d.digest}</p>
-          {d.text && (
-            <pre className="mt-3 max-h-60 overflow-auto whitespace-pre-wrap font-sans">
-              {d.text}
-            </pre>
-          )}
-        </article>
-      ))}
       <WorkflowForm
         action="/workflows/commands"
         method="post"
@@ -108,19 +97,7 @@ export default async function NewPolicy({
             className="mt-2 block w-full rounded border p-2"
           />
         </label>
-        <label className="block text-sm">
-          Source wording
-          <select name="wording_document_id" className="mt-2 block w-full rounded border p-2">
-            <option value="">Synthetic baseline reference only</option>
-            {documents?.items
-              .filter((d) => d.state === "extracted")
-              .map((d) => (
-                <option key={d.id} value={d.id}>
-                  Extracted PDF · {d.digest.slice(0, 12)}
-                </option>
-              ))}
-          </select>
-        </label>
+        <PolicyWording initial={{ ...documents, clinical_restricted: false }} />
         <PolicyEditor initial={template} />
         <label className="block text-sm">
           Proposal reason

@@ -6,6 +6,9 @@ import { mvpApi } from "@/lib/mvp-api";
 import { currentIdentity } from "@/lib/server-api";
 import { CaseServiceError } from "@/components/case-workspace";
 
+import { PolicyResults } from "@/components/background-progress";
+import type { PolicyProgress } from "@/lib/workflow-progress";
+
 type Rule = {
   rule_id: string;
   rule_type: string;
@@ -13,24 +16,13 @@ type Rule = {
   params: Record<string, unknown>;
 };
 type Clause = { clause_id: string; title: string; text: string; page: number };
-type PolicyDetail = {
+type PolicyDetail = PolicyProgress & {
   id: string;
   author_id: string;
   version: string;
   status: string;
   active: boolean;
   activation_id: string | null;
-  regression_state: string;
-  regression: {
-    passed: boolean;
-    count: number;
-    checks: {
-      name: string;
-      passed: boolean;
-      actual_outcome: string;
-      actual_payable_inr: number | null;
-    }[];
-  } | null;
   proposal: {
     name: string;
     reason: string;
@@ -142,21 +134,14 @@ export default async function PolicyPage({
           </article>
         ))}
       </section>
-      <section className={panel}>
-        <h2 className="text-xl font-semibold">Regression results</h2>
-        <p className="mt-3 text-sm">
-          {policy.regression_state} ·{" "}
-          {policy.regression
-            ? `${policy.regression.passed ? "Passed" : "Failed"} · ${policy.regression.count} cases`
-            : "Refresh after background processing finishes."}
-        </p>
-        {policy.regression?.checks.map((c) => (
-          <p key={c.name} className="mt-2 text-sm">
-            {c.passed ? "Pass" : "Fail"} · {c.name} · {c.actual_outcome} ·{" "}
-            {c.actual_payable_inr === null ? "Not calculated" : `INR ${c.actual_payable_inr}`}
-          </p>
-        ))}
-      </section>
+      <PolicyResults
+        id={id}
+        initial={{
+          regression_job_id: policy.regression_job_id,
+          regression_state: policy.regression_state,
+          regression: policy.regression,
+        }}
+      />
       {canApprove && (
         <WorkflowForm
           id="policy-decision"

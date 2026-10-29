@@ -85,7 +85,7 @@ now exercised by the agent; the owner can focus on usability feedback.
    then activate with a reason. **Approved** and **active** are separate states;
    an approved-but-inactive version is clearly labelled and excluded from intake.
 3. Enter as the processor, use **New request**, choose the active product, keep the
-   fictional defaults, confirm fictional data, and queue assessment. Refresh after
+   fictional defaults, confirm fictional data, and queue assessment. The assessment panel updates after
    processing; the baseline yields a deductions draft of INR 95,000.
 4. Enter as the medical officer, use **Submitted requests**, open the member
    reference, and select **Open reviewer workflow**. Assign it to yourself,
@@ -185,3 +185,20 @@ The final code at `7c73d69` also passes
 913 root, 1,519 API, 72 membership, 35 database-catalog, 41 client, 26 browser,
 15 source UI and two MVP browser checks. The API phase passed in 156.56 seconds;
 MVP browser checks passed in 19.8 seconds. No cloud or paid source was used.
+
+
+## Progress and job inspection — 29 October
+
+Request results, supporting-PDF extraction, policy regression results and the
+source-wording selector now update independently of the page and its forms.
+Foreground checks run every five seconds for up to two minutes while work is
+pending, with stop/check controls and hidden/offline pauses. A failed progress
+read leaves loaded results labelled potentially out of date; an ended session
+hides that panel's results. No drafts are persisted or page reloads triggered.
+
+Use **Inspect this background job** to open the specific assessment, regression
+or extraction job. It works independently of the latest-50 jobs list. Existing
+operations/tenant-admin retry controls remain reason-required and audited; a
+successful retry returns to that job. PDF rejection and manual transcription
+are distinct from worker failure. The Saturday run is described in
+[31 October private testing](saturday-testing-2026-10-31.md).

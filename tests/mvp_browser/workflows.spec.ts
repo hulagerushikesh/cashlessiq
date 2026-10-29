@@ -13,10 +13,8 @@ async function login(browser: Browser, role: string) {
 }
 
 async function waitFor(page: Page, text: string) {
-  await expect(async () => {
-    await page.reload();
-    await expect(page.getByText(text, { exact: true }).first()).toBeVisible();
-  }).toPass({ timeout: 30000, intervals: [500, 1000] });
+  // Processing panels update themselves; the owner must not have to reload.
+  await expect(page.getByText(text, { exact: true }).first()).toBeVisible({ timeout: 30000 });
 }
 
 test("policy approval, queued assessment, human decision and document visibility", async ({
@@ -72,6 +70,16 @@ test("policy approval, queued assessment, human decision and document visibility
     await expect(processor.page).toHaveURL(/\/workflows\/requests\/REQ-/);
     const requestUrl = processor.page.url().split("?")[0];
     await waitFor(processor.page, "APPROVE WITH DEDUCTIONS · ₹95,000");
+    const progressResponse = await processor.page.request.get(
+      `/workflows/progress?kind=request&id=${new URL(requestUrl).pathname.split("/").at(-1)}`,
+    );
+    expect(progressResponse.status()).toBe(200);
+    expect(progressResponse.headers()["cache-control"]).toBe("private, no-store");
+    const progress = await progressResponse.json();
+    expect(progress.facts).toBeUndefined();
+    expect(progress.clinical_restricted).toBe(true);
+    expect(progress.assessment.payable).toBeUndefined();
+    expect(Object.keys(progress.assessment_job).sort()).toEqual(["attempts", "id", "state"]);
     const requestId = new URL(requestUrl).pathname.split("/").at(-1);
     await medical.page
       .getByRole("navigation", { name: "Workflow navigation" })
@@ -141,6 +149,8 @@ test("policy approval, queued assessment, human decision and document visibility
     await expect(
       processor.page.getByText("Fictional policy wording for synthetic testing.", { exact: true }),
     ).toHaveCount(0);
+    const restrictedProgress = await processor.page.request.get(`/workflows/progress?kind=request&id=${requestId}`);
+    expect((await restrictedProgress.json()).documents.items[0].text).toBeNull();
     await medical.page.goto(requestUrl);
     await expect(
       medical.page.getByText("Fictional policy wording for synthetic testing.", { exact: true }),
