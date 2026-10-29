@@ -12,6 +12,17 @@ async function login(browser: Browser, role: string) {
   return { context, page };
 }
 
+async function saveAndNavigate(page: Page, label: string) {
+  // Successful WorkflowForm commands use a full document navigation, even when
+  // the URL is unchanged. Do not mistake an old visible result/success banner
+  // for the newly saved state before that navigation has committed.
+  await Promise.all([
+    page.waitForEvent("framenavigated", (frame) => frame === page.mainFrame()),
+    page.getByRole("button", { name: label, exact: true }).click(),
+  ]);
+  await page.waitForLoadState("domcontentloaded");
+}
+
 async function waitFor(page: Page, text: string) {
   // Processing panels update themselves; the owner must not have to reload.
   await expect(page.getByText(text, { exact: true }).first()).toBeVisible({ timeout: 30000 });
@@ -34,7 +45,7 @@ test("policy approval, queued assessment, human decision and document visibility
     await analyst.page.getByLabel("Policy product ID").fill(product);
     await analyst.page.getByLabel("Policy version", { exact: true }).fill(product);
     await analyst.page.getByLabel("Proposal reason").fill("Synthetic browser regression policy");
-    await analyst.page.getByRole("button", { name: "Save proposal and run regressions" }).click();
+    await saveAndNavigate(analyst.page, "Save proposal and run regressions");
     await expect(analyst.page).toHaveURL(/\/workflows\/policies\/[a-f0-9-]+/);
     await waitFor(analyst.page, "succeeded · Passed · 30 cases");
     await approver.page
@@ -48,13 +59,13 @@ test("policy approval, queued assessment, human decision and document visibility
     await approver.page
       .getByLabel("Reason", { exact: true })
       .fill("Different-person review of clauses and regression results");
-    await approver.page.getByRole("button", { name: "Save policy decision" }).click();
+    await saveAndNavigate(approver.page, "Save policy decision");
     await expect(approver.page.getByText("Policy action saved.")).toBeVisible();
     await approver.page.getByLabel("Review decision").selectOption("activate");
     await approver.page
       .getByLabel("Reason", { exact: true })
       .fill("Activate for private synthetic testing");
-    await approver.page.getByRole("button", { name: "Save policy decision" }).click();
+    await saveAndNavigate(approver.page, "Save policy decision");
     await expect(approver.page.getByText(/Currently active/)).toBeVisible();
 
     await processor.page
@@ -66,7 +77,7 @@ test("policy approval, queued assessment, human decision and document visibility
       .getByLabel("Synthetic member reference")
       .fill(`SYN-${product.replaceAll("_", "-")}`);
     await processor.page.getByLabel("I confirm").check();
-    await processor.page.getByRole("button", { name: "Queue assessment" }).click();
+    await saveAndNavigate(processor.page, "Queue assessment");
     await expect(processor.page).toHaveURL(/\/workflows\/requests\/REQ-/);
     const requestUrl = processor.page.url().split("?")[0];
     await waitFor(processor.page, "APPROVE WITH DEDUCTIONS · ₹95,000");
@@ -96,7 +107,7 @@ test("policy approval, queued assessment, human decision and document visibility
     await medical.page
       .getByLabel("Assignee", { exact: true })
       .selectOption("00000000-0000-4000-8000-000000000012");
-    await medical.page.getByRole("button", { name: "Save assignment" }).click();
+    await saveAndNavigate(medical.page, "Save assignment");
     await expect(medical.page.getByText("Review saved.")).toBeVisible();
     await medical.page
       .getByLabel("Action", { exact: true })
@@ -105,7 +116,7 @@ test("policy approval, queued assessment, human decision and document visibility
       .getByLabel("Comment or action reason")
       .fill("Verified deterministic calculation and policy evidence");
     await medical.page.getByLabel("Final payable in whole INR").fill("95000");
-    await medical.page.getByRole("button", { name: "Save reviewer action" }).click();
+    await saveAndNavigate(medical.page, "Save reviewer action");
     await expect(
       medical.page.getByText(/Synthetic testing · APPROVED WITH DEDUCTIONS · Version 2/),
     ).toBeVisible();
@@ -113,7 +124,7 @@ test("policy approval, queued assessment, human decision and document visibility
       .getByLabel("Comment or action reason")
       .fill("Fictional clinical note restricted to medical officers");
     await medical.page.getByLabel("Visibility").selectOption("clinical");
-    await medical.page.getByRole("button", { name: "Save reviewer action" }).click();
+    await saveAndNavigate(medical.page, "Save reviewer action");
     await expect(
       medical.page.getByText("Fictional clinical note restricted to medical officers", {
         exact: true,
@@ -144,7 +155,7 @@ test("policy approval, queued assessment, human decision and document visibility
       .getByLabel("PDF document")
       .setInputFiles(path.join(process.cwd(), "tests/fixtures/mvp/synthetic.pdf"));
     await processor.page.getByLabel("This PDF contains fictional").check();
-    await processor.page.getByRole("button", { name: "Upload for extraction" }).click();
+    await saveAndNavigate(processor.page, "Upload for extraction");
     await waitFor(processor.page, "extracted");
     await expect(
       processor.page.getByText("Fictional policy wording for synthetic testing.", { exact: true }),
@@ -169,7 +180,7 @@ test("policy approval, queued assessment, human decision and document visibility
       await medical.page.getByLabel("Comment or action reason").fill(note);
       if (action === "approve_with_deductions")
         await medical.page.getByLabel("Final payable in whole INR").fill("95000");
-      await medical.page.getByRole("button", { name: "Save reviewer action" }).click();
+      await saveAndNavigate(medical.page, "Save reviewer action");
       await expect(medical.page.getByText("Review saved.")).toBeVisible();
     };
     await act("reopen", "Reopen fictional review to verify information-request handling");
@@ -193,7 +204,7 @@ test("policy approval, queued assessment, human decision and document visibility
     await medical.page
       .getByLabel("Reason", { exact: true })
       .fill("Correct fictional note while retaining previous facts");
-    await medical.page.getByRole("button", { name: "Save facts and queue reassessment" }).click();
+    await saveAndNavigate(medical.page, "Save facts and queue reassessment");
     await waitFor(medical.page, "APPROVE WITH DEDUCTIONS · ₹95,000");
     await medical.page.getByRole("link", { name: "Open reviewer workflow" }).click();
     await act("resume", "Information received and reassessment reviewed");
