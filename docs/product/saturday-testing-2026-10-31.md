@@ -58,3 +58,39 @@ automatic updates on the request and policy pages.
 
 Fresh CI evidence for this increment is recorded in the delivery dashboard.
 The actual deployment/host acceptance remains unperformed until its approved run.
+
+
+## Acceptance record
+
+Engineering revision `1adafa8` includes bounded progress panels, specific-job
+inspection, supported metadata-only SQL and save-navigation synchronization in
+the browser tests. The production
+[private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40906659753)
+passes all 16 MVP browser tests, encrypted restoration matching all 17 tables,
+browser reopening after restart and on a fresh restored volume, and owned
+cleanup. The full
+[product run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40906659813)
+also passes: 982 root checks (three skips), 1,522 API (one skip, two pre-existing
+warnings), 72 membership, 35 catalog, 51 client, 26 browser, 15 source UI and all
+16 MVP browser checks, plus contracts/types/lint/build and containment.
+The supported metadata query removes the 19 deprecation warnings from the
+superseded API run.
+
+The two integration findings were corrected before acceptance: tests now check
+`no-store` semantics through either the gateway or direct development server,
+and successful form submissions wait for their document navigation before
+checking new results. No automatic page reload was added to the product.
+
+
+The runtime archive for the accepted engineering revision is
+`output/gcp-preview/cashlessiq-gcp-preview-1adafa88fbe7.tar.gz`, SHA-256
+`a744de8e39ffce1ba51207d406df81ceb9b9c56b8d56c452c4d0623a313c75de`.
+Checksum, manifest and fresh temporary extraction checks pass. The archive is
+runtime preparation; API/web images still require a separately approved build
+and recorded immutable registry digests before deployment.
+
+The final preview has 16 samples: individual container highs total 273.6 MiB
+(the highs need not coincide). Its approximately 16 GiB Linux CI host has zero
+sampled swap use. Sampling excludes short peaks and startup, and does not prove
+that the proposed 2 GiB GCP VM fits. No local Docker or paid cloud resource was
+started for this engineering batch.

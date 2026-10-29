@@ -14,6 +14,24 @@ shutdown when that run is eventually approved. The
 [operator guide](../../deploy/gcp-preview/README.md) records the run sequence.
 The localhost and eight-hour descriptions below are historical checkpoints.
 
+### Saturday build preparation accepted — 29 October
+
+The owner will test on Saturday, 31 October. Revision `1adafa8` adds bounded
+progress updates for request assessments, supporting PDFs, policy regressions
+and policy wording while keeping forms and action versions mounted. Specific
+background jobs have inspect/retry pages; metadata reads avoid full job payloads
+and deprecated SQL. Successful-save browser checks wait for navigation before
+looking for a new assessment.
+
+Both [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40906659813)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40906659753)
+pass. This includes all 16 MVP browser checks, 51 client checks, 1,522 API checks,
+encrypted 17-table recovery, browser reopening after restart/fresh-volume
+restore and owned cleanup. The [Saturday handoff](saturday-testing-2026-10-31.md)
+records the archive checksum, verification and remaining actual-host acceptance.
+No Docker or paid cloud resource was started. GCP remains preparation only until
+explicit approval of the spend and testing window.
+
 ### Synthetic MVP workflows implemented locally — 25 October
 
 The owner's expanded scope is now implemented for fictional private testing:

@@ -16,9 +16,25 @@ policy regressions and policy wording without reloading forms. Pending work has
 bounded foreground checks; hidden/offline tabs pause, failures stop checking and
 specific jobs have inspect/retry pages. Form entries and action versions remain
 mounted. New tests exercise these limits, role projections, worker completion
-races and browser form preservation. Full disposable CI acceptance is pending
-for this new revision; the accepted engineering baseline below remains historical.
-No Docker or paid GCP resource has been started.
+races and browser form preservation. Final code `1adafa8` passes both
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40906659813)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40906659753).
+Acceptance includes 982 root tests (three skips), 1,522 API (one skip), 72
+membership, 35 catalog, 51 client, 26 browser, 15 source UI and all 16 MVP browser
+checks, plus contracts/types/lint/build/containment. The preview also passes
+encrypted restore matching all 17 tables, browser reopening after restart and
+fresh-volume restoration, and owned cleanup. Successful-save browser checks now
+wait for document navigation, avoiding stale results during a pending save.
+The status query reads only metadata and adds no SQL deprecation warnings.
+
+The accepted runtime archive is
+`output/gcp-preview/cashlessiq-gcp-preview-1adafa88fbe7.tar.gz`, SHA-256
+`a744de8e39ffce1ba51207d406df81ceb9b9c56b8d56c452c4d0623a313c75de`.
+Its checksum, manifest and fresh temporary extraction pass the offline checker
+and sampler import. It supersedes the older engineering archive below for this
+handoff; it still contains no application source, credentials or owner media.
+No Docker or paid GCP resource has been started. Actual GCP access, host fitness
+and off-machine backup custody remain operational checks, not completed work.
 
 ### GCP handoff checks accepted in CI — 29 October
 
