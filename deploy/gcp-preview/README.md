@@ -60,6 +60,9 @@ until the owner approves the exact cost, billing account and test window.
    and `gcloud compute addresses list`, with the project fixed and prompts off.
    A missing API, absent VM or permission error fails without enabling or
    creating anything. The displayed deadline is for this start, not a daily cap.
+   From the same persistent operator checkout, immediately record this first
+   start using the usage commands below. Keep that ledger on the operator
+   machine, outside the runtime bundle, and preserve it between testing days.
 4. Install Docker Engine and its Compose plugin on the VM. Transfer the small
    archive and `.sha256` file through IAP SSH, compare its SHA-256, and extract
    into a private working directory. Run the commands below from that directory
@@ -132,6 +135,8 @@ until the owner approves the exact cost, billing account and test window.
    `TERMINATED`, no assigned external IP, no active stop deadline and no reserved
    external address in the dedicated project, including unattached reservations.
    If the VM is still stopping, wait briefly and rerun the read-only check.
+   Record the completed stop in the same usage ledger before leaving or
+   starting the VM again.
 
 The initial GCP run establishes only private synthetic access and resource
 fitness. It does not authorize real patient data or customer traffic.
@@ -143,7 +148,79 @@ runtime and stop sooner after a restart. The per-start limit is not a daily
 spend cap. Stopping containers alone does not stop VM billing: verify the GCP
 instance is `TERMINATED` and its ephemeral external IPv4 has been released.
 
-The checker records only the state observed during its two reads. It does not
+## Record cumulative daily usage
+
+The read-only usage helper counts sessions across restarts in **Asia/Kolkata**,
+using the existing fixed-project instance/address reads. It never starts or
+stops a VM, changes a timer, enables an API or touches billing. Its reports are
+an operator aid, not cloud enforcement or a bill estimate. They account only
+for observed sessions; they cannot discover every intervening start/stop.
+
+On the **first ever approved start**, after confirming that this VM has no
+earlier unrecorded runtime, initialize once on the operator machine:
+
+```sh
+python3 -m scripts.gcp_preview_usage record --expect running --live \
+  --initialize-no-earlier-usage
+```
+
+The default ledger is `output/gcp-preview/usage.json`, ignored by Git and
+excluded from runtime/build packages. Preserve this single file; never create
+a new ledger for a new day or to recover a larger allowance. The initialization
+flag attests only to complete local usage history; it is not spend approval.
+If earlier runtime exists, reconcile it before using a remaining-time report.
+
+After **every later start** and **every completed stop**, respectively:
+
+```sh
+python3 -m scripts.gcp_preview_usage record --expect running --live
+python3 -m scripts.gcp_preview_usage record --expect stopped --live
+```
+
+Before a proposed restart, check local history, then confirm live stopped state
+with the stopped command above. A positive allowance does not authorize a new
+testing window; owner spend approval remains separate.
+
+```sh
+python3 -m scripts.gcp_preview_usage status
+```
+
+For example, a recorded two-hour first session leaves two hours that day. A
+second start at 12:30 India time reports `stop_by` no later than 14:30, even if
+that start's cloud timer would allow four more hours. Follow the **earlier**
+reported deadline and stop immediately if testing ends sooner. Zero remaining
+time means no further same-day test without separate owner approval.
+
+Runtime is counted from the VM's start timestamp through the observed
+`TERMINATED` receipt, conservatively including shutdown/observation delay. An
+unclosed session keeps counting even beyond its automatic deadline; timer
+expiry is not proof of STOP. Repeated reads do not double-count. Midnight splits
+the interval between India workdays and keeps the prior day's record. An open
+session's suggested deadline also stops at the next India midnight.
+
+The helper rejects an unrecorded restart, missing STOP receipt, reversed time,
+replaced VM identity and mixing fictional/historical with live evidence.
+Concurrent recording is locked; complete writes replace the file atomically.
+Invalid observations leave prior history intact. Valid over-budget observations
+are saved before exiting with code 2 for attention; ordinary errors exit 1.
+Do not reset the ledger to clear a warning. Preserve it and reconcile gaps with
+the actual VM history; the helper offers no automatic gap repair. A local status
+report is not a fresh cloud observation or proof that a VM stayed stopped.
+
+To exercise it **without GCP**, use a separate temporary test ledger:
+
+```sh
+python3 -m scripts.gcp_preview_usage record --expect running \
+  --snapshot tests/fixtures/gcp-preview/running.json \
+  --ledger output/gcp-preview/example-usage.json --initialize-no-earlier-usage
+python3 -m scripts.gcp_preview_usage status \
+  --ledger output/gcp-preview/example-usage.json --at 2026-10-29T05:00:00Z
+```
+
+These reports say `historical_snapshot_only`; never use this example ledger
+for actual cloud usage. No foreground monitor or scheduled job is installed.
+
+The instance checker records only the state observed during its two reads. It does not
 stop a VM, prevent a later start, enforce cumulative daily hours, inventory all
 other billable services, or verify firewall/IAM/disk settings. Those remain
 operator acceptance steps. Saved snapshots are historical evidence only; use

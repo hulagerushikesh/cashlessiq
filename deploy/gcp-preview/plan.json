@@ -64,7 +64,7 @@
     "start": "manual, only for an approved testing window after builds complete",
     "stop": "as soon as testing ends, even before the automatic STOP limit",
     "daily_testing_budget_seconds": 14400,
-    "daily_budget_enforcement": "operator tracks cumulative runtime; each VM start resets its own STOP timer",
+    "daily_budget_enforcement": "operator uses persistent usage receipts and stops by the remaining Asia/Kolkata allowance; each VM start resets its own STOP timer; not a cloud-enforced daily cap",
     "automatic_daily_start": false
   }
 }

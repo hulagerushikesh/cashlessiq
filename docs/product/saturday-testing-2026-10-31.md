@@ -56,6 +56,15 @@ automatic updates on the request and policy pages.
    day and retained storage. A restart resets the automatic timer, so no daily
    automatic start is configured.
 
+The [operator usage commands](../../deploy/gcp-preview/README.md#record-cumulative-daily-usage)
+now prepare a persistent daily receipt ledger. Capture the first start once,
+then every later start and completed stop from the operator checkout. The report
+shows the remaining four-hour allowance and an India-time `stop_by` deadline
+after restarts. Preserve the same ledger across days. Unclosed sessions keep
+counting, and missing STOP receipts or unrecorded restarts require reconciliation.
+This is conservative operator accounting, not a cloud-enforced cap or billing
+meter; no actual VM history has been recorded yet.
+
 Fresh CI evidence for this increment is recorded in the delivery dashboard.
 The actual deployment/host acceptance remains unperformed until its approved run.
 

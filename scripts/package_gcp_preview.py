@@ -22,6 +22,7 @@ FILES = (
     "scripts/owner_preview.py",
     "scripts/check_gcp_preview_plan.py",
     "scripts/check_gcp_preview_instance.py",
+    "scripts/gcp_preview_usage.py",
     "scripts/gcp_preview_runtime.py",
     "scripts/measure_preview_resources.py",
 )

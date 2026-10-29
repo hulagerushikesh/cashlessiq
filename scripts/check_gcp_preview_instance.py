@@ -19,7 +19,7 @@ from scripts.check_gcp_preview_plan import PLAN
 
 PROJECT = "cashlessiq-dev-rush"
 INSTANCE_FIELDS = (
-    "selfLink,name,status,zone,machineType,scheduling,networkInterfaces,"
+    "id,selfLink,name,status,zone,machineType,scheduling,networkInterfaces,"
     "resourcePolicies,lastStartTimestamp,resourceStatus.scheduling"
 )
 

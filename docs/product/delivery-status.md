@@ -4,6 +4,18 @@ Updated 29 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Daily usage accounting prepared — 29 October
+
+The GCP handoff now includes a persistent operator usage ledger: verified start
+and completed-stop receipts, cumulative allowance across restarts, India workday
+boundaries and an earlier `stop_by` deadline when some of the four hours have
+already been used. Unclosed sessions continue counting until STOP is observed.
+Missing receipts, replaced VMs, reversed time and mixed historical/live evidence
+fail without replacing prior history. This is conservative local accounting,
+not a billing meter or a cloud-enforced cap. No actual VM history, Docker start
+or paid action was performed. CI acceptance for this increment is pending;
+the accepted application baseline below remains unchanged.
+
 ### Saturday testing preparation — 29 October
 
 The owner selected **Saturday, 31 October** for joint testing and GCP use.

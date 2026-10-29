@@ -14,6 +14,17 @@ shutdown when that run is eventually approved. The
 [operator guide](../../deploy/gcp-preview/README.md) records the run sequence.
 The localhost and eight-hour descriptions below are historical checkpoints.
 
+### Daily usage accounting prepared — 29 October
+
+The preview handoff adds persistent operator receipts for starts/completed stops
+and cumulative four-hour usage across restarts in Asia/Kolkata. The report gives
+the remaining allowance and earlier stop deadline, while unclosed sessions keep
+counting. Missing STOP receipts and replaced/mixed-evidence histories fail without
+resetting prior usage. It is an operator aid, not cloud-enforced daily limits or
+a bill estimate. The operator guide and Saturday sequence include the commands;
+no Docker or paid GCP action was started. Acceptance evidence follows in the
+delivery dashboard once the new CI run finishes.
+
 ### Saturday build preparation accepted — 29 October
 
 The owner will test on Saturday, 31 October. Revision `1adafa8` adds bounded
