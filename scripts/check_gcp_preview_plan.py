@@ -24,8 +24,11 @@ def check() -> None:
     assert plan["project_billing_enabled"] is False
     assert plan["cloud_deployment_authorized"] is False
     assert plan["runtime"]["compose_files"] == list(COMPOSE_FILES)
-    assert plan["instance"]["max_run_duration_seconds"] == 28800
+    assert plan["instance"]["max_run_duration_seconds"] == 14400
     assert plan["instance"]["termination_action"] == "STOP"
+
+    assert plan["operating_policy"]["daily_testing_budget_seconds"] == 14400
+    assert plan["operating_policy"]["automatic_daily_start"] is False
 
     registry = plan["build"]["registry"]
     api_image = f"{registry}/api@sha256:{'a' * 64}"

@@ -4,6 +4,16 @@ Updated 29 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### On-demand four-hour GCP policy — 29 October
+
+The owner selected active testing only: finish code/builds before starting the
+VM, use at most four hours total per working day, and stop early when done.
+The current plan and operator sequence use a four-hour automatic STOP, with no
+automatic daily start. Each restart resets that timer, so cumulative daily use
+must be tracked separately. Billing linkage and provisioning still require
+explicit approval; no paid resources have been started. Docker stays off on
+the Mac. This supersedes the earlier eight-hour proposal recorded below.
+
 ### GCP private test handoff prepared — 29 October
 
 A minimal runtime bundle and VM helper now connect the accepted CI revision to
@@ -11,10 +21,12 @@ the proposed first cloud run. The bundle lists and hashes only the four Compose
 files, Caddy gateway, plan and runtime helpers. The helper refuses mutable image
 tags and wrong-project digests, checks the private configuration and full
 synthetic composition, and uses prebuilt images. The
-[operator sequence](../../deploy/gcp-preview/README.md) covers the eight-hour
+[operator sequence](../../deploy/gcp-preview/README.md) covers the four-hour
 STOP, tunnel, memory acceptance and cleanup. Local checks exercise the helper
 without creating GCP resources. Billing remains disabled; the first paid test
 still requires an approved spend and test window.
+The earlier `f377278` bundle below used the superseded eight-hour plan; use a
+new bundle from the committed four-hour plan for deployment.
 The committed `f377278` bundle was extracted into a fresh temporary directory
 and passed its own Compose-only runtime check. Its SHA-256 is
 `343f85e93c26258da7327f938aff2570dea1a98fc26ae7a2b0a2154ddf4153c6`.

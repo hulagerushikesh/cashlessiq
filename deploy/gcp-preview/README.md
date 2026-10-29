@@ -16,7 +16,7 @@ until the owner approves the exact cost, billing account and test window.
    three runtime helpers. It contains no application source, owner video or
    credential. Verify it with
    `python3 -m scripts.package_gcp_preview verify PATH_TO_ARCHIVE`.
-3. Record the accepted commit, archive SHA-256, proposed eight-hour run window
+3. Record the accepted commit, archive SHA-256, proposed four-hour run window
    and an updated charge estimate. Get the owner's explicit approval before
    linking billing, enabling paid services, building or creating resources.
 
@@ -31,8 +31,11 @@ until the owner approves the exact cost, billing account and test window.
 2. Submit `cloudbuild.yml` from the accepted revision using the builder
    identity. Record the registry SHA-256 digest for each pushed image. A mutable
    tag is not accepted by the runtime helper. Do not build on the VM.
+   Complete and accept the build before starting the VM. Keep it off during
+   coding, build failures and time away from testing; reuse accepted digests
+   until the code changes.
 3. Create the reviewed e2-small Debian VM with a 20 GiB standard disk and only
-   IAP SSH ingress. Set `--max-run-duration=8h
+   IAP SSH ingress. Set `--max-run-duration=4h
    --instance-termination-action=STOP` when creating it. Verify those fields on
    the created instance before proceeding. Stopping releases the ephemeral IP;
    the disk and retained images continue to accrue storage cost.
@@ -76,10 +79,18 @@ until the owner approves the exact cost, billing account and test window.
    denial, the three synthetic roles, request/policy/reviewer workflows, secure
    cookies, sign-out and the absence of exposed backend ports. Measure host
    memory under use. If the 2 GiB VM is unhealthy, stop this run and review a
-   larger VM and its price before changing size. Confirm the eight-hour STOP
-   occurs; stop the tunnel first if finishing early, then run
+   larger VM and its price before changing size. Confirm the four-hour STOP
+   setting is present, and verify the VM stops by that deadline if the run lasts
+   that long. Stop early whenever testing finishes: stop the tunnel, then run
    `python3 -m scripts.gcp_preview_runtime down` and stop the VM. Retain or
    delete the fictional disk and images according to the agreed storage plan.
 
 The initial GCP run establishes only private synthetic access and resource
 fitness. It does not authorize real patient data or customer traffic.
+
+Use at most four hours of total VM runtime per working day unless a longer
+window is separately approved. There is no automatic daily start. Each start
+resets the VM runtime limit, so the operator must track the day's cumulative
+runtime and stop sooner after a restart. The per-start limit is not a daily
+spend cap. Stopping containers alone does not stop VM billing: verify the GCP
+instance is `TERMINATED` and its ephemeral external IPv4 has been released.

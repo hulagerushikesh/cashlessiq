@@ -1,10 +1,13 @@
 # Two-person testing: existing Docker and a small GCP preview
 
-**Owner decision — 25 October:** keep local testing; GCP preparation only.
-The owner declined the proposed paid eight-hour test. Billing linkage, cloud
-builds, registry storage and VM deployment are not authorized. Keep the existing
-unbilled GCP project and prepared files for a future decision; continue current
-application testing locally without a second complete stack.
+**Current owner operating decision — 29 October:** prepare code and complete
+builds before starting the GCP VM. Run it only during active testing, for at
+most **four hours total per working day**, and stop sooner when finished.
+There is no automatic daily start. The four-hour automatic STOP is a per-start
+backstop; the operator must track cumulative daily use across restarts. This
+operating preference does not authorize billing linkage or paid provisioning.
+Docker Desktop stays shut down during ordinary engineering; use offline checks
+and disposable CI. Earlier local observations below are historical evidence.
 
 25 October 2026. The current target is private testing by Rushikesh and the
 engineering agent, before an MVP. Customer scale, marketing, SEO and delivery
@@ -25,10 +28,10 @@ observations are a snapshot, not a load test or a production memory minimum.
 The earlier requirement for 2 GiB spare Docker memory is conservative admission
 for an additional workload; it is not CashlessIQ's minimum server specification.
 
-Use the single existing stack for day-to-day development. A built web server
-is the next resource improvement; adding another local database/app copy is
-unnecessary. Docker is a development/deployment tool, not something required
-on each tester's device. Localhost access remains tied to this Mac; a hosted
+During explicitly requested local interactive testing, use one stack after
+checking Mac headroom. Keep Docker shut down during routine engineering. The
+built production web server avoids the development compiler overhead. Docker
+is a development/deployment tool, not something required on each tester's device. Localhost access remains tied to this Mac; a hosted
 preview provides independent browser access from other devices.
 
 ## Dedicated GCP target prepared, without billing
@@ -131,18 +134,26 @@ plus source storage, logging and any network charges. Artifact Registry gives
 free allowance for this new project. Keep a small set of accepted revisions.
 Budget alerts warn about costs; they do not stop billing automatically.
 
-For the initial remote acceptance, the proposed VM has an **eight-hour maximum
-run duration with automatic STOP**. Eight hours of VM and IPv4 usage is about
-**$0.18**, plus the bounded build and retained storage. Restarting the VM begins
-another runtime period; it is not an unlimited free test. The initial duration
-limit is explicit in the reviewed plan and needs no paid scheduler. If an
-always-on preview is later wanted, review the monthly estimate before removing
-that limit.
+For remote acceptance, the proposed VM has a **four-hour maximum run duration
+with automatic STOP**. Four hours of VM and IPv4 usage is about **$0.09**, plus
+builds, retained storage, traffic and tax. Complete the build before starting
+the VM. Stop immediately after testing; do not leave it running while coding,
+waiting for a build or away from the app. Reuse an accepted image until code
+changes require a new build. No paid scheduler is needed.
+
+At 30 days of four-hour use, VM and IPv4 total approximately **$2.61/month**;
+the retained 20 GiB disk adds **$0.80/month**, giving **$3.41 before builds,
+image/source storage, traffic, logging and tax**. This assumes 120 total running
+hours, not an always-on VM. Each 15-minute build adds up to $0.09 in build
+compute without free allowances. This is a usage estimate, not a hard cap.
 
 Stopping the VM ends its compute usage and releases its ephemeral address;
-retained disks still incur storage charges. Stop it between testing periods
-when convenient. The app remains unavailable while stopped. This is a private
-test environment with no uptime promise.
+retained disks and images still incur storage charges. The app is unavailable
+while stopped. Stopping Docker containers alone does not stop VM billing;
+verify the GCP instance is `TERMINATED` and its ephemeral IPv4 is released.
+Each start resets the runtime timer. Track cumulative daily hours and stop
+sooner after a restart rather than treating each start as another four-hour
+allowance. An extension requires the owner's approval.
 
 ## Future deployment sequence — requires a new owner decision
 
@@ -154,7 +165,7 @@ test environment with no uptime promise.
    ignore file and Docker ignore file exclude local credentials, output and
    the owner's untracked submission video. Never build images on the test VM.
 4. Create only the reviewed network, IAP SSH firewall, 20 GiB disk and e2-small
-   VM with the reviewed eight-hour STOP limit. Install Docker and pull the exact
+   VM with the reviewed four-hour STOP limit. Install Docker and pull the exact
    accepted web/API image digests.
 5. Prepare independent preview secrets on that VM. Set
    `CIQ_PREVIEW_API_IMAGE` and `CIQ_PREVIEW_WEB_IMAGE` to those exact digests in
@@ -180,7 +191,7 @@ four-file preflight and preview CI pass at the chosen revision. The remaining
 first-deployment work is operational: recheck the current price, agree on a spend
 and test window, link billing, set budget alerts, create the reviewed resources,
 start the exact image digests and HTTPS tunnel, then test anonymous denial,
-roles, workflows, cookies, memory and the eight-hour STOP. A budget alert is
+roles, workflows, cookies, memory and the four-hour STOP. A budget alert is
 not a spending cap. No customer or real medical data should be used.
 
 The owner can choose the first test window and acceptable spend while engineering
@@ -201,8 +212,8 @@ and [stopped-VM charges](https://docs.cloud.google.com/compute/docs/instances/st
 
 E2 machine sizes, VM/disk/IPv4 prices and [free-tier eligibility](https://docs.cloud.google.com/free/docs/free-cloud-features)
 were rechecked on 29 October. The e2-small VM price remains $0.016752855/hour
-and standard IPv4 remains $0.005/hour. The eight-hour VM-plus-IP estimate is
-$0.174 before rounding, storage, builds, traffic and tax. No paid action was
+and standard IPv4 remains $0.005/hour. The four-hour VM-plus-IP estimate is
+$0.087 before rounding, storage, builds, traffic and tax. No paid action was
 taken as part of the resource measurement.
 
 ## Runtime package — 29 October
@@ -215,5 +226,5 @@ video, credentials and application source. On the VM,
 `scripts.gcp_preview_runtime` accepts only exact API/web image digests from this
 project's registry, checks the private environment and resolved four-file
 composition, and starts it with `--no-build`. The operator must still verify
-the VM's eight-hour STOP setting and observed memory during the paid test.
+the VM's four-hour STOP setting and observed memory during the paid test.
 This package has not been deployed to GCP; billing remains disabled.

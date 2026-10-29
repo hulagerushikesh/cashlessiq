@@ -1,6 +1,15 @@
 # Product deployment: concrete remaining work
 
-## Current target — local testing; GCP preparation only, 25 October
+## Current target — on-demand GCP preparation, 29 October
+
+The owner now plans at most four hours of active VM testing per working day,
+with builds completed before startup and an immediate stop when finished. The
+current [GCP plan](gcp-private-testing.md) uses a four-hour automatic STOP and no
+automatic daily start. Billing linkage and provisioning still require approval.
+Docker stays shut down during ordinary engineering; use offline checks and CI.
+This supersedes the earlier eight-hour proposal below.
+
+## Earlier local testing decision — 25 October
 
 The current local Docker stack is sufficient for owner/engineering testing.
 Its development web server was observed at about 2.4 GiB; the built preview
