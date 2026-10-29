@@ -22,7 +22,7 @@ def snapshot():
 def stopped(snapshot):
     result = copy.deepcopy(snapshot)
     result["instance"]["status"] = "TERMINATED"
-    result["instance"].pop("terminationTimestamp")
+    result["instance"].pop("resourceStatus")
     result["instance"]["networkInterfaces"][0]["accessConfigs"][0].pop("natIP")
     return result
 
@@ -32,6 +32,13 @@ def test_running_reports_stop_deadline_without_printing_ip(snapshot):
     assert report["automatic_stop_deadline"] == "2026-10-29T08:00:00+00:00"
     assert report["external_ipv4_present"] is True
     assert "192.0.2.10" not in json.dumps(report)
+
+
+def test_deadline_must_come_from_compute_resource_status(snapshot):
+    snapshot["instance"].pop("resourceStatus")
+    snapshot["instance"]["terminationTimestamp"] = "2026-10-29T08:00:00Z"
+    with pytest.raises(ValueError, match="Missing VM start"):
+        checker.verify(snapshot, "running")
 
 
 def test_stopped_accepts_only_terminated_without_external_ip(snapshot):
@@ -86,7 +93,7 @@ def test_missing_or_changed_backstop_is_rejected(snapshot, change):
     "deadline", [None, "2026-10-29T04:30:00Z", "2026-10-29T12:00:00Z", "2026-10-29T08:00:00"]
 )
 def test_missing_expired_long_or_timezone_free_deadline_fails(snapshot, deadline):
-    snapshot["instance"]["terminationTimestamp"] = deadline
+    snapshot["instance"]["resourceStatus"]["scheduling"]["terminationTimestamp"] = deadline
     with pytest.raises(ValueError):
         checker.verify(snapshot, "running")
 
@@ -106,7 +113,9 @@ def test_stopped_rejects_retained_ip_and_active_deadline(snapshot):
     with pytest.raises(ValueError, match="still reports an external"):
         checker.verify(bad, "stopped")
     bad = stopped(snapshot)
-    bad["instance"]["terminationTimestamp"] = "2026-10-29T08:00:00Z"
+    bad["instance"]["resourceStatus"] = {
+        "scheduling": {"terminationTimestamp": "2026-10-29T08:00:00Z"}
+    }
     with pytest.raises(ValueError, match="active termination"):
         checker.verify(bad, "stopped")
 
@@ -144,6 +153,7 @@ def test_live_reader_only_describes_and_lists_in_fixed_project(snapshot, monkeyp
     assert commands[1][:5] == ["gcloud", "--quiet", "compute", "addresses", "list"]
     assert all("--project=cashlessiq-dev-rush" in command for command in commands)
     assert "metadata" not in " ".join(commands[0])
+    assert "resourceStatus.scheduling" in commands[0][-1]
     assert not any(word in {"start", "stop"} for c in commands for word in c)
 
 

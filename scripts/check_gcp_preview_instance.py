@@ -20,7 +20,7 @@ from scripts.check_gcp_preview_plan import PLAN
 PROJECT = "cashlessiq-dev-rush"
 INSTANCE_FIELDS = (
     "selfLink,name,status,zone,machineType,scheduling,networkInterfaces,"
-    "resourcePolicies,lastStartTimestamp,terminationTimestamp"
+    "resourcePolicies,lastStartTimestamp,resourceStatus.scheduling"
 )
 
 
@@ -119,17 +119,18 @@ def verify(snapshot: dict, expected: str) -> dict:
         raise PreviewCheckError("Dedicated project has a reserved or unclassified external address")
 
     observed = timestamp(snapshot["observed_at"])
+    actual_schedule = instance.get("resourceStatus", {}).get("scheduling", {})
     deadline = None
     if expected == "running":
         started = timestamp(instance["lastStartTimestamp"])
-        deadline = timestamp(instance["terminationTimestamp"])
+        deadline = timestamp(actual_schedule.get("terminationTimestamp"))
         if not (
             started <= observed < deadline and 0 < (deadline - started).total_seconds() <= maximum
         ):
             raise PreviewCheckError(
                 "VM automatic stop deadline is missing, expired or exceeds four hours"
             )
-    elif instance.get("terminationTimestamp"):
+    elif actual_schedule.get("terminationTimestamp"):
         raise PreviewCheckError("Stopped VM still reports an active termination deadline")
 
     return {

@@ -8,7 +8,9 @@
     "machineType": "https://www.googleapis.com/compute/v1/projects/cashlessiq-dev-rush/zones/us-central1-a/machineTypes/e2-small",
     "status": "RUNNING",
     "lastStartTimestamp": "2026-10-29T04:00:00Z",
-    "terminationTimestamp": "2026-10-29T08:00:00Z",
+    "resourceStatus": {
+      "scheduling": {"terminationTimestamp": "2026-10-29T08:00:00Z"}
+    },
     "scheduling": {
       "maxRunDuration": {"seconds": "14400", "nanos": 0},
       "instanceTerminationAction": "STOP"
