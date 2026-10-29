@@ -76,7 +76,16 @@ the end-of-test container snapshot was approximately 253 MiB combined (web
 99, API 92, database 48, gateway 16 MiB). That snapshot does not show peak
 memory, host memory or future use. Preview CI now samples memory throughout the
 browser workflow and reports each service's observed high; the first remote
-test must still measure the whole VM.
+test must still measure the whole VM. [CI 40812748861](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40812748861)
+passed all 13 browser workflows and both recovery browser checks at `4418460`.
+Ten samples during the browser suite reported highs of database **47.7 MiB**,
+API **116.3 MiB**, web **117.5 MiB** and gateway **16.3 MiB**. Their individual
+highs total **297.8 MiB**; they need not have occurred at the same instant.
+Samples are separated by the three-second wait plus the Docker observation
+time and miss short peaks. They also exclude startup, the host OS, Docker and
+the HTTPS tunnel. Both disposable preview stacks were removed afterward.
+These observations make a 1 GiB experiment plausible; 2 GiB remains a cautious
+initial proposal, not a measured minimum requirement.
 
 An e2-micro would provide only 1 GiB RAM and half the e2-small's sustained CPU
 share. Its memory is below the current **1,408 MiB combined container ceilings**
@@ -189,6 +198,12 @@ Price references rechecked on 28 October: [E2 machine sizes](https://docs.cloud.
 [Cloud Run runtime contract](https://docs.cloud.google.com/run/docs/container-contract)
 [VM runtime limits](https://docs.cloud.google.com/compute/docs/instances/limit-vm-runtime)
 and [stopped-VM charges](https://docs.cloud.google.com/compute/docs/instances/stop-start-instance).
+
+E2 machine sizes, VM/disk/IPv4 prices and [free-tier eligibility](https://docs.cloud.google.com/free/docs/free-cloud-features)
+were rechecked on 29 October. The e2-small VM price remains $0.016752855/hour
+and standard IPv4 remains $0.005/hour. The eight-hour VM-plus-IP estimate is
+$0.174 before rounding, storage, builds, traffic and tax. No paid action was
+taken as part of the resource measurement.
 
 ## Runtime package — 29 October
 
