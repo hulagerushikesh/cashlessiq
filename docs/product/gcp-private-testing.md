@@ -166,3 +166,16 @@ Price references rechecked on 28 October: [E2 machine sizes](https://docs.cloud.
 [Cloud Run runtime contract](https://docs.cloud.google.com/run/docs/container-contract)
 [VM runtime limits](https://docs.cloud.google.com/compute/docs/instances/limit-vm-runtime)
 and [stopped-VM charges](https://docs.cloud.google.com/compute/docs/instances/stop-start-instance).
+
+## Runtime package — 29 October
+
+The [first-test operator sequence](../../deploy/gcp-preview/README.md) now
+specifies the exact handoff from accepted CI revision to the bounded VM run.
+`scripts.package_gcp_preview` builds a checksum-verified, minimal bundle of
+Compose/gateway/plan/runtime files from committed source. It excludes the owner
+video, credentials and application source. On the VM,
+`scripts.gcp_preview_runtime` accepts only exact API/web image digests from this
+project's registry, checks the private environment and resolved four-file
+composition, and starts it with `--no-build`. The operator must still verify
+the VM's eight-hour STOP setting and observed memory during the paid test.
+This package has not been deployed to GCP; billing remains disabled.

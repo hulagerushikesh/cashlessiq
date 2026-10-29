@@ -47,14 +47,11 @@ def private_write(path: Path, content: str) -> None:
         file.write(content)
 
 
-def read_settings() -> dict[str, str]:
-    if (
-        ENV_FILE.is_symlink()
-        or not ENV_FILE.is_file()
-        or stat.S_IMODE(ENV_FILE.stat().st_mode) != 0o600
-    ):
+def read_settings(path: Path | None = None) -> dict[str, str]:
+    path = path or ENV_FILE
+    if path.is_symlink() or not path.is_file() or stat.S_IMODE(path.stat().st_mode) != 0o600:
         raise ValueError("Preview environment must be a private regular file with mode 0600")
-    values = dict(line.split("=", 1) for line in ENV_FILE.read_text().splitlines() if line)
+    values = dict(line.split("=", 1) for line in path.read_text().splitlines() if line)
     return {key: value.strip("'") for key, value in values.items()}
 
 

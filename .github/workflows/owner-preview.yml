@@ -19,6 +19,8 @@ on:
       - 'deploy/gcp-preview/**'
       - 'scripts/owner_preview.py'
       - 'scripts/check_gcp_preview_plan.py'
+      - 'scripts/gcp_preview_runtime.py'
+      - 'scripts/package_gcp_preview.py'
       - 'scripts/check_owner_preview.py'
       - 'scripts/check_mvp_recovery.py'
       - 'scripts/mvp_backup_transfer.py'

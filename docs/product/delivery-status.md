@@ -1,8 +1,20 @@
 # Product delivery — owner dashboard
 
-Updated 28 October 2026. This page summarizes the current product plan; the
+Updated 29 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
+
+### GCP private test handoff prepared — 29 October
+
+A minimal runtime bundle and VM helper now connect the accepted CI revision to
+the proposed first cloud run. The bundle lists and hashes only the four Compose
+files, Caddy gateway, plan and runtime helpers. The helper refuses mutable image
+tags and wrong-project digests, checks the private configuration and full
+synthetic composition, and uses prebuilt images. The
+[operator sequence](../../deploy/gcp-preview/README.md) covers the eight-hour
+STOP, tunnel, memory acceptance and cleanup. Local checks exercise the helper
+without creating GCP resources. Billing remains disabled; the first paid test
+still requires an approved spend and test window.
 
 ### GCP MVP composition corrected — 28 October
 
