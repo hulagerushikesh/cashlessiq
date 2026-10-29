@@ -66,6 +66,29 @@ passed with the 512 MiB API ceiling on a disposable Linux preview. Run
 `python -m scripts.check_gcp_preview_plan` to validate the four-file GCP
 composition locally without a cloud API call, build or container start.
 
+The e2-small is a **shared-core 2 GiB VM**, not a high-capacity server. Its size
+is driven by running PostgreSQL, the API/embedded worker, the production web
+server and password gateway together, with room for Debian, Docker and the
+tunnel. Tester count and fictional data volume are small. The development web
+server's earlier 2.4 GiB observation included the live compiler and is not the
+production preview's size. In [full-MVP preview CI 40806424789](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40806424789),
+the end-of-test container snapshot was approximately 253 MiB combined (web
+99, API 92, database 48, gateway 16 MiB). That snapshot does not show peak
+memory, host memory or future use. Preview CI now samples memory throughout the
+browser workflow and reports each service's observed high; the first remote
+test must still measure the whole VM.
+
+An e2-micro would provide only 1 GiB RAM and half the e2-small's sustained CPU
+share. Its memory is below the current **1,408 MiB combined container ceilings**
+before Debian, Docker and the tunnel, so it is not the initial plan. Those
+ceilings are safeguards rather than expected consumption; a later e2-micro
+trial is reasonable only after full-workflow peak sampling and a smaller-limit
+composition pass with actual host headroom. The GCP free tier can cover eligible
+e2-micro time and up to 30 GiB-months standard disk in the selected US region,
+but it is shared at billing-account scope, requires billing to be enabled and
+does not cover every cost, including most external IPv4 usage. No free allowance
+or credit balance is assumed for this project.
+
 Cloud Run can scale HTTP services to zero, but the current API requires
 PostgreSQL-backed membership. Its instance filesystem is ephemeral. Moving
 this exact app there introduces a durable database choice and service wiring;

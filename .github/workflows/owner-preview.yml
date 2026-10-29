@@ -21,6 +21,7 @@ on:
       - 'scripts/check_gcp_preview_plan.py'
       - 'scripts/gcp_preview_runtime.py'
       - 'scripts/package_gcp_preview.py'
+      - 'scripts/measure_preview_resources.py'
       - 'scripts/check_owner_preview.py'
       - 'scripts/check_mvp_recovery.py'
       - 'scripts/mvp_backup_transfer.py'
@@ -66,8 +67,7 @@ jobs:
           # uses only the disposable CI loopback origin behind the owner gate.
           CIQ_WEB_ORIGIN=http://127.0.0.1:3080 docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml -f compose.mvp.yml up --no-build --pull never --no-deps --detach --wait api web
           docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml -f compose.mvp.yml exec -T api .venv/bin/python -m ciq_api.seed
-          npm run test:mvp
-          docker stats --no-stream --format '{{.Name}} {{.MemUsage}}'
+          python -m scripts.measure_preview_resources -- npm run test:mvp
       - name: Restore encrypted MVP backup into a fresh preview volume
         id: recovery
         env:
