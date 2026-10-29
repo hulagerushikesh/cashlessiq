@@ -4,6 +4,34 @@ Updated 29 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### GCP handoff checks accepted in CI — 29 October
+
+Final engineering revision `dd459e8` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40841606501)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40841606646).
+Product checks include 982 root tests (three skips), 1,521 API tests (one skip),
+72 membership, 35 catalog, 41 client, 26 browser, 15 source UI and 13 MVP browser
+checks, plus contracts/types/lint/build and containment. The preview passes all
+13 MVP journeys, encrypted fresh-volume recovery, browser reopening after
+restart and restore, and owned cleanup. All 52 focused instance/measurement/
+package checks also pass locally without starting Docker.
+
+Twelve preview samples report individual container highs of database 48.2 MiB,
+API 97.5 MiB, web 99.3 MiB and gateway 15.6 MiB, totaling 260.7 MiB before
+rounding (the highs need not be simultaneous). The Linux **CI runner**, with
+15,983.9 MiB usable RAM, reports a minimum available-memory estimate of
+13,648.5 MiB and zero initial/sampled swap use. These validate host sampling;
+they do not establish fitness of the proposed 2 GiB VM or capture short peaks.
+
+The minimal runtime archive at `output/gcp-preview/cashlessiq-gcp-preview-dd459e823f93.tar.gz`
+has SHA-256 `11c61c2bc61cdc0b1f79db9efc571b6f6b5ee04dde49b26d807444d073faefa5`.
+Its checksum and file manifest pass, and a fresh temporary extraction runs the
+offline instance check and sampler import. It includes no credentials, app
+source or owner video. No local Docker or paid cloud resource was started.
+The next operational milestone is the first explicitly approved four-hour GCP
+test: actual host fitness, remote HTTPS, access controls, recovery and completed
+VM shutdown. Billing approval and real off-machine backup custody remain open.
+
 ### Whole-host memory observation prepared — 29 October
 
 The foreground preview sampler now has an explicit `--include-host` mode for
