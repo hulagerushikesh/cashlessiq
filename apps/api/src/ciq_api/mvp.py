@@ -150,24 +150,35 @@ def regression_job(db, policy):
 
 
 def processing_jobs(db, tenant_id, kind, subject_ids):
-    """Latest public job metadata only; payloads/results stay behind role projections."""
-    jobs = db.scalars(
-        select(WorkJob)
+    """Latest public job metadata only; never load payloads/results for progress."""
+    if not subject_ids:
+        return {}
+    ranked = (
+        select(
+            WorkJob.id,
+            func.row_number()
+            .over(
+                partition_by=WorkJob.subject_id,
+                order_by=(WorkJob.created_at.desc(), WorkJob.id.desc()),
+            )
+            .label("position"),
+        )
         .where(
             WorkJob.tenant_id == tenant_id,
             WorkJob.kind == kind,
             WorkJob.subject_id.in_(subject_ids),
         )
-        .distinct(WorkJob.subject_id)
-        .order_by(WorkJob.subject_id, WorkJob.created_at.desc(), WorkJob.id.desc())
+        .subquery()
     )
-    latest = {}
-    for job in jobs:
-        latest.setdefault(
-            job.subject_id,
-            {"id": str(job.id), "state": job.state, "attempts": job.attempts},
-        )
-    return latest
+    rows = db.execute(
+        select(WorkJob.subject_id, WorkJob.id, WorkJob.state, WorkJob.attempts)
+        .join(ranked, ranked.c.id == WorkJob.id)
+        .where(ranked.c.position == 1)
+    )
+    return {
+        row.subject_id: {"id": str(row.id), "state": row.state, "attempts": row.attempts}
+        for row in rows
+    }
 
 
 def policy_view(db, policy):
