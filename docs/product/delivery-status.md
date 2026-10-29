@@ -15,6 +15,13 @@ synthetic composition, and uses prebuilt images. The
 STOP, tunnel, memory acceptance and cleanup. Local checks exercise the helper
 without creating GCP resources. Billing remains disabled; the first paid test
 still requires an approved spend and test window.
+The committed `f377278` bundle was extracted into a fresh temporary directory
+and passed its own Compose-only runtime check. Its SHA-256 is
+`343f85e93c26258da7327f938aff2570dea1a98fc26ae7a2b0a2154ddf4153c6`.
+[Private owner preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40806424789)
+and [product foundation CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40806424644)
+both passed at that revision. This is package and disposable-CI evidence, not
+an actual GCP VM or remote HTTPS acceptance.
 
 ### GCP MVP composition corrected — 28 October
 
