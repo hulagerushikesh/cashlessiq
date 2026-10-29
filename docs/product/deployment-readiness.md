@@ -9,6 +9,14 @@ automatic daily start. Billing linkage and provisioning still require approval.
 Docker stays shut down during ordinary engineering; use offline checks and CI.
 This supersedes the earlier eight-hour proposal below.
 
+The [operator sequence](../../deploy/gcp-preview/README.md) now includes
+`scripts.check_gcp_preview_instance`: explicit read-only live checks for the
+reviewed running VM and its four-hour STOP deadline, and for completed shutdown
+with no assigned/reserved external IP. Fictional fixtures test the checker
+offline. It neither provisions nor stops a VM and does not enforce daily hours
+or eliminate retained storage costs. The first approved cloud run still needs
+actual HTTPS, host-memory, firewall/IAM, recovery and shutdown evidence.
+
 ## Earlier local testing decision — 25 October
 
 The current local Docker stack is sufficient for owner/engineering testing.

@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-10-29T05:00:00Z",
+  "addresses": [],
+  "instance": {
+    "name": "ciq-private-test",
+    "selfLink": "https://www.googleapis.com/compute/v1/projects/cashlessiq-dev-rush/zones/us-central1-a/instances/ciq-private-test",
+    "zone": "https://www.googleapis.com/compute/v1/projects/cashlessiq-dev-rush/zones/us-central1-a",
+    "machineType": "https://www.googleapis.com/compute/v1/projects/cashlessiq-dev-rush/zones/us-central1-a/machineTypes/e2-small",
+    "status": "RUNNING",
+    "lastStartTimestamp": "2026-10-29T04:00:00Z",
+    "terminationTimestamp": "2026-10-29T08:00:00Z",
+    "scheduling": {
+      "maxRunDuration": {"seconds": "14400", "nanos": 0},
+      "instanceTerminationAction": "STOP"
+    },
+    "networkInterfaces": [
+      {
+        "network": "https://www.googleapis.com/compute/v1/projects/cashlessiq-dev-rush/global/networks/ciq-preview",
+        "subnetwork": "https://www.googleapis.com/compute/v1/projects/cashlessiq-dev-rush/regions/us-central1/subnetworks/ciq-preview-us-central1",
+        "stackType": "IPV4_ONLY",
+        "accessConfigs": [{"type": "ONE_TO_ONE_NAT", "natIP": "192.0.2.10"}]
+      }
+    ]
+  }
+}

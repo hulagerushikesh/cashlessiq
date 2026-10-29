@@ -13,9 +13,17 @@ until the owner approves the exact cost, billing account and test window.
    `python3 -m scripts.package_gcp_preview create`. It refuses an uncommitted
    change to any packaged file. The ignored archive in `output/gcp-preview/`
    contains only the four Compose files, gateway configuration, plan and the
-   three runtime helpers. It contains no application source, owner video or
+   runtime helpers. It contains no application source, owner video or
    credential. Verify it with
    `python3 -m scripts.package_gcp_preview verify PATH_TO_ARCHIVE`.
+   Exercise the VM acceptance checker with fictional data:
+
+   ```sh
+   python3 -m scripts.check_gcp_preview_instance --expect running \
+     --snapshot tests/fixtures/gcp-preview/running.json
+   ```
+
+   This prints `historical_snapshot_only`; it is not cloud deployment evidence.
 3. Record the accepted commit, archive SHA-256, proposed four-hour run window
    and an updated charge estimate. Get the owner's explicit approval before
    linking billing, enabling paid services, building or creating resources.
@@ -39,6 +47,19 @@ until the owner approves the exact cost, billing account and test window.
    --instance-termination-action=STOP` when creating it. Verify those fields on
    the created instance before proceeding. Stopping releases the ephemeral IP;
    the disk and retained images continue to accrue storage cost.
+   From the operator's checkout, run the read-only acceptance check:
+
+   ```sh
+   python3 -m scripts.check_gcp_preview_instance --expect running --live
+   ```
+
+   It checks the dedicated project/instance, zone, reviewed machine type,
+   four-hour duration and STOP action, active automatic-stop deadline, expected
+   network/subnet, IPv4-only access and absence of attached resource policies or
+   reserved external addresses. It uses only `gcloud compute instances describe`
+   and `gcloud compute addresses list`, with the project fixed and prompts off.
+   A missing API, absent VM or permission error fails without enabling or
+   creating anything. The displayed deadline is for this start, not a daily cap.
 4. Install Docker Engine and its Compose plugin on the VM. Transfer the small
    archive and `.sha256` file through IAP SSH, compare its SHA-256, and extract
    into a private working directory. Run the commands below from that directory
@@ -84,6 +105,16 @@ until the owner approves the exact cost, billing account and test window.
    that long. Stop early whenever testing finishes: stop the tunnel, then run
    `python3 -m scripts.gcp_preview_runtime down` and stop the VM. Retain or
    delete the fictional disk and images according to the agreed storage plan.
+   Confirm completion from the operator's checkout:
+
+   ```sh
+   python3 -m scripts.check_gcp_preview_instance --expect stopped --live
+   ```
+
+   `STOPPING`, `SUSPENDED` and containers-down do not pass. Acceptance requires
+   `TERMINATED`, no assigned external IP, no active stop deadline and no reserved
+   external address in the dedicated project, including unattached reservations.
+   If the VM is still stopping, wait briefly and rerun the read-only check.
 
 The initial GCP run establishes only private synthetic access and resource
 fitness. It does not authorize real patient data or customer traffic.
@@ -94,3 +125,11 @@ resets the VM runtime limit, so the operator must track the day's cumulative
 runtime and stop sooner after a restart. The per-start limit is not a daily
 spend cap. Stopping containers alone does not stop VM billing: verify the GCP
 instance is `TERMINATED` and its ephemeral external IPv4 has been released.
+
+The checker records only the state observed during its two reads. It does not
+stop a VM, prevent a later start, enforce cumulative daily hours, inventory all
+other billable services, or verify firewall/IAM/disk settings. Those remain
+operator acceptance steps. Saved snapshots are historical evidence only; use
+`--live` at the beginning and end of the actual approved run. The implementation
+follows Google's [VM time-limit semantics](https://docs.cloud.google.com/compute/docs/instances/limit-vm-runtime)
+and [Compute instance fields](https://docs.cloud.google.com/compute/docs/reference/rest/v1/instances).

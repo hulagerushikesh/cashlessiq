@@ -21,6 +21,7 @@ FILES = (
     "deploy/gcp-preview/plan.json",
     "scripts/owner_preview.py",
     "scripts/check_gcp_preview_plan.py",
+    "scripts/check_gcp_preview_instance.py",
     "scripts/gcp_preview_runtime.py",
 )
 MANIFEST = "manifest.json"

@@ -1,8 +1,18 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 25 October 2026
+Last updated: 29 October 2026
 Current engineering scope: **synthetic MVP workflows (M3–M5), private testing**.
 Governed live-source P2 and production gates remain separate.
+
+Current operation: Docker Desktop stays shut down for ordinary engineering;
+offline checks and disposable CI provide verification. GCP remains preparation
+only, pending explicit spend approval. The owner selected at most four hours of
+active testing per day with immediate shutdown afterward. A read-only instance
+checker now verifies the reviewed four-hour STOP configuration and completed VM
+shutdown when that run is eventually approved. The
+[delivery dashboard](delivery-status.md) records current evidence and the
+[operator guide](../../deploy/gcp-preview/README.md) records the run sequence.
+The localhost and eight-hour descriptions below are historical checkpoints.
 
 ### Synthetic MVP workflows implemented locally — 25 October
 

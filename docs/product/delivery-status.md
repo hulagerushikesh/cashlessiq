@@ -4,6 +4,26 @@ Updated 29 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Read-only GCP start/stop acceptance — 29 October
+
+The operator now has a checker for the actual reviewed instance and its
+four-hour STOP deadline, and a separate stopped-state acceptance requiring
+`TERMINATED` with no assigned external IP or reserved external address in the
+dedicated project. Wrong projects/sizes, longer timers, attached resource
+policies, transitional/suspended states and retained external addresses fail.
+Its live mode uses only fixed-project describe/list calls with prompts disabled;
+offline fixtures are explicitly labelled historical and never contact GCP.
+The [operator sequence](../../deploy/gcp-preview/README.md) includes both checks.
+All 37 focused instance/runtime/package checks pass locally, along with Ruff and
+the Compose-only preflight. No Docker daemon, cloud API, VM or paid build was
+started for this work. Cumulative daily hours, disk/image retention costs and
+firewall/IAM acceptance still need operator verification during an approved run.
+
+The preceding four-hour plan at `27ade5c` passed both
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40814433252)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40814433298).
+The new checker is prepared and offline-tested; no actual GCP VM is claimed.
+
 ### On-demand four-hour GCP policy — 29 October
 
 The owner selected active testing only: finish code/builds before starting the
