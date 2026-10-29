@@ -4,7 +4,7 @@ PYTHON ?= python3.11
 SQL_FOUNDATION := sql/00_account.sql sql/01_database.sql sql/02_core_tables.sql sql/03_docs_tables.sql sql/04_app_eval_tables.sql sql/05_spike_agent.sql
 
 .PHONY: install setup teardown test lint generate-data policy-source data documents tools agent deploy eval
-.PHONY: product-up product-down product-status product-logs product-test product-contracts
+.PHONY: product-up product-down product-status product-logs product-test product-test-session product-contracts
 .PHONY: product-domain-check product-test-source-ui
 .PHONY: product-worker-isolation product-worker-mtls product-worker-replay
 .PHONY: product-membership-check
@@ -84,6 +84,9 @@ product-logs:
 
 product-test:
 	$(PYTHON) scripts/product.py test-api
+
+product-test-session:
+	$(PYTHON) scripts/product.py test-session
 
 product-contracts:
 	uv run --project apps/api python scripts/export_openapi.py

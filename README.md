@@ -149,3 +149,7 @@ The stack runs Next.js, FastAPI, PostgreSQL, and Redis locally. It does not call
 Snowflake or AI services. Stop it with `make product-down`; local database data
 is retained. See [local development](docs/architecture/local-development.md)
 for tests, generated API contracts, and identity configuration.
+For an engineering test run, `make product-test-session` checks Mac headroom,
+runs bounded API and browser checks, and attempts to stop the CashlessIQ stack
+afterward, including when a check fails. A cleanup failure is reported and
+requires a status check. It does not keep the app open for manual use.
