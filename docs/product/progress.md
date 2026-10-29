@@ -14,7 +14,7 @@ shutdown when that run is eventually approved. The
 [operator guide](../../deploy/gcp-preview/README.md) records the run sequence.
 The localhost and eight-hour descriptions below are historical checkpoints.
 
-### Daily usage accounting prepared — 29 October
+### Daily usage accounting accepted — 29 October
 
 The preview handoff adds persistent operator receipts for starts/completed stops
 and cumulative four-hour usage across restarts in Asia/Kolkata. The report gives
@@ -22,8 +22,15 @@ the remaining allowance and earlier stop deadline, while unclosed sessions keep
 counting. Missing STOP receipts and replaced/mixed-evidence histories fail without
 resetting prior usage. It is an operator aid, not cloud-enforced daily limits or
 a bill estimate. The operator guide and Saturday sequence include the commands;
-no Docker or paid GCP action was started. Acceptance evidence follows in the
-delivery dashboard once the new CI run finishes.
+no Docker or paid GCP action was started. Revision `3735e6f` passes both
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40910782084)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40910782236):
+1,018 root checks, 1,522 API checks, all 16 MVP browser journeys, encrypted
+17-table recovery, browser reopening after restart/fresh-volume restore and
+owned cleanup, plus the existing contracts/types/lint/build/containment checks.
+All 88 focused local checks pass. The refreshed archive's checksum and fresh
+temporary extraction pass the checker and historical usage CLI; the temporary
+ledger was removed. The delivery dashboard records its exact checksum.
 
 ### Saturday build preparation accepted — 29 October
 

@@ -13,8 +13,25 @@ already been used. Unclosed sessions continue counting until STOP is observed.
 Missing receipts, replaced VMs, reversed time and mixed historical/live evidence
 fail without replacing prior history. This is conservative local accounting,
 not a billing meter or a cloud-enforced cap. No actual VM history, Docker start
-or paid action was performed. CI acceptance for this increment is pending;
-the accepted application baseline below remains unchanged.
+or paid action was performed. Revision `3735e6f` passes 88 focused offline
+usage/instance/package/measurement tests, repository Ruff and the Compose-only
+preflight. The full
+[product run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40910782084)
+passes 1,018 root checks (three skips), 1,522 API checks (one skip, two existing
+warnings), 72 membership, 35 catalog, 51 client, 26 browser, 15 source UI and all
+16 MVP browser checks, plus contracts/types/lint/build/containment and cleanup. The
+[private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40910782236)
+passes 37 gate checks, all 16 MVP browser journeys, encrypted recovery matching
+all 17 tables, both recovery browser checks and owned cleanup.
+
+The refreshed minimal runtime archive is
+`output/gcp-preview/cashlessiq-gcp-preview-3735e6f18f93.tar.gz`, SHA-256
+`5233ca09a9ba10d9e825b793caeb1a1587b3c754357593241f4b4d69b65f2cea`.
+Checksum/manifest verification and a fresh temporary extraction pass the instance
+checker and historical usage record/status commands. That temporary ledger was
+removed; no actual cloud-usage ledger was initialized. This replaces the earlier
+runtime archive for the next handoff, while application behavior remains the
+accepted workflow baseline below.
 
 ### Saturday testing preparation — 29 October
 

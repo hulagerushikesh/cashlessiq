@@ -68,8 +68,30 @@ meter; no actual VM history has been recorded yet.
 Fresh CI evidence for this increment is recorded in the delivery dashboard.
 The actual deployment/host acceptance remains unperformed until its approved run.
 
+## Daily usage handoff — 29 October
 
-## Acceptance record
+Revision `3735e6f` adds the persistent cumulative-use helper to the operator
+handoff and minimal runtime archive. The
+[private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40910782236)
+passes 37 gate checks, all 16 MVP browser tests, encrypted recovery matching
+17 tables, browser reopening after restart/fresh-volume restoration and cleanup.
+The [full product run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40910782084)
+also passes: 1,018 root checks (three skips), 1,522 API checks (one skip), 72
+membership, 35 catalog, 51 client, 26 browser, 15 source UI and all 16 MVP browser
+checks, plus contracts/types/lint/build/containment and cleanup. All 88 focused
+usage/instance/package/measurement checks pass locally without starting Docker.
+
+The refreshed archive is
+`output/gcp-preview/cashlessiq-gcp-preview-3735e6f18f93.tar.gz`, SHA-256
+`5233ca09a9ba10d9e825b793caeb1a1587b3c754357593241f4b4d69b65f2cea`.
+Its checksum, manifest and clean extraction pass; the extracted checker and
+usage CLI work against fictional observations in a temporary directory, which
+was then removed. Use this archive for the next handoff rather than the earlier
+workflow archive below. Actual VM images, spend approval, access/host acceptance
+and off-machine backup custody remain separate. Docker stays off on the Mac.
+
+
+## Earlier workflow acceptance record
 
 Engineering revision `1adafa8` includes bounded progress panels, specific-job
 inspection, supported metadata-only SQL and save-navigation synchronization in
@@ -91,7 +113,7 @@ and successful form submissions wait for their document navigation before
 checking new results. No automatic page reload was added to the product.
 
 
-The runtime archive for the accepted engineering revision is
+The earlier runtime archive for that workflow revision is
 `output/gcp-preview/cashlessiq-gcp-preview-1adafa88fbe7.tar.gz`, SHA-256
 `a744de8e39ffce1ba51207d406df81ceb9b9c56b8d56c452c4d0623a313c75de`.
 Checksum, manifest and fresh temporary extraction checks pass. The archive is
