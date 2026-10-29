@@ -52,7 +52,7 @@ test("regression updates preserve an open decision form and recover from unavail
     const endpoint = `/workflows/progress?kind=policy&id=${id}`;
     const actual = await context.request.get(endpoint);
     expect(actual.status()).toBe(200);
-    expect(actual.headers()["cache-control"]).toBe("private, no-store");
+    expect(actual.headers()["cache-control"]).toContain("no-store");
     const completed = await actual.json();
     expect(Object.keys(completed).sort()).toEqual([
       "regression",

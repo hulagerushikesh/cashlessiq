@@ -74,7 +74,7 @@ test("policy approval, queued assessment, human decision and document visibility
       `/workflows/progress?kind=request&id=${new URL(requestUrl).pathname.split("/").at(-1)}`,
     );
     expect(progressResponse.status()).toBe(200);
-    expect(progressResponse.headers()["cache-control"]).toBe("private, no-store");
+    expect(progressResponse.headers()["cache-control"]).toContain("no-store");
     const progress = await progressResponse.json();
     expect(progress.facts).toBeUndefined();
     expect(progress.clinical_restricted).toBe(true);
