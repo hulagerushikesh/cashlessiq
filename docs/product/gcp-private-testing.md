@@ -9,6 +9,14 @@ operating preference does not authorize billing linkage or paid provisioning.
 Docker Desktop stays shut down during ordinary engineering; use offline checks
 and disposable CI. Earlier local observations below are historical evidence.
 
+The prepared runtime sampler now supports `--include-host` on Linux, recording
+usable RAM, minimum sampled available RAM and swap use alongside container
+highs. The [operator sequence](../../deploy/gcp-preview/README.md) includes a
+bounded two-minute observation during the eventual cross-device test, plus
+read-only checks for the actual VM's four-hour STOP deadline and completed
+shutdown. CI-host observations do not establish e2-small fitness; these helpers
+have not been run on an actual GCP VM.
+
 25 October 2026. The current target is private testing by Rushikesh and the
 engineering agent, before an MVP. Customer scale, marketing, SEO and delivery
 planning remain later work; none requires a large server today. Capacity should

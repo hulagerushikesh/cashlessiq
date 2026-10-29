@@ -68,7 +68,7 @@ jobs:
           # uses only the disposable CI loopback origin behind the owner gate.
           CIQ_WEB_ORIGIN=http://127.0.0.1:3080 docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml -f compose.mvp.yml up --no-build --pull never --no-deps --detach --wait api web
           docker compose --env-file .env.owner-preview.local -f compose.owner-preview.yml -f compose.preview-small.yml -f compose.mvp.yml exec -T api .venv/bin/python -m ciq_api.seed
-          python -m scripts.measure_preview_resources -- npm run test:mvp
+          python -m scripts.measure_preview_resources --include-host -- npm run test:mvp
       - name: Restore encrypted MVP backup into a fresh preview volume
         id: recovery
         env:

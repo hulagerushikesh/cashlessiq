@@ -4,6 +4,19 @@ Updated 29 October 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Whole-host memory observation prepared — 29 October
+
+The foreground preview sampler now has an explicit `--include-host` mode for
+Linux: usable RAM, the minimum sampled `MemAvailable` estimate, initial swap
+use and its sampled high, alongside the existing container observations. Missing
+or malformed required counters fail rather than silently claiming evidence;
+unavailable Linux counters prevent the wrapped command from starting. Browser
+CI enables the mode, and the minimal runtime bundle includes it for the actual
+VM. The operator guide has a bounded two-minute sample during cross-device
+testing. All 51 focused measurement/instance/package checks pass locally; this
+does not establish a whole-VM fit before a real approved GCP run. No local
+Docker or cloud resource was started.
+
 ### Read-only GCP start/stop acceptance — 29 October
 
 The operator now has a checker for the actual reviewed instance and its

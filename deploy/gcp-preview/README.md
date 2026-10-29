@@ -99,7 +99,24 @@ until the owner approves the exact cost, billing account and test window.
 7. From a separate browser session, check anonymous denial, wrong-password
    denial, the three synthetic roles, request/policy/reviewer workflows, secure
    cookies, sign-out and the absence of exposed backend ports. Measure host
-   memory under use. If the 2 GiB VM is unhealthy, stop this run and review a
+   memory under use. The bundle includes a bounded foreground sampler. On the
+   VM, sample during a two-minute browser test from the other device:
+
+   ```sh
+   python3 -m scripts.measure_preview_resources --include-host -- \
+     python3 -c 'import time; time.sleep(120)'
+   ```
+
+   It starts no containers. It reports service highs, Linux usable RAM, minimum
+   estimated available RAM and initial/maximum observed swap use. Run this on
+   the VM host, not inside a container. The Linux `MemAvailable` estimate
+   includes reclaimable cache (see the [Linux counter definitions](https://docs.kernel.org/filesystems/proc.html#meminfo));
+   raw `MemFree` is not a capacity verdict. Observe
+   responsiveness, restarts and OOM events separately. Samples miss short peaks
+   and this browser-only window excludes startup; a larger CI host's numbers
+   cannot prove this VM fits. The foreground sampler exits with its command;
+   it does not create a scheduled monitor or extend the VM window.
+   If the 2 GiB VM is unhealthy, stop this run and review a
    larger VM and its price before changing size. Confirm the four-hour STOP
    setting is present, and verify the VM stops by that deadline if the run lasts
    that long. Stop early whenever testing finishes: stop the tunnel, then run
