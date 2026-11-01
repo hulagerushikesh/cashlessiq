@@ -4,7 +4,12 @@ import { useEffect, useRef, useState, type ComponentProps, type FormEvent } from
 import { WorkflowFeedback } from "./workflow-feedback";
 
 // Keep drafts only in the mounted form: no clinical values in URLs or browser storage.
-export function WorkflowForm({ children, ...props }: ComponentProps<"form">) {
+export function WorkflowForm({
+  children,
+  onSaved,
+  success,
+  ...props
+}: ComponentProps<"form"> & { onSaved?: (form: HTMLFormElement) => void; success?: string }) {
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
@@ -28,15 +33,22 @@ export function WorkflowForm({ children, ...props }: ComponentProps<"form">) {
       });
       const data = await response.json();
       if (data.result === "saved") {
+        if (!response.ok) throw new Error("Save was not confirmed");
         const location = new URL(data.location, window.location.origin);
         if (location.origin !== window.location.origin) throw new Error("Invalid destination");
-        window.location.assign(location.href);
-        return;
+        if (onSaved) {
+          onSaved(form);
+          setFeedback({ result: "saved" });
+        } else {
+          window.location.assign(location.href);
+          return;
+        }
+      } else {
+        setFeedback({
+          result: data.result === "conflict" ? "conflict" : "failed",
+          error: data.error,
+        });
       }
-      setFeedback({
-        result: data.result === "conflict" ? "conflict" : "failed",
-        error: data.error,
-      });
     } catch {
       // A lost response may have committed. Reuse the command ID for a safe identical retry.
       setFeedback({ result: "failed", error: "connection" });
@@ -61,8 +73,8 @@ export function WorkflowForm({ children, ...props }: ComponentProps<"form">) {
     >
       {!ready && <p role="status">Enable JavaScript to edit and submit this form safely.</p>}
       <div ref={alert} tabIndex={-1} className="col-span-full outline-none">
-        {feedback && <WorkflowFeedback {...feedback} />}
-        {feedback && (
+        {feedback && <WorkflowFeedback {...feedback} success={success} />}
+        {feedback && feedback.result !== "saved" && (
           <>
             <p className="mt-2 text-sm text-slate-600">
               Your entries are still here. Review them before retrying. They are not saved as a

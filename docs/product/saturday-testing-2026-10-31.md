@@ -1,6 +1,8 @@
 # Private testing — Saturday, 31 October 2026
 
-The owner will be available on Saturday. Until then, ordinary engineering and
+**Current handoff — 1 November:** 31 October was the owner's planned testing date.
+No deployment or joint-testing completion is recorded. Use this sequence for the
+next owner-approved window; no new date is assumed. Ordinary engineering and
 disposable CI continue with Docker Desktop off on the Mac and no paid GCP
 resource started. The four-hour usage policy is not spend approval.
 
@@ -11,6 +13,14 @@ access workflows are implemented. The 29 October usability increment removes
 manual reloads from request assessment, supporting-PDF extraction, policy
 regressions and policy-wording extraction. Only read panels update. Mounted
 form entries, command IDs and expected action versions are not replaced.
+
+The 1 November authoring fix also keeps the proposal mounted during optional
+wording uploads. Only a confirmed upload clears its own file/confirmation and
+rotates its upload command ID; uncertain responses retain both for an identical
+retry. Extraction errors are separate from upload confirmation. The user can
+select newly extracted wording without losing an existing source selection or
+proposal edits. Ordinary successful proposal saves still navigate to the saved
+policy. This increment's disposable browser acceptance is pending.
 
 Progress reads use authenticated, uncached projections of the same tenant/role
 as the page. Polling starts only for pending work, runs every five seconds for

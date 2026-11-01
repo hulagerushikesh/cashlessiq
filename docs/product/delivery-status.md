@@ -1,8 +1,26 @@
 # Product delivery — owner dashboard
 
-Updated 29 October 2026. This page summarizes the current product plan; the
+Updated 1 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
+
+### Policy wording uploads preserve proposals — 1 November
+
+Uploading optional policy wording previously navigated away from the authoring
+page and discarded an already-started proposal. Confirmed wording uploads now
+stay on that page, update only the extraction panel and clear only the upload
+controls. The proposal fields, edited clauses/rules/examples, command ID and
+selected source remain mounted. A confirmed upload receives a fresh command ID
+for another file; a failed or uncertain response keeps the file and original ID
+for an identical retry. An unavailable progress read is reported separately from
+the confirmed upload. No draft values are written to browser storage.
+
+Requested progress reads now survive a hidden/offline pause even when the last
+loaded data was complete, while retaining the two-minute observation bound.
+Local types, lint and all 55 client checks pass; disposable browser acceptance
+is pending for this increment. Docker remains off and paid GCP actions remain
+unapproved. The planned 31 October date has passed; the sequence below is the
+handoff for the next owner-approved testing window, not evidence of deployment.
 
 ### Daily usage accounting prepared — 29 October
 

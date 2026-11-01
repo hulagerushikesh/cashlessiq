@@ -2,6 +2,10 @@ import { PolicyWording } from "@/components/background-progress";
 import type { Documents } from "@/lib/workflow-progress";
 import { PolicyEditor, type PolicyDefinition } from "@/components/policy-editor";
 import { WorkflowForm } from "@/components/workflow-form";
+import {
+  PolicyWordingUploadForm,
+  PolicyWordingWorkspace,
+} from "@/components/policy-wording-workspace";
 import { randomUUID } from "node:crypto";
 import { mvpApi } from "@/lib/mvp-api";
 import { CaseServiceError } from "@/components/case-workspace";
@@ -26,7 +30,7 @@ export default async function NewPolicy({
   const template = await mvpApi<PolicyDefinition>("policy-template");
   if (!template || !documents) return <CaseServiceError />;
   return (
-    <>
+    <PolicyWordingWorkspace>
       <h1 className="text-3xl font-semibold">Propose a policy version</h1>
       <WorkflowFeedback
         {...(await searchParams)}
@@ -41,15 +45,8 @@ export default async function NewPolicy({
         <summary className="cursor-pointer text-sm font-medium">
           Optional: upload fictional policy wording PDF
         </summary>
-        <WorkflowForm
-          action="/workflows/commands"
-          method="post"
-          encType="multipart/form-data"
-          className="mt-6 max-w-5xl space-y-4 rounded-xl border bg-white p-6"
-        >
+        <PolicyWordingUploadForm commandId={randomUUID()}>
           <h2 className="text-lg font-semibold">Extract synthetic policy wording</h2>
-          <input type="hidden" name="operation" value="policy-upload" />
-          <input type="hidden" name="command_id" value={randomUUID()} />
           <label className="block text-sm">
             Policy PDF
             <input
@@ -67,7 +64,7 @@ export default async function NewPolicy({
           <button type="submit" className="rounded-lg bg-teal-800 p-3 text-white">
             Upload wording for extraction
           </button>
-        </WorkflowForm>
+        </PolicyWordingUploadForm>
       </details>
       <WorkflowForm
         action="/workflows/commands"
@@ -112,6 +109,6 @@ export default async function NewPolicy({
           Save proposal and run regressions
         </button>
       </WorkflowForm>
-    </>
+    </PolicyWordingWorkspace>
   );
 }

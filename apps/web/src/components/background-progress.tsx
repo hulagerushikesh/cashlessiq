@@ -13,6 +13,7 @@ import {
   type RequestProgress,
 } from "@/lib/workflow-progress";
 import { rupees } from "@/lib/money";
+import { usePolicyWordingUploads } from "./policy-wording-workspace";
 
 type State = ProgressState | "error" | "session" | "stopped";
 function wait(ms: number, signal: AbortSignal) {
@@ -30,12 +31,19 @@ function wait(ms: number, signal: AbortSignal) {
   });
 }
 
-function useProgress<T>(initial: T, url: string, pending: (data: T) => boolean) {
+function useProgress<T>(initial: T, url: string, pending: (data: T) => boolean, refreshKey = 0) {
   const [data, setData] = useState<T | null>(initial);
   const [state, setState] = useState<State>(pending(initial) ? "watching" : "current");
   const [attempt, setAttempt] = useState(0);
   const [enabled, setEnabled] = useState(true);
   const latest = useRef(initial);
+  const observedRefresh = useRef(refreshKey);
+  useEffect(() => {
+    if (observedRefresh.current === refreshKey) return;
+    observedRefresh.current = refreshKey;
+    setEnabled(true);
+    setAttempt((value) => value + 1);
+  }, [refreshKey]);
   useEffect(() => {
     latest.current = initial;
     setData(initial);
@@ -324,10 +332,12 @@ export function SupportingDocuments({ documents }: { documents: RequestProgress[
 }
 
 export function PolicyWording({ initial }: { initial: Documents }) {
+  const { revision } = usePolicyWordingUploads();
   const progress = useProgress(
     initial,
     "/workflows/progress?kind=policy-documents&id=POLICY-WORDING",
     documentsPending,
+    revision,
   );
   const [selected, setSelected] = useState("");
   return (

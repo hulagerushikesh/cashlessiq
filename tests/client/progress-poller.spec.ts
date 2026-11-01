@@ -63,6 +63,41 @@ test("pending work updates once and stops on a terminal result", async () => {
 });
 
 for (const mode of ["hidden", "offline"]) {
+  test(`a requested read of completed data survives ${mode} pause`, async () => {
+    const w = world();
+    let resumed = false;
+    let waits = 0;
+    await pollProgress({
+      ...w.options,
+      initial: false,
+      immediate: true,
+      visible: () => mode !== "hidden" || resumed,
+      online: () => mode !== "offline" || resumed,
+      wait: async (ms) => {
+        waits++;
+        resumed = true;
+        await w.options.wait(ms);
+      },
+    });
+    expect(waits).toBe(1);
+    expect(w.reads()).toBe(1);
+    expect(w.states).toEqual(["paused", "checking", "current"]);
+  });
+
+  test(`a requested read of completed data expires while ${mode}`, async () => {
+    const w = world();
+    await pollProgress({
+      ...w.options,
+      initial: false,
+      immediate: true,
+      visible: () => mode !== "hidden",
+      online: () => mode !== "offline",
+    });
+    expect(w.reads()).toBe(0);
+    expect(w.states).toContain("paused");
+    expect(w.states.at(-1)).toBe("expired");
+  });
+
   test(`${mode} tabs make no reads and expire without an endless watcher`, async () => {
     const w = world();
     await pollProgress({

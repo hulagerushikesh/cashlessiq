@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 29 October 2026
+Last updated: 1 November 2026
 Current engineering scope: **synthetic MVP workflows (M3–M5), private testing**.
 Governed live-source P2 and production gates remain separate.
 
@@ -13,6 +13,18 @@ shutdown when that run is eventually approved. The
 [delivery dashboard](delivery-status.md) records current evidence and the
 [operator guide](../../deploy/gcp-preview/README.md) records the run sequence.
 The localhost and eight-hour descriptions below are historical checkpoints.
+
+### Policy wording upload continuity — 1 November
+
+Optional wording uploads no longer reload the policy authoring page and discard
+the proposal. Confirmed uploads clear only their own file/confirmation controls,
+rotate only their own command ID and request a bounded extraction update. The
+proposal, selected source and authoring edits remain mounted. Uncertain upload
+responses retain the file and command ID for an identical retry. Requested reads
+also resume after hidden/offline pauses when previously loaded data was complete.
+All 55 local client checks, types and lint pass; browser acceptance is pending.
+Docker stays off and no paid cloud action is authorized. The earlier Saturday
+date is historical; the prepared sequence applies to the next approved window.
 
 ### Daily usage accounting accepted — 29 October
 

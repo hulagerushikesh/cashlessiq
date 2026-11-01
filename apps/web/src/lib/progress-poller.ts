@@ -20,12 +20,14 @@ export async function pollProgress<T>(options: {
   const deadline = now() + PROGRESS_WINDOW_MS;
   let data = options.initial;
   let immediate = Boolean(options.immediate);
+  let waitBeforeRead = !immediate;
   while (!options.signal.aborted && (immediate || options.pending(data))) {
     if (now() >= deadline) {
       options.onState("expired");
       return;
     }
-    if (!immediate) await options.wait(PROGRESS_INTERVAL_MS, options.signal);
+    if (waitBeforeRead) await options.wait(PROGRESS_INTERVAL_MS, options.signal);
+    waitBeforeRead = true;
     if (options.signal.aborted) return;
     if (now() >= deadline) {
       options.onState("expired");
@@ -34,7 +36,6 @@ export async function pollProgress<T>(options: {
     if (!options.visible() || !options.online()) {
       options.onState("paused");
       // A manual check also waits without issuing hidden/offline reads.
-      immediate = false;
       continue;
     }
     immediate = false;
