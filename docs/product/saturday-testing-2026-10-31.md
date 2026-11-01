@@ -20,7 +20,16 @@ rotates its upload command ID; uncertain responses retain both for an identical
 retry. Extraction errors are separate from upload confirmation. The user can
 select newly extracted wording without losing an existing source selection or
 proposal edits. Ordinary successful proposal saves still navigate to the saved
-policy. This increment's disposable browser acceptance is pending.
+policy. Revision `7940886` passes the
+[private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41277424414),
+including all 18 MVP browser journeys, real upload/authoring continuity,
+idempotent retry after a committed upload loses its browser response,
+encrypted 17-table recovery, browser reopening after restart/restore and cleanup.
+The [full product run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41277424482)
+also passes at that revision, including 1,522 API checks and all 18 MVP browser
+journeys. Runtime bundle files are unchanged from the accepted `3735e6f` archive
+below; the separately approved API/web image build must use `7940886` or a later
+accepted application revision. No new cloud images or resources were created.
 
 Progress reads use authenticated, uncached projections of the same tenant/role
 as the page. Polling starts only for pending work, runs every five seconds for

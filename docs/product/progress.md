@@ -22,7 +22,16 @@ rotate only their own command ID and request a bounded extraction update. The
 proposal, selected source and authoring edits remain mounted. Uncertain upload
 responses retain the file and command ID for an identical retry. Requested reads
 also resume after hidden/offline pauses when previously loaded data was complete.
-All 55 local client checks, types and lint pass; browser acceptance is pending.
+All 55 local client checks, types and lint pass. Revision `7940886` passes the
+[private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41277424414):
+37 HTTP checks, all 18 MVP browser journeys, encrypted 17-table recovery,
+browser reopening after restart/fresh-volume restoration and owned cleanup.
+The real-upload journey and committed-upload/lost-response/idempotent-retry
+scenario both pass. The
+[full product run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41277424482)
+also passes at that revision: 1,018 root checks (three skips), 1,522 API (one skip,
+two existing warnings), 72 membership, 35 catalog, 55 client, 26 browser, 15 source
+UI and all 18 MVP journeys, plus contracts/types/lint/build/containment and cleanup.
 Docker stays off and no paid cloud action is authorized. The earlier Saturday
 date is historical; the prepared sequence applies to the next approved window.
 

@@ -34,6 +34,13 @@ Unsupported rule types fail closed and still require domain implementation.
 
 ## Local runtime
 
+**Current operation — 1 November:** Docker Desktop stays off on the owner's Mac
+during ordinary engineering. The local refresh instructions below describe the
+earlier testing setup; do not run them just to repeat CI. The next deployment
+uses the [private-testing handoff](saturday-testing-2026-10-31.md) after explicit
+spend/window approval. The [delivery dashboard](delivery-status.md) records the
+latest accepted engineering revision and checks.
+
 The normal product stack keeps workflows disabled by default. Enable them with
 `compose.mvp.yml`; this also enables one local background thread in the API.
 The same job lease implementation runs independently with
@@ -80,6 +87,11 @@ now exercised by the agent; the owner can focus on usability feedback.
    leave the baseline rules unchanged, add a reason, and save the proposal. No JSON
    editing or manual address-bar navigation is required for this walkthrough.
    An optional fictional wording PDF is available under the upload disclosure.
+   You can enter the proposal first, upload wording without leaving the page,
+   then select the PDF after extraction succeeds. Upload confirmation preserves
+   the proposal and clears only the upload file/confirmation controls. If the
+   save cannot be confirmed, retry the same file with the retained command ID;
+   do not assume a failed connection means the server rejected the upload.
 2. Sign out and enter as the policy approver. Open **Policy library**, choose the
    product/version, inspect its clauses and all 30 regression results, approve,
    then activate with a reason. **Approved** and **active** are separate states;
@@ -154,7 +166,7 @@ See the recovery guide for copy permissions and the remaining custody limits.
   follows engineering validation and explicit cost approval.
 
 
-## Validation checkpoint
+## Historical validation checkpoint
 
 Implementation `517215a` passed
 [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/40203411894):
@@ -202,3 +214,13 @@ operations/tenant-admin retry controls remain reason-required and audited; a
 successful retry returns to that job. PDF rejection and manual transcription
 are distinct from worker failure. The Saturday run is described in
 [31 October private testing](saturday-testing-2026-10-31.md).
+
+The 1 November wording-upload fix keeps policy authoring mounted through the
+upload itself as well as extraction. It preserves edited clauses/rules/examples,
+the proposal command ID and an already-selected source when another PDF is
+uploaded. A confirmed upload gets a fresh upload command ID for the next file;
+an uncertain response keeps its original file/key for an identical retry. The
+extraction panel reports read failures separately from upload confirmation and
+offers **Check for updates** to recover. Ordinary proposal saves still navigate
+to the saved policy. Leaving/reloading still loses unsaved proposal entries;
+there is no browser-storage draft or automatic proposal save.

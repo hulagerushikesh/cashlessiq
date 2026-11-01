@@ -17,9 +17,22 @@ the confirmed upload. No draft values are written to browser storage.
 
 Requested progress reads now survive a hidden/offline pause even when the last
 loaded data was complete, while retaining the two-minute observation bound.
-Local types, lint and all 55 client checks pass; disposable browser acceptance
-is pending for this increment. Docker remains off and paid GCP actions remain
-unapproved. The planned 31 October date has passed; the sequence below is the
+Local types, lint and all 55 client checks pass. Revision `7940886` passes the
+[private preview run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41277424414):
+37 HTTP gate checks, all 18 MVP browser journeys, encrypted recovery matching
+17 tables, browser reopening after restart/fresh-volume restoration and owned
+cleanup. The new real-upload journey verifies retained authoring edits, repeated
+uploads, selected wording and the final saved proposal. The lost-response test
+commits an identical upload through authenticated HTTP before dropping the
+browser response, then confirms that retry creates no duplicate document.
+[Full product regression](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41277424482)
+also passes at that revision: 1,018 root checks (three skips), 1,522 API checks
+(one skip, two existing warnings), 72 membership, 35 catalog, 55 client, 26
+browser, 15 source UI and all 18 MVP browser journeys, plus contracts, types,
+lint, build, containment and owned cleanup. The runtime bundle below is unchanged;
+the next separately approved API/web image build must use `7940886` or a later
+accepted revision. Docker remains off and paid GCP actions remain unapproved.
+The planned 31 October date has passed; the sequence below is the
 handoff for the next owner-approved testing window, not evidence of deployment.
 
 ### Daily usage accounting prepared — 29 October
