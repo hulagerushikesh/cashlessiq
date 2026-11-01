@@ -28,8 +28,15 @@ sent” and confirmed successful submission. Follow-up goes to
 `hulagerushikesh@gmail.com`, typically in about two business days, possibly longer.
 No case number was displayed. Local screenshot receipt:
 `output/gcp-preview/quota-request-submitted-2026-11-01.png` (ignored output).
-Submission does not mean the quota is approved. Keep the existing dedicated
-project; no payment or new billing account was created.
+**Quota approval verified later on 1 November.** The agent read Google's
+“Quota Granted - Paid Cloud Services” email, received at 17:14:37 IST. Google
+says the additional quota should take effect within one hour, approximately
+18:15 IST. [Approval email](https://mail.google.com/mail/u/?authuser=hulagerushikesh%40gmail.com#all/1a196ed07755eaa7).
+A read-only project check still returned `billingEnabled=false` and no linked
+account. The approval email establishes Google's decision; successful billing
+linkage has not yet been verified. The owner chose to resume cloud work after
+the propagation wait. Keep the existing dedicated project; no payment or new
+billing account was created.
 
 No Cloud Build, VM, registry, disk, tunnel or preview runtime was started. No
 CashlessIQ cloud-usage ledger was initialized. Docker Desktop remained off.
@@ -52,7 +59,11 @@ agree on the new window before starting. Do not start on quota approval alone.
   Created locally from the accepted Git revision, with only the Docker build
   inputs and build configuration. No credentials, generated output or owner
   submission media included; nothing uploaded to GCP.
-- Four-file Compose preflight passed without starting Docker or cloud services.
+- During the quota propagation wait, the four-file Compose preflight passed
+  again without starting Docker or cloud services; the steady container ceiling
+  remains 1,408 MiB. Runtime archive verification passed and the build-source
+  SHA-256 still matches the value above. This is offline readiness evidence;
+  actual GCP memory, HTTPS access and shutdown checks remain for the live run.
 
 Published USD rates were rechecked: [e2-small](https://cloud.google.com/products/compute/pricing/general-purpose?hl=en)
 $0.016752855/hour, [IPv4](https://cloud.google.com/vpc/network-pricing)

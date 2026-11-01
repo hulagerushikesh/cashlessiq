@@ -4,7 +4,7 @@ Updated 1 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
-### First GCP run approved; billing quota blocks setup — 1 November
+### GCP quota approved; billing linkage next — 1 November
 
 The owner approved the first bounded cloud test: billing linkage, one build,
 at most four hours of VM use and retained disk/image/source storage. Google
@@ -13,9 +13,12 @@ confirmed billing remains disabled. Five other projects are linked to the only
 open billing account. No build or VM was started, and Docker stayed off.
 At the owner's explicit request, the agent submitted the quota-increase form
 for one additional billing-linked project. Google confirmed submission and
-said a reply typically takes about two business days; approval remains pending.
-Keep the existing dedicated project; another project would encounter the same
-account quota. The [first-run handoff](gcp-first-run-2026-11-01.md) records the
+said a reply typically takes about two business days. Google subsequently
+approved the request at 17:14 IST, with up to one hour for propagation. The
+agent verified the approval email and confirmed billing is still unlinked.
+The owner chose to resume cloud work after the wait. Offline Compose and
+package/checksum checks pass; actual cloud acceptance remains outstanding.
+Keep the existing dedicated project; no additional project is needed. The [first-run handoff](gcp-first-run-2026-11-01.md) records the
 approval, exact failure, submission receipt, prepared inputs and next step. Earlier statements
 below that paid actions were unapproved describe their historical checkpoints.
 

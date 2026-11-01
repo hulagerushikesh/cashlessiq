@@ -6,7 +6,10 @@ billing linkage, one build and the first test for up to four hours, with retaine
 disk/image/source storage. Billing linkage failed with `Cloud billing quota
 exceeded`; billing remains disabled and no build or VM started. At the owner's
 explicit request, the agent submitted the quota form and verified Google's
-success receipt; quota approval remains pending. See the [current first-run handoff](../../docs/product/gcp-first-run-2026-11-01.md)
+success receipt. Google later approved the quota at 17:14 IST, with up to one
+hour for propagation. The approval email is verified, but billing linkage has
+not yet succeeded. The owner chose to resume cloud work after the wait; offline
+Compose/package/checksum checks pass. See the [current first-run handoff](../../docs/product/gcp-first-run-2026-11-01.md)
 for the exact approval and next step. The packaged `plan.json` retains its
 historical preparation-only state; it is not an authorization or live receipt.
 Do not start resources until the quota issue is resolved and the owner is
