@@ -17,13 +17,19 @@ The billing-link command failed with `FAILED_PRECONDITION`, specifically
 to that account, and it is the only open account visible to this login. Do not
 unlink any of those other projects without a specific owner decision.
 
-**Owner clarification: no quota-increase request has been submitted.** The
-earlier selected reply saying it was submitted was corrected in chat. Creating
-another project would not address this billing-account quota; keep the existing
-dedicated CashlessIQ project. The next owner step is Google's
+**Quota-increase request submitted on 1 November 2026.** After clarifying that
+the earlier request had not been submitted, the owner signed in and explicitly
+asked the agent to submit Google's
 [billing quota request](https://support.google.com/code/contact/billing_quota_increase)
-for capacity to link one additional project. No payment, new billing account or
-support-message submission was performed by the agent.
+on their behalf. The agent requested capacity for one additional billing-linked
+project on the account above, identifying the existing CashlessIQ project and
+the bounded synthetic-data test plan. Google displayed “Your email has been
+sent” and confirmed successful submission. Follow-up goes to
+`hulagerushikesh@gmail.com`, typically in about two business days, possibly longer.
+No case number was displayed. Local screenshot receipt:
+`output/gcp-preview/quota-request-submitted-2026-11-01.png` (ignored output).
+Submission does not mean the quota is approved. Keep the existing dedicated
+project; no payment or new billing account was created.
 
 No Cloud Build, VM, registry, disk, tunnel or preview runtime was started. No
 CashlessIQ cloud-usage ledger was initialized. Docker Desktop remained off.

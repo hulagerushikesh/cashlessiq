@@ -4,8 +4,9 @@ This is a disposable, fictional-data test for the owner and engineering agent.
 The dedicated project is `cashlessiq-dev-rush`. On 1 November the owner approved
 billing linkage, one build and the first test for up to four hours, with retained
 disk/image/source storage. Billing linkage failed with `Cloud billing quota
-exceeded`; billing remains disabled and no build or VM started. No quota request
-has been submitted. See the [current first-run handoff](../../docs/product/gcp-first-run-2026-11-01.md)
+exceeded`; billing remains disabled and no build or VM started. At the owner's
+explicit request, the agent submitted the quota form and verified Google's
+success receipt; quota approval remains pending. See the [current first-run handoff](../../docs/product/gcp-first-run-2026-11-01.md)
 for the exact approval and next step. The packaged `plan.json` retains its
 historical preparation-only state; it is not an authorization or live receipt.
 Do not start resources until the quota issue is resolved and the owner is

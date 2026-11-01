@@ -11,10 +11,12 @@ at most four hours of VM use and retained disk/image/source storage. Google
 rejected the billing link with `Cloud billing quota exceeded`; a fresh read
 confirmed billing remains disabled. Five other projects are linked to the only
 open billing account. No build or VM was started, and Docker stayed off.
-The owner clarified that **no quota-increase request has been submitted**.
+At the owner's explicit request, the agent submitted the quota-increase form
+for one additional billing-linked project. Google confirmed submission and
+said a reply typically takes about two business days; approval remains pending.
 Keep the existing dedicated project; another project would encounter the same
 account quota. The [first-run handoff](gcp-first-run-2026-11-01.md) records the
-approval, exact failure, prepared inputs and next owner step. Earlier statements
+approval, exact failure, submission receipt, prepared inputs and next step. Earlier statements
 below that paid actions were unapproved describe their historical checkpoints.
 
 ### Policy wording uploads preserve proposals — 1 November

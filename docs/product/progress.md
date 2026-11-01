@@ -8,8 +8,10 @@ Current operation: Docker Desktop stays shut down for ordinary engineering;
 offline checks and disposable CI provide verification. The first GCP billing,
 single-build and four-hour test was explicitly approved on 1 November, but Google
 rejected billing linkage with `Cloud billing quota exceeded`. Billing remains
-disabled; no build or VM started. The owner clarified that no quota request has
-been submitted. See the [first-run handoff](gcp-first-run-2026-11-01.md).
+disabled; no build or VM started. The agent submitted the quota request at the
+owner's explicit request and verified Google's success receipt. Approval is
+pending; Google says a reply typically takes about two business days. See the
+[first-run handoff](gcp-first-run-2026-11-01.md).
 The owner selected at most four hours of active testing per day with immediate
 shutdown afterward. A read-only instance
 checker now verifies the reviewed four-hour STOP configuration and completed VM
