@@ -1,4 +1,5 @@
 import { expect, test, type Browser } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { mvpBrowserOptions } from "./runtime";
 
@@ -177,8 +178,22 @@ test("lost upload receipts retain the file and command key; confirmed retry is i
     await page.route(
       "**/workflows/commands",
       async (route) => {
-        // Commit the real upload, then lose only its response to the browser.
-        const response = await route.fetch();
+        // Commit the same file/key through authenticated HTTP, then lose the
+        // browser response. Supply explicit multipart bytes for this fault
+        // injection instead of replaying an intercepted browser file body.
+        const response = await context.request.post("/workflows/commands", {
+          headers: { Origin: new URL(page.url()).origin, Accept: "application/json" },
+          multipart: {
+            operation: "policy-upload",
+            command_id: uploadKey,
+            synthetic_data: "true",
+            document: {
+              name: "synthetic.pdf",
+              mimeType: "application/pdf",
+              buffer: readFileSync(pdf),
+            },
+          },
+        });
         expect((await response.json()).result).toBe("saved");
         await route.abort("failed");
       },
