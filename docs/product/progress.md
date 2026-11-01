@@ -5,11 +5,15 @@ Current engineering scope: **synthetic MVP workflows (M3–M5), private testing*
 Governed live-source P2 and production gates remain separate.
 
 Current operation: Docker Desktop stays shut down for ordinary engineering;
-offline checks and disposable CI provide verification. GCP remains preparation
-only, pending explicit spend approval. The owner selected at most four hours of
-active testing per day with immediate shutdown afterward. A read-only instance
+offline checks and disposable CI provide verification. The first GCP billing,
+single-build and four-hour test was explicitly approved on 1 November, but Google
+rejected billing linkage with `Cloud billing quota exceeded`. Billing remains
+disabled; no build or VM started. The owner clarified that no quota request has
+been submitted. See the [first-run handoff](gcp-first-run-2026-11-01.md).
+The owner selected at most four hours of active testing per day with immediate
+shutdown afterward. A read-only instance
 checker now verifies the reviewed four-hour STOP configuration and completed VM
-shutdown when that run is eventually approved. The
+shutdown when that run starts. The
 [delivery dashboard](delivery-status.md) records current evidence and the
 [operator guide](../../deploy/gcp-preview/README.md) records the run sequence.
 The localhost and eight-hour descriptions below are historical checkpoints.

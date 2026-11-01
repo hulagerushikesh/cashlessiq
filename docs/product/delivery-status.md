@@ -4,6 +4,19 @@ Updated 1 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### First GCP run approved; billing quota blocks setup — 1 November
+
+The owner approved the first bounded cloud test: billing linkage, one build,
+at most four hours of VM use and retained disk/image/source storage. Google
+rejected the billing link with `Cloud billing quota exceeded`; a fresh read
+confirmed billing remains disabled. Five other projects are linked to the only
+open billing account. No build or VM was started, and Docker stayed off.
+The owner clarified that **no quota-increase request has been submitted**.
+Keep the existing dedicated project; another project would encounter the same
+account quota. The [first-run handoff](gcp-first-run-2026-11-01.md) records the
+approval, exact failure, prepared inputs and next owner step. Earlier statements
+below that paid actions were unapproved describe their historical checkpoints.
+
 ### Policy wording uploads preserve proposals — 1 November
 
 Uploading optional policy wording previously navigated away from the authoring

@@ -1,9 +1,15 @@
 # First private GCP test: operator sequence
 
 This is a disposable, fictional-data test for the owner and engineering agent.
-The dedicated project is `cashlessiq-dev-rush`. Billing is disabled and paid
-deployment is not authorized as of 29 October 2026. Do not run the paid steps
-until the owner approves the exact cost, billing account and test window.
+The dedicated project is `cashlessiq-dev-rush`. On 1 November the owner approved
+billing linkage, one build and the first test for up to four hours, with retained
+disk/image/source storage. Billing linkage failed with `Cloud billing quota
+exceeded`; billing remains disabled and no build or VM started. No quota request
+has been submitted. See the [current first-run handoff](../../docs/product/gcp-first-run-2026-11-01.md)
+for the exact approval and next step. The packaged `plan.json` retains its
+historical preparation-only state; it is not an authorization or live receipt.
+Do not start resources until the quota issue is resolved and the owner is
+available for the approved window.
 
 ## Prepare offline before approval
 
