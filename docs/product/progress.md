@@ -7,12 +7,14 @@ Governed live-source P2 and production gates remain separate.
 Current operation: Docker Desktop stays shut down for ordinary engineering;
 offline checks and disposable CI provide verification. The first GCP billing,
 single-build and four-hour test was explicitly approved on 1 November, but Google
-rejected billing linkage with `Cloud billing quota exceeded`. Billing remains
-disabled; no build or VM started. The agent submitted the quota request at the
+initially rejected billing linkage with `Cloud billing quota exceeded`. No build
+or VM started. The agent submitted the quota request at the
 owner's explicit request and verified Google's success receipt. Google later
 approved the quota at 17:14 IST, allowing up to one hour for propagation. The
-agent read the approval email; billing remains unlinked. The owner chose to
-resume cloud work after the wait. Offline Compose, runtime-package verification
+agent read the approval email. After the owner asked to check again following
+the wait, billing linkage succeeded at approximately 21:08 IST. An independent
+read confirmed billing enabled on Firebase Payment; the quota blocker is
+resolved. No build or VM has started. Offline Compose, runtime-package verification
 and build-source checksum checks pass. See the
 [first-run handoff](gcp-first-run-2026-11-01.md).
 The owner selected at most four hours of active testing per day with immediate

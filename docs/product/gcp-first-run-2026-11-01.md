@@ -33,15 +33,23 @@ No case number was displayed. Local screenshot receipt:
 says the additional quota should take effect within one hour, approximately
 18:15 IST. [Approval email](https://mail.google.com/mail/u/?authuser=hulagerushikesh%40gmail.com#all/1a196ed07755eaa7).
 A read-only project check still returned `billingEnabled=false` and no linked
-account. The approval email establishes Google's decision; successful billing
-linkage has not yet been verified. The owner chose to resume cloud work after
+account. The approval email established Google's decision; at that checkpoint successful
+billing linkage had not yet been verified. The owner chose to resume cloud work after
 the propagation wait. Keep the existing dedicated project; no payment or new
 billing account was created.
 
+**Billing linkage verified at approximately 21:08 IST on 1 November.** When the
+owner asked to check again after the wait, the already-approved link command
+succeeded. An independent `gcloud billing projects describe` confirmed
+`billingEnabled=true` and `billingAccounts/01D654-F2896E-D5D2E8` on
+`cashlessiq-dev-rush`. The quota blocker is resolved. This check did not start
+a build or provision test resources; the next step is the approved scoped
+cloud setup and single build, followed by the active VM testing window.
+
 No Cloud Build, VM, registry, disk, tunnel or preview runtime was started. No
 CashlessIQ cloud-usage ledger was initialized. Docker Desktop remained off.
-The four-hour window has not begun. Once the quota is resolved, resume within
-the approved window when the owner is available; if it moves to another day,
+The four-hour window has not begun. Resume within the approved window when
+the owner is available; if it moves to another day,
 agree on the new window before starting. Do not start on quota approval alone.
 
 ## Prepared inputs
@@ -77,8 +85,8 @@ prices and tax determine the invoice.
 
 ## Resume sequence
 
-1. Confirm the quota issue is resolved and the owner is available for the window.
-2. Retry only the approved billing link, then configure the scoped identities,
+1. Billing linkage is verified; confirm owner availability before the active VM window.
+2. Configure the scoped identities,
    regional registry/source storage, cost alerts and reviewed network/IAP access.
 3. Submit the single approved 15-minute build while the VM remains off. Record
    immutable API/web digests. Stop for another decision if it needs a new build.
