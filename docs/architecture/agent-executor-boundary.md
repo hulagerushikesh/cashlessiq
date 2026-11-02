@@ -1,13 +1,60 @@
-# Agent executor boundary: implementation review package
+# Agent executor boundary: fake process seam and remaining review
 
 2 November 2026. Proposed design grounded in the current repository. No service,
 principal, credential, grant, SQL function, source write or live execution is
-created by this package. The fake-only ledger remains inactive. The existing
+created in a deployed environment by this package. The fake-only ledger remains inactive. The existing
 small GCP VM can remain the first testing host; separate processes and identities
 do not imply a larger VM or a second server. Measure memory during an approved
 window before changing capacity.
 
-## Current implementation and the gap
+## Implemented fake process seam
+
+`agent_executor.py` now supplies an inactive checkpoint-to-process coordinator.
+It first commits `begin_submission`, then sends a bounded canonical envelope to
+one child, and finally publishes through the existing fresh clinical locks and
+candidate validator. The envelope binds tenant, operation, attempt, stable
+submission, mapping/configuration digests, captured input and the effective
+submission lease/deadline. Publication rejects changed pins or an extended lease.
+
+`BoundedFakeProcess` uses a fixed trusted test command, clean environment, closed
+inherited file descriptors and a new POSIX process group. It bounds request,
+reply and error pipes; any stderr, malformed frame, changed request hash, nonzero
+exit, timeout or excessive output fails with fixed safe errors. The child group
+is forcibly cleaned on completion/failure. One object permits one exchange;
+the committed ledger checkpoint, rather than that in-memory latch, prevents
+another coordinator submission. Failures retain reserved/uncertain allowance.
+The child has at most ten seconds, shortened to the original lease/window minus
+a two-second persistence margin; this is a fake engineering budget, not a
+measured provider latency or a hard remote cancellation guarantee.
+
+`apps/agent-transport` is a stdlib-only fake artifact: one fixed read-only canned
+fixture is SHA-256 bound to one exact request. It cannot select a credential,
+endpoint, file, command or retry policy through IPC. It does not calculate an
+independent recommendation, authenticate a source observation or call Snowflake.
+The default image excludes its local test helper and every product/SQL/provider
+package. It is absent from product Compose, cloud bundles and automatic startup.
+
+Disposable CI exercises that image with distinct numeric identities, exact
+read-only dummy mounts, no network/host PID namespace/ports/privileges, dropped
+capabilities, a read-only root and bounded CPU/memory/PIDs. Controller/transport
+probes cannot read each other's unmounted dummy identity. The transport has no
+PostgreSQL credentials/socket/client package or reachable database network.
+A separate PostgreSQL suite checks checkpoint visibility before child startup,
+private publication, revocation/review drift, bad results, crashes/timeouts and
+conservative no-replay accounting. Offline tests cover protocol, environment/FD
+inheritance, output bounds and descendant cleanup. Acceptance is recorded in the
+product status after CI completes.
+
+This is **not** a production sandbox launcher, private IPC authentication,
+provider credential custody or database least privilege. Offline child tests run
+under the test user's OS identity; the separate CI container tests establish the
+narrow fake artifact/mount/network boundary. The container controller probe is
+only a dummy mount/identity probe, not the real clinical controller service.
+The real controller still uses the existing schema-owning test connection.
+Live grants, separately retained receipts/restore epochs and source/provider
+integration remain unimplemented. No route or worker imports this executor.
+
+## Current database implementation and the gap
 
 `FakeAgentLedger` directly opens SQLAlchemy sessions and reads locked tenant,
 user, membership, request, policy, input-revision and review rows. It writes
@@ -43,8 +90,9 @@ stable submission IDs, exact mapping/configuration digests and original deadline
 It cannot select a tenant, credential, tool inventory or spend allowance from a
 prompt. No secrets, raw observations or arbitrary connection parameters belong
 in IPC errors, CLI arguments, browser responses, job payloads or general logs.
-The concrete IPC protocol and hardening need implementation and denial tests;
-there is currently no transport process to launch.
+The implemented fake stdio protocol and disposable hardening above exercise
+this shape. Production authenticated IPC, a service launcher and live secret
+custody still require implementation and denial tests.
 
 ## Database privilege package to prepare
 
@@ -71,7 +119,7 @@ inventory, then implement a tenant-bound capability path for the controller:
   cross-mapping fence is application logic under shared tenant/request locks;
   all future admission writers must use the same serialization boundary.
 
-This is a privilege specification, not a tested grant script. No executable
+This remains a privilege specification, not a tested grant script. No executable
 production SQL is supplied while the target effective grants and supported
 mechanism remain unresolved. Prepare forward/rollback scripts with exact newly
 created objects only after disposable privilege-denial acceptance; disabling

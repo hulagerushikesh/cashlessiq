@@ -80,6 +80,9 @@ class SubmissionPermit(ClaimReceipt):
     actor_id: UUID
     attempt_id: UUID
     submission_id: UUID
+    config_digest: Digest
+    source_digest: Digest
+    deadline: AwareDatetime
     snapshot: AgentInput = Field(repr=False)
 
 
@@ -450,6 +453,9 @@ class FakeAgentLedger:
                 actor_id=actor_id,
                 attempt_id=attempt.id,
                 submission_id=attempt.submission_id,
+                config_digest=op.config_digest,
+                source_digest=op.source_digest,
+                deadline=min(op.deadline, op.lease_until, grant.ends_at),
                 snapshot=snapshot,
             )
         # Commit completed before returning permission to the test fake gateway.
@@ -470,6 +476,9 @@ class FakeAgentLedger:
                 or attempt.submission_id != permit.submission_id
                 or attempt.fence_id != permit.fence_id
                 or permit.snapshot != snapshot
+                or permit.config_digest != op.config_digest
+                or permit.source_digest != op.source_digest
+                or not now < permit.deadline <= min(op.deadline, op.lease_until, grant.ends_at)
             ):
                 raise AgentContractError("invalid_submission_receipt")
             if op.state == "published":
