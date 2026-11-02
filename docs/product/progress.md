@@ -25,6 +25,19 @@ The existing root suite passes (1,018 checks, three skips), as do Python lint
 and whitespace checks.
 Durable run uniqueness/checkpoints, real lease renewal, cost approval and
 source/tool identity/version mapping remain open before any live adapter.
+The [durable-stage proposal](../architecture/agent-run-ledger-design.md) now
+specifies operation uniqueness, submission checkpoints, reconciliation,
+publication fences and the crash/concurrency matrix for the next fake-only
+database implementation. No ledger migration or live executor is applied.
+
+Accepted engineering revision `2878ff7`: [product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41415294397)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41415294434)
+both pass. Product checks include 1,668 API (one skip, two existing warnings),
+1,018 root (three skips), 72 membership, 35 catalog, 58 client, 26 browser,
+15 source UI and 18 MVP journeys, plus contracts/types/lint/build and containment.
+Preview passed 18 journeys and encrypted 17-table recovery with both saved-review
+browser reopenings. Owned cleanup passed. The VM remains TERMINATED on a fresh
+read; no new paid image build/runtime or local Docker was started.
 
 ### Stable private address and intelligence handoff — 2 November
 

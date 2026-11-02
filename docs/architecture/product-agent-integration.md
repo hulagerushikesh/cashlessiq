@@ -95,12 +95,15 @@ See the [v1 contract and limits](agent-comparison-contract.md). It remains
 inactive and outside the embedded MVP worker: no route, SDK, credentials,
 Snowflake staging write or execution adapter was added.
 
-Next prepare the durable run-ledger and lease/cost design for review, including
-operation uniqueness independent of a caller-chosen correlation ID, checkpoint
-custody, uncertain-completion reconciliation, transactional publication fencing,
-and the proposed governed source/tool version mapping. Do not wire the existing
-three-attempt MVP worker to the agent. Offline lifecycle receipts are not durable
-protection against duplicate paid execution after a crash or concurrent workers.
+The [proposed durable-stage design](agent-run-ledger-design.md) now specifies
+operation uniqueness, transactional allowance/submission checkpoints, worker
+fencing, unknown-completion reconciliation and a disposable-database fault matrix.
+It is not an applied migration, approved transport choice or live executor.
+Next implement/test the durable ledger against a fake gateway on disposable
+PostgreSQL, and settle the governed source/tool version mapping before any real
+adapter. Do not wire the existing three-attempt MVP worker to the agent. Offline
+lifecycle receipts are not durable protection against duplicate paid execution
+after a crash or concurrent workers.
 
 The existing source-read integration and its isolation acceptance remain
 separate from new assessment execution. This plan supersedes the assumption

@@ -19,8 +19,23 @@ entry points. The existing root regression also passes (1,018 checks, three
 skips), together with repository Python lint and whitespace checks.
 This is not live agent parity or durable duplicate-call protection.
 No agent route, live adapter, schema migration or embedded-worker wiring was
-added; GCP and Snowflake execution remain inactive. Next is the durable
-run-ledger/lease/cost and governed source-version mapping design.
+added; GCP and Snowflake execution remain inactive. Remaining work includes the
+durable run-ledger/lease/cost implementation and governed source-version mapping.
+The [durable-stage proposal](../architecture/agent-run-ledger-design.md) records
+the operation key, durable submission checkpoint, conservative reconciliation,
+publication transaction and crash/concurrency acceptance matrix. It is design
+only; the next implementation uses a fake gateway and disposable PostgreSQL.
+
+Revision `2878ff7` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41415294397)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41415294434):
+1,668 API checks (one skip, two existing warnings), 1,018 root checks (three
+skips), 72 membership, 35 catalog, 58 client, 26 browser, 15 source UI and all
+18 MVP journeys. The owner preview separately passed all 18 journeys, restored
+and matched 17 tables, then reopened the saved workflow after restart and fresh
+restore. Contracts/types/lint/build, containment and cleanup passed. A fresh
+GCP read confirmed the VM remains TERMINATED; no new paid build/run was opened.
+The existing deployed image remains unchanged; the inactive agent contract is
+source/CI preparation only.
 
 ### Stable address configured; agent integration next — 2 November
 
