@@ -37,8 +37,11 @@ def journal(tmp_path):
 
 
 def closed(call):
-    with pytest.raises(AgentContractError, match=f"^{ERROR}$"):
+    with pytest.raises(AgentContractError, match=f"^{ERROR}$") as caught:
         call()
+    # Fixed str alone is insufficient: a formatted traceback must not include
+    # chained filesystem paths, SQLite details or private corrupt-file contents.
+    assert caught.value.__suppress_context__
 
 
 def test_reopen_persists_issued_tombstone_and_never_initializes_again(journal):

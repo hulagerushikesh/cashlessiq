@@ -33,7 +33,7 @@ ERROR = "agent_admission_quarantined"
 
 
 def _closed():
-    raise AgentContractError(ERROR)
+    raise AgentContractError(ERROR) from None
 
 
 class FakeEpochPin(ImmutableContract):
