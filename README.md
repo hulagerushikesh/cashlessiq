@@ -13,9 +13,9 @@ approved testing windows. See the [current delivery status](docs/product/deliver
 [agent integration sequence](docs/architecture/product-agent-integration.md).
 The inactive [agent comparison contract](docs/architecture/agent-comparison-contract.md)
 has 146 offline golden/fault checks. The inactive
-[fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 72
+[fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 90
 PostgreSQL crash/concurrency checks and ten populated encrypted recovery cases.
-The [source mapping review](docs/architecture/agent-source-mapping.md) records
+The [source mapping review](docs/architecture/agent-source-mapping.md) has 120 offline validation checks and records
 integration gaps. Live execution, governed source mapping and service isolation
 remain; the deployed workflow still uses deterministic rules.
 

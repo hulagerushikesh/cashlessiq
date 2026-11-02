@@ -1,8 +1,8 @@
-# Agent source mapping: preparation for review
+# Agent source mapping: inactive validation and review
 
 2 November 2026. Repository inspection only; no Snowflake connection, SQL
 execution, new credential, staging write or live agent call was made. This is
-a proposed integration contract, not applied governance or transport.
+an inactive integration contract, not applied governance or transport.
 
 ## Keep two input paths explicit
 
@@ -98,12 +98,69 @@ decision, mutate the human workflow or imply that generated prose is verified.
 The retained broad `MEMBER_360` tool must remain disconnected from new product
 execution until a separately governed same-tenant clinical projection exists.
 
+## Implemented offline validation
+
+[`agent_source_mapping.py`](../../apps/api/src/ciq_api/agent_source_mapping.py)
+implements the immutable `source-mapping-v1` package. It has separate discriminated
+identities for existing golden source IDs and captured product snapshots. A
+manifest covers one tenant and input path, at most thirty exact request pins,
+a registry revision, source schema, strict normalization version and exactly
+seven definition roles (agent, case/waiting/payable/SLA tools, clause search and
+shared rules package). Duplicate request/source mappings, mixed paths and
+missing/duplicate/unknown roles are rejected. Names and content hashes both pin
+definitions. Definition/case inventory order is normalized for hashing; the
+clinical rule order is preserved.
+
+Validation requires an independently supplied clinical `SourceObservation`, a
+separately pinned expected manifest digest and the server-owned `AgentInput`.
+It checks tenant/registry/schema/definitions, exact request/input/policy/rules/
+evidence pins, distinct legacy insurance-policy IDs, source identity and capture
+digest, then compares the entire canonical normalized facts/policy projection.
+Strict integer money and explicit null/default values survive; no `_money`
+conversion, remaining-cover recomputation, legacy lookup or fabricated evidence
+is performed. JSON parsing rejects duplicate keys, unknown fields and packages
+over 128,000 bytes. Boundary errors contain fixed codes rather than clinical data.
+
+The observation's digest binds the normalized projection and source identity;
+it is not a hash of a complete raw Snowflake export. A trusted future preflight
+must establish actual source ownership, definitions, freshness and normalization,
+with independently retained raw-source custody where required. This module
+cannot authenticate a caller's assertions or prove database isolation. Test
+observations intentionally copy synthetic fixtures; they are not source parity.
+The `ValidatedMapping` receipt authorizes no I/O and is not a submission permit.
+No route, worker, ledger, credential or transport imports this module yet. Both
+paths are offline contracts; neither claims a working source adapter.
+
+The accompanying 120 offline checks cover all thirty examples under both input
+paths, changed tenant/registry/schema/definition/content/pins, strict money and
+nulls, duplicate/ambiguous mappings, namespace boundaries and immutable receipts.
+Review/correlation changes do not alter source capture identity; they still
+remain fresh publication fences in the ledger. The source/schema/definition
+revision must be reviewed before any live admission.
+
+The fake ledger now separately blocks new reservations for the same request
+under changed config/source digests while any nonexpired operation exists,
+including completed/rejected work. It also blocks amended inputs under an
+unresolved `submitting`/`unknown` execution, even with unchanged digests. Only a
+never-submitted reservation already settled `expired` can be replaced under a
+new exact fake grant. The same fence is rechecked before the durable submission
+checkpoint, including databases with old conflicting reservations. Eighteen new
+PostgreSQL cases cover state/identity changes, a concurrent cross-configuration
+race, valid expiry replacement and the final permit boundary. The populated
+restore suite also exercises changed-digest denial on restored published work.
+
+This is intentionally conservative application logic under the existing trusted
+tenant/request transaction locks, not a new SQL uniqueness guarantee, a provider
+idempotency contract or an automatic cross-version reconciliation protocol.
+There is no override endpoint. Live execution must first resolve the broader
+identity/privilege, provider reconciliation, stale-backup and spend gates.
+
 ## Next concrete acceptance
 
-1. Build offline fixtures proving the versioned manifest, exact mapping and
-   normalization rules above; wrong tenant, duplicate IDs, policy-version drift,
-   changed clauses, nullable estimates and uncertain cross-version replacements
-   must fail closed before a submission permit.
+1. Offline manifest/normalization fixtures and the conservative fake-ledger
+   replacement fence are implemented above. Settle the actual governed source
+   registry, independently captured observations and supported transport before
+   connecting validation to a future live admission.
 2. Prepare the clinical executor's process/secret/database access package and
    source preflight. Source-reading approval does not authorize tool execution,
    staging writes or a remote model call. Keep human administrator OAuth out of

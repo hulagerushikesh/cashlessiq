@@ -25,6 +25,7 @@ from test_agent_ledger import (
     TENANT_ID,
     balance,
     payload,
+    replacement_grant,
     reserve,
     rows,
     submission,
@@ -274,6 +275,15 @@ def test_populated_encrypted_restore_retains_receipts_and_forbids_resubmission(
         replacement = restored.ledger.create_fake_grant(TENANT_ID, s.spec)
         assert reserve(restored, 1, grant_id=replacement) == recovered
         assert reserve(restored, 1) == recovered
+        # A restored result still fences cross-version attempts under a new
+        # grant; a changed digest is not permission to repurchase baseline work.
+        for changes, grant_changes in (
+            ({"config_digest": "c" * 64}, {"config": "c" * 64}),
+            ({"source_digest": "c" * 64}, {"source": "c" * 64}),
+        ):
+            changed_grant = replacement_grant(restored, **grant_changes)
+            with pytest.raises(AgentContractError, match="mapping_replacement_requires_review"):
+                reserve(restored, 0, grant_id=changed_grant, **changes)
         with pytest.raises(AgentContractError):
             restored.ledger.claim(TENANT_ID, ACTOR, subject.operation_id)
         if permit:

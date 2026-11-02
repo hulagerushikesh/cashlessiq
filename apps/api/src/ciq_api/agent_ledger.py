@@ -223,6 +223,35 @@ def _settle(grant, op, state):
             grant.consumed_units += grant.units_per_attempt
 
 
+def _replacement_fence(db, tenant_id, request_id, config_digest, source_digest, operation_id=None):
+    """Conservative application fence, under _scope's tenant/request locks.
+
+    Changing a manifest/configuration is not reconciliation or permission to buy
+    another call. Only a never-submitted, expired reservation can be replaced.
+    An unresolved attempt also blocks amended inputs under the same mapping.
+    There is deliberately no automatic override or live reconciliation path.
+    """
+    priors = db.execute(
+        select(
+            AgentOperation.id,
+            AgentOperation.state,
+            AgentOperation.config_digest,
+            AgentOperation.source_digest,
+        ).where(
+            AgentOperation.tenant_id == tenant_id,
+            AgentOperation.request_id == request_id,
+            AgentOperation.state != "expired",
+        )
+    )
+    for prior in priors:
+        if prior.id == operation_id:
+            continue
+        if prior.config_digest != config_digest or prior.source_digest != source_digest:
+            raise AgentContractError("mapping_replacement_requires_review")
+        if prior.state in {"submitting", "unknown"}:
+            raise AgentContractError("unresolved_execution")
+
+
 class FakeAgentLedger:
     """Engineering seam only. Fake-only schema cannot admit a live execution grant."""
 
@@ -288,6 +317,7 @@ class FakeAgentLedger:
             )
             if prior:
                 return _receipt(prior)
+            _replacement_fence(db, tenant_id, request_id, config_digest, source_digest)
             now = _now(db)
             _window(grant, now)
             if (
@@ -395,6 +425,11 @@ class FakeAgentLedger:
             _lease(op, claim.fence_id, now)
             if op.state != "reserved" or op.version != claim.version:
                 raise AgentContractError("automatic_retry_forbidden")
+            # Recheck immediately before the durable checkpoint, including old
+            # reservations created before this application fence was introduced.
+            _replacement_fence(
+                db, tenant_id, op.request_id, op.config_digest, op.source_digest, op.id
+            )
             attempt = AgentAttempt(
                 tenant_id=tenant_id,
                 id=uuid4(),

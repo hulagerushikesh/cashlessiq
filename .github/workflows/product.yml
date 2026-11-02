@@ -33,7 +33,7 @@ jobs:
           TEST_DATABASE_URL: postgresql+psycopg://postgres:ciq-disposable-agent-ledger@127.0.0.1:5432/postgres
         run: |
           uv sync --project apps/api --frozen
-          uv run --project apps/api pytest apps/api/tests/test_agent_contracts.py apps/api/tests/test_agent_ledger.py
+          uv run --project apps/api pytest apps/api/tests/test_agent_contracts.py apps/api/tests/test_agent_source_mapping.py apps/api/tests/test_agent_ledger.py
       - name: Populated encrypted agent-ledger restore and duplicate-submission guards
         env:
           CIQ_AGENT_RECOVERY_CONTAINER: ${{ job.services.postgres.id }}

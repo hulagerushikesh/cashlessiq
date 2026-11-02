@@ -11,7 +11,7 @@ Implementation:
   scope capture; `FakeAgentLedger` is an engineering seam, not a live executor.
 - `apps/api/src/ciq_api/agent_ledger_models.py` and migration
   `0004_agent_ledger`: four owned grant/operation/attempt/comparison tables.
-- `apps/api/tests/test_agent_ledger.py`: 72 PostgreSQL crash, authority,
+- `apps/api/tests/test_agent_ledger.py`: 90 PostgreSQL crash, authority,
   concurrency, accounting, retention and publication checks. Public CI supplies
   disposable PostgreSQL 17; no operator Mac containers are needed.
 - `apps/api/tests/test_agent_ledger_recovery.py`: ten populated, encrypted
@@ -21,7 +21,14 @@ Implementation:
 
 The operation key binds tenant/request, input revision and digest, pinned
 policy/product/rules/evidence versions, orchestration version and configuration/
-source mapping digests. Correlation, browser command, grant and review assignment
+source mapping digests. A separate application fence rejects changed config/source
+digests for the same request while any nonexpired operation exists, including
+terminal results. Unresolved submitting/unknown work also blocks new input
+revisions under unchanged digests. Only expired, never-submitted work can change
+mapping under a new exact fake grant. This fence runs at reservation and again
+before the submission checkpoint under existing tenant/request locks; it is
+not a new SQL uniqueness constraint or provider reconciliation path. Correlation,
+browser command, grant and review assignment
 versions cannot create another operation. The captured review version remains a
 publication fence; a result is never silently rebound to a later review.
 
@@ -76,7 +83,11 @@ restarts before and after submission; unknown completion; lost fences and
 heartbeat/deadline boundaries; revocation/unapproved policy/final review;
 amendments; invalid/oversized outputs; publication rollback; cross-tenant and
 wrong-operation references; immutable receipts and accounting constraints.
-The earlier 146 contract/golden tests remain separate. Fake outputs are
+Eighteen additional PostgreSQL cases cover cross-version replacements, concurrent
+configuration admission, unresolved amendments and rechecking old reservations
+at submission. Populated restore also rejects changed config/source attempts on
+retained published results. The earlier 146 contract/golden tests and 120 offline
+source-mapping checks remain separate. Fake outputs are
 canonical fixtures, not evidence of actual Cortex parity.
 The original restart faults reconstruct the ledger over new database sessions;
 they do not kill PostgreSQL or a VM. Populated recovery is now separately tested

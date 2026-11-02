@@ -686,3 +686,158 @@ def test_all_agent_tables_migrate_and_ledger_remains_unwired(engine):
     tree = ast.parse(Path(agent_ledger.__file__).read_text())
     imports = [n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)]
     assert not any(n and n.startswith(("snowflake", "requests", "httpx")) for n in imports)
+
+
+def replacement_grant(s, *, config=CONFIG, source=SOURCE):
+    snapshots = [s.ledger.capture(TENANT_ID, ACTOR, f"REQ-FAKE-{i}") for i in range(3)]
+    spec = FakeGrantSpec.model_validate(
+        {
+            **s.spec.model_dump(),
+            "operation_keys": tuple(operation_key(item, config, source) for item in snapshots),
+            "config_digest": config,
+            "source_digest": source,
+        }
+    )
+    return s.ledger.create_fake_grant(TENANT_ID, spec)
+
+
+@pytest.mark.parametrize("field", ["config_digest", "source_digest"])
+@pytest.mark.parametrize(
+    "phase", ["reserved", "claimed", "submitting", "unknown", "published", "rejected"]
+)
+def test_changed_mapping_or_configuration_cannot_repurchase_existing_work(setup, phase, field):
+    s = setup
+    original = reserve(s)
+    if phase != "reserved":
+        claim = s.ledger.claim(TENANT_ID, ACTOR, original.operation_id)
+        if phase != "claimed":
+            permit = s.ledger.begin_submission(TENANT_ID, ACTOR, claim)
+            if phase in {"published", "rejected"}:
+                s.ledger.publish_fake_result(
+                    permit, payload(permit) if phase == "published" else b"{}"
+                )
+            elif phase == "unknown":
+                s.clock[0] += timedelta(seconds=30)
+                s.ledger.recover_expired(TENANT_ID, original.operation_id)
+    before = balance(s)
+    attempts = [(row.id, row.submission_id) for row in rows(s, AgentAttempt)]
+    comparisons = [row.candidate for row in rows(s, AgentComparison)]
+    config = "c" * 64 if field == "config_digest" else CONFIG
+    source = "c" * 64 if field == "source_digest" else SOURCE
+    grant_id = replacement_grant(s, config=config, source=source)
+    with pytest.raises(AgentContractError, match=r"^mapping_replacement_requires_review$"):
+        reserve(s, grant_id=grant_id, config_digest=config, source_digest=source)
+    assert balance(s) == before
+    assert [(row.id, row.submission_id) for row in rows(s, AgentAttempt)] == attempts
+    assert [row.candidate for row in rows(s, AgentComparison)] == comparisons
+    assert len(rows(s, AgentOperation)) == 1
+    with Session(s.engine) as db:
+        grant = db.get(AgentExecutionGrant, (TENANT_ID, grant_id))
+        assert (grant.admitted, grant.in_flight, grant.reserved_units) == (0, 0, 0)
+
+
+@pytest.mark.parametrize("field", ["config_digest", "source_digest"])
+def test_only_expired_never_submitted_reservation_can_change_mapping(setup, field):
+    s = setup
+    original = reserve(s)
+    s.ledger.claim(TENANT_ID, ACTOR, original.operation_id)
+    s.clock[0] += timedelta(seconds=121)
+    assert s.ledger.recover_expired(TENANT_ID, original.operation_id).state == "expired"
+    config = "c" * 64 if field == "config_digest" else CONFIG
+    source = "c" * 64 if field == "source_digest" else SOURCE
+    grant_id = replacement_grant(s, config=config, source=source)
+    replacement = reserve(s, grant_id=grant_id, config_digest=config, source_digest=source)
+    claim = s.ledger.claim(TENANT_ID, ACTOR, replacement.operation_id)
+    permit = s.ledger.begin_submission(TENANT_ID, ACTOR, claim)
+    assert s.ledger.publish_fake_result(permit, payload(permit)).state == "published"
+    assert len(rows(s, AgentAttempt)) == 1
+    assert balance(s) == (1, 0, 0, 0, 0)
+
+
+@pytest.mark.parametrize("phase", ["submitting", "unknown"])
+def test_uncertain_execution_cannot_be_relabelled_as_an_input_amendment(setup, phase):
+    s = setup
+    permit = submission(s)
+    if phase == "unknown":
+        s.clock[0] += timedelta(seconds=30)
+        s.ledger.recover_expired(TENANT_ID, permit.operation_id)
+    with Session(s.engine) as db, db.begin():
+        case = db.get(SubmittedCase, (TENANT_ID, "REQ-FAKE-0"))
+        facts = {**case.inputs, "diagnosis": "Synthetic amendment"}
+        case.inputs = facts
+        case.record = calculate(case.request_id, facts, db.get(PolicyVersion, s.policy_id).proposal)
+        db.add(
+            CaseInputRevision(
+                tenant_id=TENANT_ID,
+                request_id=case.request_id,
+                revision=1,
+                actor_id=ACTOR,
+                inputs=facts,
+                digest=fingerprint(facts),
+            )
+        )
+    new_grant = replacement_grant(s)
+    with pytest.raises(AgentContractError, match=r"^unresolved_execution$"):
+        reserve(s, grant_id=new_grant)
+    assert len(rows(s, AgentOperation)) == len(rows(s, AgentAttempt)) == 1
+    assert not rows(s, AgentComparison)
+
+
+def test_concurrent_cross_configuration_reservations_have_one_winner(setup):
+    s = setup
+    new_grant = replacement_grant(s, config="c" * 64)
+    barrier = Barrier(2)
+
+    def admit(config, grant):
+        barrier.wait(timeout=10)
+        try:
+            return reserve(s, grant_id=grant, config_digest=config)
+        except AgentContractError as exc:
+            return str(exc)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        one = pool.submit(admit, CONFIG, s.grant_id)
+        two = pool.submit(admit, "c" * 64, new_grant)
+        results = [one.result(timeout=20), two.result(timeout=20)]
+    assert results.count("mapping_replacement_requires_review") == 1
+    winner = next(result for result in results if not isinstance(result, str))
+    claim = s.ledger.claim(TENANT_ID, ACTOR, winner.operation_id)
+    s.ledger.begin_submission(TENANT_ID, ACTOR, claim)
+    assert len(rows(s, AgentOperation)) == len(rows(s, AgentAttempt)) == 1
+    assert sum(grant.admitted for grant in rows(s, AgentExecutionGrant)) == 1
+
+
+def test_submission_rechecks_old_cross_mapping_reservations_without_writing_checkpoint(setup):
+    s = setup
+    first = reserve(s)
+    new_grant = replacement_grant(s, source="c" * 64)
+    # Simulate an old database containing reservations admitted by the previous
+    # implementation. SQL guards preserve both; the new permit boundary must
+    # fail closed rather than assuming reserve() was the only possible writer.
+    with Session(s.engine) as db, db.begin():
+        db.add(
+            AgentOperation(
+                tenant_id=TENANT_ID,
+                id=uuid4(),
+                request_id="REQ-FAKE-0",
+                actor_id=ACTOR,
+                grant_id=new_grant,
+                operation_key=operation_key(s.snapshots[0], CONFIG, "c" * 64),
+                config_digest=CONFIG,
+                source_digest="c" * 64,
+                snapshot=s.snapshots[0].model_dump(mode="json"),
+                state="reserved",
+                version=0,
+                created_at=NOW,
+                deadline=NOW + timedelta(seconds=120),
+            )
+        )
+        grant = db.get(AgentExecutionGrant, (TENANT_ID, new_grant))
+        grant.admitted = grant.in_flight = 1
+        grant.reserved_units = 10
+    claim = s.ledger.claim(TENANT_ID, ACTOR, first.operation_id)
+    with pytest.raises(AgentContractError, match=r"^mapping_replacement_requires_review$"):
+        s.ledger.begin_submission(TENANT_ID, ACTOR, claim)
+    assert not rows(s, AgentAttempt)
+    assert not rows(s, AgentComparison)
+    assert all(row.state == "reserved" for row in rows(s, AgentOperation))

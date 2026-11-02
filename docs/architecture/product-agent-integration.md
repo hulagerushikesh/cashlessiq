@@ -98,7 +98,8 @@ Snowflake staging write or execution adapter was added.
 The [inactive fake-only database ledger](agent-run-ledger.md) is also implemented:
 owned grant/operation/attempt/comparison tables, durable submission checkpoints,
 leases/fencing, conservative unknown accounting, transactional comparison storage
-and 72 PostgreSQL fault/concurrency tests. Fake-only grants cannot activate live
+and 90 PostgreSQL fault/concurrency tests, including conservative cross-version
+replacement and unresolved-amendment fences. Fake-only grants cannot activate live
 execution. No route, worker or provider transport uses this ledger; existing
 cloud images and data are unchanged. The original
 [durable-stage design](agent-run-ledger-design.md) retains the broader target.
@@ -108,8 +109,10 @@ an actual submission remains a separate pre-live reconciliation/quarantine gate.
 
 The [source mapping preparation](agent-source-mapping.md) now records exact
 legacy/product identifier, policy-version, evidence, money and remaining-cover
-gaps from repository inspection. No mapping or source privilege is applied.
-Next settle the governed source/tool version mapping and clinical execution
+gaps from repository inspection. The inactive mapping validator and its 120
+offline fixtures now reject ambiguous mappings and content/version drift. It
+has no source adapter, and its coherence receipt grants no execution authority.
+No source privilege is applied. Next settle the governed source/tool version mapping and clinical execution
 identity/process/database privileges, then prepare the provider checkpoint/lookup
 adapter and reviewed latency budget. Live run reconciliation, credentials,
 allowances and execution require separate review and explicit approval. Do not
