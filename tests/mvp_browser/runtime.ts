@@ -4,13 +4,16 @@ export function mvpBrowserOptions(environment = process.env) {
   const baseURL = environment.MVP_BASE_URL ?? "http://localhost:3000";
   const url = new URL(baseURL);
   const passwordFile = environment.MVP_OWNER_PASSWORD_FILE;
+  const previewHost =
+    url.hostname === "cashlessiq-test.hulage.in" ||
+    /^[a-z0-9]+(?:-[a-z0-9]+)*\.trycloudflare\.com$/.test(url.hostname);
   if (
     !["localhost", "127.0.0.1"].includes(url.hostname) &&
     (environment.MVP_APPROVED_GCP_ORIGIN !== url.origin ||
       baseURL !== url.origin ||
       url.protocol !== "https:" ||
       url.port !== "" ||
-      !/^[a-z0-9]+(?:-[a-z0-9]+)*\.trycloudflare\.com$/.test(url.hostname) ||
+      !previewHost ||
       !passwordFile)
   ) {
     throw new Error(

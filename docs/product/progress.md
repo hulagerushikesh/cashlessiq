@@ -11,6 +11,24 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Stable private address and intelligence handoff — 2 November
+
+Cloudflare's owner-authenticated dashboard confirmed the full-setup Free
+`hulage.in` zone. A dedicated managed tunnel and proxied CNAME now route
+`cashlessiq-test.hulage.in` to the existing owner gateway at `127.0.0.1:3080`.
+The connector remains inactive and GCP remains stopped; no paid add-on was
+purchased. The [stable-domain handoff](stable-private-domain.md) contains the
+saved route, private token custody, bounded manual service template and next
+approved-window checks. The browser harness permits this one exact custom
+hostname with the existing double opt-in and password-file requirements.
+
+The [agent integration sequence](../architecture/product-agent-integration.md)
+distinguishes tested deterministic workflows from pending Cortex integration.
+It records the PostgreSQL/Snowflake request and policy-version gap, current
+lease/agent timeout mismatch and duplicate-cost concerns before any live calls.
+The root README now reflects completed private GCP testing and the remaining
+intelligence boundary instead of the historical preparation-only state.
+
 ### First GCP test completed; VM stopped — 2 November
 
 The owner tested the private preview and requested another engineering browser

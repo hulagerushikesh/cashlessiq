@@ -19,6 +19,11 @@ for observed state and the [1 November handoff](../../docs/product/gcp-first-run
 for quota/billing history and source checksums. The packaged `plan.json` retains
 its historical preparation-only state; it is not authorization or live evidence.
 
+The subsequent [stable private hostname handoff](../../docs/product/stable-private-domain.md)
+records the configured `cashlessiq-test.hulage.in` route and inactive named
+tunnel. Use its manual-start/token-file steps for the next separately approved
+window; the quick-tunnel steps below remain the original first-run procedure.
+
 ## Prepare offline before approval
 
 1. Accept a single committed Git revision with the full product and private
@@ -247,7 +252,8 @@ and [Compute instance fields](https://docs.cloud.google.com/compute/docs/referen
 The same MVP browser suite can test the private deployed synthetic workspace.
 After verifying the live fixed-project VM and exact tunnel origin, set
 `MVP_BASE_URL` and `MVP_APPROVED_GCP_ORIGIN` to that identical HTTPS
-`*.trycloudflare.com` origin, and `MVP_OWNER_PASSWORD_FILE` to the separately
+`*.trycloudflare.com` origin or exactly `https://cashlessiq-test.hulage.in`, and
+`MVP_OWNER_PASSWORD_FILE` to the separately
 retrieved mode-0600 credential file. Then run
 `npm run test:mvp -- --workers=1 --trace=off --timeout=240000`.
 Do not put the password in a URL or command argument. Remote execution is

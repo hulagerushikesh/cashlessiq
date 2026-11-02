@@ -1,10 +1,18 @@
 # CashlessIQ
 
-CashlessIQ is a Snowflake-native copilot that drafts a cited, reviewable
-cashless pre-authorisation recommendation within the IRDAI one-hour window.
-It never denies a claim and never asks an LLM to calculate money.
+CashlessIQ is a cashless pre-authorisation review application with deterministic
+calculations, policy evidence and human approval. The current private synthetic
+MVP runs on Next.js, FastAPI and PostgreSQL. The original Snowflake Cortex Agent
+prototype is retained; connecting it to new product requests is the next
+intelligence milestone. It never asks an LLM to calculate money.
 
-## Architecture
+On 2 November, the first private GCP test passed all 18 deployed browser checks
+and a separate manual correction/review journey. The VM is stopped between
+approved testing windows. See the [current delivery status](docs/product/delivery-status.md),
+[stable private address](docs/product/stable-private-domain.md) and
+[agent integration sequence](docs/architecture/product-agent-integration.md).
+
+## Retained Snowflake prototype
 
 The system combines staged pre-authorisation PDFs, Cortex document extraction,
 a `MEMBER_360` semantic view, policy clauses in Cortex Search, deterministic
@@ -56,12 +64,12 @@ make deploy      # container Streamlit app and restricted caller grants
 make eval        # all 30 golden cases into EVAL tables
 ```
 
-The deployed reviewer console is:
+The historical reviewer-console address is:
 [CashlessIQ in Snowsight](https://app.snowflake.com/me-central2.gcp/ca31605/#/streamlit-apps/CASHLESSIQ_APP).
 
-## Measured results
+## Prototype measured results
 
-The latest 30-case live-agent evaluation produced 30/30 schema-valid decisions,
+The recorded 30-case live-agent evaluation produced 30/30 schema-valid decisions,
 27/30 correct outcomes, 29/30 correct payable amounts, 55% strict citation
 recall, and 41.4-second average latency. See
 [docs/evaluation.md](docs/evaluation.md) for the documented gaps.
@@ -105,28 +113,23 @@ P0 is approved; P1 progress is tracked in the
 the [migration contracts](docs/architecture/contract-versioning.md) and follow the
 [Snowflake budget plan](docs/product/snowflake-budget.md).
 
-### Local product workspace
+### Product workspace and private testing
 
-With Docker Compose and Python 3.11 installed:
-
-```sh
-make product-up
-```
-
-Open [localhost:3000](http://localhost:3000) and choose a synthetic reviewer role.
-Use the [10-minute local alpha testing guide](docs/product/local-alpha-testing.md)
-for the three role journeys, expected values and issue-reporting checklist.
-The current focus is **local owner/engineering testing before a customer MVP**.
+The current focus is **private owner/engineering testing before a customer MVP**.
 Use the [joint acceptance checklist](docs/product/owner-preview-acceptance.md)
-to keep engineering results and Rushikesh's human feedback separate. The local
-app has been tested by Rushikesh, who also walked two friends through its
-current state. That completes the general local human-testing checkpoint by
-owner report; an owner-only online address is not deployed yet.
-The [two-person testing/GCP plan](docs/product/gcp-private-testing.md) records
-37 passing checks under small-runtime limits and a final approximately 190 MiB
-combined service snapshot. Local Docker is sufficient for current testing; a
-dedicated GCP project is prepared without billing. The owner chose **local
-testing; GCP preparation only**. No paid cloud test or deployment is authorized.
+to keep engineering results and Rushikesh's human feedback separate. The first
+approved GCP test completed on 2 November with synthetic request intake, policy
+authoring/approval/activation, background assessments, uploads and human review.
+All 18 browser checks passed; the [test receipt](docs/product/gcp-first-run-2026-11-02.md)
+records the manual journey, memory observations and verified early VM shutdown.
+
+The public [CashlessIQ demo](https://cashlessiq.hulage.in) remains a fixed-example
+prototype. `cashlessiq-test.hulage.in` is configured for the private application,
+but its connector is inactive while the VM is stopped. New paid test windows
+require owner approval; no daily automatic start is configured. Keep Docker
+Desktop off on the operator Mac during ordinary engineering work; use offline
+checks and disposable CI runners. The deployed application currently makes no
+Snowflake or AI calls. Governed live-source and agent integration remain open.
 The earlier [Mac preview package](docs/product/mac-owner-preview.md) remains an
 optional route, not a prerequisite to keep developing.
 The [case queue](http://localhost:3000/cases) now supports read-only exploration

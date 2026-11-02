@@ -1,0 +1,23 @@
+# Start manually during an approved test window. No boot enablement.
+[Unit]
+Description=CashlessIQ private preview named tunnel
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/cashlessiq-preview/tunnel-token
+
+[Service]
+Type=simple
+User=ciqpreview
+Group=ciqpreview
+LoadCredential=tunnel-token:/etc/cashlessiq-preview/tunnel-token
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate --metrics 127.0.0.1:20241 run --token-file %d/tunnel-token
+Restart=no
+RuntimeMaxSec=4h
+TimeoutStopSec=30s
+MemoryMax=128M
+CPUQuota=25%
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true

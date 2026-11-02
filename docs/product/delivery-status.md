@@ -4,6 +4,23 @@ Updated 2 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Stable address configured; agent integration next — 2 November
+
+The owner signed in to Cloudflare. The dedicated `cashlessiq-private-test`
+managed tunnel and proxied CNAME `cashlessiq-test.hulage.in` are saved, routing
+only that hostname to the password-protected loopback gateway on port 3080.
+No connector or GCP VM was started; the new hostname is not yet end-to-end tested.
+The public prototype remains at `cashlessiq.hulage.in`. The selected first-level
+test hostname avoids the deeper-subdomain certificate issue in the earlier
+suggestion. See the [configuration and next-window handoff](stable-private-domain.md).
+
+The deployed rules/workflows do not yet call the retained Cortex Agent. The
+[integration sequence](../architecture/product-agent-integration.md) records
+request/policy version mapping, governed identities, input/output validation,
+uncertain paid-call handling and the current 60-second job lease versus the
+legacy agent's 120-second execution budget. Offline preparation does not close
+live-source gates or authorize paid execution.
+
 ### First GCP test completed; VM stopped — 2 November
 
 The owner tested the private preview and requested another engineering browser
