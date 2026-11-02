@@ -52,7 +52,7 @@ Immutable deployment images:
 
 Both are in the private registry above. No second build was submitted.
 
-## VM acceptance and active owner window
+## VM acceptance and initial owner window
 
 After build success, `ciq-private-test` was created in `us-central1-a`, e2-small,
 Debian 12, 20 GiB standard boot disk, custom IPv4 subnet and the scoped runtime
@@ -101,13 +101,11 @@ subsequent protected-page visit redirected to login. A desktop screenshot was
 visually inspected; workflow links are visible in the sidebar. Credentials and
 the exact temporary origin are kept only in ignored operator output.
 
-The VM is intentionally left running for the available owner's manual test,
-within today's approved first window. Stop immediately when testing finishes,
-with **13:03:01 IST on 2 November** as the verified automatic-STOP backstop.
-No daily startup, automatic restart or extra build is authorized. Completed
-shutdown, `TERMINATED` state, ephemeral-IP release and the stop ledger entry
-remain pending until this active test ends. Container shutdown alone does not
-complete this check. Keep the persistent operator usage ledger.
+At the initial handoff, the VM was left running for the available owner's manual
+test within the approved window, with **13:03:01 IST on 2 November** as the
+verified automatic-STOP backstop. That test window has now ended early, with
+completed shutdown verified below. No daily startup, automatic restart or extra
+build was configured. Keep the persistent operator usage ledger.
 
 Ignored operator receipts are under `output/gcp-preview/`: build response,
 accepted digests, creation/live disk and instance acceptance, startup/browser
@@ -125,5 +123,51 @@ rejected. Only opt in after checking the live fixed-project VM and exact tunnel
 origin. Do not set these variables for production or customer data.
 
 The local harness checks and TypeScript/lint checks passed; all 57 client tests
-passed without starting Docker or a browser. The initial live results and remaining acceptance items are recorded above;
-completed shutdown remains pending until active testing ends.
+passed without starting Docker or a browser. Initial live results are recorded above;
+completed owner-requested regression and shutdown acceptance follow below.
+
+## Owner-requested regression and completed shutdown
+
+After the owner reported testing the deployed app, they requested another
+engineering pass. On the same accepted images, all **18 browser tests passed in
+one uninterrupted 4.8-minute run**, without retries. The 240-second overall
+ceiling was retained; per-action and navigation limits were unchanged. The long
+policy/assessment/review/document journey passed in about 1.3 minutes. All seven
+roles' mobile navigation, policy authoring/approval/activation, input retention,
+lost-response upload retries, progress recovery, cross-page searches and foreign
+origin rejection passed. Traces stayed disabled to avoid retaining auth headers.
+
+A separate manual browser journey submitted `SYN-MANUAL-20261102-MISSING`
+(request `REQ-c6bdb9d19b7d43368f0f`) with empty diagnosis and procedure. The app
+returned QUERY / Not calculated; the medical officer saw specific prompts for
+both fields, while the processor could not see clinical details. Assignment,
+request information, fact correction, reassessment to INR 95,000, resume and final
+review all saved, with five versioned audit actions. Switching back to processor
+retained the completed result while hiding the clinical correction comment.
+No blocking defect was observed in these journeys. Test records are fictional
+and remain in the retained database; this does not establish production or load
+readiness.
+
+A concurrent four-minute sample collected 48 observations. Individual container
+highs were DB 65.4, API 121.4, web 136.7 and gateway 40.8 MiB (sum 364.3 MiB,
+not a simultaneous peak). Minimum estimated host available RAM was 1,041.4 MiB;
+swap use stayed zero. A separate Docker state read confirmed all four steady
+services healthy, zero restarts and no OOM state; migration remained exited zero.
+Sampling can miss shorter peaks. No new build, VM resize or local Docker start
+was needed.
+
+After checks finished, the transient tunnel was stopped and the runtime brought
+down without deleting its database volume. The VM was explicitly stopped early.
+At **2026-11-02T04:04:46.534262Z (09:34:46 IST)**, the live fixed-project checker
+verified **TERMINATED**, no assigned external IPv4, no active automatic deadline
+and zero reserved addresses. The next live ledger read closed today's session at
+**1,901 seconds**, a conservative observed upper bound of about 32 minutes, not
+a billing measurement. The persistent ledger was preserved. The temporary URL
+is offline; retained disk, registry images and build source remain. Agree the
+next test window before further paid operation; another build or larger VM still
+requires explicit approval.
+
+Ignored receipts: `owner-requested-browser-tests.log`,
+`owner-requested-memory.log`, `owner-requested-containers.json`,
+`manual-review-completed.jpg`, `completed-shutdown.json`, `completed-usage.txt`
+and the updated `deployment-receipt.json`. The app images are unchanged.

@@ -4,24 +4,28 @@ Updated 2 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
-### Private GCP preview ready for owner testing — 2 November
+### First GCP test completed; VM stopped — 2 November
 
-The owner moved the unused first build/test to today and explicitly confirmed
-the same bounded spend and availability. The single approved cloud build
-succeeded; exact web/API digests are deployed on e2-small with a 20 GiB standard
-disk, IAP-only SSH, a password-protected HTTPS tunnel and verified automatic STOP
-at **13:03:01 IST today**. The VM remains running for the available owner's test;
-stop early when finished and record completed shutdown/IP release in the ledger.
+The owner tested the private preview and requested another engineering browser
+pass. All 18 deployed checks passed in one uninterrupted 4.8-minute run, without
+retries, using a 240-second overall ceiling and unchanged action/navigation
+limits. This includes the long journey that needed an isolated rerun during the
+initial deployment. A separate manual UI journey verified missing diagnosis and
+procedure → QUERY with no calculation → reviewer information request → corrected
+facts → INR 95,000 reassessment → resumed and completed review, with five audit
+versions. Processor access hid clinical details and the clinical correction note.
+No blocking defect was observed in these checks; this is synthetic testing,
+not production or load acceptance.
 
-All 18 deployed browser checks passed across the first run (17 passes, one
-120-second overall timeout) and an isolated successful rerun of the long journey
-with a 240-second ceiling. Per-action limits stayed unchanged. Cookie flags,
-sign-out, anonymous/wrong-password denial and role navigation passed. During
-browser checks the VM retained about 1 GiB of estimated available RAM, with no
-swap use or observed container OOM/restarts. No larger VM or second build was
-needed. All 57 client checks, targeted TypeScript and lint passed; Docker Desktop
-was not started. See the [2 November receipts](gcp-first-run-2026-11-02.md) for
-exact scope, evidence and remaining shutdown acceptance.
+All steady containers were healthy with zero restarts/OOM state. During the
+additional four-minute sample, minimum estimated host available RAM was
+1,041.4 MiB and swap use stayed zero. No second build, resize or local Docker
+was needed. The tunnel and app were shut down, retaining the database volume.
+At **09:34:46 IST**, a live read verified the VM was **TERMINATED**, with no
+assigned external IPv4, no active STOP deadline and zero reserved addresses.
+The preserved usage ledger records 1,901 seconds (about 32 minutes) for today,
+with the session closed. Disk/image/source retention continues; the temporary
+preview is offline. See the [2 November receipts](gcp-first-run-2026-11-02.md).
 
 ### GCP billing linked; build and test next — 1 November
 

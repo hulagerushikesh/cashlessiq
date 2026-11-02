@@ -6,11 +6,14 @@ The dedicated project is `cashlessiq-dev-rush`. Billing linkage succeeded on
 moved the unused first build and four-hour test to today and confirmed
 availability. Scoped identities, registry, regional source storage, INR cost
 alerts and IAP-only network access are configured. The single approved build
-succeeded; the private preview is running for the available owner's test. Its
-verified automatic STOP is 13:03:01 IST on 2 November; stop earlier when finished.
-All 18 deployed browser checks passed across the initial run and one isolated
-rerun; session/gate checks and actual host-memory acceptance passed. Completed
-shutdown/IP-release acceptance remains pending until the active test ends. See the
+succeeded; the owner and agent completed testing and stopped the preview early.
+All 18 deployed browser checks subsequently passed in one uninterrupted run,
+plus a manual missing-information/correction/review journey. Session/gate and
+host-memory checks passed. At 09:34:46 IST on 2 November the live checker verified
+TERMINATED, no assigned ephemeral IPv4 and no reserved addresses; the preserved
+ledger closes today's session at 1,901 seconds. Retained disk/image/source storage
+remains. The temporary preview is offline; do not restart or rebuild merely to
+repeat these results. Agree the next test window before further paid operation. See the
 [current first-run receipts](../../docs/product/gcp-first-run-2026-11-02.md)
 for observed state and the [1 November handoff](../../docs/product/gcp-first-run-2026-11-01.md)
 for quota/billing history and source checksums. The packaged `plan.json` retains
