@@ -131,7 +131,7 @@ The `ValidatedMapping` receipt authorizes no I/O and is not a submission permit.
 No route, worker, ledger, credential or transport imports this module yet. Both
 paths are offline contracts; neither claims a working source adapter.
 
-The accompanying 120 offline checks cover all thirty examples under both input
+The accompanying 122 offline checks cover all thirty examples under both input
 paths, changed tenant/registry/schema/definition/content/pins, strict money and
 nulls, duplicate/ambiguous mappings, namespace boundaries and immutable receipts.
 Review/correlation changes do not alter source capture identity; they still

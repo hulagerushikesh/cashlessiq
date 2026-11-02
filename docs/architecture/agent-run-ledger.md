@@ -86,7 +86,7 @@ wrong-operation references; immutable receipts and accounting constraints.
 Eighteen additional PostgreSQL cases cover cross-version replacements, concurrent
 configuration admission, unresolved amendments and rechecking old reservations
 at submission. Populated restore also rejects changed config/source attempts on
-retained published results. The earlier 146 contract/golden tests and 120 offline
+retained published results. The earlier 146 contract/golden tests and 122 offline
 source-mapping checks remain separate. Fake outputs are
 canonical fixtures, not evidence of actual Cortex parity.
 The original restart faults reconstruct the ledger over new database sessions;

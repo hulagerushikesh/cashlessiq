@@ -15,7 +15,7 @@ The inactive [agent comparison contract](docs/architecture/agent-comparison-cont
 has 146 offline golden/fault checks. The inactive
 [fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 90
 PostgreSQL crash/concurrency checks and ten populated encrypted recovery cases.
-The [source mapping review](docs/architecture/agent-source-mapping.md) has 120 offline validation checks and records
+The [source mapping review](docs/architecture/agent-source-mapping.md) has 122 offline validation checks and records
 integration gaps. Live execution, governed source mapping and service isolation
 remain; the deployed workflow still uses deterministic rules.
 

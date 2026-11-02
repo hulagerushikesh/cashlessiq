@@ -104,7 +104,15 @@ class SourceManifest(MappingContract):
     def coherent(self):
         _definitions(self.definitions)
         requests = [case.product.request_id for case in self.cases]
-        sources = [canonical_json(case.source.model_dump(mode="json")) for case in self.cases]
+        # A legacy request is globally identified by its request key, not by a
+        # caller's claimed policy/TPA. Changing that claim cannot create a second
+        # source case or make an ambiguous alias acceptable.
+        sources = [
+            case.source.request_id
+            if isinstance(case.source, GoldenIdentity)
+            else str(case.source.capture_id)
+            for case in self.cases
+        ]
         if len(set(requests)) != len(requests) or len(set(sources)) != len(sources):
             raise ValueError("ambiguous_mapping")
         if len({case.source.path for case in self.cases}) != 1:

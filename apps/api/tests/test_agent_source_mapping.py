@@ -347,3 +347,15 @@ def test_mapping_validator_is_unwired_and_has_no_provider_or_database_dependency
     # The clinical observation fixture is constructed here only; production code
     # has no function that manufactures independent observations from AgentInput.
     assert deepcopy(POLICY)["examples"] == POLICY["examples"]
+
+
+@pytest.mark.parametrize("field", ["insurance_policy_id", "tpa_id"])
+def test_same_legacy_request_cannot_alias_new_product_request_by_changing_ownership_claim(field):
+    _, manifest, _ = package()
+    value = manifest.model_dump(mode="json")
+    second = deepcopy(value["cases"][0])
+    second["product"]["request_id"] = "REQ-second"
+    second["source"][field] = "CHANGED"
+    value["cases"].append(second)
+    with pytest.raises(AgentContractError, match=r"^invalid_source_mapping$"):
+        parse_manifest(canonical_json(value).encode())

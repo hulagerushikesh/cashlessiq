@@ -109,7 +109,7 @@ an actual submission remains a separate pre-live reconciliation/quarantine gate.
 
 The [source mapping preparation](agent-source-mapping.md) now records exact
 legacy/product identifier, policy-version, evidence, money and remaining-cover
-gaps from repository inspection. The inactive mapping validator and its 120
+gaps from repository inspection. The inactive mapping validator and its 122
 offline fixtures now reject ambiguous mappings and content/version drift. It
 has no source adapter, and its coherence receipt grants no execution authority.
 No source privilege is applied. Next settle the governed source/tool version mapping and clinical execution
