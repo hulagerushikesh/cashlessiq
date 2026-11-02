@@ -6,8 +6,18 @@ from hashlib import sha256
 
 from cashlessiq_domain.rules import evaluate_case
 from cashlessiq_domain.rules.models import CostItem, MemberCondition, Policy, PreAuthFacts, Rule
+from pydantic import Field
 
-from ciq_api.mvp_contracts import AssessmentInput, PolicyProposal
+from ciq_api.contracts import Contract
+from ciq_api.mvp_contracts import AssessmentInput, PolicyProposal, RuleInput
+
+
+class CalculationPolicy(Contract):
+    """Selected rule inputs, without other members' regression example facts."""
+
+    product_id: str = Field(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9_-]+$")
+    version: str = Field(min_length=1, max_length=80)
+    rules: list[RuleInput] = Field(min_length=1, max_length=30)
 
 
 def fingerprint(value):
@@ -17,6 +27,22 @@ def fingerprint(value):
 def calculate(request_id, inputs, proposal):
     inputs = AssessmentInput.model_validate(inputs)
     proposal = PolicyProposal.model_validate(proposal)
+    return _calculate(request_id, inputs, proposal)
+
+
+def calculate_rules(request_id, inputs, policy):
+    """Offline comparison using a selected, server-owned approved policy projection.
+
+    Approval, clause completeness and unambiguous rule types must be established
+    by the caller's validated policy snapshot. Existing submissions still use the
+    full PolicyProposal validation in calculate().
+    """
+    return _calculate(
+        request_id, AssessmentInput.model_validate(inputs), CalculationPolicy.model_validate(policy)
+    )
+
+
+def _calculate(request_id, inputs, proposal):
     policy = Policy(
         policy_id=proposal.product_id,
         member_id=inputs.member_reference,

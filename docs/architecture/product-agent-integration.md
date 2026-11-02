@@ -87,12 +87,20 @@ citation gaps and extraction normalization issues.
 
 ## Next engineering batch
 
-Prepare the immutable input/output schema and fake-gateway contract tests for
-the explicit agent stage. Keep it inactive and out of the embedded MVP worker
-until the identity, version mapping, retry/cost and lease design are reviewed.
-Tests must prove stale versions cannot publish, wrong-tenant inputs fail before
-I/O, invalid or mismatched amounts/citations cannot become recommendations, and
-uncertain completion does not automatically trigger a second paid call.
+The first offline batch is implemented in
+[`agent_contracts.py`](../../apps/api/src/ciq_api/agent_contracts.py) and
+[`agent_simulation.py`](../../apps/api/src/ciq_api/agent_simulation.py), with
+[fake-gateway fault tests](../../apps/api/tests/test_agent_contracts.py).
+See the [v1 contract and limits](agent-comparison-contract.md). It remains
+inactive and outside the embedded MVP worker: no route, SDK, credentials,
+Snowflake staging write or execution adapter was added.
+
+Next prepare the durable run-ledger and lease/cost design for review, including
+operation uniqueness independent of a caller-chosen correlation ID, checkpoint
+custody, uncertain-completion reconciliation, transactional publication fencing,
+and the proposed governed source/tool version mapping. Do not wire the existing
+three-attempt MVP worker to the agent. Offline lifecycle receipts are not durable
+protection against duplicate paid execution after a crash or concurrent workers.
 
 The existing source-read integration and its isolation acceptance remain
 separate from new assessment execution. This plan supersedes the assumption

@@ -11,6 +11,21 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Inactive agent contract and fault simulation — 2 November
+
+Implemented the [versioned internal comparison contract](../architecture/agent-comparison-contract.md),
+minimal immutable request/policy snapshots and fake-stage lifecycle. All 146
+offline tests pass: thirty golden examples with full calculation equivalence,
+binding/revocation/final-review fences, strict per-line and total money,
+owned/versioned citation matching, bad responses, QUERY/REFER null semantics,
+uncertain completion, automatic second-call denial and deadline/fence failures.
+Policy payloads exclude other members' regression examples. The stage remains
+outside routes and the MVP worker; no Snowflake or paid runtime was activated.
+The existing root suite passes (1,018 checks, three skips), as do Python lint
+and whitespace checks.
+Durable run uniqueness/checkpoints, real lease renewal, cost approval and
+source/tool identity/version mapping remain open before any live adapter.
+
 ### Stable private address and intelligence handoff — 2 November
 
 Cloudflare's owner-authenticated dashboard confirmed the full-setup Free

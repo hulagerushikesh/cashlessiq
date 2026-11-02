@@ -4,6 +4,24 @@ Updated 2 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Inactive agent contract and offline fault tests — 2 November
+
+The [v1 agent comparison contract](../architecture/agent-comparison-contract.md)
+now binds the selected request/policy/evidence/review versions and validates
+strict monetary lines and exact owned citations against the shared rules core.
+The policy payload excludes other requests' regression examples. The fake-only
+lifecycle checks stale scopes, closed reviews, lost fences and deadlines;
+uncertain responses block automatic second attempts in the simulation.
+
+All 146 offline contract tests pass, including the thirty canonical examples
+and full equivalence between the existing and selected-policy calculation
+entry points. The existing root regression also passes (1,018 checks, three
+skips), together with repository Python lint and whitespace checks.
+This is not live agent parity or durable duplicate-call protection.
+No agent route, live adapter, schema migration or embedded-worker wiring was
+added; GCP and Snowflake execution remain inactive. Next is the durable
+run-ledger/lease/cost and governed source-version mapping design.
+
 ### Stable address configured; agent integration next — 2 November
 
 The owner signed in to Cloudflare. The dedicated `cashlessiq-private-test`
