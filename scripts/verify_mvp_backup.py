@@ -51,7 +51,7 @@ def verify_package(directory: Path) -> dict:
     dump = manifest["dump"]
     tables = manifest["tables"]
     if (
-        manifest["schema"] != "0003_mvp"
+        manifest["schema"] not in ("0003_mvp", "0004_agent_ledger")
         or not isinstance(tables, dict)
         or not 10 <= len(tables) <= 100
         or not isinstance(dump, dict)

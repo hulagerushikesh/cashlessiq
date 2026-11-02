@@ -536,7 +536,7 @@ def main():
         os.chmod(output.name, 0o600)
         json.dump(
             {
-                "schema": "0003_mvp",
+                "schema": "0004_agent_ledger",
                 "tables": frame["manifest"],
                 "dump": {"file": "current.dump", "bytes": path.stat().st_size, "sha256": digest},
             },

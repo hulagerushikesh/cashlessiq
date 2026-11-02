@@ -46,7 +46,7 @@ def main():
         conn.execute("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY")
         snapshot = conn.execute("SELECT pg_export_snapshot()").fetchone()[0]
         revision = conn.execute("SELECT version_num FROM alembic_version").fetchall()
-        if revision != [("0003_mvp",)]:
+        if revision != [("0004_agent_ledger",)]:
             raise ValueError("Expected current MVP schema")
         tables = conn.execute(
             "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "

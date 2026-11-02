@@ -106,7 +106,7 @@ def create_app(
                 revision = connection.execute(
                     text("SELECT version_num FROM alembic_version")
                 ).scalar()
-                if revision != "0003_mvp":
+                if revision != "0004_agent_ledger":
                     raise ValueError("Database migration required")
             return HealthResponse(status="ready")
         except (SQLAlchemyError, ValueError):
