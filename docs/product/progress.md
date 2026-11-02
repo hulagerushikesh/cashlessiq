@@ -29,6 +29,14 @@ lease/agent timeout mismatch and duplicate-cost concerns before any live calls.
 The root README now reflects completed private GCP testing and the remaining
 intelligence boundary instead of the historical preparation-only state.
 
+Revision `aaecef5` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41389177084)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41389176994),
+including all 58 client checks, existing API/browser/MVP suites and 17-table
+encrypted recovery with browser reopening after restart and on a fresh restore.
+The new hostname's HTTPS request reaches Cloudflare with expected offline 530;
+the public demo remains 200. Its live app/origin/gate checks await the next
+separately approved VM window. Existing app image digests remain unchanged.
+
 ### First GCP test completed; VM stopped — 2 November
 
 The owner tested the private preview and requested another engineering browser

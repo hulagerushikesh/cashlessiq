@@ -137,3 +137,18 @@ start, token-file and bounded-runtime settings were inspected; actual systemd
 execution remains a VM acceptance step. A fresh read-only GCP check at
 04:32:19 UTC confirmed TERMINATED, no active deadline/external IPv4 and no
 reserved addresses. No new runtime usage session was opened.
+
+Revision `aaecef5` also passes both remote CI runs:
+
+- [Private preview 41389176994](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41389176994):
+  owner/asset/role/origin/cookie checks, all 18 MVP browser journeys, encrypted
+  restoration matching all 17 tables, saved-review reopening after restart and
+  on a fresh restored volume, and owned cleanup.
+- [Product regression 41389177084](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41389177084):
+  1,018 root checks (three skips), 1,522 API checks (one skip, two existing
+  warnings), 72 membership, 35 catalog, 58 client, 26 browser, 15 source UI and
+  all 18 MVP journeys, plus contracts, types, lint, build, containment and cleanup.
+
+These are disposable-runner checks. They do not establish live application
+acceptance through the inactive custom-host tunnel, Cortex integration or a
+new accepted GCP image. The existing deployed image digests remain unchanged.

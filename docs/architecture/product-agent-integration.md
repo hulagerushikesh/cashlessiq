@@ -21,6 +21,12 @@ new `REQ-...` ID from PostgreSQL does not populate Snowflake request/fact tables
 Its tools and search are also not wired to the product's newly approved policy
 versions. Calling the old agent with a new ID would not complete the migration.
 
+Do not import the legacy `run_agent` helper as the new worker adapter: it retries
+invalid output once and inserts directly into `CASHLESSIQ.APP.DECISION`. That
+combines paid invocation, retry policy and legacy persistence. The new gateway
+must separate these effects, preserve PostgreSQL workflow authority and require
+explicit approval for any Snowflake writes; a read-only service is insufficient.
+
 The retained evaluation reports 27/30 correct outcomes, 29/30 correct amounts
 and 55% strict citation recall; those are historical prototype measurements,
 not targets already met by the new integration. Use

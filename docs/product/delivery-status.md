@@ -21,6 +21,14 @@ uncertain paid-call handling and the current 60-second job lease versus the
 legacy agent's 120-second execution budget. Offline preparation does not close
 live-source gates or authorize paid execution.
 
+Revision `aaecef5` passes [full product regression](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41389177084)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41389176994):
+58 client checks, all existing API/browser/MVP checks, owner gate and encrypted
+17-table recovery with both browser reopenings. DNS/TLS reach Cloudflare;
+HTTP 530 is expected while its connector is inactive. The public demo still
+returns 200, and a fresh read confirms the GCP VM remains TERMINATED with no
+external IPv4 or reserved addresses. No new GCP image was built or paid run opened.
+
 ### First GCP test completed; VM stopped — 2 November
 
 The owner tested the private preview and requested another engineering browser
