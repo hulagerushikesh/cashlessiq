@@ -4,6 +4,44 @@ Updated 2 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Named hostname tested; fake-only agent ledger implemented — 2 November
+
+The owner approved a new 30-minute GCP window using the existing accepted images.
+`cashlessiq-test.hulage.in` now reaches the owner-gated app with the correct HTTPS
+origin: all **18 deployed browser journeys** and **35 direct HTTPS checks** pass.
+The smoke harness now waits for role-switch sign-in navigation before making a
+shared-cookie request. The public fixed-example demo remains independent. See
+the [named-host receipt](gcp-named-host-2026-11-02.md); the private site is expected
+to be offline between approved windows under the stop-between-tests policy.
+The VM was verified TERMINATED at **14:58:06 IST**, with no external IP or
+reserved addresses. This second session used about 15 observed minutes; today's
+conservative recorded total is 2,780 seconds (about 46 minutes), with no open
+session. DNS/token/origin configuration and the database volume are retained.
+
+The [inactive fake-only ledger](../architecture/agent-run-ledger.md) now has four
+PostgreSQL tables, owned foreign keys, stable operation identity, atomic allowance
+reservation and submission checkpoints, renewable fenced leases, conservative
+unknown accounting and atomic private comparison publication. Its 72 database
+fault/concurrency checks and the earlier 146 contract checks pass in disposable
+CI. The migration cannot admit live grants; no route/worker/provider adapter is
+connected. Source/CI changes do not upgrade the existing cloud app/database.
+
+Revision `2433424` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41419930718)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41419930694):
+1,026 root checks, 1,740 API checks, the separate 218 agent checks, all browser/MVP
+journeys, encrypted 21-table recovery and both saved-workflow browser reopenings.
+Contract drift, types, lint, build, containment and owned cleanup pass. Agent
+tables are empty in this preview recovery; populated-ledger recovery remains open.
+
+For the current synthetic app, deployment and workflow acceptance are established
+by the checks above and the earlier manual owner session. Further testing follows
+each change. Agent integration is still a separate milestone: governed identities/
+database privileges, request-policy-evidence transport, remote checkpoint/lookup
+and timeout budget, populated-ledger recovery, explicitly approved live golden
+comparisons, clinical display and joint human acceptance remain. Production and
+real-data gates remain separate; a project-wide testing percentage would hide
+these materially different scopes.
+
 ### Inactive agent contract and offline fault tests — 2 November
 
 The [v1 agent comparison contract](../architecture/agent-comparison-contract.md)

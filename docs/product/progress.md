@@ -4,12 +4,48 @@ Last updated: 2 November 2026
 Current engineering scope: **synthetic MVP workflows (M3–M5), private testing**.
 Governed live-source P2 and production gates remain separate.
 
-Current operation: the first approved private GCP test completed on 2 November.
+Current operation: the first private GCP test and a separately approved named-host
+test completed on 2 November.
 The VM is verified stopped, its ephemeral IP released and the daily usage session
 closed. Retained storage remains; Docker Desktop stays off on the operator Mac. The
 [1 November handoff](gcp-first-run-2026-11-01.md) retains quota/billing history;
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
+
+### Named-host acceptance and inactive fake-only ledger — 2 November
+
+The stable private hostname has now passed all 18 deployed browser journeys and
+35 direct HTTPS owner-gate/origin/cookie/role/cache checks on the existing images.
+The owner approved at most 30 minutes; the VM's automatic STOP was shortened to
+1,800 seconds. No new build, larger VM or local Docker was needed. The named
+connector is manual-only and keeps its token in a root-private systemd credential.
+The public demo remains independent. See the
+[run and shutdown receipt](gcp-named-host-2026-11-02.md).
+
+Implemented the [fake-only durable ledger](../architecture/agent-run-ledger.md)
+and migration `0004_agent_ledger`, with 72 database tests for concurrent duplicate
+commands, allowance accounting, crash checkpoints, fencing/lease expiry,
+revocation/stale reviews, retained receipts and transactional private comparison
+storage. The 146 offline contract tests remain green. Live grants are forbidden
+by the schema and no API/worker/transport activates the stage. Readiness and new
+backup manifests advance with the migration, while historical backup package
+verification remains supported. Existing cloud images/data are unchanged.
+
+Next prepare/review the governed source mapping, clinical execution privileges,
+provider checkpoint/lookup and latency budget, plus populated-ledger recovery.
+Only then plan a separately approved live golden comparison and human UI
+acceptance. An inactive fake stage does not establish actual Cortex parity.
+
+Accepted source revision `2433424` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41419930718)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41419930694):
+1,026 root, 1,740 API, 72 membership, 35 catalog, 58 client, 26 browser,
+15 source UI and 18 MVP checks, plus the separate 218 agent checks. Preview
+recovery matched 21 tables and reopened the saved workflow after restart and
+fresh-volume restore; its agent tables were empty. The live named-host window
+closed with TERMINATED/no external IP/reservations at 14:58:06 IST. The ledger
+retains 2,780 seconds of today's observed use with no open session. The private
+hostname is offline again by design; the public demo remains HTTP 200.
 
 ### Inactive agent contract and fault simulation — 2 November
 

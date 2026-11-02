@@ -1,7 +1,9 @@
 # Proposed durable agent stage
 
-2 November 2026. **Design for review; no migration, executor or live access is
-implemented by this document.** It follows the
+2 November 2026. **Original design and remaining live-execution requirements.**
+An [inactive fake-only subset](agent-run-ledger.md) now has a PostgreSQL migration
+and transaction/fault tests. Remote execution/reconciliation, live grants and
+source access remain unimplemented. This proposal follows the
 [inactive comparison contract](agent-comparison-contract.md) and preserves the
 [governed identity/source boundary](../product/p2-isolation-proposal.md).
 
@@ -32,7 +34,8 @@ not spending permission.
 
 ## Proposed records and invariants
 
-Names are conceptual, not executable SQL:
+This table records the target design. The implemented subset and its deliberately
+narrower fake-only allowance/recovery model are documented separately:
 
 | Record | Required constraints and custody |
 | --- | --- |

@@ -1,8 +1,16 @@
 # Stable private test address
 
-2 November 2026. DNS and the remotely managed tunnel are configured; the
-connector is inactive. The application has not been tested through this
-hostname. GCP remains stopped and the earlier temporary address is offline.
+2 November 2026. DNS, the named connector and the exact app origin are configured.
+The owner approved a separate 30-minute window: all 18 deployed browser journeys
+and 35 HTTPS checks now pass through `cashlessiq-test.hulage.in`. See the
+[named-host acceptance and shutdown receipt](gcp-named-host-2026-11-02.md).
+The site is available only during approved VM/tunnel windows; an offline
+Cloudflare error between tests remains expected. The initial setup observations
+below are historical and retain the reusable operating steps.
+The completed test ended with the VM verified TERMINATED at 14:58:06 IST;
+the connector/app were stopped and the usage session closed. Its current
+automatic STOP duration is 30 minutes. A later window must review that bound
+and cumulative usage rather than assume another four-hour entitlement.
 
 ## Address and observed Cloudflare state
 

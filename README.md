@@ -12,8 +12,10 @@ approved testing windows. See the [current delivery status](docs/product/deliver
 [stable private address](docs/product/stable-private-domain.md) and
 [agent integration sequence](docs/architecture/product-agent-integration.md).
 The inactive [agent comparison contract](docs/architecture/agent-comparison-contract.md)
-has 146 offline golden/fault checks. Durable execution and live source mapping
-remain to be implemented; the deployed workflow still uses deterministic rules.
+has 146 offline golden/fault checks. The inactive
+[fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 72
+PostgreSQL crash/concurrency checks. Live execution, governed source mapping and
+service isolation remain; the deployed workflow still uses deterministic rules.
 
 ## Retained Snowflake prototype
 
