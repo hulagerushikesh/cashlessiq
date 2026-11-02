@@ -8,8 +8,10 @@ removed. Parent/child process limits are tested separately without Docker.
 import base64
 import hashlib
 import json
+import os
 import signal
 import subprocess
+import sys
 from datetime import UTC, datetime, timedelta
 from importlib.resources import files
 from pathlib import Path
@@ -36,6 +38,13 @@ def interrupted(_signal, _frame):
 
 
 def main():
+    if (
+        sys.platform != "linux"
+        or os.environ.get("GITHUB_ACTIONS") != "true"
+        or os.environ.get("GITHUB_REPOSITORY") != "hulagerushikesh/cashlessiq"
+        or os.environ.get("CIQ_AGENT_TRANSPORT_TEST") != "1"
+    ):
+        raise SystemExit("Fake transport isolation requires the explicit disposable CI job")
     signal.signal(signal.SIGTERM, interrupted)
     prefix = "ciq-agent-transport-" + uuid4().hex[:12]
     image = prefix + ":fake"

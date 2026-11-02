@@ -32,7 +32,9 @@ fixture is SHA-256 bound to one exact request. It cannot select a credential,
 endpoint, file, command or retry policy through IPC. It does not calculate an
 independent recommendation, authenticate a source observation or call Snowflake.
 The default image excludes its local test helper and every product/SQL/provider
-package. It is absent from product Compose, cloud bundles and automatic startup.
+package. It is absent from product Compose, the minimal cloud runtime bundle and
+automatic startup. The isolation harness refuses execution outside its explicit
+disposable Linux CI job, before contacting Docker.
 
 Disposable CI exercises that image with distinct numeric identities, exact
 read-only dummy mounts, no network/host PID namespace/ports/privileges, dropped

@@ -51,6 +51,8 @@ jobs:
         with:
           version: '0.11.25'
       - name: Separate fake transport with no database, provider SDK or network
+        env:
+          CIQ_AGENT_TRANSPORT_TEST: '1'
         run: |
           uv sync --project apps/api --frozen
           uv run --project apps/api python scripts/test_agent_transport_isolation.py
