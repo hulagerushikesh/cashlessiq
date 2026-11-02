@@ -66,12 +66,23 @@ def _sample_package(tmp_path):
     return directory, manifest
 
 
-def test_copied_backup_verifies_without_database_or_docker(tmp_path):
+@pytest.mark.parametrize("schema", ["0003_mvp", "0004_agent_ledger"])
+def test_copied_backup_verifies_without_database_or_docker(tmp_path, schema):
     source, manifest = _sample_package(tmp_path)
+    manifest["schema"] = schema
+    (source / "verified.json").write_text(json.dumps(manifest))
     copied = tmp_path / "copied"
     shutil.copytree(source, copied)
     copied.chmod(0o700)
     assert verify_package(copied) == manifest
+
+
+def test_copied_backup_rejects_unknown_schema(tmp_path):
+    source, manifest = _sample_package(tmp_path)
+    manifest["schema"] = "0005_unknown"
+    (source / "verified.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError):
+        verify_package(source)
 
 
 def test_disposable_transfer_supplies_verified_dump_for_volume_restore(tmp_path, monkeypatch):

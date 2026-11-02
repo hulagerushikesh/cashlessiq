@@ -46,8 +46,12 @@ test("regression updates preserve an open decision form and recover from unavail
     const policyUrl = new URL(page.url());
     const id = policyUrl.pathname.split("/").at(-1);
     await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL(/\/login$/);
     await page.getByLabel("Review role").selectOption("policy_approver");
     await page.getByRole("button", { name: "Enter workspace" }).click();
+    // Wait for the role-switch response to commit its session cookie before a
+    // new navigation can cancel it. The following request shares that cookie.
+    await expect(page).toHaveURL(/\/$/);
     await page.goto(policyUrl.pathname);
     const endpoint = `/workflows/progress?kind=policy&id=${id}`;
     const actual = await context.request.get(endpoint);

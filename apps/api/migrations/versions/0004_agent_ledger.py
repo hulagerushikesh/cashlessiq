@@ -178,4 +178,4 @@ FOR EACH ROW EXECUTE FUNCTION agent_operation_transition_guard()""")
 
 
 def downgrade():
-    raise RuntimeError("Agent cost receipts are retained; the inactive stage cannot be reset")
+    raise RuntimeError("Agent ledger is forward-only; retained cost receipts cannot be reset")
