@@ -8,6 +8,7 @@ import os
 import signal
 import sys
 import time
+from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
@@ -218,22 +219,28 @@ import os, time
 from pathlib import Path
 pid = os.fork()
 if pid == 0:
- Path({str(pid_file)!r}).write_text(str(os.getpid()))
+ Path({str(pid_file)!r}).write_text(f"{{os.getpid()}} {{os.getpgrp()}}")
  time.sleep(60)
 else:
  time.sleep(60)
 """
     with pytest.raises(AgentContractError):
         child(code).exchange(packet(), timeout=0.5)
-    pid = int(pid_file.read_text())
-    # Linux can retain an orphan zombie until its init reaps it; it cannot run.
-    proc = Path(f"/proc/{pid}/stat")
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return
-    if sys.platform == "linux" and proc.is_file():
-        assert proc.read_text().split()[2] == "Z"
-    else:
-        os.kill(pid, signal.SIGKILL)
-        pytest.fail("Descendant remains alive")
+    pid, group = map(int, pid_file.read_text().split())
+    # Reaping can race every observation: disappearance between kill(0), /proc
+    # inspection and cleanup is success. Allow bounded signal scheduling without
+    # accepting an actually runnable leftover or touching a reused process ID.
+    end = time.monotonic() + 1
+    while time.monotonic() < end:
+        try:
+            if os.getpgid(pid) != group:
+                return
+            if sys.platform == "linux" and Path(f"/proc/{pid}/stat").read_text().split()[2] == "Z":
+                return
+        except (ProcessLookupError, FileNotFoundError):
+            return
+        time.sleep(0.01)
+    with suppress(ProcessLookupError):
+        if os.getpgid(pid) == group:
+            os.kill(pid, signal.SIGKILL)
+    pytest.fail("Descendant remains alive after bounded group cleanup")
