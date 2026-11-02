@@ -12,6 +12,44 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Inactive source validation and replacement protection — 2 November
+
+Implemented the [versioned mapping validator](../architecture/agent-source-mapping.md)
+and **122 offline checks**. Existing golden IDs and captured product snapshots
+have separate namespaces; tenant, request, policy/rules/evidence, source capture,
+registry and tool/search definition drift fail closed. Strict integer money and
+explicit nulls are retained. The validation receipt grants no execution authority;
+independent source capture, governed privileges and transport remain unconnected.
+
+The fake-only ledger now has **90 PostgreSQL tests**, adding eighteen cases for
+changed mapping/configuration replacements, unresolved input amendments, concurrent
+admission and rechecking old reservations at the submission boundary. Completed
+or uncertain work cannot be repurchased by changing a digest/grant. Only an
+expired, never-submitted reservation can be replaced under a new exact fake grant.
+The ten populated encrypted recovery cases also reject changed-digest attempts
+against a retained published result. No schema migration or live activation was added.
+
+Prepared the [clinical executor boundary package](../architecture/agent-executor-boundary.md):
+separate controller/transport identities, database capabilities, secret custody,
+restore quarantine and a concrete denial-test matrix. It is a review package;
+no service, principal, credential or grant was provisioned. Next implement the
+disposable database/process boundary, then independently captured source mapping
+and a provider adapter with reviewed checkpoint/lookup and latency budgets.
+Stale-backup reconciliation and separately approved live golden comparisons remain.
+
+Revision `3436411` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41425980997)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41425980837).
+The dedicated job passed **358 agent checks** (146 contract, 122 mapping and 90
+ledger), followed by all ten populated encrypted recovery cases. Full CI passed
+1,026 root checks, 1,880 API checks (eleven expected skips), 35 catalog, 72 membership,
+58 client, 26 browser and 15 source UI checks, plus all eighteen MVP journeys.
+The private preview separately passed 37 HTTP checks, all eighteen MVP journeys,
+encrypted 21-table recovery and both saved-workflow browser reopenings. Types,
+lint, build, contract drift, containment and owned cleanup also passed.
+A fresh read-only GCP check confirms the VM is TERMINATED with a 1,800-second
+STOP backstop and no external IPv4. No paid build/run, Snowflake call or local
+Docker startup was needed; existing deployed images and retained data are unchanged.
+
 ### Populated agent recovery completed; source mapping prepared — 2 November
 
 Revision `ac48b19` passes

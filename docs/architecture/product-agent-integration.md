@@ -112,9 +112,10 @@ legacy/product identifier, policy-version, evidence, money and remaining-cover
 gaps from repository inspection. The inactive mapping validator and its 122
 offline fixtures now reject ambiguous mappings and content/version drift. It
 has no source adapter, and its coherence receipt grants no execution authority.
-No source privilege is applied. Next settle the governed source/tool version mapping and clinical execution
-identity/process/database privileges, then prepare the provider checkpoint/lookup
-adapter and reviewed latency budget. Live run reconciliation, credentials,
+No source privilege is applied. Next settle the governed source/tool version
+mapping and clinical execution identity/process/database privileges using the
+[executor boundary package](agent-executor-boundary.md), then prepare the provider
+checkpoint/lookup adapter and reviewed latency budget. Live run reconciliation, credentials,
 allowances and execution require separate review and explicit approval. Do not
 wire the existing three-attempt MVP worker to the agent or treat the fake ledger
 as proof of provider idempotency, actual usage bounds or live Cortex parity.

@@ -126,6 +126,13 @@ restore tests unless an explicit service ID is supplied; Linux/GitHub/repository
 exact container image, localhost database and generated restore-target checks
 precede its mutations. No operator Mac Docker or GCP VM is started by this suite.
 
+Source-mapping/replacement revision `3436411` also passes the
+[dedicated disposable job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41425980997/job/125212572250):
+358 combined checks (146 contract, 122 mapping, 90 ledger) and ten populated
+restores, including the changed-digest denial after recovery. Full product and
+private-preview CI pass. The [executor boundary package](agent-executor-boundary.md)
+now specifies the unbuilt process/identity/privilege and restore-quarantine work.
+
 Before live integration, the remaining design in
 [the durable-stage proposal](agent-run-ledger-design.md) still needs review:
 

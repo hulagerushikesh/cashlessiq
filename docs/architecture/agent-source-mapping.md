@@ -155,6 +155,14 @@ idempotency contract or an automatic cross-version reconciliation protocol.
 There is no override endpoint. Live execution must first resolve the broader
 identity/privilege, provider reconciliation, stale-backup and spend gates.
 
+Revision `3436411` passes the [dedicated disposable PostgreSQL job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41425980997/job/125212572250):
+358 contract/mapping/ledger checks in 19.86 seconds and all ten populated encrypted
+restores in 11.70 seconds. Both full product and private-preview workflows pass,
+including all eighteen MVP journeys in each. Local offline checks pass 268
+contract/mapping tests; the restore tests are deliberately skipped without the
+explicit disposable CI service. Python lint, whitespace and document links pass.
+GCP stays stopped; no local Docker or Snowflake call was needed.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
