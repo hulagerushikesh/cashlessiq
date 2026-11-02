@@ -14,6 +14,8 @@ Implementation:
 - `apps/api/tests/test_agent_ledger.py`: 72 PostgreSQL crash, authority,
   concurrency, accounting, retention and publication checks. Public CI supplies
   disposable PostgreSQL 17; no operator Mac containers are needed.
+- `apps/api/tests/test_agent_ledger_recovery.py`: ten populated, encrypted
+  snapshot/dump/restore checks on the explicit disposable CI PostgreSQL service.
 
 ## Implemented boundaries
 
@@ -76,10 +78,42 @@ amendments; invalid/oversized outputs; publication rollback; cross-tenant and
 wrong-operation references; immutable receipts and accounting constraints.
 The earlier 146 contract/golden tests remain separate. Fake outputs are
 canonical fixtures, not evidence of actual Cortex parity.
-The restart faults reconstruct the ledger over new database sessions; they do
-not kill PostgreSQL or a VM. The preview recovery suite exercises the new
-schema with empty agent tables. A populated agent-ledger backup/restore and
-post-restore no-resubmission probe remains an explicit pre-live acceptance item.
+The original restart faults reconstruct the ledger over new database sessions;
+they do not kill PostgreSQL or a VM. Populated recovery is now separately tested
+in ten CI cases: reserved, claimed, submitting, unknown, rejected, published,
+superseded and expired states, plus two valid pre-submission recovery paths.
+Every backup contains all 21 tables and nonempty grant/operation/attempt/
+comparison tables. The shared read-only manifest and `pg_dump` use one exported
+snapshot. The existing encrypted-transfer helper encrypts/decrypts through
+separate disposable keyrings before `pg_restore` loads a newly created database.
+
+Restored row/column hashes, stable attempt/submission IDs, private comparisons
+and allowance totals match. Expired work cannot resubmit, unknown work retains
+uncertain units/concurrency, changed grants cannot repurchase the same operation,
+and repeated recovery is idempotent. Restored append-only/state/fake-only guards,
+one-attempt uniqueness and exact operation/attempt foreign keys still reject
+invalid mutations. Unsubmitted work within its original deadline may obtain its
+first permit and publish once; restore does not reset the deadline. The source
+schema remains unchanged and the temporary restored database is dropped.
+The ordinary preview still covers encrypted full-volume restore/browser reopening
+with empty agent tables; populated recovery uses a separate database on the
+CI service. Neither suite proves crash-consistent provider execution, recovery
+from a stale pre-submission backup, or off-machine backup custody.
+
+In particular, restoring a backup taken *before* an actual submission can lose
+that receipt. Before live execution, recovery needs a reviewed external receipt/
+remote reconciliation or restore-quarantine policy that blocks new admissions
+until the gap is resolved. Do not interpret the populated checkpoint tests as
+exactly-once remote execution across point-in-time rollback.
+
+Recovery revision `ac48b19` passed the dedicated
+[disposable PostgreSQL job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41423257127/job/125203629399):
+218 existing contract/ledger checks in 12.88 seconds, followed by all ten populated
+recovery checks in 9.36 seconds. The shared probe remains self-contained for
+execution inside the preview container. Ordinary API runs skip the CI-only
+restore tests unless an explicit service ID is supplied; Linux/GitHub/repository,
+exact container image, localhost database and generated restore-target checks
+precede its mutations. No operator Mac Docker or GCP VM is started by this suite.
 
 Before live integration, the remaining design in
 [the durable-stage proposal](agent-run-ledger-design.md) still needs review:
@@ -87,7 +121,9 @@ Before live integration, the remaining design in
 - Separate clinical execution identity/process/database privileges and credential
   custody. Current same-database ownership is not production isolation.
 - Governed request/policy/evidence transport and pinned tool/search mappings.
-  Local evidence hashes do not create Snowflake permissions or source records.
+  The [source mapping preparation](agent-source-mapping.md) records the concrete
+  identifier/version/normalization gaps. Local hashes do not create Snowflake
+  permissions or source records.
 - A provider adapter with supported remote-run checkpoint/lookup, bounded
   transport/poll timeouts, usage observations and explicit uncertain-run
   reconciliation. This seam intentionally cannot recover by resubmitting or

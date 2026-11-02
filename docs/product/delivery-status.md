@@ -4,6 +4,38 @@ Updated 2 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Populated agent recovery completed; source mapping prepared — 2 November
+
+Revision `ac48b19` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41423257127)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41423257133).
+The dedicated agent job passed 218 existing checks and **ten populated encrypted
+recovery cases**. Each backup restores all 21 tables, including nonempty grant,
+operation, attempt and comparison records. Stable submission IDs, private results,
+allowance accounting, database guards and no-resubmission behaviour survive the
+restore; valid unsubmitted work can finish once within its original deadline.
+The original schema remains unchanged and temporary restored databases are removed.
+See the [recovery details](../architecture/agent-run-ledger.md).
+
+Full CI also passes 1,026 root checks, 1,740 API checks (the ten CI-only restores
+are skipped here and run in their dedicated job), all 18 MVP journeys in each
+workflow, and encrypted preview recovery/browser reopening on the restored volume.
+Types, lint, build, contract drift, containment and owned cleanup pass.
+
+Prepared the [source mapping review](../architecture/agent-source-mapping.md)
+from repository definitions: legacy and product request/policy IDs, policy
+versions, evidence hashes, strict monetary/null handling and remaining-cover
+snapshots require explicit mapping. No source transport or permissions are applied.
+Next implement offline mapping fixtures and prepare the clinical execution
+boundary, then review the bounded provider adapter/latency budget. Recovery from
+a backup older than an actual submission needs reconciliation or quarantine
+before live execution. Live golden comparison and joint human acceptance remain.
+
+No GCP build/start, Snowflake call or operator Mac Docker start was needed.
+A read-only cloud check confirms the VM remains TERMINATED with its 1,800-second
+STOP backstop. Existing deployed images/data and the closed usage ledger remain
+unchanged; the private hostname stays offline between approved windows.
+
 ### Named hostname tested; fake-only agent ledger implemented — 2 November
 
 The owner approved a new 30-minute GCP window using the existing accepted images.
@@ -31,13 +63,13 @@ and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/r
 1,026 root checks, 1,740 API checks, the separate 218 agent checks, all browser/MVP
 journeys, encrypted 21-table recovery and both saved-workflow browser reopenings.
 Contract drift, types, lint, build, containment and owned cleanup pass. Agent
-tables are empty in this preview recovery; populated-ledger recovery remains open.
+tables were empty in that preview run; separate populated recovery is recorded above.
 
 For the current synthetic app, deployment and workflow acceptance are established
 by the checks above and the earlier manual owner session. Further testing follows
 each change. Agent integration is still a separate milestone: governed identities/
 database privileges, request-policy-evidence transport, remote checkpoint/lookup
-and timeout budget, populated-ledger recovery, explicitly approved live golden
+and timeout budget, stale-backup reconciliation/quarantine, explicitly approved live golden
 comparisons, clinical display and joint human acceptance remain. Production and
 real-data gates remain separate; a project-wide testing percentage would hide
 these materially different scopes.

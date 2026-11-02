@@ -12,6 +12,38 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Populated agent recovery completed; source mapping prepared — 2 November
+
+Revision `ac48b19` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41423257127)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41423257133).
+The dedicated agent job passed 218 existing checks and **ten populated encrypted
+recovery cases**. Each backup restores all 21 tables, including nonempty grant,
+operation, attempt and comparison records. Stable submission IDs, private results,
+allowance accounting, database guards and no-resubmission behaviour survive the
+restore; valid unsubmitted work can finish once within its original deadline.
+The original schema remains unchanged and temporary restored databases are removed.
+See the [recovery details](../architecture/agent-run-ledger.md).
+
+Full CI also passes 1,026 root checks, 1,740 API checks (the ten CI-only restores
+are skipped here and run in their dedicated job), all 18 MVP journeys in each
+workflow, and encrypted preview recovery/browser reopening on the restored volume.
+Types, lint, build, contract drift, containment and owned cleanup pass.
+
+Prepared the [source mapping review](../architecture/agent-source-mapping.md)
+from repository definitions: legacy and product request/policy IDs, policy
+versions, evidence hashes, strict monetary/null handling and remaining-cover
+snapshots require explicit mapping. No source transport or permissions are applied.
+Next implement offline mapping fixtures and prepare the clinical execution
+boundary, then review the bounded provider adapter/latency budget. Recovery from
+a backup older than an actual submission needs reconciliation or quarantine
+before live execution. Live golden comparison and joint human acceptance remain.
+
+No GCP build/start, Snowflake call or operator Mac Docker start was needed.
+A read-only cloud check confirms the VM remains TERMINATED with its 1,800-second
+STOP backstop. Existing deployed images/data and the closed usage ledger remain
+unchanged; the private hostname stays offline between approved windows.
+
 ### Named-host acceptance and inactive fake-only ledger — 2 November
 
 The stable private hostname has now passed all 18 deployed browser journeys and
@@ -32,7 +64,8 @@ backup manifests advance with the migration, while historical backup package
 verification remains supported. Existing cloud images/data are unchanged.
 
 Next prepare/review the governed source mapping, clinical execution privileges,
-provider checkpoint/lookup and latency budget, plus populated-ledger recovery.
+provider checkpoint/lookup and latency budget, plus stale-backup reconciliation.
+The later populated recovery acceptance above supersedes that earlier open item.
 Only then plan a separately approved live golden comparison and human UI
 acceptance. An inactive fake stage does not establish actual Cortex parity.
 

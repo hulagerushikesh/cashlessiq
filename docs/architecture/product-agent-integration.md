@@ -95,14 +95,20 @@ See the [v1 contract and limits](agent-comparison-contract.md). It remains
 inactive and outside the embedded MVP worker: no route, SDK, credentials,
 Snowflake staging write or execution adapter was added.
 
-The next batch implements the [inactive fake-only database ledger](agent-run-ledger.md):
+The [inactive fake-only database ledger](agent-run-ledger.md) is also implemented:
 owned grant/operation/attempt/comparison tables, durable submission checkpoints,
 leases/fencing, conservative unknown accounting, transactional comparison storage
 and 72 PostgreSQL fault/concurrency tests. Fake-only grants cannot activate live
 execution. No route, worker or provider transport uses this ledger; existing
 cloud images and data are unchanged. The original
 [durable-stage design](agent-run-ledger-design.md) retains the broader target.
+Ten additional populated encrypted recovery cases now preserve receipts/allowance
+and reject post-restore duplicate submissions. Recovery of a backup older than
+an actual submission remains a separate pre-live reconciliation/quarantine gate.
 
+The [source mapping preparation](agent-source-mapping.md) now records exact
+legacy/product identifier, policy-version, evidence, money and remaining-cover
+gaps from repository inspection. No mapping or source privilege is applied.
 Next settle the governed source/tool version mapping and clinical execution
 identity/process/database privileges, then prepare the provider checkpoint/lookup
 adapter and reviewed latency budget. Live run reconciliation, credentials,
