@@ -52,6 +52,19 @@ The four-hour window has not begun. Resume within the approved window when
 the owner is available; if it moves to another day,
 agree on the new window before starting. Do not start on quota approval alone.
 
+## Resumed approval — 2 November 2026
+
+After initially deferring the run to 4 November, the owner resumed on 2 November
+and explicitly approved moving the unused first test to today: one build (up to
+US$0.09 compute), one e2-small VM for at most four hours from startup (about
+US$0.09 VM/IP), retained 20 GiB disk (about US$0.80/month), plus image/source
+storage, traffic, logs and tax. The owner is available to test. Stop early when
+testing ends; another build or larger VM still requires another decision.
+These estimates are not a hard cap. Read-only checks reconfirmed billing enabled;
+offline Compose, runtime bundle and build-source checksum checks passed. Cloud
+setup is now in progress; this paragraph is approval evidence, not deployment
+acceptance. The actual build and VM receipts will be recorded separately.
+
 ## Prepared inputs
 
 - Application revision: `79408862a15454565f09744edd90c25b3d4df1d4`.

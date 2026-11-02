@@ -1,8 +1,27 @@
 # Product delivery — owner dashboard
 
-Updated 1 November 2026. This page summarizes the current product plan; the
+Updated 2 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
+
+### Private GCP preview ready for owner testing — 2 November
+
+The owner moved the unused first build/test to today and explicitly confirmed
+the same bounded spend and availability. The single approved cloud build
+succeeded; exact web/API digests are deployed on e2-small with a 20 GiB standard
+disk, IAP-only SSH, a password-protected HTTPS tunnel and verified automatic STOP
+at **13:03:01 IST today**. The VM remains running for the available owner's test;
+stop early when finished and record completed shutdown/IP release in the ledger.
+
+All 18 deployed browser checks passed across the first run (17 passes, one
+120-second overall timeout) and an isolated successful rerun of the long journey
+with a 240-second ceiling. Per-action limits stayed unchanged. Cookie flags,
+sign-out, anonymous/wrong-password denial and role navigation passed. During
+browser checks the VM retained about 1 GiB of estimated available RAM, with no
+swap use or observed container OOM/restarts. No larger VM or second build was
+needed. All 57 client checks, targeted TypeScript and lint passed; Docker Desktop
+was not started. See the [2 November receipts](gcp-first-run-2026-11-02.md) for
+exact scope, evidence and remaining shutdown acceptance.
 
 ### GCP billing linked; build and test next — 1 November
 
@@ -17,8 +36,8 @@ said a reply typically takes about two business days. Google subsequently
 approved the request at 17:14 IST, with up to one hour for propagation. The
 agent verified the approval email. After the owner asked to check again, the
 approved billing link succeeded at approximately 21:08 IST; an independent read
-confirmed billing enabled on Firebase Payment. No build or VM has started. Offline Compose and
-package/checksum checks pass; actual cloud acceptance remains outstanding.
+confirmed billing enabled on Firebase Payment. At that checkpoint no build or VM had started. Offline Compose and
+package/checksum checks pass; actual cloud acceptance was still outstanding.
 Keep the existing dedicated project; no additional project is needed. The [first-run handoff](gcp-first-run-2026-11-01.md) records the
 approval, exact failure, submission receipt, prepared inputs and next step. Earlier statements
 below that paid actions were unapproved describe their historical checkpoints.

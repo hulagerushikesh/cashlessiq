@@ -1,29 +1,34 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 1 November 2026
+Last updated: 2 November 2026
 Current engineering scope: **synthetic MVP workflows (M3–M5), private testing**.
 Governed live-source P2 and production gates remain separate.
 
-Current operation: Docker Desktop stays shut down for ordinary engineering;
-offline checks and disposable CI provide verification. The first GCP billing,
-single-build and four-hour test was explicitly approved on 1 November, but Google
-initially rejected billing linkage with `Cloud billing quota exceeded`. No build
-or VM started. The agent submitted the quota request at the
-owner's explicit request and verified Google's success receipt. Google later
-approved the quota at 17:14 IST, allowing up to one hour for propagation. The
-agent read the approval email. After the owner asked to check again following
-the wait, billing linkage succeeded at approximately 21:08 IST. An independent
-read confirmed billing enabled on Firebase Payment; the quota blocker is
-resolved. No build or VM has started. Offline Compose, runtime-package verification
-and build-source checksum checks pass. See the
-[first-run handoff](gcp-first-run-2026-11-01.md).
-The owner selected at most four hours of active testing per day with immediate
-shutdown afterward. A read-only instance
-checker now verifies the reviewed four-hour STOP configuration and completed VM
-shutdown when that run starts. The
-[delivery dashboard](delivery-status.md) records current evidence and the
-[operator guide](../../deploy/gcp-preview/README.md) records the run sequence.
-The localhost and eight-hour descriptions below are historical checkpoints.
+Current operation: the first approved private GCP test is live for the owner
+on 2 November, with a four-hour STOP deadline and immediate early shutdown when
+testing ends. Docker Desktop stays off on the operator Mac. The
+[1 November handoff](gcp-first-run-2026-11-01.md) retains quota/billing history;
+the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
+Earlier localhost, eight-hour and preparation-only entries below are historical.
+
+### Private GCP preview ready for owner testing — 2 November
+
+The owner moved the unused first build/test to today and explicitly confirmed
+the same bounded spend and availability. The single approved cloud build
+succeeded; exact web/API digests are deployed on e2-small with a 20 GiB standard
+disk, IAP-only SSH, a password-protected HTTPS tunnel and verified automatic STOP
+at **13:03:01 IST today**. The VM remains running for the available owner's test;
+stop early when finished and record completed shutdown/IP release in the ledger.
+
+All 18 deployed browser checks passed across the first run (17 passes, one
+120-second overall timeout) and an isolated successful rerun of the long journey
+with a 240-second ceiling. Per-action limits stayed unchanged. Cookie flags,
+sign-out, anonymous/wrong-password denial and role navigation passed. During
+browser checks the VM retained about 1 GiB of estimated available RAM, with no
+swap use or observed container OOM/restarts. No larger VM or second build was
+needed. All 57 client checks, targeted TypeScript and lint passed; Docker Desktop
+was not started. See the [2 November receipts](gcp-first-run-2026-11-02.md) for
+exact scope, evidence and remaining shutdown acceptance.
 
 ### Policy wording upload continuity — 1 November
 

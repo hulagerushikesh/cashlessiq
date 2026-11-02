@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-// Pure HTTP-client tests use an injected fetch; no browser, server or credentials.
+// Pure client and test-scope checks; no browser, server or real credentials.
 export default defineConfig({
   testDir: "tests/client",
   outputDir: "test-results/client",

@@ -1,20 +1,20 @@
 # First private GCP test: operator sequence
 
 This is a disposable, fictional-data test for the owner and engineering agent.
-The dedicated project is `cashlessiq-dev-rush`. On 1 November the owner approved
-billing linkage, one build and the first test for up to four hours, with retained
-disk/image/source storage. Billing linkage failed with `Cloud billing quota
-exceeded`; the initial check confirmed billing was disabled and no build or VM started. At the owner's
-explicit request, the agent submitted the quota form and verified Google's
-success receipt. Google later approved the quota at 17:14 IST, with up to one
-hour for propagation. After the owner asked to check again, billing linkage
-succeeded at approximately 21:08 IST; an independent read confirmed billing
-enabled on the approved Firebase Payment account. No build or VM has started.
-Offline Compose/package/checksum checks pass. See the [current first-run handoff](../../docs/product/gcp-first-run-2026-11-01.md)
-for the exact approval and next step. The packaged `plan.json` retains its
-historical preparation-only state; it is not an authorization or live receipt.
-Do not start resources until the quota issue is resolved and the owner is
-available for the approved window.
+The dedicated project is `cashlessiq-dev-rush`. Billing linkage succeeded on
+1 November after Google's quota approval. On 2 November the owner explicitly
+moved the unused first build and four-hour test to today and confirmed
+availability. Scoped identities, registry, regional source storage, INR cost
+alerts and IAP-only network access are configured. The single approved build
+succeeded; the private preview is running for the available owner's test. Its
+verified automatic STOP is 13:03:01 IST on 2 November; stop earlier when finished.
+All 18 deployed browser checks passed across the initial run and one isolated
+rerun; session/gate checks and actual host-memory acceptance passed. Completed
+shutdown/IP-release acceptance remains pending until the active test ends. See the
+[current first-run receipts](../../docs/product/gcp-first-run-2026-11-02.md)
+for observed state and the [1 November handoff](../../docs/product/gcp-first-run-2026-11-01.md)
+for quota/billing history and source checksums. The packaged `plan.json` retains
+its historical preparation-only state; it is not authorization or live evidence.
 
 ## Prepare offline before approval
 
@@ -238,3 +238,19 @@ operator acceptance steps. Saved snapshots are historical evidence only; use
 `--live` at the beginning and end of the actual approved run. The implementation
 follows Google's [VM time-limit semantics](https://docs.cloud.google.com/compute/docs/instances/limit-vm-runtime)
 and [Compute instance fields](https://docs.cloud.google.com/compute/docs/reference/rest/v1/instances).
+
+## Run browser checks against the approved HTTPS preview
+
+The same MVP browser suite can test the private deployed synthetic workspace.
+After verifying the live fixed-project VM and exact tunnel origin, set
+`MVP_BASE_URL` and `MVP_APPROVED_GCP_ORIGIN` to that identical HTTPS
+`*.trycloudflare.com` origin, and `MVP_OWNER_PASSWORD_FILE` to the separately
+retrieved mode-0600 credential file. Then run
+`npm run test:mvp -- --workers=1 --trace=off --timeout=240000`.
+Do not put the password in a URL or command argument. Remote execution is
+rejected without the exact opt-in and credentials, or for other hosts, paths,
+URL credentials or unexpected ports. This opt-in does not authorize another
+build, VM start, real data or customer traffic. The four-minute remote overall ceiling accommodates the long journey's
+many HTTPS round trips; per-action/navigation limits remain unchanged. Traces are
+off to avoid retaining authorization headers. The suite creates fictional
+policies, requests and documents and should run before the owner's manual test.
