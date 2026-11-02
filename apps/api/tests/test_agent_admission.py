@@ -213,3 +213,42 @@ def test_sqlite_guards_reject_receipt_reset_or_epoch_change(journal):
 def test_missing_external_receipt_is_not_evidence_of_zero_usage(journal):
     closed(lambda: journal.check((receipt(),)))
     assert os.stat(journal.path).st_size > 0
+
+
+def test_checkpoint_digest_uses_instants_not_database_session_timezone():
+    from datetime import UTC, datetime, timedelta, timezone
+    from types import SimpleNamespace
+
+    from ciq_api.agent_admission import checkpoint
+    from ciq_api.agent_ledger_models import AgentExecutionGrant, AgentOperation
+
+    now = datetime(2026, 11, 2, 10, 0, 0, 123456, tzinfo=UTC)
+    op = SimpleNamespace(
+        id=uuid4(), tenant_id=uuid4(), actor_id=uuid4(), grant_id=uuid4(),
+        request_id="SYN-TIMEZONE", operation_key="a" * 64, snapshot={"synthetic": True},
+        config_digest="b" * 64, source_digest="c" * 64,
+        created_at=now, deadline=now + timedelta(seconds=120),
+    )
+    grant = SimpleNamespace(
+        id=op.grant_id, mode="fake-only", approval_ref="fake only",
+        starts_at=now, ends_at=now + timedelta(minutes=10),
+        case_limit=1, concurrency_limit=1, unit_limit=10, units_per_attempt=10,
+    )
+    attempt = SimpleNamespace(
+        id=uuid4(), tenant_id=op.tenant_id, operation_id=op.id,
+        submission_id=uuid4(), fence_id=uuid4(), submitted_at=now,
+    )
+    db = SimpleNamespace(get=lambda model, _: {
+        AgentOperation: op, AgentExecutionGrant: grant,
+    }[model])
+    expected = checkpoint(db, attempt)
+    for target in (timezone(timedelta(hours=5, minutes=30)), timezone(timedelta(hours=-7))):
+        for obj, fields in (
+            (op, ("created_at", "deadline")), (grant, ("starts_at", "ends_at")),
+            (attempt, ("submitted_at",)),
+        ):
+            for name in fields:
+                setattr(obj, name, getattr(obj, name).astimezone(target))
+        assert checkpoint(db, attempt) == expected
+    attempt.submitted_at = now.replace(tzinfo=None)
+    closed(lambda: checkpoint(db, attempt))

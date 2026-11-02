@@ -10,6 +10,7 @@ import os
 import sqlite3
 import stat
 from contextlib import contextmanager
+from datetime import UTC
 from pathlib import Path
 from typing import Literal
 from urllib.parse import quote
@@ -205,18 +206,23 @@ def checkpoint(db, attempt: AgentAttempt) -> FakeCheckpoint:
         _closed()
     # Immutable source fields only: state/counters/leases may legitimately move.
     # Include approval window/allowance and captured snapshot HASH, not its body.
+    def instant(value):
+        if value.tzinfo is None or value.utcoffset() is None:
+            _closed()
+        return value.astimezone(UTC).isoformat()
+
     body = {
         "version": 1, "tenant": str(op.tenant_id), "actor": str(op.actor_id),
         "request": op.request_id, "operation": str(op.id), "key": op.operation_key,
         "snapshot_digest": fingerprint(op.snapshot), "config": op.config_digest,
-        "source": op.source_digest, "created": op.created_at.isoformat(),
-        "deadline": op.deadline.isoformat(), "grant": str(grant.id),
+        "source": op.source_digest, "created": instant(op.created_at),
+        "deadline": instant(op.deadline), "grant": str(grant.id),
         "approval_digest": fingerprint(grant.approval_ref),
-        "window": [grant.starts_at.isoformat(), grant.ends_at.isoformat()],
+        "window": [instant(grant.starts_at), instant(grant.ends_at)],
         "limits": [grant.case_limit, grant.concurrency_limit, grant.unit_limit,
                    grant.units_per_attempt],
         "attempt": str(attempt.id), "submission": str(attempt.submission_id),
-        "fence": str(attempt.fence_id), "submitted": attempt.submitted_at.isoformat(),
+        "fence": str(attempt.fence_id), "submitted": instant(attempt.submitted_at),
     }
     return FakeCheckpoint(
         tenant_id=op.tenant_id, request_id=op.request_id, operation_id=op.id,
