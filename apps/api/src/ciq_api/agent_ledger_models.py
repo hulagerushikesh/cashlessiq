@@ -17,6 +17,19 @@ from sqlalchemy.orm import Mapped, mapped_column
 from ciq_api.models import Base
 
 
+class AgentAdmissionEpoch(Base):
+    """No default row: a restored database alone cannot enable fake transport."""
+
+    __tablename__ = "agent_admission_epoch"
+    __table_args__ = (
+        CheckConstraint("id = 1 AND mode = 'fake-only'", name="ck_agent_epoch_fake_only"),
+    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    mode: Mapped[str] = mapped_column(String(20))
+    database_id: Mapped[UUID] = mapped_column()
+    epoch_id: Mapped[UUID] = mapped_column()
+
+
 class AgentExecutionGrant(Base):
     __tablename__ = "agent_execution_grant"
     __table_args__ = (

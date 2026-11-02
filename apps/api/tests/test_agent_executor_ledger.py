@@ -7,6 +7,7 @@ The supplied test transport manufactures a canned fixture, never provider parity
 import base64
 import hashlib
 import json
+import sqlite3
 import sys
 from datetime import timedelta
 from pathlib import Path
@@ -61,6 +62,11 @@ class CannedProcess:
         assert str(attempts[0].id) == request["attempt_id"]
         assert rows(self.s, AgentOperation)[0].state == "submitting"
         assert balance(self.s) == (1, 1, 10, 0, 0)
+        # Independent fake receipt is committed as issued before child startup.
+        with sqlite3.connect(self.s.admission.journal.path) as journal:
+            assert journal.execute(
+                "SELECT state FROM receipt WHERE submission_id=?", (request["submission_id"],),
+            ).fetchone() == ("issued",)
         if self.fault == "revoke":
             with Session(self.s.engine) as db, db.begin():
                 db.get(Membership, (TENANT_ID, ACTOR)).active = False

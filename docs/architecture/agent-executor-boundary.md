@@ -58,8 +58,10 @@ under the test user's OS identity; the separate CI container tests establish the
 narrow fake artifact/mount/network boundary. The container controller probe is
 only a dummy mount/identity probe, not the real clinical controller service.
 The real controller still uses the existing schema-owning test connection.
-Live grants, separately retained receipts/restore epochs and source/provider
-integration remain unimplemented. No route or worker imports this executor.
+A [default-closed fake epoch and independent test journal](agent-admission-quarantine.md)
+now guard this seam, including old-backup and cross-store crash tests. Live grants,
+production receipt custody and source/provider integration remain unimplemented.
+No route or worker imports this executor.
 
 ## Current database implementation and the gap
 
@@ -157,23 +159,26 @@ backup. A backup older than a submission can erase its local receipt. The new
 cross-mapping guard cannot detect a row absent from the restored database.
 No amount of matching local hashes solves that missing-history problem.
 
-Proposed default: live execution is disabled after restore, unknown recovery
-state or a missing admission epoch. Keep a separately retained execution receipt
-outside the restored database, or require bounded remote reconciliation before
-reopening admission. Its custody, access, durability and cost require review.
-The receipt must bind tenant/request, input identity, mapping/configuration,
-attempt/submission IDs and approval window. It must not retain raw clinical
-bodies in a general operations log.
+The [inactive fake admission implementation](agent-admission-quarantine.md) now
+adds migration `0005_agent_admission` with no default anchor row. Ordinary ledger
+construction is quarantined. Explicit disposable provisioning binds an empty
+local ledger to independently retained private SQLite test custody. Admission
+compares the full bounded checkpoint inventory; an old backup missing a later
+receipt fails closed even when its anchor/grant counters look valid. Four actual
+encrypted pre-checkpoint dump/restore cases supplement the original ten cases.
 
-Before provider I/O, both the local attempt checkpoint and the independent
-receipt must be durable. A crash between either write, or between the writes and
-I/O, remains noncallable pending reconciliation. This deliberately accepts a
-possible unused reservation rather than assuming a missing response means no
-execution. There is no claim of atomic cross-system writes or exactly-once
-provider execution. Reconciliation must never replay an uncertain invocation,
-relabel it with another mapping/grant, or release its allowance merely because a
-lookup failed. The storage protocol and restore epoch enforcement are unbuilt;
-they are pre-live acceptance requirements, not current implementation.
+External prepare precedes local commit; a second single-use issued marker must
+commit after the local checkpoint and before fake child I/O. Either cross-store
+gap is conservative: contradictory history quarantines, and restart cannot
+rehydrate ephemeral issue permission. Lost or terminally closed custody is never
+automatically recreated/reopened. Unknown submitted cost remains held. There is
+no atomic cross-system or exactly-once remote execution claim.
+
+The SQLite adapter is fake-only and not production custody or protection from
+its owner/host. Production independently retained receipts, restore/operator
+authentication and explicit reviewed reconciliation remain required. A real
+restore must close admission externally before work and reconcile history before
+any approved reopening. No service/cost has been selected or provisioned.
 
 ## Concrete acceptance before a live test packet
 

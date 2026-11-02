@@ -112,7 +112,7 @@ def snapshot(engine):
 
 
 @contextmanager
-def restored_database(s, container, directory):
+def restored_database(s, container, directory, *, after_backup=None):
     from scripts.check_mvp_recovery import recovered_transfer_dump, verify_manifest
     from scripts.mvp_recovery_probe import table_manifest
     from scripts.verify_mvp_backup import digest_file, verify_package
@@ -145,7 +145,7 @@ def restored_database(s, container, directory):
     descriptor.write_text(
         json.dumps(
             {
-                "schema": "0004_agent_ledger",
+                "schema": "0005_agent_admission",
                 "tables": expected,
                 "dump": {
                     "file": "current.dump",
@@ -156,9 +156,13 @@ def restored_database(s, container, directory):
         )
     )
     descriptor.chmod(0o600)
-    assert len(verify_package(directory)["tables"]) == 21
+    assert len(verify_package(directory)["tables"]) == 22
     for table in ("agent_execution_grant", "agent_operation", "agent_attempt", "agent_comparison"):
         assert expected[table]["rows"] > 0
+    if after_backup:
+        after_backup()
+    with snapshot(s.engine) as (db, source_schema):
+        source_after_backup = table_manifest(db, source_schema)
     database = "ciq_agent_restore_" + uuid4().hex[:24]
     service_command(container, "createdb", "-U", "postgres", "-T", "template0", database)
     engine = create_engine(
@@ -185,13 +189,18 @@ def restored_database(s, container, directory):
         assert not decrypted.exists()
         with snapshot(engine) as (db, restored_schema):
             verify_manifest(expected, table_manifest(db, restored_schema))
-        yield SimpleNamespace(**{**vars(s), "engine": engine, "ledger": FakeAgentLedger(engine)})
+        # Explicit fake harness attestation only. Normal constructor/startup
+        # defaults closed; a restored DB cannot provision its own new custody.
+        yield SimpleNamespace(**{
+            **vars(s), "engine": engine,
+            "ledger": FakeAgentLedger(engine, admission=s.admission),
+        })
     finally:
         engine.dispose()
         service_command(container, "dropdb", "-U", "postgres", "--force", database)
     # No application/ledger mutation in the restored DB may affect the original.
     with snapshot(s.engine) as (db, schema):
-        verify_manifest(expected, table_manifest(db, schema))
+        verify_manifest(source_after_backup, table_manifest(db, schema))
 
 
 def receipt_digest(s):
@@ -298,6 +307,8 @@ def test_populated_encrypted_restore_retains_receipts_and_forbids_resubmission(
         # Restoring post-data triggers, unique keys and FK constraints matters as
         # much as restoring rows. These statements must fail in fresh transactions.
         for statement in (
+            "DELETE FROM agent_admission_epoch",
+            "UPDATE agent_admission_epoch SET epoch_id=gen_random_uuid()",
             "DELETE FROM agent_attempt",
             "DELETE FROM agent_operation",
             "DELETE FROM agent_execution_grant",
@@ -353,3 +364,53 @@ def test_restore_can_finish_unsubmitted_work_once_before_its_deadline(
         assert reserve(restored, 1) == result
         assert len(rows(restored, AgentAttempt)) == len(rows(restored, AgentComparison)) == 2
         assert balance(restored) == (3, 1, 10, 20, 0)
+
+
+@pytest.mark.parametrize("phase", ["checkpoint", "issued", "published", "quarantined"])
+def test_backup_before_checkpoint_cannot_erase_independently_retained_attempt(
+    recovery_service, setup, tmp_path, phase,
+):
+    from ciq_api.agent_admission import ERROR, FakeAdmissionGate
+
+    s = setup
+    baseline = submission(s, 0)
+    s.ledger.publish_fake_result(baseline, payload(baseline))
+    subject = reserve(s, 1)
+    claim = s.ledger.claim(TENANT_ID, ACTOR, subject.operation_id)
+    later = []
+
+    def after_backup():
+        permit = s.ledger.begin_submission(TENANT_ID, ACTOR, claim)
+        later.append(permit)
+        if phase in {"issued", "published"}:
+            s.ledger.authorize_fake_io(permit)
+        if phase == "published":
+            s.ledger.publish_fake_result(permit, payload(permit))
+        if phase == "quarantined":
+            s.admission.journal.quarantine()
+
+    with restored_database(
+        s, recovery_service, tmp_path / "old-backup", after_backup=after_backup,
+    ) as restored:
+        # The old dump has one baseline attempt. External custody retains the
+        # later attempt even though the restored SQL grant/counters forgot it.
+        assert len(rows(restored, AgentAttempt)) == 1
+        assert later[0].attempt_id not in {a.id for a in rows(restored, AgentAttempt)}
+        assert balance(restored) == (2, 1, 10, 10, 0)
+        for action in (
+            lambda: reserve(restored, 2),
+            lambda: restored.ledger.begin_submission(TENANT_ID, ACTOR, claim),
+            lambda: restored.ledger.publish_fake_result(baseline, payload(baseline)),
+        ):
+            with pytest.raises(AgentContractError, match=f"^{ERROR}$"):
+                action()
+        with pytest.raises(AgentContractError, match=f"^{ERROR}$"):
+            FakeAdmissionGate.provision_empty_for_tests(
+                restored.engine, tmp_path / "replacement-custody",
+            )
+        # A restore cannot assume forgotten execution was free, create a new
+        # epoch automatically or use a stale permit to reach fake process I/O.
+        with pytest.raises(AgentContractError):
+            restored.ledger.authorize_fake_io(later[0])
+        assert len(rows(restored, AgentAttempt)) == 1
+        assert balance(restored) == (2, 1, 10, 10, 0)

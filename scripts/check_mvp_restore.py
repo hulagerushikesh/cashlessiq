@@ -31,7 +31,7 @@ try:
         migration.attributes['connection'] = connection
         command.upgrade(migration, 'head')
         revision = connection.execute(text('SELECT version_num FROM alembic_version')).scalar()
-        assert revision == '0004_agent_ledger'
+        assert revision == '0005_agent_admission'
     seed(config)
     with engine.connect() as connection:
         assert connection.execute(text('SELECT count(*) FROM app_user')).scalar() == 7

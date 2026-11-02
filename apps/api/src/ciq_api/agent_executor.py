@@ -184,7 +184,8 @@ def execute_fake_process(ledger, tenant_id, actor_id, claim, transport: BoundedF
 
     Failure leaves submitting/unknown cost reserved. Existing status-only recovery
     handles lease expiry. Never replay, reclaim or refund based on a child exit.
-    No externally retained receipt/restore epoch is implemented by this seam.
+    An explicit fake admission epoch and independent receipt must agree with the
+    committed local checkpoint. Missing/contradictory custody is quarantined.
     """
     permit = ledger.begin_submission(tenant_id, actor_id, claim)
     request = FakeProcessRequest(
@@ -203,6 +204,12 @@ def execute_fake_process(ledger, tenant_id, actor_id, claim, transport: BoundedF
     )
     # A late local clock may waste this fake checkpoint; it never expands its
     # lease/deadline or grants a second call. DB time remains publication authority.
+    if budget <= 0:
+        raise AgentContractError("fake_transport_unavailable")
+    ledger.authorize_fake_io(permit)
+    budget = min(
+        budget, (permit.deadline - _utc_now()).total_seconds() - PERSISTENCE_MARGIN_SECONDS,
+    )
     if budget <= 0:
         raise AgentContractError("fake_transport_unavailable")
     raw = transport.exchange(request, timeout=budget)

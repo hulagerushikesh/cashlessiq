@@ -19,8 +19,10 @@ The [source mapping review](docs/architecture/agent-source-mapping.md) has 122
 offline validation checks and records integration gaps. The inactive
 [fake executor](docs/architecture/agent-executor-boundary.md) adds 56 offline
 process/protocol and 13 PostgreSQL integration checks, plus disposable container
-isolation. Governed controller database permissions, restore quarantine, live
-source/transport and credentials remain; deployed workflows use deterministic rules.
+isolation. The [fake admission quarantine](docs/architecture/agent-admission-quarantine.md)
+adds a default-closed epoch and separately retained single-use test receipts.
+Governed controller database permissions, production receipt/secret custody and
+live source/transport remain; deployed workflows use deterministic rules.
 
 ## Retained Snowflake prototype
 

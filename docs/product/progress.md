@@ -12,6 +12,30 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Default-closed fake admission and old-backup quarantine — 2 November
+
+Implemented the [fake admission gate](../architecture/agent-admission-quarantine.md).
+Migration `0005_agent_admission` creates an immutable fake epoch anchor without a
+default row. Ordinary ledger construction cannot admit work. Explicit disposable
+provisioning binds an empty ledger to a separate private SQLite test journal;
+missing, changed or closed custody denies admission. Exact checkpoint history and
+single-use issue markers persist before fake child I/O; restart never reconstructs
+permission. Cross-store commit failures retain uncertainty and have no reset path.
+
+Added 26 offline journal checks, nineteen PostgreSQL gate cases and four encrypted
+restore cases whose backups precede a later checkpoint/issue/publication/quarantine.
+The original ten populated recoveries now include all 22 tables. Actual-child
+checks also require the independently committed issue marker before startup.
+Local root checks (1,027), 350 offline agent checks and Ruff pass; disposable/full
+CI acceptance is pending at this implementation checkpoint.
+
+The controller still has an owner-level test connection. Next restrict its database
+commands and accounting permissions, then finish independent source capture and
+the bounded provider adapter. The SQLite adapter is fake-only; live independent
+receipt custody, secrets and reviewed reconciliation remain unconfigured. No route,
+worker or service activates this seam. No GCP build/start, Snowflake usage or local
+Docker startup was performed; the old deployed images/schema remain unchanged.
+
 ### Inactive fake executor and transport isolation — 2 November
 
 Implemented a [bounded fake process executor](../architecture/agent-executor-boundary.md)

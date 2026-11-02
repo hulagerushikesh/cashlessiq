@@ -258,8 +258,17 @@ def _replacement_fence(db, tenant_id, request_id, config_digest, source_digest, 
 class FakeAgentLedger:
     """Engineering seam only. Fake-only schema cannot admit a live execution grant."""
 
-    def __init__(self, engine):
+    def __init__(self, engine, *, admission=None):
         self.engine = engine
+        self.admission = admission
+        # Only this coordinator instance may issue its freshly committed permit.
+        # Restart never rehydrates permission from a retained receipt.
+        self._pending_fake_io = {}
+
+    def _admit(self, db):
+        if self.admission is None:
+            raise AgentContractError("agent_admission_quarantined")
+        self.admission.check(db)
 
     def capture(self, tenant_id: UUID, actor_id: UUID, request_id: str) -> AgentInput:
         with Session(self.engine) as db, db.begin():
@@ -301,6 +310,7 @@ class FakeAgentLedger:
         if type(timeout_seconds) is not int or not 1 <= timeout_seconds <= 120:
             raise AgentContractError("invalid_deadline")
         with Session(self.engine) as db, db.begin():
+            self._admit(db)
             snapshot, _ = _scope(db, tenant_id, actor_id, request_id, correlation_id)
             key = operation_key(snapshot, config_digest, source_digest)
             grant = _lock(
@@ -384,6 +394,7 @@ class FakeAgentLedger:
 
     def claim(self, tenant_id: UUID, actor_id: UUID, operation_id: UUID) -> ClaimReceipt:
         with Session(self.engine) as db, db.begin():
+            self._admit(db)
             grant, op, snapshot, current = self._owned(db, tenant_id, actor_id, operation_id)
             require_current(snapshot, current)
             now = _now(db)
@@ -402,6 +413,7 @@ class FakeAgentLedger:
 
     def heartbeat(self, tenant_id: UUID, actor_id: UUID, claim: ClaimReceipt) -> ClaimReceipt:
         with Session(self.engine) as db, db.begin():
+            self._admit(db)
             grant, op, snapshot, current = self._owned(db, tenant_id, actor_id, claim.operation_id)
             require_current(snapshot, current)
             now = _now(db)
@@ -421,6 +433,7 @@ class FakeAgentLedger:
         claim: ClaimReceipt,
     ) -> SubmissionPermit:
         with Session(self.engine) as db, db.begin():
+            self._admit(db)
             grant, op, snapshot, current = self._owned(db, tenant_id, actor_id, claim.operation_id)
             require_current(snapshot, current)
             now = _now(db)
@@ -446,6 +459,10 @@ class FakeAgentLedger:
             op.version += 1
             db.add(attempt)
             db.flush()
+            # Independent fake custody commits first. If this PostgreSQL commit
+            # rolls back or its outcome is unknown, the orphan receipt closes
+            # subsequent admission. Neither store is reset to make them agree.
+            self.admission.prepare(db, attempt)
             permit = SubmissionPermit(
                 **_receipt(op).model_dump(),
                 fence_id=op.fence_id,
@@ -459,10 +476,50 @@ class FakeAgentLedger:
                 snapshot=snapshot,
             )
         # Commit completed before returning permission to the test fake gateway.
+        self._pending_fake_io[permit.submission_id] = permit
         return permit
+
+    def authorize_fake_io(self, permit: SubmissionPermit):
+        """One durable issue marker after the committed local checkpoint.
+
+        Failure after issue is conservative uncertainty, never retry/refund.
+        This is inactive fake custody, not a live provider authorization path.
+        """
+        permit = SubmissionPermit.model_validate(permit.model_dump())
+        if self._pending_fake_io.pop(permit.submission_id, None) != permit:
+            raise AgentContractError("automatic_retry_forbidden")
+        with Session(self.engine) as db, db.begin():
+            self._admit(db)
+            grant, op, snapshot, current = self._owned(
+                db, permit.tenant_id, permit.actor_id, permit.operation_id
+            )
+            now = _now(db)
+            require_current(snapshot, current)
+            _window(grant, now)
+            _lease(op, permit.fence_id, now)
+            attempt = db.get(AgentAttempt, (permit.tenant_id, permit.attempt_id))
+            self._permit(permit, op, snapshot, grant, attempt, now)
+            if op.state != "submitting" or op.version != permit.version:
+                raise AgentContractError("automatic_retry_forbidden")
+            self.admission.issue(db, attempt)
+
+    @staticmethod
+    def _permit(permit, op, snapshot, grant, attempt, now):
+        if (
+            not attempt
+            or attempt.operation_id != op.id
+            or attempt.submission_id != permit.submission_id
+            or attempt.fence_id != permit.fence_id
+            or permit.snapshot != snapshot
+            or permit.config_digest != op.config_digest
+            or permit.source_digest != op.source_digest
+            or not now < permit.deadline <= min(op.deadline, op.lease_until, grant.ends_at)
+        ):
+            raise AgentContractError("invalid_submission_receipt")
 
     def publish_fake_result(self, permit: SubmissionPermit, raw: bytes) -> OperationReceipt:
         with Session(self.engine) as db, db.begin():
+            self._admit(db)
             grant, op, snapshot, current = self._owned(
                 db, permit.tenant_id, permit.actor_id, permit.operation_id
             )
@@ -470,17 +527,7 @@ class FakeAgentLedger:
             _window(grant, now)
             _lease(op, permit.fence_id, now)
             attempt = db.get(AgentAttempt, (permit.tenant_id, permit.attempt_id))
-            if (
-                not attempt
-                or attempt.operation_id != op.id
-                or attempt.submission_id != permit.submission_id
-                or attempt.fence_id != permit.fence_id
-                or permit.snapshot != snapshot
-                or permit.config_digest != op.config_digest
-                or permit.source_digest != op.source_digest
-                or not now < permit.deadline <= min(op.deadline, op.lease_until, grant.ends_at)
-            ):
-                raise AgentContractError("invalid_submission_receipt")
+            self._permit(permit, op, snapshot, grant, attempt, now)
             if op.state == "published":
                 return _receipt(op)
             if op.state != "submitting":

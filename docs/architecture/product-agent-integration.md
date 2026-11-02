@@ -106,7 +106,9 @@ data are unchanged. The original
 [durable-stage design](agent-run-ledger-design.md) retains the broader target.
 Ten additional populated encrypted recovery cases now preserve receipts/allowance
 and reject post-restore duplicate submissions. Recovery of a backup older than
-an actual submission remains a separate pre-live reconciliation/quarantine gate.
+an actual submission is now exercised by four additional encrypted restore cases
+through the [default-closed fake gate](agent-admission-quarantine.md). Production
+independent custody and reviewed reconciliation remain pre-live gates.
 
 The [source mapping preparation](agent-source-mapping.md) now records exact
 legacy/product identifier, policy-version, evidence, money and remaining-cover
@@ -120,8 +122,10 @@ allowance on failure and validates/publishes under fresh clinical locks. Its
 container tests with distinct identities, exact dummy mounts and no network/DB
 capability. The fixed canned fixture is not provider or independent-source parity.
 No route or worker activates it; the real controller still uses the owning DB
-test connection. Next implement narrow governed database commands and restore
-quarantine, finish independently captured source/tool mapping and prepare the
+test connection. The default-closed fake epoch, independent test receipts and
+pre-checkpoint restore quarantine are implemented; production receipt custody
+remains unselected. Next implement narrow governed database commands, finish
+independently captured source/tool mapping and prepare the
 provider checkpoint/lookup adapter with a reviewed latency budget. Live run reconciliation, credentials,
 allowances and execution require separate review and explicit approval. Do not
 wire the existing three-attempt MVP worker to the agent or treat the fake ledger

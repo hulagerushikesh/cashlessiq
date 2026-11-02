@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from test_agent_contracts import candidate
 
 from ciq_api import agent_ledger
+from ciq_api.agent_admission import FakeAdmissionGate
 from ciq_api.agent_contracts import AgentContractError
 from ciq_api.agent_ledger import FakeAgentLedger, FakeGrantSpec, operation_key
 from ciq_api.agent_ledger_models import (
@@ -44,7 +45,7 @@ ACTOR = UUID(PROFILES["medical_officer"][0])
 
 
 @pytest.fixture
-def setup(engine, monkeypatch):
+def setup(engine, monkeypatch, tmp_path):
     clock = [NOW]
     monkeypatch.setattr(agent_ledger, "_now", lambda db: clock[0])
     policy = json.loads(files("ciq_api").joinpath("fixtures/policy-template.json").read_text())
@@ -128,9 +129,12 @@ def setup(engine, monkeypatch):
         unit_limit=30,
     )
     grant_id = ledger.create_fake_grant(TENANT_ID, spec)
+    admission = FakeAdmissionGate.provision_empty_for_tests(engine, tmp_path / "fake-custody")
+    ledger = FakeAgentLedger(engine, admission=admission)
     return SimpleNamespace(
         engine=engine,
         ledger=ledger,
+        admission=admission,
         clock=clock,
         policy_id=policy_id,
         snapshots=snapshots,
@@ -209,7 +213,7 @@ def test_repeated_publication_and_enqueue_are_idempotent_after_restart(setup):
     s = setup
     permit = submission(s)
     result = s.ledger.publish_fake_result(permit, payload(permit))
-    s.ledger = FakeAgentLedger(s.engine)
+    s.ledger = FakeAgentLedger(s.engine, admission=s.admission)
     assert s.ledger.publish_fake_result(permit, b"ignored duplicate") == result
     assert reserve(s) == result
     assert len(rows(s, AgentComparison)) == len(rows(s, AgentAttempt)) == 1
@@ -299,7 +303,7 @@ def test_pre_submission_restart_is_safe_and_expiry_releases_only_units(setup, ph
     receipt = reserve(s)
     if phase == "after_claim":
         s.ledger.claim(TENANT_ID, ACTOR, receipt.operation_id)
-    s.ledger = FakeAgentLedger(s.engine)
+    s.ledger = FakeAgentLedger(s.engine, admission=s.admission)
     s.clock[0] += timedelta(seconds=120)
     expired = s.ledger.recover_expired(TENANT_ID, receipt.operation_id)
     assert expired.state == "expired"
@@ -331,7 +335,7 @@ def test_submission_crash_stays_unknown_and_never_returns_second_permit(setup, c
             permit.operation_id,
             payload(permit),
         )
-    s.ledger = FakeAgentLedger(s.engine)
+    s.ledger = FakeAgentLedger(s.engine, admission=s.admission)
     s.clock[0] += timedelta(seconds=30)
     result = s.ledger.recover_expired(TENANT_ID, permit.operation_id)
     assert result.state == "unknown"
@@ -677,7 +681,7 @@ def test_all_agent_tables_migrate_and_ledger_remains_unwired(engine):
                 AgentComparison,
             )
         } <= tables
-        assert db.scalar(text("SELECT version_num FROM alembic_version")) == "0004_agent_ledger"
+        assert db.scalar(text("SELECT version_num FROM alembic_version")) == "0005_agent_admission"
     package = Path(agent_ledger.__file__).parent
     for name in ("main.py", "jobs.py", "local_worker.py", "reviews.py", "mvp.py"):
         tree = ast.parse((package / name).read_text())

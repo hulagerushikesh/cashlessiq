@@ -93,7 +93,7 @@ The original restart faults reconstruct the ledger over new database sessions;
 they do not kill PostgreSQL or a VM. Populated recovery is now separately tested
 in ten CI cases: reserved, claimed, submitting, unknown, rejected, published,
 superseded and expired states, plus two valid pre-submission recovery paths.
-Every backup contains all 21 tables and nonempty grant/operation/attempt/
+Current backups contain all 22 tables and nonempty grant/operation/attempt/
 comparison tables. The shared read-only manifest and `pg_dump` use one exported
 snapshot. The existing encrypted-transfer helper encrypts/decrypts through
 separate disposable keyrings before `pg_restore` loads a newly created database.
@@ -109,12 +109,13 @@ schema remains unchanged and the temporary restored database is dropped.
 The ordinary preview still covers encrypted full-volume restore/browser reopening
 with empty agent tables; populated recovery uses a separate database on the
 CI service. Neither suite proves crash-consistent provider execution, recovery
-from a stale pre-submission backup, or off-machine backup custody.
+off-machine backup custody or actual provider behaviour. The new stale-backup
+fake gate is described below.
 
 In particular, restoring a backup taken *before* an actual submission can lose
-that receipt. Before live execution, recovery needs a reviewed external receipt/
-remote reconciliation or restore-quarantine policy that blocks new admissions
-until the gap is resolved. Do not interpret the populated checkpoint tests as
+that receipt. The [fake quarantine gate](agent-admission-quarantine.md) now denies that gap
+using independently retained test receipts; live execution still needs reviewed
+external custody and operator reconciliation. Do not interpret the populated checkpoint tests as
 exactly-once remote execution across point-in-time rollback.
 
 Recovery revision `ac48b19` passed the dedicated
@@ -131,7 +132,8 @@ Source-mapping/replacement revision `3436411` also passes the
 358 combined checks (146 contract, 122 mapping, 90 ledger) and ten populated
 restores, including the changed-digest denial after recovery. Full product and
 private-preview CI pass. The [executor boundary package](agent-executor-boundary.md)
-now specifies the unbuilt process/identity/privilege and restore-quarantine work.
+records implemented fake process/restore gates and the remaining production
+identity, privilege and custody work.
 
 Before live integration, the remaining design in
 [the durable-stage proposal](agent-run-ledger-design.md) still needs review:
@@ -154,8 +156,8 @@ Before live integration, the remaining design in
   acceptance. Live grants require a new reviewed migration/path; changing a
   configuration flag does not activate them.
 
-Readiness and new backup manifests now require `0004_agent_ledger`. Offline
-package verification still recognizes historical `0003_mvp` manifests for
+Readiness and new backup manifests now require `0005_agent_admission`. Offline
+package verification still recognizes historical `0003_mvp`/`0004_agent_ledger` manifests for
 custody/decryption; recognizing an old package does not certify a current-schema
 restore. Retained cost receipts are forward-only. Existing cloud images and
 their retained database are not upgraded by source or CI changes.
@@ -181,3 +183,18 @@ identity/state guards exist; counters intentionally remain mutable for trusted
 transactions today. The next database boundary must restrict runtime commands,
 protect accounting and fresh scope locks, and deny direct human-workflow writes.
 No production role/grant/SQL command function is provisioned by this batch.
+
+
+## Default-closed fake admission — 2 November
+
+Migration `0005_agent_admission` creates a fifth agent table without an anchor
+row. The [fake gate and independent receipt adapter](agent-admission-quarantine.md)
+are explicit disposable test capabilities; ordinary ledger construction cannot
+admit or issue transport. All admission writers lock the anchor first and compare
+local/external attempt history. Submission prepares external custody before local
+commit; fake I/O requires a separately committed single-use issue marker and
+fresh clinical validation. Restart does not reconstruct permission. The new
+offline/PostgreSQL fault tests and four pre-checkpoint encrypted restores cover
+missing, contradictory, closed and rolled-back local history. Status-only expiry
+recovery remains available without opening admission. Production custody and
+database least privilege remain required; no deployed database is migrated.

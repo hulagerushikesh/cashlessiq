@@ -95,7 +95,7 @@ def main():
         conn.execute("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY")
         snapshot = conn.execute("SELECT pg_export_snapshot()").fetchone()[0]
         revision = conn.execute("SELECT version_num FROM alembic_version").fetchall()
-        if revision != [("0004_agent_ledger",)]:
+        if revision != [("0005_agent_admission",)]:
             raise ValueError("Expected current MVP schema")
         manifest = table_manifest(conn)
         sample = conn.execute(

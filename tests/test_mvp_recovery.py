@@ -66,7 +66,7 @@ def _sample_package(tmp_path):
     return directory, manifest
 
 
-@pytest.mark.parametrize("schema", ["0003_mvp", "0004_agent_ledger"])
+@pytest.mark.parametrize("schema", ["0003_mvp", "0004_agent_ledger", "0005_agent_admission"])
 def test_copied_backup_verifies_without_database_or_docker(tmp_path, schema):
     source, manifest = _sample_package(tmp_path)
     manifest["schema"] = schema
