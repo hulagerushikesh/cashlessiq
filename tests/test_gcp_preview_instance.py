@@ -56,6 +56,23 @@ def test_integer_duration_and_omitted_stopped_access_configs_are_valid(snapshot)
     assert checker.verify(snapshot, "stopped")["external_ipv4_present"] is False
 
 
+def test_shorter_owner_window_preserves_stricter_stop_backstop(snapshot):
+    snapshot["instance"]["scheduling"]["maxRunDuration"] = {"seconds": "1800"}
+    snapshot["instance"]["resourceStatus"]["scheduling"]["terminationTimestamp"] = (
+        "2026-10-29T04:30:00Z"
+    )
+    snapshot["observed_at"] = "2026-10-29T04:10:00Z"
+    assert checker.verify(snapshot, "running")["max_run_duration_seconds"] == 1800
+    assert checker.verify(stopped(snapshot), "stopped")["max_run_duration_seconds"] == 1800
+
+
+@pytest.mark.parametrize("duration", [0, -1, 59, True, "1800.5"])
+def test_invalid_short_duration_fails(snapshot, duration):
+    snapshot["instance"]["scheduling"]["maxRunDuration"] = {"seconds": duration}
+    with pytest.raises((ValueError, KeyError)):
+        checker.verify(snapshot, "running")
+
+
 @pytest.mark.parametrize("state", ["STOPPING", "SUSPENDED", "PROVISIONING", "STAGING"])
 def test_transitional_and_suspended_states_are_not_a_stop_receipt(snapshot, state):
     snapshot = stopped(snapshot)

@@ -78,13 +78,15 @@ def verify(snapshot: dict, expected: str) -> dict:
     schedule = instance["scheduling"]
     duration = schedule["maxRunDuration"]
     maximum = plan["instance"]["max_run_duration_seconds"]
+    configured = int(duration["seconds"])
     if (
-        str(duration["seconds"]) != str(maximum)
+        str(duration["seconds"]) != str(configured)
+        or not 60 <= configured <= maximum
         or str(duration.get("nanos", 0)) != "0"
         or schedule["instanceTerminationAction"] != "STOP"
         or schedule.get("terminationTime")
     ):
-        raise PreviewCheckError("VM must retain the reviewed four-hour duration with STOP")
+        raise PreviewCheckError("VM must retain a bounded duration at most four hours with STOP")
     if instance.get("resourcePolicies"):
         raise PreviewCheckError("Unexpected VM resource policy; review possible scheduled startup")
 
@@ -125,7 +127,8 @@ def verify(snapshot: dict, expected: str) -> dict:
         started = timestamp(instance["lastStartTimestamp"])
         deadline = timestamp(actual_schedule.get("terminationTimestamp"))
         if not (
-            started <= observed < deadline and 0 < (deadline - started).total_seconds() <= maximum
+            started <= observed < deadline
+            and 0 < (deadline - started).total_seconds() <= configured
         ):
             raise PreviewCheckError(
                 "VM automatic stop deadline is missing, expired or exceeds four hours"
@@ -138,7 +141,7 @@ def verify(snapshot: dict, expected: str) -> dict:
         "instance": name,
         "state": state,
         "machine_type": machine,
-        "max_run_duration_seconds": maximum,
+        "max_run_duration_seconds": configured,
         "termination_action": "STOP",
         "automatic_stop_deadline": deadline.isoformat() if deadline else None,
         "external_ipv4_present": bool(external),

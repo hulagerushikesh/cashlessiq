@@ -637,9 +637,12 @@ def test_grant_window_blocks_admission(setup, seconds):
 
 def test_clock_rollback_and_deadline_boundary_cannot_publish(setup):
     permit = submission(setup)
-    for time in (NOW - timedelta(seconds=1), NOW + timedelta(seconds=30)):
+    for time, error in (
+        (NOW - timedelta(seconds=1), "grant_unavailable"),
+        (NOW + timedelta(seconds=30), "expired_or_lost_run"),
+    ):
         setup.clock[0] = time
-        with pytest.raises(AgentContractError, match="expired_or_lost_run"):
+        with pytest.raises(AgentContractError, match=error):
             setup.ledger.publish_fake_result(permit, payload(permit))
     assert not rows(setup, AgentComparison)
 
