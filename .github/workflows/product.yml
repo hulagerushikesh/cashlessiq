@@ -5,6 +5,35 @@ on:
 permissions:
   contents: read
 jobs:
+  agent-ledger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_PASSWORD: ciq-disposable-agent-ledger
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+      - name: Fake-only agent crash, concurrency and PostgreSQL ledger checks
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:ciq-disposable-agent-ledger@127.0.0.1:5432/postgres
+        run: |
+          uv sync --project apps/api --frozen
+          uv run --project apps/api pytest apps/api/tests/test_agent_contracts.py apps/api/tests/test_agent_ledger.py
   foundation:
     runs-on: ubuntu-latest
     steps:
