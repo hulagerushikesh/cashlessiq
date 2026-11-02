@@ -196,5 +196,16 @@ commit; fake I/O requires a separately committed single-use issue marker and
 fresh clinical validation. Restart does not reconstruct permission. The new
 offline/PostgreSQL fault tests and four pre-checkpoint encrypted restores cover
 missing, contradictory, closed and rolled-back local history. Status-only expiry
-recovery remains available without opening admission. Production custody and
+recovery remains available without opening admission. If custody cannot verify
+local history, even an expired reservation retains its allowance rather than
+assuming its missing attempt was free. Production custody and
 database least privilege remain required; no deployed database is migrated.
+
+
+Quarantine/recovery revision `93abcdd` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41459570300)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41459570298).
+The dedicated job passes 476 checks and fourteen encrypted restores. The ordinary
+API job passes 1,998 checks with fifteen expected skips; preview restores all 22
+tables and reopens the saved workflow through the browser. No live source or
+provider is used, no production identity is provisioned and no cloud build/run
+is performed by this acceptance.

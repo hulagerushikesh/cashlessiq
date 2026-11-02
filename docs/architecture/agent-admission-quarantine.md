@@ -10,7 +10,10 @@ Migration `0005_agent_admission` creates an append-only, fake-only singleton
 anchor **without a row**. `FakeAgentLedger(engine)` refuses reservation, claim,
 heartbeat, submission and publication. Capture and explicit fake-grant creation
 remain test/operator helpers; neither grants transport permission. Status-only
-expiry recovery stays available and retains submitted uncertainty.
+expiry recovery stays available and retains submitted uncertainty. It releases
+never-submitted reservation units only when independent history is verified;
+unverified/contradictory custody retains even an expired reservation. That
+reservation status is not transport permission.
 
 Only the explicit `FakeAdmissionGate.provision_empty_for_tests` helper can
 bootstrap a test epoch. It checks for no prior operations/attempts or accounted
@@ -28,8 +31,10 @@ oversized, public or symlink custody fails with `agent_admission_quarantined`.
 The journal stores only tenant/request/operation/submission identifiers, an exact
 immutable checkpoint digest and prepared/issued status. Its digest covers the
 attempt, actor, captured-snapshot hash, source/configuration, original deadline,
-grant identity, approval-reference hash, window and allowance. No raw facts,
+grant identity, approval-reference hash, window and allowance. Timestamps are
+canonical UTC instants, independent of the database session time zone. No raw facts,
 policy wording, response, credentials or connection parameters are stored there.
+Quarantine tracebacks suppress underlying file/SQLite failure details.
 Identifiers/hashes still require private custody.
 
 This is **a fake durable adapter, not selected production custody**. Same-host
@@ -63,7 +68,9 @@ PostgreSQL rolls back, the orphan external receipt quarantines admission. If
 PostgreSQL commits but the coordinator exits before issue, restarting cannot
 obtain its ephemeral permission. If issue commits but the caller exits, times
 out or fails before child startup, it still cannot reissue. Expired submitted
-work becomes unknown and keeps concurrency/uncertain allowance. Lost external
+work becomes unknown and keeps concurrency/uncertain allowance. An expired
+reservation also keeps its allowance if independent history cannot be verified:
+a restored database may have forgotten the submitted attempt. Lost external
 custody cannot be recreated from a restored database. A terminal external
 quarantine has no clear/reopen API. There is no automatic reconciliation,
 resubmission or refund because a process/lookup failed.
@@ -90,7 +97,12 @@ checkpoint, issue, publication or terminal quarantine. They restore all 22 table
 into a separate disposable database and prove the forgotten attempt cannot be
 repurchased or replaced by a new epoch. The original ten populated recoveries
 continue to cover retained receipts, guarded valid first submission and expiry.
-CI acceptance links are recorded in the [delivery status](../product/delivery-status.md).
+Revision `93abcdd` passes [product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41459570300)
+and [preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41459570298):
+27 offline journal/UTC checks, 22 PostgreSQL admission cases, the existing 427
+agent checks and all fourteen populated encrypted recoveries. Full product,
+transport containment/cleanup, browser and 22-table preview recovery pass. See the
+[delivery status](../product/delivery-status.md) for counts.
 
 The controller still has an owner-level test connection. This gate does not
 prevent arbitrary database owners from resetting counters or bypassing code.

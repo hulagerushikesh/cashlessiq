@@ -12,14 +12,25 @@ default row. Ordinary ledger construction cannot admit work. Explicit disposable
 provisioning binds an empty ledger to a separate private SQLite test journal;
 missing, changed or closed custody denies admission. Exact checkpoint history and
 single-use issue markers persist before fake child I/O; restart never reconstructs
-permission. Cross-store commit failures retain uncertainty and have no reset path.
+permission. Cross-store commit failures retain uncertainty and have no reset path. Expired
+reservations also keep allowance when independent history cannot be verified;
+a stale backup is not evidence that no attempt occurred.
 
-Added 26 offline journal checks, nineteen PostgreSQL gate cases and four encrypted
+Added 27 offline journal checks, 22 PostgreSQL gate cases and four encrypted
 restore cases whose backups precede a later checkpoint/issue/publication/quarantine.
 The original ten populated recoveries now include all 22 tables. Actual-child
 checks also require the independently committed issue marker before startup.
-Local root checks (1,027), 350 offline agent checks and Ruff pass; disposable/full
-CI acceptance is pending at this implementation checkpoint.
+Revision `93abcdd` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41459570300)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41459570298).
+The dedicated job passed **476 agent checks** and **all fourteen populated encrypted
+recoveries**. Full CI passed **1,027 root**, **1,998 API** (fifteen expected skips),
+72 membership, 58 client, 26 browser, 15 source UI and all eighteen MVP journeys;
+catalog, transport isolation/owned cleanup, contracts/types/lint/build and process
+containment also passed. The private preview separately passed all eighteen
+journeys, encrypted **22-table recovery** and both saved-workflow browser reopenings.
+A final recovery review added refusal to release expired reservation allowance
+when history is unverified; that fix is included in the accepted revision.
+Earlier superseded full runs were cancelled and are not the accepted revision.
 
 The controller still has an owner-level test connection. Next restrict its database
 commands and accounting permissions, then finish independent source capture and
