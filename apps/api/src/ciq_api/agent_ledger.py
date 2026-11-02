@@ -560,11 +560,19 @@ class FakeAgentLedger:
     def recover_expired(self, tenant_id: UUID, operation_id: UUID) -> OperationReceipt:
         """Status-only recovery: never calls a provider or releases uncertain cost.
 
-        Grant->operation locks only, with no later acquisition of workflow locks.
-        This can conservatively account for a revoked/finalized user's abandoned
-        operation without reacquiring their clinical capability.
+        Epoch (when available), then grant->operation; no later workflow locks.
+        A verified unsubmitted expiry can release units. Unavailable/contradictory
+        custody may hide a later attempt, so it cannot release even a reservation.
+        Local submitted work still becomes unknown without clinical capability.
         """
         with Session(self.engine) as db, db.begin():
+            verified_history = False
+            try:
+                self._admit(db)
+            except AgentContractError:
+                pass  # Retain allowance; status-only unknown recovery remains safe.
+            else:
+                verified_history = True
             locator = db.get(AgentOperation, (tenant_id, operation_id))
             if not locator:
                 raise AgentContractError("scope_unavailable")
@@ -581,7 +589,7 @@ class FakeAgentLedger:
                 AgentOperation.id == operation_id,
             )
             now = _now(db)
-            if op.state == "reserved" and now >= op.deadline:
+            if op.state == "reserved" and now >= op.deadline and verified_history:
                 _settle(grant, op, "expired")
             elif op.state == "submitting" and now >= min(op.lease_until, op.deadline):
                 _settle(grant, op, "unknown")

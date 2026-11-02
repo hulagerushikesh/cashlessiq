@@ -412,5 +412,9 @@ def test_backup_before_checkpoint_cannot_erase_independently_retained_attempt(
         # epoch automatically or use a stale permit to reach fake process I/O.
         with pytest.raises(AgentContractError):
             restored.ledger.authorize_fake_io(later[0])
+        s.clock[0] = NOW + timedelta(seconds=121)
+        assert restored.ledger.recover_expired(
+            TENANT_ID, subject.operation_id,
+        ).state == "reserved"
         assert len(rows(restored, AgentAttempt)) == 1
         assert balance(restored) == (2, 1, 10, 10, 0)

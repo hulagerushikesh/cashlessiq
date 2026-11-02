@@ -133,6 +133,9 @@ def test_crash_after_external_prepare_before_local_commit_quarantines_all_admiss
     closed(lambda: reserve(s, 1))
     closed(lambda: s.ledger.begin_submission(TENANT_ID, ACTOR, claim))
     assert balance(s) == (1, 1, 10, 0, 0)
+    s.clock[0] += timedelta(seconds=121)
+    assert s.ledger.recover_expired(TENANT_ID, claim.operation_id).state == "reserved"
+    assert balance(s) == (1, 1, 10, 0, 0)
 
 
 def test_failed_external_prepare_rolls_back_local_checkpoint(setup, monkeypatch):
@@ -190,6 +193,23 @@ def test_lost_external_receipts_block_publication_but_status_recovery_retains_co
     assert s.ledger.recover_expired(TENANT_ID, permit.operation_id).state == "unknown"
     assert balance(s) == (1, 1, 0, 0, 10)
     assert not s.admission.journal.path.exists()
+
+
+@pytest.mark.parametrize("fault", ["missing", "closed", "unconfigured"])
+def test_unverified_expiry_cannot_refund_a_possibly_forgotten_attempt(setup, fault):
+    s = setup
+    claim = claimed(s)
+    if fault == "missing":
+        s.admission.journal.path.unlink()
+    elif fault == "closed":
+        s.admission.journal.quarantine()
+    else:
+        s.ledger = FakeAgentLedger(s.engine)
+    s.clock[0] += timedelta(seconds=121)
+    first = s.ledger.recover_expired(TENANT_ID, claim.operation_id)
+    assert first.state == "reserved"
+    assert s.ledger.recover_expired(TENANT_ID, claim.operation_id) == first
+    assert balance(s) == (1, 1, 10, 0, 0)
 
 
 @pytest.mark.parametrize("field", ["config_digest", "source_digest", "submission_id", "deadline"])
