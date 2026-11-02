@@ -100,8 +100,9 @@ owned grant/operation/attempt/comparison tables, durable submission checkpoints,
 leases/fencing, conservative unknown accounting, transactional comparison storage
 and 90 PostgreSQL fault/concurrency tests, including conservative cross-version
 replacement and unresolved-amendment fences. Fake-only grants cannot activate live
-execution. No route, worker or provider transport uses this ledger; existing
-cloud images and data are unchanged. The original
+execution. No route, worker or live provider transport uses this ledger; the inactive
+fake process coordinator exercises it only in tests. Existing cloud images and
+data are unchanged. The original
 [durable-stage design](agent-run-ledger-design.md) retains the broader target.
 Ten additional populated encrypted recovery cases now preserve receipts/allowance
 and reject post-restore duplicate submissions. Recovery of a backup older than
@@ -112,10 +113,16 @@ legacy/product identifier, policy-version, evidence, money and remaining-cover
 gaps from repository inspection. The inactive mapping validator and its 122
 offline fixtures now reject ambiguous mappings and content/version drift. It
 has no source adapter, and its coherence receipt grants no execution authority.
-No source privilege is applied. Next settle the governed source/tool version
-mapping and clinical execution identity/process/database privileges using the
-[executor boundary package](agent-executor-boundary.md), then prepare the provider
-checkpoint/lookup adapter and reviewed latency budget. Live run reconciliation, credentials,
+No source privilege is applied. The [fake executor boundary](agent-executor-boundary.md)
+now commits the sole checkpoint before a bounded child process, retains uncertain
+allowance on failure and validates/publishes under fresh clinical locks. Its
+56 offline and 13 PostgreSQL checks are accompanied by separate disposable
+container tests with distinct identities, exact dummy mounts and no network/DB
+capability. The fixed canned fixture is not provider or independent-source parity.
+No route or worker activates it; the real controller still uses the owning DB
+test connection. Next implement narrow governed database commands and restore
+quarantine, finish independently captured source/tool mapping and prepare the
+provider checkpoint/lookup adapter with a reviewed latency budget. Live run reconciliation, credentials,
 allowances and execution require separate review and explicit approval. Do not
 wire the existing three-attempt MVP worker to the agent or treat the fake ledger
 as proof of provider idempotency, actual usage bounds or live Cortex parity.

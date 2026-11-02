@@ -44,8 +44,13 @@ PostgreSQL credentials/socket/client package or reachable database network.
 A separate PostgreSQL suite checks checkpoint visibility before child startup,
 private publication, revocation/review drift, bad results, crashes/timeouts and
 conservative no-replay accounting. Offline tests cover protocol, environment/FD
-inheritance, output bounds and descendant cleanup. Acceptance is recorded in the
-product status after CI completes.
+inheritance, output bounds and descendant cleanup. Revision `ad38848` passes [product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41434111010)
+and [preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41434110762):
+56 offline process/protocol and 13 PostgreSQL process/ledger cases join the 358
+existing agent checks, all ten populated recoveries and full product/browser
+regression. The separate container job verifies cleanup. The new cleanup test
+handles disappearance/reaping during observation while retaining a bounded
+requirement that no owned runnable descendant survives.
 
 This is **not** a production sandbox launcher, private IPC authentication,
 provider credential custody or database least privilege. Offline child tests run

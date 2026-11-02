@@ -12,6 +12,51 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Inactive fake executor and transport isolation — 2 November
+
+Implemented a [bounded fake process executor](../architecture/agent-executor-boundary.md)
+with **56 offline protocol/process tests** and **13 additional PostgreSQL tests**.
+The durable submission checkpoint commits before child startup. Exact request,
+attempt/submission IDs, mapping/configuration pins and the effective lease are
+bound across IPC; returned candidates still pass fresh clinical scope and rule
+validation before private storage. No human review/final amount is changed.
+Child crashes, timeout, bad framing and excessive output retain uncertain
+allowance and cannot obtain another coordinator submission.
+
+The stdlib-only fake image has no database/provider SDK, network or database
+credential in its disposable container test. Separate numeric identities and
+exact read-only dummy mounts deny access to the other component's identity;
+read-only root, dropped capabilities and resource/namespace limits are inspected.
+All invocation-owned containers and the image are removed. The harness refuses
+execution outside its explicit Linux CI job before contacting Docker. Ordinary
+Mac checks do not start local containers. The canned fixture tests framing and
+isolation, not independent source capture, actual credentials or provider parity.
+
+The controller still uses a schema-owning test connection. Next implement narrow
+controller database commands with protected accounting and fresh scope locks,
+then restore quarantine/external receipt handling. Independently captured source
+mapping, governed source identities, a supported bounded provider adapter and
+separately approved live golden comparisons/clinical UI acceptance remain.
+No API route or worker activates this fake seam; no production role or secret
+was provisioned and no schema migration was added.
+
+Revision `ad38848` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41434111010)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41434110762).
+The dedicated job passed **427 checks** (146 contract, 122 mapping, 90 original
+ledger, 56 process/protocol and 13 process/ledger integration), followed by all
+ten populated encrypted recovery cases. The separate container job passed and
+removed all owned resources. Full CI passed 1,026 root, 1,949 API (eleven expected
+skips), 72 membership, 58 client, 26 browser and 15 source UI checks, plus catalog,
+contracts/types/lint/build/containment and all eighteen MVP journeys. The preview
+also passed all eighteen journeys, encrypted 21-table restore and both saved
+workflow browser reopenings. A process-reaping observation race in the new test
+was corrected before this acceptance; the bounded descendant-cleanup assertion
+remains enforced. Earlier superseded runs are not the accepted revision.
+
+A read-only GCP check confirms the VM remains TERMINATED with its 1,800-second
+STOP backstop. No new GCP build/run, Snowflake call, live grant or Mac Docker
+startup was performed. Existing deployed images and data remain unchanged.
+
 ### Inactive source validation and replacement protection — 2 November
 
 Implemented the [versioned mapping validator](../architecture/agent-source-mapping.md)

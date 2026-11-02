@@ -16,8 +16,11 @@ has 146 offline golden/fault checks. The inactive
 [fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 90
 PostgreSQL crash/concurrency checks and ten populated encrypted recovery cases.
 The [source mapping review](docs/architecture/agent-source-mapping.md) has 122
-offline validation checks and records integration gaps. Live execution, governed source mapping and service isolation
-remain; the deployed workflow still uses deterministic rules.
+offline validation checks and records integration gaps. The inactive
+[fake executor](docs/architecture/agent-executor-boundary.md) adds 56 offline
+process/protocol and 13 PostgreSQL integration checks, plus disposable container
+isolation. Governed controller database permissions, restore quarantine, live
+source/transport and credentials remain; deployed workflows use deterministic rules.
 
 ## Retained Snowflake prototype
 

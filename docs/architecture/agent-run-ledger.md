@@ -159,3 +159,25 @@ package verification still recognizes historical `0003_mvp` manifests for
 custody/decryption; recognizing an old package does not certify a current-schema
 restore. Retained cost receipts are forward-only. Existing cloud images and
 their retained database are not upgraded by source or CI changes.
+
+
+## Inactive process integration — 2 November
+
+The [fake executor seam](agent-executor-boundary.md) now uses the committed
+submission permit for exactly one bounded child exchange. The permit includes
+mapping/configuration hashes and the effective minimum of operation deadline,
+claim lease and approval window. Publication checks those pins and rejects an
+extended effective deadline; no route or worker calls this seam. Thirteen
+additional PostgreSQL tests verify checkpoint visibility before process start,
+private-only publication, malformed/invalid results, revocation/review drift,
+child crashes/timeouts, conservative unknown recovery and no replay. The ninety
+original ledger and ten populated recovery tests remain separate.
+
+The stdlib fake artifact has no database credential, client package or network
+in its disposable isolation test. The controller connection still owns its test
+schema: these process checks do not establish controller database least
+privilege. Direct grant-counter DML is not a safe runtime capability just because
+identity/state guards exist; counters intentionally remain mutable for trusted
+transactions today. The next database boundary must restrict runtime commands,
+protect accounting and fresh scope locks, and deny direct human-workflow writes.
+No production role/grant/SQL command function is provisioned by this batch.
