@@ -10,10 +10,59 @@ import re
 import sys
 
 
+def table_manifest(conn, schema="public"):
+    """Hash a bounded, caller-owned schema inside the caller's read-only snapshot.
+
+    Values never leave this function; the schema is quoted as an identifier and
+    catalog filters use bound parameters. Shared by preview and populated-ledger
+    recovery, including CI's isolated test schemas.
+    """
+    from psycopg import sql
+
+    tables = conn.execute(
+        "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "
+        "WHERE n.nspname=%s AND c.relkind='r' ORDER BY c.relname COLLATE \"C\"",
+        (schema,),
+    ).fetchall()
+    if not 10 <= len(tables) <= 100:
+        raise ValueError("Unexpected MVP table inventory")
+    manifest, total_bytes = {}, 0
+    for (table,) in tables:
+        columns = conn.execute(
+            "SELECT a.attname, format_type(a.atttypid,a.atttypmod), a.attnotnull "
+            "FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid "
+            "JOIN pg_namespace n ON n.oid=c.relnamespace "
+            "WHERE n.nspname=%s AND c.relname=%s AND a.attnum>0 "
+            "AND NOT a.attisdropped ORDER BY a.attnum",
+            (schema, table),
+        ).fetchall()
+        digest, count = hashlib.sha256(), 0
+        with conn.cursor(name="recovery_rows") as rows:
+            rows.execute(
+                sql.SQL(
+                    "SELECT row_to_json(t)::text AS value FROM {}.{} t "
+                    'ORDER BY row_to_json(t)::text COLLATE "C"'
+                ).format(sql.Identifier(schema), sql.Identifier(table))
+            )
+            for (value,) in rows:
+                data = value.encode("utf-8")
+                total_bytes += len(data)
+                count += 1
+                if total_bytes > 100 * 1024**2 or count > 100000:
+                    raise ValueError("Synthetic rehearsal size limit")
+                digest.update(len(data).to_bytes(8, "big"))
+                digest.update(data)
+        manifest[table] = {
+            "columns": [list(column) for column in columns],
+            "rows": count,
+            "sha256": digest.hexdigest(),
+        }
+    return manifest
+
+
 def main():
     import psycopg
     from ciq_api.config import Settings
-    from psycopg import sql
     from sqlalchemy.engine import make_url
 
     settings = Settings()
@@ -48,39 +97,7 @@ def main():
         revision = conn.execute("SELECT version_num FROM alembic_version").fetchall()
         if revision != [("0004_agent_ledger",)]:
             raise ValueError("Expected current MVP schema")
-        tables = conn.execute(
-            "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "
-            "WHERE n.nspname='public' AND c.relkind='r' ORDER BY c.relname COLLATE \"C\""
-        ).fetchall()
-        if not 10 <= len(tables) <= 100:
-            raise ValueError("Unexpected MVP table inventory")
-        manifest, total_bytes = {}, 0
-        for (table,) in tables:
-            columns = conn.execute(
-                "SELECT a.attname, format_type(a.atttypid,a.atttypmod), a.attnotnull "
-                "FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid "
-                "JOIN pg_namespace n ON n.oid=c.relnamespace "
-                "WHERE n.nspname='public' AND c.relname=%s AND a.attnum>0 "
-                "AND NOT a.attisdropped ORDER BY a.attnum",
-                (table,),
-            ).fetchall()
-            digest, count = hashlib.sha256(), 0
-            with conn.cursor(name="recovery_rows") as rows:
-                rows.execute(
-                    sql.SQL(
-                        "SELECT row_to_json(t)::text AS value FROM public.{} t "
-                        'ORDER BY row_to_json(t)::text COLLATE "C"'
-                    ).format(sql.Identifier(table))
-                )
-                for (value,) in rows:
-                    data = value.encode("utf-8")
-                    total_bytes += len(data)
-                    count += 1
-                    if total_bytes > 100 * 1024**2 or count > 100000:
-                        raise ValueError("Synthetic rehearsal size limit")
-                    digest.update(len(data).to_bytes(8, "big"))
-                    digest.update(data)
-            manifest[table] = {"columns": columns, "rows": count, "sha256": digest.hexdigest()}
+        manifest = table_manifest(conn)
         sample = conn.execute(
             "SELECT s.request_id, s.policy_id::text, d.id::text FROM submitted_case s "
             "JOIN review_case r USING(tenant_id, request_id) "
