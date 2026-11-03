@@ -164,8 +164,10 @@ def test_post_exchange_revocation_and_stale_scope_deny_without_refund_or_replay(
         'lease': "UPDATE agent_operation SET lease_until=clock_timestamp()-interval '1 second',"
                  'version=version+1',
         'custody_window': f'UPDATE "{s.receipts}".principal SET '
+                         "starts_at=clock_timestamp()-interval '1 minute',"
                          "ends_at=clock_timestamp()-interval '1 second'",
         'clinical_window': f'UPDATE "{s.capture}".principal SET '
+                           "starts_at=clock_timestamp()-interval '1 minute',"
                            "ends_at=clock_timestamp()-interval '1 second'",
     }
     if fault == 'missing_custody':
