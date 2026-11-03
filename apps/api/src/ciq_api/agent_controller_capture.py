@@ -18,7 +18,9 @@ from ciq_api.assessment import fingerprint
 class ControllerCapture:
     def __init__(self, engine, *, schema="ciq_agent_capture"):
         # Trusted installation identifier, never supplied by IPC/browser input.
-        if not re.fullmatch(r"ciq_agent_capture(?:_[a-f0-9]{24})?", schema):
+        if type(schema) is not str or not re.fullmatch(
+            r"ciq_agent_capture(?:_[a-f0-9]{24})?", schema
+        ):
             raise AgentContractError("scope_unavailable")
         self.engine = engine
         self._statement = text(f'SELECT "{schema}".capture(:request_id)')

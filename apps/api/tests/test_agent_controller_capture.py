@@ -196,10 +196,12 @@ def test_owned_capture_matches_shared_snapshot_and_has_no_regression_examples(sc
         assert db.scalar(text("SELECT count(*) FROM agent_operation")) == 0
 
 
-@pytest.mark.parametrize("request", ["REQ-FAKE-1", "missing", "x' OR true--", "", None, "x" * 121])
-def test_function_cannot_widen_exact_request_allowlist(scope, request):
+@pytest.mark.parametrize(
+    "request_id", ["REQ-FAKE-1", "missing", "x' OR true--", "", None, "x" * 121]
+)
+def test_function_cannot_widen_exact_request_allowlist(scope, request_id):
     with pytest.raises(DBAPIError) as failure:
-        call(scope, request)
+        call(scope, request_id)
     assert failure.value.orig.sqlstate == "42501"
 
 
