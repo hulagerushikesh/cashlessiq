@@ -41,9 +41,24 @@ def main():
         if config.get("reply_fault"):
             from ciq_api import agent_receipt_peer
 
-            agent_receipt_peer._OK = {
+            damaged = {
                 "malformed": b"BAD", "trailing": b"OK\nextra", "empty": b"",
             }[config["reply_fault"]]
+            command = config.get("reply_command")
+            if command is None:
+                agent_receipt_peer._OK = damaged
+            else:
+                # Combined flows perform checks before mutation. Damage only
+                # the ACK AFTER the selected real SQLite commit, never an
+                # earlier history check or the durable operation itself.
+                assert command in ("prepare", "issue")
+                original = getattr(FakeReceiptJournal, command)
+
+                def committed_then_lost(self, selected):
+                    original(self, selected)
+                    agent_receipt_peer._OK = damaged
+
+                setattr(FakeReceiptJournal, command, committed_then_lost)
         journal = FakeReceiptJournal(directory, pin)
         peer = FakeReceiptPeer(journal, custody_uid=config["custody_uid"])
         with peer.bind(path) as listener:

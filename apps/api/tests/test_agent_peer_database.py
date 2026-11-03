@@ -158,11 +158,14 @@ def test_lost_peer_ack_retains_marker_and_never_replays_or_refunds(combined, sta
         assert c.command("prepare") == b"OK"
     c.peer.stop(c.peer.server)
     Path(c.peer.path).unlink()
-    c.peer.server = c.peer.start(reply_fault="empty")
+    c.peer.server = c.peer.start(reply_fault="empty",
+                               reply_command="prepare" if stage == "prepare" else "issue")
     assert c.command(stage) == b"DENIED"
     assert c.command("dispatch") == b"DENIED"
     assert not c.comparisons()
-    assert c.peer.rows()[0][-1] == ("prepared" if stage == "prepare" else "issued")
+    retained = c.peer.rows()
+    assert len(retained) == 1, "lost_ack_committed_marker_missing"
+    assert retained[0][-1] == ("prepared" if stage == "prepare" else "issued")
     assert len(rows(c.s)[1]) == (0 if stage == "prepare" else 1)
     assert balance(c.s.setup) == (1, 1, 10, 0, 0)
 
