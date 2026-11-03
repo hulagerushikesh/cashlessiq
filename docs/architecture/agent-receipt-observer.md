@@ -70,7 +70,12 @@ and submission transactions, rather than returning an attestation for the
 clinical runtime to present later. Only the independently authenticated custody
 coordinator may receive future checkpoint/issue command capabilities; clinical
 runtime must be denied those functions even when calling SQL directly. The
-coordinator must hold epoch-before-clinical/grant/operation locks, observe full
+existing clinical commands bind `session_user`; a future coordinator must not
+impersonate that login or accept caller-selected principal/tenant IDs as authority.
+A protected operator binding and authenticated peer must authorize its exact
+operation, clinical actor and scope before any future write command. Epoch-wide
+history-read authority alone must not confer epoch-wide clinical execution.
+The coordinator must hold epoch-before-clinical/grant/operation locks, observe full
 history itself, commit external prepare before local checkpoint commit, retain
 only original-process ephemeral issue permission and commit the single-use
 external issued marker before child I/O. Restart cannot reconstruct that
@@ -96,3 +101,19 @@ positive historical observation, effective PUBLIC/inherited ACLs and definer
 metadata, controller/observer separation, role/binding denials, prepared/local
 rollback gaps, bounded inventory, expiry while waiting and retention of the epoch
 lock across external checking. No local Docker or paid environment is required.
+
+Revision `499a6c7` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41612481036)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41612481048).
+All **37 new actual-login cases** pass alongside the prior 109 restricted capture/
+reservation cases, 476 agent checks and fourteen encrypted recoveries. The new
+**30 offline checks** pass in a combined 421-check offline agent/controller suite.
+Full regression passes 1,027 root, 2,068 API (eighteen expected skips), 72 membership,
+58 client, 26 browser, 15 source UI and all eighteen MVP journeys. Catalog,
+transport isolation, process containment, contracts/types/lint/build and owned
+cleanup pass. Preview separately passes eighteen journeys, encrypted 22-table
+restoration and both saved-workflow browser reopenings with owned cleanup. The
+fourteen agent recovery cases still use their prior owner-connected path; they
+do not establish restricted submission/recovery integration. No API/worker/startup
+imports the observer. No deployed role, binding, image, migration or source was
+changed. GCP remains verified TERMINATED with its existing 1,800-second STOP;
+no paid build/run, Snowflake call or local Docker startup was performed.

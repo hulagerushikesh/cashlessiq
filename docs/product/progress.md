@@ -12,6 +12,42 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Independent restricted receipt observation — 3 November
+
+Prepared the [fake receipt observer](../architecture/agent-receipt-observer.md)
+with a separate authenticated database login, protected default-disabled epoch
+binding and a no-argument history command. It reads the entire bounded epoch,
+including cases outside the clinical controller's allowlist, then compares the
+shared canonical checkpoint identities against retained fake custody while the
+epoch lock remains held. Runtime has no direct table access or history reset;
+clinical controller cannot invoke this observer. Oversized/missing/contradictory
+history, expiry and wrong identities fail closed. A successful observation returns
+no ticket or execution permission.
+
+All **67 new checks** pass: 30 offline and 37 actual-login cases. The combined
+offline suite passes 421 checks; dedicated CI passes all 146 restricted-login
+cases, the existing 476 agent checks and fourteen populated encrypted recoveries.
+The latter still use the owner-connected execution path, rather than a restricted
+submission service. Revision `499a6c7` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41612481036)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41612481048):
+1,027 root, 2,068 API (eighteen expected skips), 72 membership, 58 client,
+26 browser, 15 source UI and all eighteen MVP journeys. Catalog, transport
+isolation, process containment, contracts/types/lint/build and owned cleanup pass.
+The preview separately passes eighteen journeys, encrypted 22-table restoration
+and both saved-workflow browser reopenings, with fresh-volume/stack cleanup.
+
+The next step is a custody-controlled restricted checkpoint/issue transaction
+path, followed by private publication and conservative recovery. Independent
+source capture, authenticated process/secret custody and live-provider integration
+remain later gates. No API, worker, executor or startup enables the new observer.
+The product's synthetic MVP and tested private hosting remain complete; live agent
+and customer/real-data readiness are separate unfinished milestones.
+
+No deployed schema, roles, binding, image or source was changed. A fresh read-only
+3 November check confirms GCP is TERMINATED with its existing 1,800-second STOP.
+No paid build/run, Snowflake call or local Docker startup was performed.
+
 ### Restricted fake reservations and unsubmitted leases — 3 November
 
 Prepared the [restricted reservation/lease package](../architecture/agent-controller-reservation.md).
