@@ -112,7 +112,7 @@ def snapshot(engine):
 
 
 @contextmanager
-def restored_database(s, container, directory, *, after_backup=None):
+def restored_database(s, container, directory, *, after_backup=None, owner_ledger=True):
     from scripts.check_mvp_recovery import recovered_transfer_dump, verify_manifest
     from scripts.mvp_recovery_probe import table_manifest
     from scripts.verify_mvp_backup import digest_file, verify_package
@@ -193,7 +193,7 @@ def restored_database(s, container, directory, *, after_backup=None):
         # defaults closed; a restored DB cannot provision its own new custody.
         yield SimpleNamespace(**{
             **vars(s), "engine": engine,
-            "ledger": FakeAgentLedger(engine, admission=s.admission),
+            "ledger": FakeAgentLedger(engine, admission=s.admission) if owner_ledger else None,
         })
     finally:
         engine.dispose()
