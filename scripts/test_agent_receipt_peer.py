@@ -28,7 +28,9 @@ def summary(output):
             print(line.strip())
         elif line.startswith(("FAILED ", "ERROR ")):
             print(line.split(" - ", 1)[0])
-        elif re.match(r"^E\s+(AssertionError|PermissionError|ModuleNotFoundError|RuntimeError)", line):
+        elif re.match(
+            r"^E\s+(AssertionError|PermissionError|ModuleNotFoundError|RuntimeError)", line,
+        ):
             print(line[:200])  # Fixed dummy-helper failure reasons only.
 
 
