@@ -22,13 +22,24 @@ principal windows. No DB lock spans child I/O; ambiguous commit, timeout, replay
 changed clinical scope or lost custody fails without resubmission/refund. The
 unvalidated reply stays private and does not alter human review or accounting.
 
-Local focused checks pass; disposable actual-login and full product/preview CI
-acceptance is pending. Next: narrow submitted heartbeat, private validated
-comparison publication and conservative restricted recovery, including the
-fourteen encrypted restore journeys that still use an owner-connected fixture.
+All **63 new checks** pass: 39 offline and 24 actual-login cases. The combined
+offline suite passes 491 checks; dedicated CI passes 205 restricted-login cases,
+476 existing agent checks and fourteen encrypted recoveries on the owner fixture.
+Revision `5a4b91c` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41627015668)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41627015530):
+1,027 root, 2,138 API (twenty expected skips), 72 membership, 58 client,
+26 browser, 15 source UI and all eighteen MVP journeys. Catalog, transport
+isolation, process containment, contracts/types/lint/build and owned cleanup pass.
+The preview also passes eighteen journeys, matched encrypted 22-table restoration
+and both saved-workflow browser reopenings, with fresh-volume/stack cleanup.
+
+Next: narrow submitted heartbeat, private validated comparison publication and
+conservative restricted recovery, including those fourteen restore journeys.
 Authenticated peer/process/secret custody and live source/provider remain later
-gates. No normal route, worker or startup activates this code; no paid cloud or
-source call, local Docker startup or deployed image/schema/role change is made.
+gates. No normal route, worker or startup activates this code. GCP is freshly
+verified TERMINATED with its 1,800-second STOP and Docker Desktop is off; no paid
+build/run, source/provider call or deployed image/schema/role change was made.
 
 ### Restricted custody checkpoint and single-use issue — 3 November
 

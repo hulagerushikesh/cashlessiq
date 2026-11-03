@@ -75,9 +75,25 @@ lock release, exact immutable checkpoint, unchanged human review/accounting and
 absence of comparison publication. The owning fixture is used only for operator
 setup/assertions; custody executes through its restricted login throughout.
 
-Local focused checks pass; full disposable product/preview acceptance is pending.
-Docker Desktop stays off. No local container, paid GCP build/run, provider/source
-call or deployed image/schema/role/binding change is required for these checks.
+Revision `5a4b91c` passes **39 new offline checks** in the combined **491-check**
+offline agent suite, repository Ruff and all four SQL template-format checks.
+The [actual-login job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41627015668/job/125886788579)
+passes **205 restricted-login checks**, including **24 new dispatch checks**,
+the existing 476 agent checks and fourteen encrypted recoveries. The latter
+still use the owner-connected baseline, not restricted execution/recovery.
+
+[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41627015668)
+passes 1,027 root, 2,138 API (twenty expected skips), 72 membership, 58 client,
+26 browser, 15 source UI and all eighteen MVP journeys. Catalog, transport
+isolation, process containment, contracts/types/lint/build and owned cleanup pass.
+[Private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41627015530)
+separately passes eighteen MVP journeys, matched encrypted 22-table restoration
+and both saved-workflow browser reopenings. Fresh-volume/stack cleanup succeeds.
+Both complete workflows select code revision `5a4b91c`.
+
+A fresh read-only check confirms GCP TERMINATED with the unchanged 1,800-second
+automatic STOP; Docker Desktop is off. No local container, paid GCP build/run,
+provider/source call or deployed image/schema/role/binding change was performed.
 
 Next add narrow submitted heartbeat and **private validated comparison
 publication**, with independently checked history and fresh clinical pins under
@@ -96,3 +112,13 @@ peer/secret isolation, deployed restore/close/revoke/rotation, effective PUBLIC/
 default ACL review, independent live source capture and supported provider
 timeout/submission/status semantics remain separate gates. No live grant,
 production installer or automatic reconciliation is added.
+
+For the next coordinator step, consume the private candidate before attempting
+publication, independently check full retained history on the same connection,
+obtain fresh protected clinical scope and validate the candidate with the shared
+Python deterministic/citation validator while those locks remain held. Do not
+accept caller-supplied "validated" attestations or invoke the owning ledger to
+bypass the restricted commands. A failed/ambiguous publication must not make the
+original I/O permission reconstructible. Submitted heartbeat may maintain the
+current fence/lease within the original deadline/window; it must not create a
+new attempt, reclaim a submitted operation or extend the original deadline.

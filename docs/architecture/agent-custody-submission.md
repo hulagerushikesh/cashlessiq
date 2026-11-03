@@ -55,8 +55,9 @@ arbitrary SQL/credentials from custody, would invalidate the boundary.
 
 [`FakeCustodySubmission`](../../apps/api/src/ciq_api/agent_custody_submission.py)
 is explicitly constructed by trusted fake test code with a separate engine,
-already-pinned journal and exact request/claim. It has two no-argument methods;
-both return **None**, no inventory, receipt, attestation or I/O permit.
+already-pinned journal and exact request/claim. Its `prepare()` and `issue()`
+methods return **None**, no inventory, receipt, attestation or I/O permit. The
+later `dispatch()` extension below also returns None.
 
 1. `prepare()` independently obtains full bounded epoch history on the custody
    connection and compares it with retained history while holding the epoch.
