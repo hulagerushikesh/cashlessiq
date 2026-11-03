@@ -1,8 +1,42 @@
 # Product delivery — owner dashboard
 
-Updated 2 November 2026. This page summarizes the current product plan; the
+Updated 3 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
+
+### Current scope and controller capture — 3 November
+
+The complete **synthetic MVP workflow set** is implemented: request intake and
+fact correction, deterministic background assessment, human review, audit/outbox,
+PDF quarantine/extraction, policy regression/approval/activation and access controls.
+Private GCP hosting and the stable hostname were tested on 2 November. They stay
+offline between approved windows. This is not completion of live agent integration
+or customer/real-data readiness; the [scope table](#how-much-is-finished) distinguishes them.
+
+Prepared the [principal-bound controller capture](../architecture/agent-controller-capture.md):
+a database login-bound exact case allowlist/window, fresh clinical locks and
+selected policy projection, with shared strict Python validation. The runtime
+receives one function capability and no clinical/ledger table grants. Tests use
+real restricted PostgreSQL logins on disposable CI: all **59 pass**, alongside
+the existing 476 agent checks and fourteen populated encrypted recoveries.
+Thirteen new offline client checks also pass. Revision `89586d4` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41576247892)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41576247912):
+1,027 root, 2,011 API (sixteen expected skips), 72 membership, 58 client, 26 browser,
+15 source UI and all eighteen MVP journeys. Catalog, transport isolation,
+containment, contracts/types/lint/build and owned cleanup passed. The preview
+separately passed all eighteen journeys, encrypted 22-table restoration and both
+saved-workflow browser reopenings. Earlier superseded runs were cancelled after
+correcting two test collection/name-resolution assumptions; they are not the
+accepted revision.
+No production role/binding or migration is installed. The existing ledger's write
+methods still use their owner-level test connection and remain the next batch.
+Independent source capture, provider execution, live custody/credentials and
+approved live comparison/clinical UI acceptance follow.
+
+A new read-only check on 3 November confirms GCP is TERMINATED with its existing
+1,800-second STOP backstop. No new paid build/run, Snowflake call or local Docker
+startup was performed. Existing deployed images and data are unchanged.
 
 ### Default-closed fake admission and old-backup quarantine — 2 November
 
@@ -801,7 +835,7 @@ external approvals and validation still required.
 | P5: ingestion/policies | Synthetic PDF extraction, input history, supported rules/clauses, regression, second-person approval, activation and rollback | Real-data storage/retention, malware scanning, OCR and customer policy validation |
 | P6: migration completion | Prototype remains independently available | Parallel reconciliation and retirement after a real integration is proven |
 
-## Accepted baseline
+## Earlier accepted local baseline — 25 October
 
 - [x] Local Mac/Docker application rebuilt and verified; no separate Linux host needed.
 - [x] Owner reports manual checks working and accepts the synthetic sign-in role categories.
@@ -831,37 +865,30 @@ baseline, not an independently observed step-by-step security test report.
    API/UI; saved/missing/unavailable states, revocation and evidence presentation;
    rerun full regression and remote CI, then review P2 exit explicitly.
 
-Do not add more isolated security primitives unless integration reveals a
-concrete defect. Do not start P3 while P2's exit gates remain open.
+These remain governed live-source exit gates. The owner's later expanded scope
+authorized synthetic P3–P5 workflows while those real-source gates stay open;
+their implementation does not imply a P2 production exit.
 
 ## Deployment and next decision
 
-The new product currently runs only on this Mac at `http://localhost:3000`.
-The public hackathon website is unchanged. Local role-selection authentication
-must not be exposed publicly, even for synthetic data.
+The private GCP app and [stable hostname](stable-private-domain.md) passed
+synthetic testing on 2 November. The existing e2-small VM is stopped; local Docker
+stays off. `cashlessiq-test.hulage.in` is expected to be offline between approved
+windows. The public `cashlessiq.hulage.in` fixed-example demo remains independent.
+The old temporary tunnel address is retired.
 
-Operational activation depends on an owner-approved target and custody
-arrangement. Disposable synthetic integration can proceed on standard Linux CI
-under the [25 October plan](../architecture/p2-ci-integration-plan.md).
-There is no approved paid external host or hosting budget.
-The owner approved preparing the [no-purchase Mac/Docker integration design](../architecture/p2-mac-docker-integration-design.md).
-It now specifies topology, proposed manual encrypted-image custody, clock/fence
-blockers and one bounded next service-composition batch. The owner subsequently
-approved that disposable implementation with a Mac configuration/load check.
-Lightweight preparation now includes seven independent authority-state fixtures,
-a journaled launcher/controller bridge, disposable DB material generation and a
-shared eight-logical-role, one-process TLS test world. Both tenants/all
-three roles and failure/cleanup paths are exercised without live source access.
-This is not the separate-container/supervisor acceptance batch or a deployment.
-The [resource preflight](mac-resource-check.md) currently refuses heavy execution
-at elevated memory pressure. The batch is still pending, not re-awaiting approval;
-operational custody/activation remains unapproved.
-Docker's VM is not an independently trusted production host. Implementation
-using actual keys, secret stores or service activation requires separate approval.
+The deployed app still uses revision `79408862a15454565f09744edd90c25b3d4df1d4`
+and schema `0003_mvp`. Subsequent agent engineering exists in source/disposable
+CI and is inactive. A new image build, migration rehearsal and VM test need a
+concrete approval of charges/window before deployment; previous paid windows are
+closed. No larger VM is assumed necessary.
 
-Public release additionally needs browser OIDC configuration, hosting, secret
-delivery, rollback and deployment approval. Those are not prerequisites for
-continued local testing, nor automatically authorized by accepting this dashboard.
+Continue offline/disposable engineering on controller commands/accounting,
+independent source capture, provider transport and live custody. Then present the
+exact synthetic cases, tools/configuration, credential scopes, attempts, latency
+budget and expected charges for a bounded comparison and joint human test.
+Customer identity/OIDC, real-data privacy/storage, operational custody and
+design-partner acceptance remain separate release gates.
 
 The owner reports adding Snowflake payment information on 25 October; account
 status, balance and current resource usage have not been independently checked.

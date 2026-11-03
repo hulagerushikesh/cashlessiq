@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 2 November 2026
+Last updated: 3 November 2026
 Current engineering scope: **synthetic MVP workflows (M3–M5), private testing**.
 Governed live-source P2 and production gates remain separate.
 
@@ -11,6 +11,29 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 [1 November handoff](gcp-first-run-2026-11-01.md) retains quota/billing history;
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
+
+### Controller capture and current scope — 3 November
+
+Prepared the [principal-bound database capture](../architecture/agent-controller-capture.md)
+and actual restricted-login CI suite. It permits only a bound owned case read
+under fresh clinical locks; no ledger writes, workflow writes or provider
+permission. All 59 actual-login cases and thirteen offline client checks pass;
+revision `89586d4` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41576247892)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41576247912).
+Full regression includes 1,027 root, 2,011 API (sixteen expected skips), 72 membership,
+58 client, 26 browser, 15 source UI and all eighteen MVP journeys. The existing
+476 agent checks and fourteen populated encrypted recoveries pass. Preview
+acceptance includes eighteen journeys, 22-table encrypted restoration and both
+saved-workflow browser reopenings; owned cleanup passed. The owner-level fake
+ledger still needs restricted commands/accounting. Independent source capture,
+live transport/custody and approved comparison follow.
+
+The synthetic MVP workflows and private hostname testing are complete; live
+agent integration and customer/real-data readiness are separate unfinished
+milestones. See the [current scope table](delivery-status.md#how-much-is-finished).
+The 23 October scoreboard/percentage below is historical and superseded.
+A 3 November read-only check confirms GCP remains TERMINATED; no local Docker,
+paid build/run or Snowflake execution was started.
 
 ### Default-closed fake admission and old-backup quarantine — 2 November
 
@@ -760,7 +783,11 @@ DEFER. No containers/settings changed. Next: pinned PostgreSQL packaging,
 nonroot cluster initialization, bounded startup, TLS/grant readiness and physical
 lifecycle acceptance. Phase estimates unchanged.
 
-## Phase scoreboard
+## Historical phase scoreboard — 23 October
+
+Superseded by the [current scope table](delivery-status.md#how-much-is-finished).
+Synthetic reviewer, job and policy workflows were subsequently implemented and
+private GCP testing completed. This table preserves the earlier phase checkpoint.
 
 | Phase | Status | Exit gate |
 | --- | --- | --- |

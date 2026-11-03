@@ -128,11 +128,12 @@ inventory, then implement a tenant-bound capability path for the controller:
   cross-mapping fence is application logic under shared tenant/request locks;
   all future admission writers must use the same serialization boundary.
 
-This remains a privilege specification, not a tested grant script. No executable
-production SQL is supplied while the target effective grants and supported
-mechanism remain unresolved. Prepare forward/rollback scripts with exact newly
-created objects only after disposable privilege-denial acceptance; disabling
-execution must not delete immutable receipt history.
+The [principal-bound capture package](agent-controller-capture.md) now prepares
+the first read-only capability and actual restricted-login denial tests in a
+disposable database. It does not replace the owning ledger connection or permit
+accounting writes. Target effective PUBLIC/default grants, narrow ledger command
+implementation and deployed forward/revoke review remain unresolved. No production
+installer is supplied. Disabling execution must preserve immutable receipt history.
 
 ## Source identities and secret custody
 

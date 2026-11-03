@@ -21,7 +21,9 @@ offline validation checks and records integration gaps. The inactive
 process/protocol and 13 PostgreSQL integration checks, plus disposable container
 isolation. The [fake admission quarantine](docs/architecture/agent-admission-quarantine.md)
 adds a default-closed epoch and separately retained single-use test receipts.
-Governed controller database permissions, production receipt/secret custody and
+The inactive [principal-bound capture package](docs/architecture/agent-controller-capture.md)
+prepares the first restricted database read; ledger write commands still use
+their owning test connection. Governed controller accounting, production receipt/secret custody and
 live source/transport remain; deployed workflows use deterministic rules.
 
 ## Retained Snowflake prototype
