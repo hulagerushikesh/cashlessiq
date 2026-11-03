@@ -44,7 +44,7 @@ from test_agent_ledger import setup as setup
 from test_agent_ledger_recovery import receipt_digest, restored_database
 from test_agent_ledger_recovery import recovery_service as recovery_service
 
-from ciq_api.agent_contracts import AgentContractError
+from ciq_api.agent_contracts import AgentContractError, AgentInput
 from ciq_api.agent_controller_reservation import ControllerReservation
 from ciq_api.agent_custody_recovery import FakeCustodyRecovery
 from ciq_api.agent_custody_submission import FakeCustodySubmission
@@ -118,6 +118,36 @@ def closed(action):
         action()
 
 
+def human_digest(s):
+    """Operator assertions compare content without returning clinical rows."""
+    digest = hashlib.sha256()
+    with s.engine.connect() as db:
+        for table in (
+            "tenant",
+            "app_user",
+            "tenant_membership",
+            "submitted_case",
+            "case_input_revision",
+            "policy_version",
+            "review_case",
+            "mvp_event",
+            "review_audit",
+            "review_outbox",
+            "analytics_event",
+        ):
+            digest.update(table.encode())
+            for value in db.scalars(
+                text(
+                    f"SELECT row_to_json(t)::text FROM {table} t "
+                    'ORDER BY row_to_json(t)::text COLLATE "C"'
+                )
+            ):
+                raw = value.encode()
+                digest.update(len(raw).to_bytes(8, "big"))
+                digest.update(raw)
+    return digest.hexdigest()
+
+
 @contextmanager
 def rebound(s, *, enabled=True):
     """EXPLICIT trusted disposable reinstallation, not automatic restore/startup.
@@ -144,6 +174,18 @@ def rebound(s, *, enabled=True):
             == 22
         )  # Exact normal backup inventory, including Alembic version.
     assert s.ledger is None
+    # Source-owner reservation adds its own correlation ID. Restage the exact
+    # restored immutable snapshot, never the fixture's earlier capture with a
+    # different correlation. Unused allowlisted requests keep their original
+    # validated source snapshot. This is trusted binding preparation only.
+    existing = {op.request_id: op for op in rows(s, AgentOperation)}
+    s.snapshots = [
+        AgentInput.model_validate_json(json.dumps(existing[f"REQ-FAKE-{index}"].snapshot))
+        if f"REQ-FAKE-{index}" in existing
+        else snapshot
+        for index, snapshot in enumerate(s.snapshots)
+    ]
+    human_before = human_digest(s)
     with s.engine.begin() as db:
         raw = db.connection.driver_connection
         raw.execute(
@@ -258,6 +300,7 @@ def rebound(s, *, enabled=True):
                     db.execute(text(statement))
                 assert denied.value.orig.sqlstate == "42501"
         yield c
+        assert human_digest(s) == human_before
 
 
 def assert_no_human_changes(s):
