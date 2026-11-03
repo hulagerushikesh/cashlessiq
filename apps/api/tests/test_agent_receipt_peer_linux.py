@@ -42,18 +42,30 @@ def receipt(**changes):
 
 
 @pytest.fixture
-def peers():
+def peers(request):
     # /run avoids a public writable ancestor. Only this invocation is removed.
     root = Path("/run") / ("ciq-receipt-peer-" + uuid4().hex[:16])
+    processes = []
     root.mkdir(mode=0o755)
+
+    def cleanup():
+        for child in reversed(processes):
+            if child.poll() is None:
+                os.killpg(child.pid, signal.SIGKILL)
+            child.communicate(timeout=5)
+            assert child.poll() is not None
+        shutil.rmtree(root)
+        assert not root.exists()
+
+    request.addfinalizer(cleanup)  # Also cleans failures BEFORE fixture yield.
     base = 200_000 + int(uuid4().hex[:5], 16)
     server_uid, custody_uid, clinical_uid, transport_uid = range(base, base + 4)
     endpoint = root / "ipc"
     endpoint.mkdir(mode=0o755)
-    endpoint.chown(server_uid, server_uid)
+    os.chown(endpoint, server_uid, server_uid)
     storage = root / "journal-parent"
     storage.mkdir(mode=0o700)
-    storage.chown(server_uid, server_uid)
+    os.chown(storage, server_uid, server_uid)
     secret = root / "supervisor-secret"
     secret.write_text("DUMMY-ONLY-NOT-A-CREDENTIAL")
     secret.chmod(0o600)
@@ -62,7 +74,6 @@ def peers():
         "pin": FakeEpochPin(database_id=uuid4(), epoch_id=uuid4()).model_dump(mode="json"),
         "server_uid": server_uid, "custody_uid": custody_uid, "other_secret": str(secret),
     }
-    processes = []
 
     def spawn(uid, **changes):
         child = subprocess.Popen(
@@ -83,8 +94,8 @@ def peers():
         assert child.returncode == 0 and not err, "fixed receipt peer helper failed"
         return out.strip()
 
-    def start():
-        child = spawn(server_uid, action="server")
+    def start(**changes):
+        child = spawn(server_uid, action="server", **changes)
         assert select.select([child.stdout], [], [], 5)[0], "peer readiness timed out"
         assert child.stdout.readline() == b"READY\n", "peer did not become ready"
         return child
@@ -103,16 +114,9 @@ def peers():
     assert run(server_uid, action="provision") == b"PASS"
     server = start()
     s = SimpleNamespace(**config, root=root, server=server, start=start, stop=stop,
-                        run=run, rows=rows, clinical_uid=clinical_uid,
+                        run=run, spawn=spawn, rows=rows, clinical_uid=clinical_uid,
                         transport_uid=transport_uid)
-    try:
-        yield s
-    finally:
-        for child in reversed(processes):
-            stop(child)
-        shutil.rmtree(root)
-        assert not root.exists()
-        assert all(child.poll() is not None for child in processes)
+    yield s
 
 
 def frame(s, command, selected=None, expected=(), **changes):
@@ -214,8 +218,8 @@ def test_client_rejects_wrong_kernel_server_uid_even_with_expected_path_owner(pe
     s = peers
     # Trusted test root changes path metadata only; running server UID is intact.
     # Metadata alone must not authorize receipt payload disclosure.
-    Path(s.path).parent.chown(s.transport_uid, s.transport_uid)
-    Path(s.path).chown(s.transport_uid, s.transport_uid)
+    os.chown(Path(s.path).parent, s.transport_uid, s.transport_uid)
+    os.chown(s.path, s.transport_uid, s.transport_uid)
     assert s.run(action="check", expected=[], server_uid=s.transport_uid) == b"DENIED"
     assert s.rows() == []
 
@@ -286,3 +290,31 @@ def test_stale_socket_is_never_unlinked_or_adopted_by_bind(peers):
     assert s.run(s.server_uid, action="bind_denied") == b"DENIED"
     assert Path(s.path).lstat().st_ino == before.st_ino
     assert s.run(action="check", expected=[]) == b"PASS"
+
+
+@pytest.mark.parametrize("fault", ["malformed", "trailing", "empty"])
+def test_bad_ack_closes_client_but_retains_committed_marker(peers, fault):
+    s, item = peers, receipt()
+    s.stop(s.server)
+    Path(s.path).unlink()
+    s.server = s.start(reply_fault=fault)
+    assert s.run(action="prepare", selected=item) == b"DENIED"
+    assert s.rows()[0][-1] == "prepared"
+    s.stop(s.server)
+    Path(s.path).unlink()
+    s.server = s.start()
+    assert s.run(action="check", expected=[item]) == b"PASS"
+    assert s.run(action="prepare", selected=item) == b"DENIED"
+
+
+def test_concurrent_separate_clients_can_issue_only_once(peers):
+    s, item = peers, receipt()
+    assert s.run(action="prepare", selected=item) == b"PASS"
+    children = [s.spawn(s.custody_uid, action="issue", selected=item) for _ in range(2)]
+    replies = []
+    for child in children:
+        out, err = child.communicate(timeout=8)
+        assert child.returncode == 0 and not err
+        replies.append(out.strip())
+    assert sorted(replies) == [b"DENIED", b"PASS"]
+    assert s.rows()[0][-1] == "issued"

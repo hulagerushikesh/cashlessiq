@@ -33,6 +33,12 @@ def main():
             return
         raise AssertionError("stale_listener_adopted")
     elif action == "server":
+        if config.get("reply_fault"):
+            from ciq_api import agent_receipt_peer
+
+            agent_receipt_peer._OK = {
+                "malformed": b"BAD", "trailing": b"OK\nextra", "empty": b"",
+            }[config["reply_fault"]]
         journal = FakeReceiptJournal(directory, pin)
         peer = FakeReceiptPeer(journal, custody_uid=config["custody_uid"])
         with peer.bind(path) as listener:
@@ -40,19 +46,6 @@ def main():
             listener.settimeout(30)
             for _ in range(128):
                 peer.serve_once(listener)
-        return
-    elif action == "rogue":
-        # Same pinned path owner, WRONG peer UID. Must receive no payload.
-        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        listener.bind(str(path))
-        path.chmod(0o666)
-        listener.listen(1)
-        print("READY", flush=True)
-        connection, _ = listener.accept()
-        with connection:
-            connection.settimeout(3)
-            assert connection.recv(1) == b""
-        listener.close()
         return
     elif action == "raw":
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
