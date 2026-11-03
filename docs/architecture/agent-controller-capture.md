@@ -94,6 +94,9 @@ Reserve/claim/heartbeat/checkpoint, recovery and private publication need narrow
 principal-bound commands, protected accounting and fresh clinical locks. The
 existing concurrent ledger and fourteen encrypted recovery journeys must pass
 under that intended command path before any production permission is proposed.
+The next [reservation-only package](agent-controller-reservation.md) prepares
+protected fake holds and unsubmitted leases, separately from the still-missing
+independent admission/checkpoint/publication integration.
 The new registry is outside the application's normal migration/backup manifest;
 no deployed recovery compatibility is claimed. A future deployed authority needs
 explicit custody/revocation/restore tests and default-closed activation.
