@@ -517,7 +517,7 @@ def test_definer_has_no_refund_settlement_attempt_publication_or_approval_privil
             "WHERE n.nspname=%s",
             (s.capture,),
         ).fetchall()
-        assert len(functions) == 4 and all(
+        assert len(functions) == 6 and all(
             row
             == (
                 True,

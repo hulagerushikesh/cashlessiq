@@ -112,21 +112,26 @@ class FakeReceiptVerifier:
     def check(self):
         try:
             with self.engine.begin() as db:
-                raw = db.scalar(self._statement)
-                if len(json.dumps(raw, allow_nan=False).encode()) > MAX_INVENTORY_BYTES:
-                    raise ValueError("inventory_bound")
-                # JSON validation revalidates nested models and rejects extras.
-                inventory = _Inventory.model_validate_json(json.dumps(raw, allow_nan=False))
-                if inventory.epoch != self.journal.pin:
-                    raise ValueError("epoch_mismatch")
-                expected = tuple(
-                    checkpoint_from_material(e.operation, e.grant, e.attempt)
-                    for e in inventory.entries
-                )
-                if any(len({getattr(c, key) for c in expected}) != len(expected) for key in (
-                    "operation_id", "submission_id",
-                )) or len({(c.tenant_id, c.request_id) for c in expected}) != len(expected):
-                    raise ValueError("duplicate_receipt")
+                _, expected = self._observe(db)
                 self.journal.check(expected)
         except (AgentContractError, DBAPIError, ValueError, TypeError, KeyError, RecursionError):
             raise AgentContractError(ERROR) from None
+
+    def _observe(self, db):
+        """Internal only: caller retains this connection/epoch through custody work."""
+        raw = db.scalar(self._statement)
+        if len(json.dumps(raw, allow_nan=False).encode()) > MAX_INVENTORY_BYTES:
+            raise ValueError("inventory_bound")
+        # JSON validation revalidates nested models and rejects extras.
+        inventory = _Inventory.model_validate_json(json.dumps(raw, allow_nan=False))
+        if inventory.epoch != self.journal.pin:
+            raise ValueError("epoch_mismatch")
+        expected = tuple(
+            checkpoint_from_material(e.operation, e.grant, e.attempt)
+            for e in inventory.entries
+        )
+        if any(len({getattr(c, key) for c in expected}) != len(expected) for key in (
+            "operation_id", "submission_id",
+        )) or len({(c.tenant_id, c.request_id) for c in expected}) != len(expected):
+            raise ValueError("duplicate_receipt")
+        return inventory, expected

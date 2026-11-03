@@ -479,7 +479,7 @@ def test_catalog_records_effective_runtime_and_definer_privileges(scope):
                 ["search_path=pg_catalog, pg_temp", "row_security=on", "lock_timeout=2s"],
                 scope.owner,
             )
-        ]
+        ] * 2
         assert raw.execute(
             "SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace, "
             "LATERAL aclexplode(p.proacl) a WHERE n.nspname=%s AND a.grantee=0",

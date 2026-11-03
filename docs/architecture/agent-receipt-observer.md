@@ -82,8 +82,10 @@ external issued marker before child I/O. Restart cannot reconstruct that
 permission. A rollbackable local ticket or cached successful observation cannot
 replace these requirements, since an old restore can resurrect it.
 
-No authenticated IPC/OS launcher, writable coordinator capability or production
-custody service is selected/installed by this observer. The same-host private
+The later [fake custody extension](agent-custody-submission.md) prepares
+restricted checkpoint/issue commands on a custody-owned transaction. This observer
+itself selects/installs no authenticated IPC/OS launcher, writable coordinator
+capability or production custody service. The same-host private
 SQLite journal remains fake-only, without protection from its owner, host loss or
 rollback of both stores. There is no reset, automatic reconciliation or refund.
 Missing, closed or contradictory custody conservatively denies observation.

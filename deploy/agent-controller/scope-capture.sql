@@ -40,7 +40,7 @@ GRANT SELECT(tenant_id, request_id, revision, inputs, digest)
     ON {product}.case_input_revision TO {owner};
 GRANT SELECT(tenant_id, subject_id, action) ON {product}.mvp_event TO {owner};
 
-CREATE FUNCTION {capture}.capture(p_request_id text) RETURNS jsonb
+CREATE FUNCTION {capture}._capture_bound(p_login oid, p_request_id text) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER PARALLEL UNSAFE
 SET search_path = pg_catalog, pg_temp
 SET row_security = on
@@ -56,13 +56,15 @@ DECLARE
     revision_value record;
     decision_value record;
 BEGIN
+    -- PRIVATE helper. Only trusted definer functions may select a pinned login.
     -- Do not trust current_user (the definer) or caller-controlled GUCs.
     -- Pin both name AND OID, so a dropped/recreated/renamed login loses scope.
     SELECT p.* INTO principal FROM {capture}.principal AS p
     JOIN pg_catalog.pg_roles AS r ON r.oid = p.login_oid AND r.rolname = p.login_name
-    WHERE r.rolname = session_user AND r.rolcanlogin AND NOT r.rolsuper
+    WHERE r.oid = p_login AND r.rolcanlogin AND NOT r.rolsuper
       AND NOT r.rolcreatedb AND NOT r.rolcreaterole AND NOT r.rolreplication
       AND NOT r.rolbypassrls AND NOT r.rolinherit AND p.enabled
+      AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_auth_members m WHERE m.member = r.oid)
     FOR SHARE OF p;
     IF NOT FOUND OR p_request_id IS NULL OR length(p_request_id) NOT BETWEEN 1 AND 120
        OR (p_request_id = ANY(principal.request_ids)) IS DISTINCT FROM true THEN
@@ -141,5 +143,17 @@ BEGIN
     );
 END;
 $capture$;
+ALTER FUNCTION {capture}._capture_bound(oid, text) OWNER TO {owner};
+REVOKE ALL ON FUNCTION {capture}._capture_bound(oid, text) FROM PUBLIC;
+
+-- Runtime wrapper has no principal selector. Delegation is granted separately
+-- only to the custody definer, whose own protected assignment selects that OID.
+CREATE FUNCTION {capture}.capture(p_request_id text) RETURNS jsonb
+LANGUAGE sql VOLATILE SECURITY DEFINER PARALLEL UNSAFE
+SET search_path = pg_catalog, pg_temp SET row_security = on SET lock_timeout = '2s'
+AS $wrapper$
+    SELECT {capture}._capture_bound(
+      (SELECT oid FROM pg_catalog.pg_roles WHERE rolname = session_user), p_request_id);
+$wrapper$;
 ALTER FUNCTION {capture}.capture(text) OWNER TO {owner};
 REVOKE ALL ON FUNCTION {capture}.capture(text) FROM PUBLIC;

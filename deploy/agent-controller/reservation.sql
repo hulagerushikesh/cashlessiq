@@ -30,7 +30,7 @@ GRANT UPDATE(version, fence_id, lease_until) ON {product}.agent_operation TO {ow
 
 -- Private helper: never grant EXECUTE to runtime. No caller-supplied tenant,
 -- actor, grant, snapshot, hash, clock or epoch becomes authority.
-CREATE FUNCTION {capture}._reservation_context(p_request_id text) RETURNS jsonb
+CREATE FUNCTION {capture}._reservation_context_for(p_login oid, p_request_id text) RETURNS jsonb
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER PARALLEL UNSAFE
 SET search_path = pg_catalog, pg_temp SET row_security = on SET lock_timeout = '2s'
 AS $context$
@@ -50,9 +50,10 @@ BEGIN
     END IF;
     SELECT p.* INTO principal FROM {capture}.principal AS p
       JOIN pg_catalog.pg_roles AS r ON r.oid = p.login_oid AND r.rolname = p.login_name
-      WHERE r.rolname = session_user AND r.rolcanlogin AND NOT r.rolsuper
+      WHERE r.oid = p_login AND r.rolcanlogin AND NOT r.rolsuper
         AND NOT r.rolcreatedb AND NOT r.rolcreaterole AND NOT r.rolreplication
         AND NOT r.rolbypassrls AND NOT r.rolinherit AND p.enabled
+        AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_auth_members m WHERE m.member = r.oid)
       FOR SHARE OF p;
     IF NOT FOUND OR p_request_id IS NULL OR length(p_request_id) NOT BETWEEN 1 AND 120
        OR (p_request_id = ANY(principal.request_ids)) IS DISTINCT FROM true THEN
@@ -65,7 +66,7 @@ BEGIN
        OR approval.epoch_id <> anchor.epoch_id THEN
         RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'reservation_unavailable';
     END IF;
-    observed := {capture}.capture(p_request_id);
+    observed := {capture}._capture_bound(p_login, p_request_id);
     binding := approval.snapshot->'binding';
     -- The trusted operator validates/canonicalizes the exact snapshot and key
     -- with shared Python contracts BEFORE staging this disabled approval row.
@@ -90,6 +91,16 @@ BEGIN
       'ends_at', principal.ends_at, 'approval', to_jsonb(approval));
 END;
 $context$;
+ALTER FUNCTION {capture}._reservation_context_for(oid, text) OWNER TO {owner};
+REVOKE ALL ON FUNCTION {capture}._reservation_context_for(oid, text) FROM PUBLIC;
+
+CREATE FUNCTION {capture}._reservation_context(p_request_id text) RETURNS jsonb
+LANGUAGE sql VOLATILE SECURITY DEFINER PARALLEL UNSAFE
+SET search_path = pg_catalog, pg_temp SET row_security = on SET lock_timeout = '2s'
+AS $wrapper$
+    SELECT {capture}._reservation_context_for(
+      (SELECT oid FROM pg_catalog.pg_roles WHERE rolname = session_user), p_request_id);
+$wrapper$;
 ALTER FUNCTION {capture}._reservation_context(text) OWNER TO {owner};
 REVOKE ALL ON FUNCTION {capture}._reservation_context(text) FROM PUBLIC;
 

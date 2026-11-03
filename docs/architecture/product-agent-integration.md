@@ -153,3 +153,15 @@ The result is not an admission ticket or I/O permit. Restricted checkpoint/issue
 private publication and conservative recovery still need a custody-controlled
 transaction path, authenticated IPC and acceptance through all fourteen encrypted
 recoveries. No runtime self-attestation or cached observation may bridge that gap.
+
+
+### Custody-owned checkpoint and issue prepared — 3 November
+
+The [inactive fake custody extension](agent-custody-submission.md) now prepares
+exact protected delegation to a clinical principal and restricted checkpoint/issue
+commands. Independent full history checking, protected SQL and external prepare
+share one custody transaction; only the original coordinator can consume the
+external issue marker after confirmed checkpoint commit. No permit is returned,
+transport is not dispatched and no publication/recovery or production IPC service
+is activated. All fourteen encrypted recoveries still require migration to the
+intended restricted execution path.
