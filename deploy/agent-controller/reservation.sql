@@ -88,7 +88,7 @@ BEGIN
     END IF;
     RETURN jsonb_build_object(
       'tenant_id', principal.tenant_id, 'actor_id', principal.actor_id,
-      'ends_at', principal.ends_at, 'approval', to_jsonb(approval));
+      'ends_at', principal.ends_at, 'approval', to_jsonb(approval), 'clinical', observed);
 END;
 $context$;
 ALTER FUNCTION {capture}._reservation_context_for(oid, text) OWNER TO {owner};

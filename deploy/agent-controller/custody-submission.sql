@@ -97,6 +97,9 @@ BEGIN
     SELECT p.ends_at INTO custody_end FROM {receipts}.principal p
       JOIN pg_catalog.pg_roles r ON r.oid = p.login_oid AND r.rolname = session_user;
     RETURN jsonb_build_object('tenant_id', assignment.tenant_id,
+      'clinical', context->'clinical',
+      'window_end', least(operation.deadline, allowance.ends_at,
+                          (context->>'ends_at')::timestamptz, custody_end),
       'deadline', least(operation.deadline, operation.lease_until, allowance.ends_at,
                        (context->>'ends_at')::timestamptz, custody_end));
 END;

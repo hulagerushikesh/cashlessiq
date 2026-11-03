@@ -122,3 +122,9 @@ bypass the restricted commands. A failed/ambiguous publication must not make the
 original I/O permission reconstructible. Submitted heartbeat may maintain the
 current fence/lease within the original deadline/window; it must not create a
 new attempt, reclaim a submitted operation or extend the original deadline.
+
+
+The later [private publication extension](agent-custody-publication.md) implements
+the next heartbeat/validation stage above. Its separate acceptance record retains
+restricted recovery/restore and production custody/source gates. The dispatch
+acceptance in this document describes revision `5a4b91c`, before that extension.

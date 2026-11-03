@@ -33,26 +33,31 @@ class ControllerCapture:
                 # Function locks live scope; all shared validation finishes before
                 # commit releases those locks. A capture is never a later permit.
                 row = db.scalar(self._statement, {"request_id": request_id})
-                if (
-                    type(row) is not dict
-                    or row["request_id"] != request_id
-                    or row["revision_digest"] != fingerprint(row["facts"])
-                    or row["revision_digest"] != fingerprint(row["revision_inputs"])
-                    or row["record_input_digest"] != row["revision_digest"]
-                    or row["record_policy_version"] != row["policy"]["version"]
-                    or row["record_rules_digest"] != fingerprint(row["policy"]["rules"])
-                ):
-                    raise AgentContractError("scope_unavailable")
-                return capture_selected_input(
-                    tenant_id=row["tenant_id"],
-                    request_id=request_id,
-                    policy_id=row["policy_id"],
-                    input_revision=row["input_revision"],
-                    review_version=row["review_version"],
-                    correlation_id=uuid4(),
-                    facts=row["facts"],
-                    policy=row["policy"],
-                )
+                return _validated_capture(row, request_id, uuid4())
         except (DBAPIError, ValueError, TypeError, KeyError, RecursionError):
             # Never propagate driver SQL/connection details or clinical inputs.
             raise AgentContractError("scope_unavailable") from None
+
+
+def _validated_capture(row, request_id, correlation_id):
+    """Validate a freshly locked protected projection; never a caller attestation."""
+    if (
+        type(row) is not dict
+        or row["request_id"] != request_id
+        or row["revision_digest"] != fingerprint(row["facts"])
+        or row["revision_digest"] != fingerprint(row["revision_inputs"])
+        or row["record_input_digest"] != row["revision_digest"]
+        or row["record_policy_version"] != row["policy"]["version"]
+        or row["record_rules_digest"] != fingerprint(row["policy"]["rules"])
+    ):
+        raise AgentContractError("scope_unavailable")
+    return capture_selected_input(
+        tenant_id=row["tenant_id"],
+        request_id=request_id,
+        policy_id=row["policy_id"],
+        input_revision=row["input_revision"],
+        review_version=row["review_version"],
+        correlation_id=correlation_id,
+        facts=row["facts"],
+        policy=row["policy"],
+    )

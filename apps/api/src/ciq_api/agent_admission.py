@@ -159,6 +159,13 @@ BEGIN SELECT RAISE(ABORT,'immutable_receipt'); END;
             _closed()
 
     def check(self, expected: tuple[FakeCheckpoint, ...]):
+        self._check(expected)
+
+    def check_issued(self, expected: tuple[FakeCheckpoint, ...], selected: FakeCheckpoint):
+        """Point-in-time full history + exact issued observation, never an I/O permit."""
+        self._check(expected, selected)
+
+    def _check(self, expected, issued=None):
         with self._connection() as db:
             self._identity(db)
             actual = db.execute(
@@ -166,6 +173,13 @@ BEGIN SELECT RAISE(ABORT,'immutable_receipt'); END;
                 "FROM receipt LIMIT 31"
             ).fetchall()
             if len(actual) > MAX_RECEIPTS or sorted(actual) != sorted(c.values() for c in expected):
+                _closed()
+            if issued is not None and (
+                issued not in expected or db.execute(
+                    "SELECT state FROM receipt WHERE tenant_id=? AND request_id=? "
+                    "AND operation_id=? AND submission_id=? AND digest=?", issued.values(),
+                ).fetchall() != [("issued",)]
+            ):
                 _closed()
 
     def prepare(self, checkpoint: FakeCheckpoint):

@@ -4,7 +4,8 @@ Trusted test construction pins one request/claim and a separate custody engine.
 SQL's protected assignment authorizes the clinical principal; no impersonation,
 caller-supplied history, tenant, actor, digest or journal path is accepted.
 prepare()/issue()/dispatch() return None. Only dispatch() performs one fixed fake
-exchange; its unvalidated candidate stays private. There is no provider execution.
+exchange; its candidate stays private until validated comparison publication.
+There is no provider execution.
 """
 
 from datetime import UTC, datetime
@@ -19,11 +20,15 @@ from sqlalchemy.exc import DBAPIError
 
 from ciq_api.agent_admission import ERROR, FakeReceiptJournal
 from ciq_api.agent_contracts import (
+    AgentContext,
     AgentContractError,
     AgentInput,
     ImmutableContract,
     canonical_json,
+    require_current,
+    validate_candidate,
 )
+from ciq_api.agent_controller_capture import _validated_capture
 from ciq_api.agent_executor import (
     MAX_PROCESS_SECONDS,
     PERSISTENCE_MARGIN_SECONDS,
@@ -48,6 +53,11 @@ class _IssueProjection(ImmutableContract):
     checkpoint: _CheckpointReceipt
     checked_at: AwareDatetime
     deadline: AwareDatetime
+
+
+class _PublicationProjection(_IssueProjection):
+    window_end: AwareDatetime
+    clinical: dict = Field(repr=False)
 
 
 class FakeCustodySubmission:
@@ -81,6 +91,18 @@ class FakeCustodySubmission:
         )
         self._issue = text(
             f'SELECT "{schema}".issue_fake(:request, :operation, :version, :fence, :submission)'
+        )
+        self._publication_context = text(
+            f'SELECT "{schema}".publication_context_fake('
+            ':request, :operation, :version, :fence, :submission)'
+        )
+        self._heartbeat = text(
+            f'SELECT "{schema}".heartbeat_submitted_fake('
+            ':request, :operation, :version, :fence, :submission)'
+        )
+        self._publish = text(
+            f'SELECT "{schema}".publish_comparison_fake('
+            ':request, :operation, :version, :fence, :submission, CAST(:candidate AS jsonb))'
         )
         self._started = False
         self._pending = None
@@ -194,7 +216,85 @@ class FakeCustodySubmission:
                     request, timeout=self._budget(end, projection.deadline),
                 )
                 self._budget(end, projection.deadline)
-                self._candidate = (receipt, raw)
+                with self._stage_lock:
+                    self._candidate = (receipt, raw, projection.deadline, end, retained)
+        except _FAILURES:
+            raise AgentContractError(ERROR) from None
+
+    def heartbeat(self):
+        """Maintain the current submitted lease, without widening the I/O budget."""
+        self._complete(publish=False)
+
+    def publish(self):
+        """Consume the private reply and save only a fresh, validated comparison.
+
+        Returns None. No caller response/identity/validation flag is accepted.
+        No human decision or audit/outbox is written. Any failure sacrifices the
+        candidate; neither transport issue nor publication is automatically retried.
+        """
+        self._complete(publish=True)
+
+    def _complete(self, *, publish):
+        with self._stage_lock:
+            pending, self._candidate = self._candidate, None
+        if pending is None:
+            raise AgentContractError(ERROR) from None
+        receipt, raw, deadline, end, retained = pending
+        try:
+            self._budget(end, deadline)
+            with self._engine.begin() as db:
+                material, current = self._verifier._observe(db)
+                self._journal.check_issued(current, retained)
+                params = {
+                    **self._params, "version": receipt.version,
+                    "submission": receipt.submission_id,
+                }
+                projection = _PublicationProjection.model_validate(
+                    db.scalar(self._publication_context, params)
+                )
+                if (
+                    projection.checkpoint != receipt
+                    or self._selected(material, current, receipt) != retained
+                    or not projection.checked_at < projection.deadline <= projection.window_end
+                ):
+                    raise ValueError("checkpoint_mismatch")
+                selected = next(
+                    m for m in material.entries if m.operation.id == receipt.operation_id
+                )
+                op = selected.operation
+                if not (
+                    op.created_at <= projection.checked_at < projection.deadline
+                    <= projection.window_end <= min(op.deadline, selected.grant.ends_at)
+                ):
+                    raise ValueError("invalid_publication_budget")
+                snapshot = AgentInput.model_validate_json(canonical_json(op.snapshot))
+                # Fresh protected clinical capture is validated independently of
+                # the immutable submitted snapshot. SQL retains these row locks
+                # through Python validation and the final narrow command/commit.
+                fresh = _validated_capture(
+                    projection.clinical, self._params["request"], snapshot.binding.correlation_id,
+                )
+                context = AgentContext(
+                    binding=fresh.binding, tenant_active=True, policy_approved=True,
+                    clinical_authorized=True, review_open=True,
+                )
+                require_current(snapshot, context)
+                self._budget(end, min(deadline, projection.deadline))
+                if publish:
+                    candidate = validate_candidate(snapshot, context, receipt.operation_id, raw)
+                    params["candidate"] = canonical_json(candidate.model_dump(mode="json"))
+                self._budget(end, min(deadline, projection.deadline))
+                result = _CheckpointReceipt.model_validate(
+                    db.scalar(self._publish if publish else self._heartbeat, params)
+                )
+                if result != receipt.model_copy(update={"version": receipt.version + 1}):
+                    raise ValueError("checkpoint_mismatch")
+                self._budget(end, min(deadline, projection.deadline))
+            if not publish:
+                # Only confirmed heartbeat commit retains the original response;
+                # neither original issue deadline nor monotonic budget expands.
+                with self._stage_lock:
+                    self._candidate = (result, raw, deadline, end, retained)
         except _FAILURES:
             raise AgentContractError(ERROR) from None
 

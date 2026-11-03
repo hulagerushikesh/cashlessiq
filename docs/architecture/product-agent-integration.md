@@ -178,3 +178,18 @@ deadline or child loses permission without retry/refund. This is inactive truste
 in-process fake construction, not authenticated IPC or production custody.
 Restricted validated publication, submitted heartbeat and conservative recovery,
 including all fourteen encrypted restore journeys, remain the next work.
+
+
+### Restricted private publication and submitted heartbeat — 3 November
+
+The [private publication extension](agent-custody-publication.md) consumes only the
+original coordinator's private response, independently rechecks full issued
+history and current clinical scope, and validates strict money/deterministic
+results and exact owned citation content under the same clinical locks. A narrow
+SQL command atomically saves one private comparison and settles allowance. No
+human review/audit/outbox is changed; no caller candidate or validated flag is
+accepted. Submitted heartbeat keeps the current attempt/fence and original
+deadline/issue budget. Failures sacrifice the candidate without replay/refund.
+This remains inactive fake-only code, with no production peer/custody/source gate
+claimed. Conservative restricted recovery and all fourteen populated restore
+journeys through that path remain next.

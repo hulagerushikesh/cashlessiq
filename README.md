@@ -38,8 +38,11 @@ independent history verification and the checkpoint on one custody transaction,
 with an original-instance single-use external issue marker. Its
 [fixed fake exchange](docs/architecture/agent-custody-dispatch.md) now stays inside
 that original custody process, with fresh bounded deadlines and no returned
-execution permission. The candidate remains private and unvalidated; restricted
-publication/recovery and real source/provider integration remain unfinished.
+execution permission. The later [private publication extension](docs/architecture/agent-custody-publication.md)
+validates the original response under fresh clinical locks and saves a private
+comparison with atomic accounting; submitted heartbeat preserves the original
+fence/deadline. Restricted recovery and real source/provider integration remain
+unfinished. No human review is finalized by these inactive fake-only commands.
 
 ## Retained Snowflake prototype
 
