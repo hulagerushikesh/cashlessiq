@@ -12,6 +12,35 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Restricted custody checkpoint and single-use issue — 3 November
+
+Prepared the [inactive fake custody transaction path](../architecture/agent-custody-submission.md).
+A separate custody login can checkpoint only an exact operator-bound operation,
+using the pinned clinical principal and fresh clinical locks. Independent full
+history verification, the protected checkpoint and external prepare stay on one
+custody transaction. Original-process pending state is created only after local
+commit; issue independently rechecks history/scope and consumes one retained
+external marker. Restart, failed/ambiguous commit, replay, changed bindings,
+revoked access and expired locks fail conservatively without refunds. No I/O
+permit is returned and no transport/provider is dispatched.
+
+The **31 new offline checks** pass in a combined **452-check** suite. Dedicated
+CI passes **181 actual-login cases**, including **35 new custody cases**, the
+existing 476 agent checks and all fourteen encrypted recoveries. Those recoveries
+still use the owning fixture path; restricted dispatch/publication/recovery
+integration and authenticated process/peer custody remain the next work.
+Revision `9010fe9` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41617111433)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41617111576):
+1,027 root, 2,099 API (nineteen expected skips), 72 membership, 58 client,
+26 browser, 15 source UI and all eighteen MVP journeys. Catalog, transport
+isolation, process containment, contracts/types/lint/build and owned cleanup pass.
+The preview separately passes eighteen journeys, matched encrypted 22-table
+restoration and both saved-workflow browser reopenings, with successful owned
+fresh-volume/stack cleanup. No route, worker, startup or deployed image activates this
+package. GCP is freshly verified TERMINATED with its 1,800-second STOP and Docker
+Desktop is off; no paid build/run or source/provider call was made.
+
 ### Independent restricted receipt observation — 3 November
 
 Prepared the [fake receipt observer](../architecture/agent-receipt-observer.md)

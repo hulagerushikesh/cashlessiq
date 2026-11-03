@@ -7,7 +7,8 @@ worker or fake executor imports the capture client. Deployed images stay unchang
 ## Implemented boundary
 
 [`scope-capture.sql`](../../deploy/agent-controller/scope-capture.sql) defines a
-single `capture(text)` SECURITY DEFINER command. Installation identifiers are
+single public `capture(text)` SECURITY DEFINER command, backed by a private
+`_capture_bound(oid, text)` helper. Installation identifiers are
 quoted by the trusted disposable harness; callers cannot choose SQL, schema,
 connection, tenant, actor, policy or credential. The protected principal registry
 pins the authenticated login's name **and OID** to one tenant/medical officer,
@@ -17,7 +18,8 @@ The window authorizes test capture only, not a provider call or paid window.
 
 Identity uses `session_user`, not caller-controlled session settings or the
 definer's `current_user`. A role switch cannot borrow another login's binding.
-Superuser/role/database/replication/BYPASSRLS capabilities and INHERIT are refused.
+Superuser/role/database/replication/BYPASSRLS capabilities, INHERIT and any role
+membership are refused.
 The intended runtime is a separate NOINHERIT login without any role memberships,
 table/column/sequence grants, schema ownership or DDL privileges. Application
 owner connections and shared cross-tenant logins are not accepted substitutes.
@@ -47,7 +49,10 @@ PostgreSQL JSON serialization for the shared deterministic hashes. Clinical,
 driver and connection failures become a fixed `scope_unavailable` error with
 chained private traceback details suppressed. A returned snapshot is **not** a
 reservation, submission permit, source observation or publication authorization;
-later commands must independently recheck fresh scope.
+later commands must independently recheck fresh scope. The later
+[custody extension](agent-custody-submission.md) privately delegates this helper
+through a protected exact clinical-principal/operation assignment; ordinary
+runtime never receives a principal selector.
 
 ## Disposable verification and limits
 

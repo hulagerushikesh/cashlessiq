@@ -67,10 +67,11 @@ after timeout, because no recovery/refund command is implemented here.
 
 The [independent fake receipt observer](agent-receipt-observer.md) now prepares
 a separate restricted history-reading identity, with no ticket or I/O permission.
-Before checkpoint/issue/publication can be exposed, design and test an
-independently authenticated custody/admission command path that cannot be bypassed
-by directly invoking SQL as the runtime. Passing a caller-selected boolean or
-digest saying "journal checked" would not establish that authority. Preserve
+The later [fake custody extension](agent-custody-submission.md) prepares
+checkpoint/issue commands through a separate exact principal/operation assignment.
+Full dispatch/publication/recovery still require an independently authenticated
+custody path that cannot be bypassed by directly invoking SQL as the runtime.
+Passing a caller-selected boolean or digest saying "journal checked" would not establish that authority. Preserve
 epoch-before-clinical/grant locking, full bounded history, external prepare before
 local commit, single-use issued markers, no replay and conservative unknown cost.
 Then run the successful clinical execution/concurrency and fourteen populated

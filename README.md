@@ -26,13 +26,17 @@ prepares the first restricted database read. Its separate
 [reservation package](docs/architecture/agent-controller-reservation.md) adds exact
 fake allowance holds and unsubmitted leases without direct runtime table access.
 It grants no submission/refund authority and does not replace the owner-connected
-fake ledger. Independent admission/checkpoint/publication commands, production
+fake ledger. Restricted submission/publication/recovery integration, production
 receipt/secret custody and live source/transport remain; deployed workflows use
 deterministic rules.
 
 The inactive [receipt observer](docs/architecture/agent-receipt-observer.md)
 compares independently read, epoch-wide submission history with retained fake
-custody through a separate restricted identity. It grants no execution permission.
+custody through a separate restricted identity. The later inactive
+[custody checkpoint extension](docs/architecture/agent-custody-submission.md) keeps
+independent history verification and the checkpoint on one custody transaction,
+with an original-instance single-use external issue marker. Neither package
+dispatches a provider or returns execution permission.
 
 ## Retained Snowflake prototype
 

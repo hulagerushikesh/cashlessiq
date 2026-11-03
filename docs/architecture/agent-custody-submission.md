@@ -99,10 +99,46 @@ local commit, ambiguous commit/rollback gaps, no transferable result, original
 instance single-use state, typed selectors, changed checkpoint material, lost or
 closed custody, SQL failures and inactive runtime imports. Guarded actual-login
 CI checks real checkpoint/issue through the two restricted logins, concurrent
-claims, protected assignment drift, clinical revocation and expiry after lock
+checkpoints, protected assignment drift, clinical revocation and expiry after lock
 waits, exact effective ACLs, direct-SQL denials, epoch locking across external
 writes and conservative cost retention. Existing capture/reservation/observer
 and full product/preview regression are required for acceptance.
 
-Acceptance results will be recorded after CI completes. No local Docker or paid
-GCP/Snowflake operation is required for these tests.
+Revision `9010fe9` passes the [dedicated agent job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41617111433/job/125853203907):
+all **35 new actual-login custody cases**, the existing 146 restricted capture/
+reservation/observer cases, 476 agent checks and fourteen encrypted recoveries.
+The **31 new offline cases** pass in the combined **452-check** offline suite.
+The fourteen recoveries remain on the owner-connected fixture path.
+[Private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41617111576)
+passes all eighteen MVP journeys, matched encrypted 22-table restoration and
+both saved-workflow browser reopenings, with successful fresh-volume/stack cleanup.
+[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41617111433)
+also passes 1,027 root, 2,099 API (nineteen expected skips), 72 membership,
+58 client, 26 browser, 15 source UI and all eighteen MVP journeys. Catalog,
+transport isolation, process containment, contracts/types/lint/build and owned
+cleanup pass. Both full workflows select code revision `9010fe9`.
+GCP is verified TERMINATED with the unchanged 1,800-second STOP; Docker Desktop
+remains off. No paid build/run, source/provider call or deployed schema/role/image
+change was performed.
+
+## Next restricted execution acceptance
+
+Keep dispatch inside the original trusted custody coordinator; do not add a
+`checked=true` handoff, issued-receipt IPC ticket or a second process that can
+reconstruct issue permission. Bind the fixed bounded fake transport and exact
+request envelope through trusted configuration, verify the remaining original
+lease/deadline budget, consume external issue, then perform at most one exchange.
+No browser/clinical peer may select an executable, connection, credential,
+tenant/actor or arbitrary operation. Authenticate that peer before any exposed
+service command; the current in-process fixture does not meet that requirement.
+
+Next add submitted heartbeat and private comparison publication under fresh
+clinical locks/pins and conservative recovery with separate narrow authority.
+Recovery must not take clinical locks after grant/operation locks, must retain
+submitted unknown units/slot, and may refund never-submitted reservations only
+when full independent history is available and agrees. Neither missing custody
+nor a lost command reply is permission to retry or release allowance. Exercise
+successful validated clinical comparison, concurrency, revocation, child faults
+and all fourteen populated encrypted restore journeys through these intended
+restricted commands. Retain the old owning test path only as an explicit fixture
+baseline; do not report it as restricted acceptance.
