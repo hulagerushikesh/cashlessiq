@@ -65,6 +65,8 @@ authorization. The runtime has no attempt, comparison, refund, release,
 reconciliation or grant-creation command. Held allowance stays held, including
 after timeout, because no recovery/refund command is implemented here.
 
+The [independent fake receipt observer](agent-receipt-observer.md) now prepares
+a separate restricted history-reading identity, with no ticket or I/O permission.
 Before checkpoint/issue/publication can be exposed, design and test an
 independently authenticated custody/admission command path that cannot be bypassed
 by directly invoking SQL as the runtime. Passing a caller-selected boolean or

@@ -204,6 +204,15 @@ def checkpoint(db, attempt: AgentAttempt) -> FakeCheckpoint:
     grant = db.get(AgentExecutionGrant, (op.tenant_id, op.grant_id)) if op else None
     if not op or not grant or grant.mode != "fake-only":
         _closed()
+    return checkpoint_from_material(op, grant, attempt)
+
+
+def checkpoint_from_material(op, grant, attempt) -> FakeCheckpoint:
+    """Shared canonical preimage for owner fixtures and restricted observation.
+
+    The caller must independently obtain/validate these rows. This pure hash
+    function does not authenticate supplied material or authorize any action.
+    """
     # Immutable source fields only: state/counters/leases may legitimately move.
     # Include approval window/allowance and captured snapshot HASH, not its body.
     def instant(value):

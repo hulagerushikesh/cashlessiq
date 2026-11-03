@@ -142,3 +142,14 @@ The existing source-read integration and its isolation acceptance remain
 separate from new assessment execution. This plan supersedes the assumption
 that a hostname change or simple call to the legacy agent enables intelligence
 for newly submitted product requests. It does not change phase-exit status.
+
+
+### Independent receipt observation prepared — 3 November
+
+The [receipt observer](agent-receipt-observer.md) now prepares a separate,
+principal-bound history command and fake custody verifier. It independently reads
+full bounded epoch history; clinical runtime has no observer/table privileges.
+The result is not an admission ticket or I/O permit. Restricted checkpoint/issue,
+private publication and conservative recovery still need a custody-controlled
+transaction path, authenticated IPC and acceptance through all fourteen encrypted
+recoveries. No runtime self-attestation or cached observation may bridge that gap.

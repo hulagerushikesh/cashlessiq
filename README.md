@@ -30,6 +30,10 @@ fake ledger. Independent admission/checkpoint/publication commands, production
 receipt/secret custody and live source/transport remain; deployed workflows use
 deterministic rules.
 
+The inactive [receipt observer](docs/architecture/agent-receipt-observer.md)
+compares independently read, epoch-wide submission history with retained fake
+custody through a separate restricted identity. It grants no execution permission.
+
 ## Retained Snowflake prototype
 
 The system combines staged pre-authorisation PDFs, Cortex document extraction,
