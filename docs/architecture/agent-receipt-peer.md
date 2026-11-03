@@ -120,8 +120,9 @@ is off. No paid build/start, live source/provider call or deployment occurred.
 The fake peer does not open a PostgreSQL connection, query Snowflake, call a
 provider or create an allowance. The coordinator integration case uses its
 existing deterministic offline SQL-engine double; full actual-login lifecycle
-tests continue separately. Combined peer + restricted PostgreSQL + bounded-child
-publication/recovery/restore acceptance remains a next integration step.
+tests continued separately at that checkpoint. The subsequent combined
+acceptance below joins the peer, actual logins, child, publication and recovery;
+combined restored-state acceptance remains open.
 
 The initial CI setup exposed a test-only `Path.chown` mistake, corrected to
 `os.chown` with cleanup registered before setup. The runner's private home
@@ -130,6 +131,68 @@ were widened. The dedicated copied runtime above solves that boundary. Its
 complete process suite needs over three minutes, so the initial 180-second
 container deadline was replaced with a bounded 240-second run. Final acceptance
 checks the actual test count and container state, never just launcher success.
+
+## Combined restricted database acceptance — 3 November
+
+The later [integration suite](../../apps/api/tests/test_agent_peer_database.py)
+passes **eleven cases in 73.16 seconds** at revision
+`e973c4cda0eafa704ef92e1347a5a0e0ccd07648` in the
+[dedicated CI job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41681911155/job/126077487485).
+Actual distinct clinical and custody OS UIDs receive only their respective
+restricted PostgreSQL credentials through private stdin. They assert exact
+`session_user`/`current_user`, denied direct product/private table reads, zero
+capabilities, `NoNewPrivs=1` and denied journal/supervisor-file reads. Calling any
+owner-ledger or direct-journal method in those runtime processes fails the test.
+The journal process alone opens retained SQLite; it has no DB credentials.
+
+The original custody process checks retained history, checkpoints, issues,
+exchanges with the existing bounded canned child, heartbeats and validates a
+private comparison through actual restricted SQL. The successful journey checks
+one attempt/comparison, original deadline/fence and consumed allowance. Other
+cases cover clinical/assignment/membership revocation, lost prepare/issue ACKs,
+replacement processes, submitted expiry with a healthy/unavailable peer,
+unavailable custody before checkpoint and clinically invalid child money. Human
+request/review/audit/outbox/event rows remain unchanged across every journey.
+Lost replies leave committed markers, never reconstructed issue or refunds;
+expired submitted work retains its uncertain units and concurrency slot.
+
+The [launcher](../../scripts/test_agent_peer_database.py) creates only an owned
+PostgreSQL 17 container and a selected-code supervisor container. They share
+the database container's **network-none loopback namespace**, with no host
+ports, external bridge, host directories, Docker socket or real credentials.
+Both have read-only root filesystems, bounded tmpfs, 512 MiB/one CPU/128 PIDs
+and explicit capabilities only for trusted test supervision. Actual inspected
+configuration, test count, container exit/no-OOM and process/file/container/image
+cleanup are required. Linux/GitHub/exact-repository/explicit opt-in guards refuse
+before Docker locally. The related local suite passes 213 cases with the two
+Linux-only modules skipped, and repository Ruff/whitespace checks pass.
+
+The first combined fault test damaged the initial history-check reply rather
+than the later write ACK. The fixed dummy peer now injects the fault immediately
+after the selected SQLite prepare/issue commit; earlier checks remain intact.
+This changes test injection only. No runtime permission, accounting rule or
+deadline was relaxed.
+
+That same exact revision passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41681911155)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41681911168).
+The dedicated existing suites pass 476 agent, fourteen owner-fixture restore,
+290 restricted command, 53 lifecycle, 27 restricted encrypted restore and 33
+separate-peer cases. Full regression passes 1,027 root, 2,281 API, 72 membership,
+58 client, 26 browser, fifteen source UI and eighteen MVP journeys, with expected
+skips and two existing API warnings. The preview independently passes eighteen
+journeys, matched encrypted 22-table restore and saved-workflow reopenings after
+restart and restored-volume replacement. All owned service/stack/fresh-volume,
+process/file/container/image cleanup succeeds. No local Docker or GCP run/build
+was started; the VM remains TERMINATED with its unchanged 1,800-second STOP.
+
+The bounded canned child still shares the trusted custody UID; this suite does
+not claim a separate untrusted transport UID or credential sandbox. That
+containment probe remains separate. Root/DB fixture owners prepare and assert
+state, but their credentials are absent from runtime children. Combined
+encrypted restored-state journeys, real operational credential delivery and
+retained custody across host loss remain open. No route, service, worker,
+provider, migration or deployed configuration is activated by this test.
 
 ## Remaining operational gates
 

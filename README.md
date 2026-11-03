@@ -9,6 +9,7 @@ intelligence milestone. It never asks an LLM to calculate money.
 On 2 November, the first private GCP test passed all 18 deployed browser checks
 and a separate manual correction/review journey. The VM is stopped between
 approved testing windows. See the [current delivery status](docs/product/delivery-status.md),
+[short engineering overview](docs/product/engineering-overview-2026-11-03.md),
 [stable private address](docs/product/stable-private-domain.md) and
 [agent integration sequence](docs/architecture/product-agent-integration.md).
 The inactive [agent comparison contract](docs/architecture/agent-comparison-contract.md)
@@ -52,8 +53,10 @@ checks effective PUBLIC/default ACLs, exact command/definer permissions and
 credential revocation/rotation in disposable CI; it enables no deployed authority.
 The [Linux fake receipt peer](docs/architecture/agent-receipt-peer.md) separates
 retained-file ownership from the coordinator and checks both OS identities before
-receipt transfer. This remains inactive test engineering; production custody,
-secret delivery and the combined restricted-database integration remain open.
+receipt transfer. Its combined disposable acceptance now joins actual restricted
+database logins, bounded fake exchange, private publication and conservative
+recovery. Combined restored-state acceptance, production custody, secret delivery
+and governed source/provider integration remain open. This work stays inactive.
 
 ## Retained Snowflake prototype
 

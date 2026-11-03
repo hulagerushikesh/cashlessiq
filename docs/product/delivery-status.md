@@ -4,6 +4,34 @@ Updated 3 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+For a short view of completed capabilities, remaining engineering and the next
+deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
+
+### Combined agent process/database acceptance — 3 November
+
+The [combined disposable acceptance](../architecture/agent-receipt-peer.md#combined-restricted-database-acceptance--3-november)
+now passes **eleven cases** at `e973c4c`: actual restricted clinical/custody
+PostgreSQL logins, independently owned retained receipts, bounded fake child,
+validated private publication and conservative recovery. Lost ACKs, revoked
+scope, replacement processes, peer outages and invalid money fail without
+duplicate execution or uncertain-usage refunds. Runtime owner/direct-journal
+fallback fails the test; human workflow rows remain unchanged.
+
+The [dedicated job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41681911155/job/126077487485)
+requires eleven passes, actual isolation/exit/no-OOM checks and successful owned
+process/file/database/container/image cleanup. Related local checks pass 213
+cases with two guarded Linux skips. Combined restored-state journeys, production
+custody/secret delivery and governed Snowflake/provider integration remain open.
+The deployed image/schema remain `7940886`/`0003_mvp`; GCP and Docker stay off.
+
+The same exact code passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41681911155)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41681911168),
+including the existing agent/restricted-login/restore suites, eighteen MVP
+journeys, matched encrypted 22-table restoration and saved-workflow reopenings
+after restart/restored-volume replacement. All owned cleanup succeeds. No paid
+build/start, live provider/source call, migration or service activation occurred.
+
 ### Separate retained receipt process — 3 November
 
 The [inactive Linux receipt peer](../architecture/agent-receipt-peer.md) moves
