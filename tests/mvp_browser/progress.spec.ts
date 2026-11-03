@@ -196,8 +196,12 @@ test("policy wording completion enables selection without replacing the proposal
     expect(calls).toBe(2);
     // An ordinary role never receives policy wording through the real progress route.
     await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL(/\/login$/);
     await page.getByLabel("Review role").selectOption("processor");
     await page.getByRole("button", { name: "Enter workspace" }).click();
+    // The API request shares this context's cookie. Wait for the login response
+    // to commit it before checking role authorization, as in the test above.
+    await expect(page).toHaveURL(/\/$/);
     expect(
       (
         await context.request.get("/workflows/progress?kind=policy-documents&id=POLICY-WORDING")

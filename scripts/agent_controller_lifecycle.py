@@ -129,6 +129,8 @@ def check_target(raw, target):
 
 def command(raw, verb, schema, signature, role):
     # All signatures are internal fixed constants. Identifiers never become SQL text.
+    guard(raw)
+    require(verb in ("GRANT", "REVOKE"), "command")
     require(signature in (*CLINICAL, *CUSTODY), "command")
     raw.execute(
         sql.SQL("{} EXECUTE ON FUNCTION {}.{} {} {}").format(
