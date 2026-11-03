@@ -49,7 +49,7 @@ jobs:
           CIQ_AGENT_CONTROLLER_TEST: '1'
           CIQ_AGENT_RECOVERY_CONTAINER: ${{ job.services.postgres.id }}
           TEST_DATABASE_URL: postgresql+psycopg://postgres:ciq-disposable-agent-ledger@127.0.0.1:5432/postgres
-        run: uv run --project apps/api pytest apps/api/tests/test_agent_custody_restore.py
+        run: uv run --project apps/api python -m pytest apps/api/tests/test_agent_custody_restore.py
   agent-transport-isolation:
     runs-on: ubuntu-latest
     timeout-minutes: 6
