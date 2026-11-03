@@ -43,8 +43,9 @@ validates the original response under fresh clinical locks and saves a private
 comparison with atomic accounting; submitted heartbeat preserves the original
 fence/deadline. [Conservative restricted recovery](docs/architecture/agent-custody-recovery.md)
 retains submitted uncertain cost and releases unused reservations only with
-agreeing full history. Restricted populated restore acceptance and real
-source/provider integration remain unfinished. No human review is finalized by
+agreeing full history. The [restricted encrypted restore suite](docs/architecture/agent-custody-restore.md)
+adds the fourteen populated journeys through separately authenticated commands;
+production restore/custody and real source/provider integration remain unfinished. No human review is finalized by
 these inactive fake-only commands.
 
 ## Retained Snowflake prototype

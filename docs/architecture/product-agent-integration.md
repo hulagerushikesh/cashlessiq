@@ -208,3 +208,16 @@ preserve atomic accounting. This remains inactive fake-only engineering. Moving
 the fourteen populated encrypted restore journeys through the restricted path,
 production custody/peer/credential isolation and live source/provider gates
 remain outstanding.
+
+
+### Populated restricted restore prepared — 3 November
+
+The [restricted encrypted restore suite](agent-custody-restore.md) adds all fourteen
+populated recovery journeys through actual clinical/custody logins. Restored
+runtime cannot call the owner ledger. Private registries and ACLs are explicitly
+installed/bound by a trusted disposable harness after verifying the normal
+22-table restoration; backups do not restore runtime authority automatically.
+Additional binding/history faults, concurrent settlement and same-name/new-OID
+logins cover fail-closed recovery and no replay/refund of forgotten execution.
+This does not activate a deployed installer, independent production custody or
+live source/provider integration.

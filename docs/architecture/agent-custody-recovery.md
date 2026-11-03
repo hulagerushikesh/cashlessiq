@@ -91,3 +91,9 @@ not restricted restore acceptance. The private registries are outside the normal
 22-table product backup; deployed restoration/rebinding/revoke/rotation remains
 unaccepted. No production source/provider submission or paid window is needed for
 this step.
+
+
+The later [restricted encrypted restore suite](agent-custody-restore.md) now adds
+those fourteen journeys and additional binding/history/concurrency/role-identity
+cases through actual restricted credentials. Its separate acceptance record
+distinguishes trusted disposable installation from production restoration.

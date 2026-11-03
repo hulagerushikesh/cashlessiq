@@ -12,6 +12,43 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Populated encrypted restore through restricted credentials — 3 November
+
+The [inactive restricted restore suite](../architecture/agent-custody-restore.md)
+now passes **27 cases**, including all fourteen populated journeys previously
+covered only by the owner ledger. Restored runtime uses actual separate clinical
+and custody logins; invoking any owner-ledger method fails the test. A trusted
+disposable harness explicitly recreates/binds private authorization registries
+and ACLs, which the normal 22-table backup does not restore automatically.
+
+The suite covers first-attempt completion with the original deadline, no replay
+of submitted work, forgotten execution retained outside an older backup, exact
+bindings/history faults, concurrent settlement and dropped/recreated same-name
+logins. Immutable receipts and human-record hashes remain unchanged where
+required. Revision `001241b` passes the
+[dedicated job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41645239219/job/125948726097),
+including 290 existing restricted-login cases, 476 existing agent checks and
+fourteen retained owner-fixture restore baselines. Local lint and 205 related
+offline checks pass.
+
+The same exact `001241b` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41645239219)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41645239508).
+Full regression passes 1,027 root, 2,243 API (twenty-three expected skips),
+72 membership, 58 client, 26 browser, 15 source UI and eighteen MVP journeys.
+The preview independently passes eighteen journeys, matched encrypted 22-table
+restoration and both saved-workflow browser reopenings. All owned service,
+stack and fresh-volume cleanup succeeds. The two restricted steps total
+**317 actual-login cases**, including the 27 new restored-database cases.
+
+Next: review/test the exact forward, revoke and credential-rotation procedure and
+effective PUBLIC/default ACLs. Deployed restoration/rebinding, independent
+production custody/process/credential/peer isolation and live source/provider
+gates remain separate. The deployed preview still selects `7940886`/schema
+`0003_mvp`; these tests activate no installer or agent route. GCP is freshly
+verified TERMINATED with its unchanged 1,800-second STOP and Docker Desktop off.
+No paid build/run or source/provider call was needed; no assistance is needed now.
+
 ### Conservative restricted status recovery — 3 November
 
 Prepared the [inactive restricted recovery path](../architecture/agent-custody-recovery.md).
