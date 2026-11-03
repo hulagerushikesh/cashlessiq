@@ -185,6 +185,21 @@ def test_forward_install_is_atomic_empty_and_has_only_exact_effective_rights(fac
     assert review(s) is None and product_digest(s) == before
 
 
+def test_operator_review_uses_catalog_before_a_spoofed_caller_search_path(installed):
+    s = installed
+    with s.admin.begin() as db:
+        raw = db.connection.driver_connection
+        raw.execute(
+            sql.SQL("CREATE TABLE {}.pg_roles (oid oid, rolname name)").format(
+                sql.Identifier(s.product)
+            )
+        )
+        raw.execute(
+            sql.SQL("SET LOCAL search_path={},pg_catalog").format(sql.Identifier(s.product))
+        )
+        assert audit(raw, s.target) is None
+
+
 def test_unreviewed_creator_defaults_abort_entire_install_without_partial_authority(factory):
     s = factory
     with s.admin.begin() as db:

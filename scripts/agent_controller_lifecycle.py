@@ -93,6 +93,7 @@ def operator_savepoint(action):
         # An existing transaction is REQUIRED: this is only a nested SAVEPOINT.
         # Even a caller catching a policy failure cannot commit a partial install.
         with raw.transaction():
+            raw.execute("SET LOCAL search_path=pg_catalog,pg_temp")
             return action(raw, *args, **kwargs)
 
     return guarded
@@ -359,6 +360,7 @@ def routine_sources(raw, target):
     return sources
 
 
+@operator_savepoint
 def audit(raw, target):
     """Read-only effective catalog review, including defaults; returns no authority.
 
