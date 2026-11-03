@@ -61,7 +61,29 @@ configuration. Actual restricted-login CI covers atomic unknown/unused settlemen
 cross-tenant forgotten history, independent clinical locks during recovery,
 clinical revocation/drift, exact custody authorization, concurrent checks, commit
 rollback, effective privileges and accidental clinical execute grants. Acceptance
-results will be recorded after the complete workflows finish.
+revision `b7734100d6cc1597210ab38ac0e02735f771d3f5` passes **61 new checks**:
+**22 offline** and **39 actual restricted-login** cases. The related local offline
+suite passes 205 checks. The
+[dedicated restricted job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41633083440/job/125907313307)
+passes all **290 restricted-login checks**, 476 existing agent checks and the
+fourteen existing owning-fixture encrypted recoveries.
+
+[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41633083440)
+passes 1,027 root (three expected skips), 72 membership, 58 client, **2,243 API**
+(twenty-two expected skips/two existing warnings), 26 browser, 15 source UI and
+all eighteen MVP journeys. Catalog, transport isolation, process containment,
+contracts/types/lint/build and owned cleanup pass.
+[Private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41633083591)
+passes eighteen MVP journeys, matched encrypted 22-table restoration and both
+saved-workflow browser reopenings. Fresh-volume/stack cleanup succeeds. Both full
+workflows select exactly `b7734100d6cc1597210ab38ac0e02735f771d3f5`.
+Local Ruff, SQL template formatting, inactive import boundary, edited links and
+diff whitespace checks pass.
+
+A read-only check confirms GCP TERMINATED with its unchanged 1,800-second STOP
+and Docker Desktop off. No paid build/run, local container, source/provider call,
+or deployed role/binding/schema/image changed. The deployed private preview still
+selects `7940886`/schema `0003_mvp`; this acceptance is inactive engineering.
 
 Next move the fourteen populated encrypted restore journeys through the intended
 restricted commands. Their existing database-owning fixture remains a baseline,

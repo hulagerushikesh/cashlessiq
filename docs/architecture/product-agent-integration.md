@@ -193,3 +193,18 @@ deadline/issue budget. Failures sacrifice the candidate without replay/refund.
 This remains inactive fake-only code, with no production peer/custody/source gate
 claimed. Conservative restricted recovery and all fourteen populated restore
 journeys through that path remain next.
+
+### Conservative restricted status recovery — 3 November
+
+The later [restricted recovery extension](agent-custody-recovery.md) now performs
+status-only settlement through exact custody credentials/assignments. Fresh DB
+expiry moves submitted reserved cost to uncertain and retains its slot, even
+when external history is unavailable. Unsubmitted refund needs an available,
+agreeing independently observed full history on the same epoch transaction.
+No current clinical capability or clinical row lock is required. Recovery never
+rehydrates issue permission or a private response, retries an exchange, resets
+custody or automatically reconciles unknown work. Concurrency and commit failure
+preserve atomic accounting. This remains inactive fake-only engineering. Moving
+the fourteen populated encrypted restore journeys through the restricted path,
+production custody/peer/credential isolation and live source/provider gates
+remain outstanding.

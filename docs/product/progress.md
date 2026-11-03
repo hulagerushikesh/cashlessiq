@@ -12,6 +12,36 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Conservative restricted status recovery — 3 November
+
+Prepared the [inactive restricted recovery path](../architecture/agent-custody-recovery.md).
+Expired submitted work moves reserved allowance to uncertain while keeping its
+concurrency slot, even with missing/closed/contradictory external history. Unused
+reservation refund requires available agreeing full epoch history. Recovery uses
+exact custody identity/assignment without current clinical capability or clinical
+locks, and never reconstructs a lost response/issue, retries, resets custody or
+automatically reconciles unknown work. Explicit concurrent/repeated status checks
+settle once; commit failure rolls back accounting.
+
+All **61 new checks** pass: 22 offline and 39 actual-login cases. Revision
+`b773410` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41633083440)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41633083591).
+Dedicated CI passes **290 restricted-login checks**, 476 existing agent checks
+and fourteen encrypted recoveries on the owning fixture. Full regression passes
+1,027 root, 2,243 API (twenty-two expected skips), 72 membership, 58 client,
+26 browser, 15 source UI and eighteen MVP journeys. The preview independently
+passes eighteen journeys, matched encrypted 22-table restoration and both saved-
+workflow browser reopenings. All owned container/fresh-volume cleanup succeeds.
+
+Next: move all fourteen populated encrypted restore journeys through the intended
+restricted commands. Their current owning fixture remains a baseline, not that
+acceptance. Production custody/peer/credential isolation, deployed restore/revoke/
+rotation and effective PUBLIC/default ACL review, independent live source capture
+and supported provider semantics remain separate gates. GCP is freshly verified
+TERMINATED with its unchanged 1,800-second STOP; Docker Desktop stays off. No paid
+build/run, source/provider call or deployed image/schema/role/binding changed.
+No assistance or paid window is needed for the next engineering step.
+
 ### Restricted private comparison publication and heartbeat — 3 November
 
 Prepared the [inactive private publication path](../architecture/agent-custody-publication.md).

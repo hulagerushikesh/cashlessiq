@@ -119,3 +119,8 @@ Production custody/peer isolation, deployed restore/revoke/rotation and effectiv
 PUBLIC/default ACL review, independent live source capture and supported provider
 submission/status/usage/timeout semantics remain separate gates. No assistance or
 paid window is needed for this engineering step.
+
+Later on 3 November, [restricted conservative recovery](agent-custody-recovery.md)
+was implemented and accepted at `b773410`, with 22 offline and 39 actual-login
+checks and both full CI workflows green. The fourteen populated restore journeys
+still need acceptance through that intended restricted path.

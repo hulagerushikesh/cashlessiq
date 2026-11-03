@@ -41,8 +41,11 @@ that original custody process, with fresh bounded deadlines and no returned
 execution permission. The later [private publication extension](docs/architecture/agent-custody-publication.md)
 validates the original response under fresh clinical locks and saves a private
 comparison with atomic accounting; submitted heartbeat preserves the original
-fence/deadline. Restricted recovery and real source/provider integration remain
-unfinished. No human review is finalized by these inactive fake-only commands.
+fence/deadline. [Conservative restricted recovery](docs/architecture/agent-custody-recovery.md)
+retains submitted uncertain cost and releases unused reservations only with
+agreeing full history. Restricted populated restore acceptance and real
+source/provider integration remain unfinished. No human review is finalized by
+these inactive fake-only commands.
 
 ## Retained Snowflake prototype
 
