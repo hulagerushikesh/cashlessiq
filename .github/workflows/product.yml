@@ -72,6 +72,22 @@ jobs:
         run: |
           uv sync --project apps/api --frozen
           uv run --project apps/api python scripts/test_agent_transport_isolation.py
+  agent-receipt-peer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+      - name: Independently authenticated fake receipt peers and retained state
+        run: |
+          uv sync --project apps/api --frozen
+          receipt_test_python="$(uv run --project apps/api python -c 'import sys; print(sys.executable)')"
+          sudo -n env GITHUB_ACTIONS=true GITHUB_REPOSITORY="$GITHUB_REPOSITORY" CIQ_AGENT_RECEIPT_PEER_TEST=1 "$receipt_test_python" -m pytest apps/api/tests/test_agent_receipt_peer_linux.py
   foundation:
     runs-on: ubuntu-latest
     steps:

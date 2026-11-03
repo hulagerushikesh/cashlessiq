@@ -7,6 +7,7 @@ from sqlalchemy.exc import DBAPIError
 
 from ciq_api.agent_admission import ERROR, FakeReceiptJournal
 from ciq_api.agent_contracts import AgentContractError
+from ciq_api.agent_receipt_peer import FakeReceiptPeerClient
 from ciq_api.agent_receipt_verifier import FakeReceiptVerifier
 
 _FAILURES = (AgentContractError, DBAPIError, ValueError, TypeError, KeyError, RecursionError)
@@ -24,7 +25,7 @@ class FakeCustodyRecovery:
     def __init__(
         self,
         engine,
-        journal: FakeReceiptJournal,
+        journal: FakeReceiptJournal | FakeReceiptPeerClient,
         *,
         request_id,
         operation_id,

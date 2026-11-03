@@ -22,6 +22,7 @@ from ciq_api.agent_admission import (
     checkpoint_from_material,
 )
 from ciq_api.agent_contracts import AgentContractError, Digest, ImmutableContract, Label
+from ciq_api.agent_receipt_peer import FakeReceiptPeerClient
 
 MAX_INVENTORY_BYTES = 4 * 1024 * 1024
 Limit = Annotated[int, Field(strict=True, ge=1, le=30)]
@@ -95,14 +96,16 @@ class FakeReceiptVerifier:
 
     Holds the local epoch lock until the full retained journal comparison ends.
     Returns no transferable result, receipt or submission permission. There is
-    deliberately no network/IPC/service installer or automatic integration.
+    deliberately no service installer or automatic integration. A separately
+    configured fake peer client may replace direct journal access in CI.
     """
 
-    def __init__(self, engine, journal: FakeReceiptJournal, *, schema="ciq_agent_receipts"):
+    def __init__(self, engine, journal: FakeReceiptJournal | FakeReceiptPeerClient,
+                 *, schema="ciq_agent_receipts"):
         if (
             type(schema) is not str
             or not re.fullmatch(r"ciq_agent_receipts(?:_[a-f0-9]{24})?", schema)
-            or type(journal) is not FakeReceiptJournal
+            or type(journal) not in (FakeReceiptJournal, FakeReceiptPeerClient)
         ):
             raise AgentContractError(ERROR) from None
         self.engine = engine

@@ -36,6 +36,7 @@ from ciq_api.agent_executor import (
     FakeProcessRequest,
 )
 from ciq_api.agent_ledger import ClaimReceipt
+from ciq_api.agent_receipt_peer import FakeReceiptPeerClient
 from ciq_api.agent_receipt_verifier import FakeReceiptVerifier
 
 _FAILURES = (AgentContractError, DBAPIError, ValueError, TypeError, KeyError, RecursionError)
@@ -70,7 +71,8 @@ class FakeCustodySubmission:
     Database/registry owners and custody-process memory remain trusted.
     """
 
-    def __init__(self, engine, journal: FakeReceiptJournal, *, request_id, claim: ClaimReceipt,
+    def __init__(self, engine, journal: FakeReceiptJournal | FakeReceiptPeerClient,
+                 *, request_id, claim: ClaimReceipt,
                  schema="ciq_agent_receipts", transport: BoundedFakeProcess | None = None):
         self._verifier = FakeReceiptVerifier(engine, journal, schema=schema)
         if (
