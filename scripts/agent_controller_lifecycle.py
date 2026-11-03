@@ -267,8 +267,19 @@ def install_empty_fake(
     return target
 
 
-# Exact effective product column rights for the two trusted nonlogin definers.
-# '*' expands to the actual migrated table's columns; table shape is pinned below.
+# Exact effective product column rights, including the current whole-table grants.
+# Never expand '*' from a drifted database: newly added columns need review too.
+GRANT_COLUMNS = (
+    "tenant_id id mode approval_ref operation_keys config_digest source_digest starts_at ends_at "
+    "case_limit concurrency_limit units_per_attempt unit_limit admitted in_flight reserved_units "
+    "consumed_units uncertain_units"
+)
+OPERATION_COLUMNS = (
+    "tenant_id id request_id actor_id grant_id operation_key config_digest source_digest snapshot "
+    "state version created_at deadline fence_id lease_until"
+)
+ATTEMPT_COLUMNS = "tenant_id id operation_id attempt_number submission_id fence_id submitted_at"
+COMPARISON_COLUMNS = "tenant_id operation_id attempt_id candidate published_at"
 CLINICAL_COLUMNS = {
     "tenant": ("id active", "", "id"),
     "app_user": ("id active", "", "id"),
@@ -279,8 +290,8 @@ CLINICAL_COLUMNS = {
     "case_input_revision": ("tenant_id request_id revision inputs digest", "", ""),
     "mvp_event": ("tenant_id subject_id action", "", ""),
     "agent_admission_epoch": ("id mode database_id epoch_id", "", "id"),
-    "agent_execution_grant": ("*", "", "admitted in_flight reserved_units"),
-    "agent_operation": ("*", "*", "version fence_id lease_until"),
+    "agent_execution_grant": (GRANT_COLUMNS, "", "admitted in_flight reserved_units"),
+    "agent_operation": (OPERATION_COLUMNS, OPERATION_COLUMNS, "version fence_id lease_until"),
 }
 CUSTODY_COLUMNS = {
     "agent_admission_epoch": ("id mode database_id epoch_id", "", "id"),
@@ -291,9 +302,9 @@ CUSTODY_COLUMNS = {
         "",
         "id in_flight reserved_units consumed_units uncertain_units",
     ),
-    "agent_operation": ("*", "", "state version lease_until"),
-    "agent_attempt": ("*", "*", ""),
-    "agent_comparison": ("", "*", ""),
+    "agent_operation": (OPERATION_COLUMNS, "", "state version lease_until"),
+    "agent_attempt": (ATTEMPT_COLUMNS, ATTEMPT_COLUMNS, ""),
+    "agent_comparison": ("", COMPARISON_COLUMNS, ""),
 }
 
 
@@ -307,6 +318,45 @@ def routine_oids(raw, schema, signatures):
     return result
 
 
+def routine_sources(raw, target):
+    """Compare installed bodies/languages/results with these exact local packages."""
+    sources = {}
+    pattern = re.compile(
+        r'CREATE FUNCTION "(?P<schema>[a-z_0-9]+)"\.(?P<name>[a-z_]+)\(.*?\) '
+        r"RETURNS (?P<result>jsonb|void)\nLANGUAGE (?P<language>sql|plpgsql) .*?\n"
+        r"AS (?P<tag>\$[a-z_]+\$)(?P<body>.*?)(?P=tag);",
+        re.DOTALL,
+    )
+    for file, owner in (
+        ("scope-capture.sql", target.clinical_definer),
+        ("reservation.sql", target.clinical_definer),
+        ("receipt-observer.sql", target.custody_definer),
+        ("custody-submission.sql", target.custody_definer),
+        ("custody-publication.sql", target.custody_definer),
+        ("custody-recovery.sql", target.custody_definer),
+    ):
+        rendered = (
+            sql.SQL((PACKAGES / file).read_text())
+            .format(
+                owner=sql.Identifier(owner.name),
+                product=sql.Identifier(target.product),
+                capture=sql.Identifier(target.capture),
+                receipts=sql.Identifier(target.receipts),
+            )
+            .as_string(raw)
+        )
+        for match in pattern.finditer(rendered):
+            values = match.groupdict()
+            key = (values["schema"], values["name"])
+            require(key not in sources, "source_inventory")
+            sources[key] = (values["body"], values["language"], values["result"])
+    names = {(target.capture, s.split("(")[0]) for s in (*CLINICAL, *PRIVATE_CLINICAL)} | {
+        (target.receipts, s.split("(")[0]) for s in (*CUSTODY, *PRIVATE_CUSTODY)
+    }
+    require(set(sources) == names, "source_inventory")
+    return sources
+
+
 def audit(raw, target):
     """Read-only effective catalog review, including defaults; returns no authority.
 
@@ -314,6 +364,7 @@ def audit(raw, target):
     trusted administrator/DDL changes, process compromise or live deployment proof.
     """
     check_target(raw, target)
+    sources = routine_sources(raw, target)
     definitions = (target.clinical_definer, target.custody_definer)
     logins = (target.clinical, target.custody)
     pins = (*definitions, *logins)
@@ -354,7 +405,10 @@ def audit(raw, target):
         function_sets[schema] = functions
         rows = raw.execute(
             "SELECT p.oid,p.proowner,p.prosecdef,p.provolatile,p.proparallel,p.proleakproof,"
-            "p.prokind,p.proconfig FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace "
+            "p.prokind,p.proconfig,p.proname,p.prosrc,l.lanname,t.typname,p.pronargdefaults,"
+            "p.provariadic,p.proretset,p.prosupport::oid FROM pg_proc p "
+            "JOIN pg_language l ON l.oid=p.prolang JOIN pg_type t ON t.oid=p.prorettype "
+            "JOIN pg_namespace n ON n.oid=p.pronamespace "
             "WHERE n.nspname=%s",
             (schema,),
         ).fetchall()
@@ -370,6 +424,25 @@ def audit(raw, target):
                 },
                 "routine_properties",
             )
+            require(
+                row[9:12] == sources[(schema, row[8])] and row[12:] == (0, 0, False, 0),
+                "routine_source",
+            )
+            allowed_grantees = {owner.oid, target.installer.oid}
+            runtime_pin = target.clinical if schema == target.capture else target.custody
+            commands = CLINICAL if schema == target.capture else CUSTODY
+            if row[0] in routine_oids(raw, schema, commands):
+                allowed_grantees.add(runtime_pin.oid)
+            if schema == target.capture and row[0] in routine_oids(
+                raw, schema, ("_reservation_context_for(oid, text)",)
+            ):
+                allowed_grantees.add(target.custody_definer.oid)
+            grantees = raw.execute(
+                "SELECT a.grantee FROM pg_proc p CROSS JOIN LATERAL "
+                "aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE p.oid=%s",
+                (row[0],),
+            ).fetchall()
+            require(all(r[0] in allowed_grantees for r in grantees), "routine_grantee")
         rows = raw.execute(
             "SELECT c.relname,c.relowner,c.relkind,c.relrowsecurity,c.relforcerowsecurity "
             "FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=%s "
@@ -389,6 +462,35 @@ def audit(raw, target):
                 (schema, owner.oid, target.installer.oid),
             ).fetchone(),
             "private_acl",
+        )
+        require(
+            not raw.execute(
+                "SELECT 1 FROM pg_attribute c JOIN pg_class t ON t.oid=c.attrelid "
+                "JOIN pg_namespace n ON n.oid=t.relnamespace "
+                "CROSS JOIN LATERAL aclexplode(c.attacl) a "
+                "WHERE n.nspname=%s AND a.grantee NOT IN (%s,%s) LIMIT 1",
+                (schema, owner.oid, target.installer.oid),
+            ).fetchone(),
+            "private_column_grantee",
+        )
+        schema_grantees = {
+            owner.oid,
+            target.installer.oid,
+            (target.clinical if schema == target.capture else target.custody).oid,
+        }
+        if schema == target.capture:
+            schema_grantees.add(target.custody_definer.oid)
+        require(
+            all(
+                r[0] in schema_grantees
+                for r in raw.execute(
+                    "SELECT a.grantee FROM pg_namespace n CROSS JOIN LATERAL "
+                    "aclexplode(coalesce(n.nspacl,acldefault('n',n.nspowner))) a "
+                    "WHERE n.nspname=%s",
+                    (schema,),
+                ).fetchall()
+            ),
+            "schema_grantee",
         )
     # Defaults apply to the role actually creating an object, not its later owner.
     # Check both global fallback defaults AND every additive per-schema entry.
@@ -517,7 +619,7 @@ def audit(raw, target):
                 ).fetchall()
                 for column, actual, grantable in columns:
                     require(
-                        (actual, grantable) == ("*" in allowed or column in allowed, False),
+                        (actual, grantable) == (column in allowed, False),
                         "column_acl",
                     )
     return None

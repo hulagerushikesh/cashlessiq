@@ -107,19 +107,23 @@ def factory(setup):
                     raw.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))
 
 
+def install_on(raw, s):
+    return install_empty_fake(
+        raw,
+        product=s.product,
+        capture=s.capture,
+        receipts=s.receipts,
+        clinical=s.login,
+        custody=s.receipt_login,
+        clinical_definer=s.owner,
+        custody_definer=s.receipt_owner,
+    )
+
+
 def install(s):
     with s.admin.begin() as db:
         db.execute(text("SELECT 1"))  # Start the caller-owned DB transaction.
-        return install_empty_fake(
-            db.connection.driver_connection,
-            product=s.product,
-            capture=s.capture,
-            receipts=s.receipts,
-            clinical=s.login,
-            custody=s.receipt_login,
-            clinical_definer=s.owner,
-            custody_definer=s.receipt_owner,
-        )
+        return install_on(db.connection.driver_connection, s)
 
 
 @pytest.fixture
@@ -190,8 +194,13 @@ def test_unreviewed_creator_defaults_abort_entire_install_without_partial_author
             ).format(sql.Identifier(s.login))
         )
     before = product_digest(s)
-    with pytest.raises(InstallationRejected):
-        install(s)
+    # Catch INSIDE the outer transaction, then successfully commit it. The
+    # operator helper's SAVEPOINT must still undo every partial installation.
+    with s.admin.begin() as db:
+        db.execute(text("SELECT 1"))
+        with pytest.raises(InstallationRejected):
+            install_on(db.connection.driver_connection, s)
+        assert db.scalar(text("SELECT 1")) == 1
     with s.admin.connect() as db:
         assert (
             db.scalar(
@@ -246,6 +255,12 @@ def test_unreviewed_creator_defaults_abort_entire_install_without_partial_author
         "runtime_sequence",
         "public_private_helper",
         "private_schema_public",
+        "helper_outsider",
+        "command_outsider",
+        "schema_outsider",
+        "column_outsider",
+        "new_product_column",
+        "routine_body",
     ],
 )
 def test_catalog_review_rejects_effective_and_additive_default_acl_drift(installed, fault):
@@ -294,6 +309,18 @@ def test_catalog_review_rejects_effective_and_additive_default_acl_drift(install
             "public_private_helper": "GRANT EXECUTE ON FUNCTION "
             "{receipts}._recover_fake(text,uuid,boolean) TO PUBLIC",
             "private_schema_public": "GRANT USAGE ON SCHEMA {receipts} TO PUBLIC",
+            "helper_outsider": "GRANT EXECUTE ON FUNCTION {capture}._capture_bound(oid,text) "
+            "TO pg_monitor",
+            "command_outsider": "GRANT EXECUTE ON FUNCTION {capture}.capture(text) TO pg_monitor",
+            "schema_outsider": "GRANT USAGE ON SCHEMA {receipts} TO pg_monitor",
+            "column_outsider": "GRANT SELECT(actor_id) ON {receipts}.submission_scope "
+            "TO pg_monitor",
+            "new_product_column": "ALTER TABLE {product}.agent_operation "
+            "ADD COLUMN unreviewed text",
+            "routine_body": "CREATE OR REPLACE FUNCTION {capture}.capture(p_request_id text) "
+            "RETURNS jsonb LANGUAGE sql VOLATILE SECURITY DEFINER PARALLEL UNSAFE "
+            "SET search_path=pg_catalog,pg_temp SET row_security=on "
+            "SET lock_timeout='2s' AS 'SELECT NULL::jsonb'",
         }
         raw.execute(
             sql.SQL(templates[fault]).format(
