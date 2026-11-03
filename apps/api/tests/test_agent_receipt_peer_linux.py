@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import select
 import shutil
 import signal
@@ -91,7 +92,10 @@ def peers(request):
     def run(uid=custody_uid, **changes):
         child = spawn(uid, **changes)
         out, err = child.communicate(timeout=8)
-        assert child.returncode == 0 and not err, "fixed receipt peer helper failed"
+        detail = out.strip().decode(errors="replace")
+        if not re.fullmatch(r"FAIL:[A-Za-z]+", detail):
+            detail = "redacted"
+        assert child.returncode == 0 and not err, "fixed receipt helper failed: " + detail
         return out.strip()
 
     def start(**changes):

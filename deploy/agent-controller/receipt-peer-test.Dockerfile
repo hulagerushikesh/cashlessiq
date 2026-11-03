@@ -10,4 +10,4 @@ COPY src/cashlessiq/decision_schema.py src/cashlessiq/source_decision.py src/cas
 COPY src/cashlessiq/rules ./src/cashlessiq/rules
 RUN uv sync --project apps/api --frozen
 COPY apps/api/tests/receipt_peer_child.py apps/api/tests/test_agent_receipt_peer_linux.py apps/api/tests/test_agent_receipt_verifier_offline.py apps/api/tests/test_agent_custody_submission_offline.py ./apps/api/tests/
-CMD ["apps/api/.venv/bin/python", "-m", "pytest", "-p", "no:cacheprovider", "apps/api/tests/test_agent_receipt_peer_linux.py"]
+CMD ["apps/api/.venv/bin/python", "-m", "pytest", "-x", "--tb=short", "-p", "no:cacheprovider", "apps/api/tests/test_agent_receipt_peer_linux.py"]

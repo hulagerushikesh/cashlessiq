@@ -150,7 +150,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except BaseException:
+    except BaseException as exc:
         # Never emit payloads/config/paths/Pydantic/SQL in CI failure output.
-        print("FAIL", flush=True)
+        print("FAIL:" + type(exc).__name__, flush=True)
         sys.exit(1)

@@ -22,6 +22,16 @@ def interrupted(_signal, _frame):
     raise SystemExit("Interrupted; cleaning owned fake receipt peer resources")
 
 
+def summary(output):
+    for line in output.decode(errors="replace").splitlines():
+        if re.fullmatch(r"\d+ passed(?:, \d+ warnings?)? in [0-9.]+s", line.strip()):
+            print(line.strip())
+        elif line.startswith(("FAILED ", "ERROR ")):
+            print(line.split(" - ", 1)[0])
+        elif re.match(r"^E\s+(AssertionError|PermissionError|ModuleNotFoundError|RuntimeError)", line):
+            print(line[:200])  # Fixed dummy-helper failure reasons only.
+
+
 def main():
     if (
         sys.platform != "linux" or os.environ.get("GITHUB_ACTIONS") != "true"
@@ -51,14 +61,13 @@ def main():
             "--env", "GITHUB_REPOSITORY=hulagerushikesh/cashlessiq",
             "--env", "CIQ_AGENT_RECEIPT_PEER_TEST=1", image,
         ).stdout.decode().strip()
-        result = docker("start", "-a", identifier, check=False, timeout=180)
+        try:
+            result = docker("start", "-a", identifier, check=False, timeout=240)
+        except subprocess.TimeoutExpired as exc:
+            summary(exc.stdout or b"")
+            raise RuntimeError("Disposable receipt peer acceptance timed out") from None
         # Test data are synthetic, but emit only counts/fixed failure labels.
-        output = result.stdout.decode(errors="replace")
-        for line in output.splitlines():
-            if re.fullmatch(r"\d+ passed(?:, \d+ warnings?)? in [0-9.]+s", line.strip()):
-                print(line.strip())
-            elif line.startswith(("FAILED ", "ERROR ")):
-                print(line.split(" - ", 1)[0])
+        summary(result.stdout)
         if result.returncode:
             raise RuntimeError("Disposable receipt peer acceptance failed")
         print("PASS: independent receipt peers and invocation-owned process/file cleanup")
