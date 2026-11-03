@@ -83,7 +83,30 @@ Actual-login PostgreSQL CI exercises restricted successful exchange → heartbea
 publication, atomic accounting and unchanged human review/audit/outbox, clinical
 locks during Python validation, revocation/drift/windows, malformed candidates,
 commit failure, concurrency, effective privileges and SQL expiry after validation.
-Acceptance results are recorded after both complete CI workflows finish.
+Revision `c9a985f` passes **129 new checks**: **83 offline** (including all thirty
+golden candidates) and **46 actual-login** cases. The
+[restricted job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41630406968/job/125898207440)
+passes all **251 restricted-login checks**, the existing **476 agent checks** and
+**fourteen populated encrypted recoveries**. Those fourteen still use the owning
+fixture, **not** restricted recovery acceptance.
+
+[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41630406968)
+passes 1,027 root (three expected skips), 72 membership, 58 client, **2,221 API**
+(twenty-one expected skips/two existing warnings), 26 browser, 15 source UI and
+all **eighteen MVP journeys**. Catalog, transport isolation, process containment,
+contracts/types/lint/build and owned cleanup pass.
+[Private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41630407338)
+separately passes eighteen MVP journeys, a matched encrypted **22-table restore**
+and both saved-workflow browser reopenings. Fresh-volume/stack cleanup succeeds.
+Both complete workflows select `c9a985fd4b7ec5189b245d73780809df97cac828`.
+Local Ruff, all five SQL template-format checks and edited relative document
+links pass. The new offline suite passes 83 checks in 4.19 seconds.
+
+A fresh read-only check confirms GCP TERMINATED with its unchanged 1,800-second
+STOP and Docker Desktop off. No paid build/run, local container, source/provider
+call or deployed image/schema/role/binding change was performed. The deployed
+preview still selects revision `7940886`/schema `0003_mvp`; this code is inactive
+engineering, not a newly deployed agent workflow.
 
 Next implement **conservative restricted recovery**, with no clinical locks after
 grant/operation locks. Submitted unknown work keeps its slot and uncertain units

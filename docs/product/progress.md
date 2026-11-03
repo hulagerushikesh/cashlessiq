@@ -12,6 +12,34 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Restricted private comparison publication and heartbeat — 3 November
+
+Prepared the [inactive private publication path](../architecture/agent-custody-publication.md).
+The original custody coordinator rechecks full independently retained issued
+history and current clinical scope on one restricted transaction. It validates
+strict money, deterministic results and exact owned citation content before
+atomically saving a private comparison and settling its allowance. Human review,
+audit and outbox stay unchanged. Submitted heartbeat preserves the attempt/fence,
+original deadline and pre-I/O budget; errors sacrifice the private candidate
+without replay/refund. Restricted recovery/restore acceptance remains next.
+
+All **129 new checks** pass: 83 offline and 46 actual-login cases. Revision
+`c9a985f` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41630406968)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41630407338).
+Dedicated CI passes **251 restricted-login checks**, 476 existing agent checks
+and fourteen encrypted recoveries on the owning fixture. Full regression passes
+1,027 root, 2,221 API (twenty-one expected skips), 72 membership, 58 client,
+26 browser, 15 source UI and eighteen MVP journeys. The preview independently
+passes eighteen journeys, a matched encrypted 22-table restore and both saved-
+workflow browser reopenings. Owned container/fresh-volume cleanup succeeds.
+
+Next: conservative restricted recovery and all fourteen populated restore
+journeys through that intended path. The existing owning-fixture recoveries are
+not that acceptance. Production custody/peer isolation and live source/provider
+gates remain separate. GCP is freshly verified TERMINATED with its unchanged
+1,800-second STOP and Docker Desktop off; no paid build/run, source/provider call
+or deployed image/schema/role/binding was changed. No assistance is needed now.
+
 ### Original-custody restricted fake exchange — 3 November
 
 Prepared the [fixed fake exchange](../architecture/agent-custody-dispatch.md).
