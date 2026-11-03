@@ -26,9 +26,9 @@ prepares the first restricted database read. Its separate
 [reservation package](docs/architecture/agent-controller-reservation.md) adds exact
 fake allowance holds and unsubmitted leases without direct runtime table access.
 It grants no submission/refund authority and does not replace the owner-connected
-fake ledger. Restricted submission/publication/recovery integration, production
-receipt/secret custody and live source/transport remain; deployed workflows use
-deterministic rules.
+fake ledger. Later inactive packages below add restricted submission, publication
+and recovery. Production receipt/secret custody and live source/transport remain;
+deployed workflows use deterministic rules.
 
 The inactive [receipt observer](docs/architecture/agent-receipt-observer.md)
 compares independently read, epoch-wide submission history with retained fake
@@ -46,7 +46,10 @@ retains submitted uncertain cost and releases unused reservations only with
 agreeing full history. The [restricted encrypted restore suite](docs/architecture/agent-custody-restore.md)
 adds the fourteen populated journeys through separately authenticated commands;
 production restore/custody and real source/provider integration remain unfinished. No human review is finalized by
-these inactive fake-only commands.
+these inactive fake-only commands. The later
+[installation and retirement rehearsal](docs/architecture/agent-controller-installation.md)
+checks effective PUBLIC/default ACLs, exact command/definer permissions and
+credential revocation/rotation in disposable CI; it enables no deployed authority.
 
 ## Retained Snowflake prototype
 

@@ -4,6 +4,48 @@ Updated 3 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Installation, permission review and credential retirement — 3 November
+
+The [inactive operator rehearsal](../architecture/agent-controller-installation.md)
+now installs all six existing fake SQL packages in one transaction with empty
+private registries. Effective catalog checks cover runtime/definer permissions,
+PUBLIC and additive creator defaults, unrelated third-role/private-helper grants,
+exact routine sources and explicit columns. OID/name pins, fixed operator search
+path and SAVEPOINT rollback prevent accidental adoption or partial installation.
+
+Revocation is epoch-first and atomic with a bounded lock wait. Existing idle
+sessions and original prepared/issued/private-candidate work lose further command
+capability; independent custody status remains available after clinical retirement.
+Password rotation requires prior retirement and does not restore disabled
+bindings or pending issue permission. No accounting, receipt, human record,
+original deadline or epoch is reset. This is a disposable fake rehearsal, not a
+production installer or automatic reauthorization.
+
+Revision `3b6b3aa` passes **53 new lifecycle cases** in the
+[dedicated job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41667545689/job/126026809738),
+plus 290 existing restricted-login cases, 27 restricted encrypted restores,
+476 existing agent checks and fourteen owner-fixture restore baselines.
+Local lint and 175 related offline checks pass; the guarded new module skips
+before connecting on the Mac. The existing browser test now waits for its new
+login cookie before checking role authorization, fixing a 401/403 timing race.
+
+The same exact code passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41667545689)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41667545933).
+Regression passes 1,027 root (three expected skips), 2,243 API (twenty-four expected
+skips/two existing warnings), 72 membership, 58 client, 26 browser, 15 source UI
+and eighteen MVP journeys. The preview independently passes eighteen journeys,
+matched encrypted 22-table restoration and saved-workflow browser reopenings
+after restart and restored-volume replacement. All owned service/stack/fresh-volume
+cleanup succeeds.
+
+Next: independent production peer/process/credential isolation and retained
+receipt custody, followed by deployed restore/rebinding/retirement checks and
+independent Snowflake source/provider contract acceptance. The deployed preview
+is still `7940886`/schema `0003_mvp`. GCP remains TERMINATED with a 1,800-second
+STOP; Docker Desktop is off. No paid build/start, source/provider use, live
+principal/schema/credential change or owner assistance was needed.
+
 ### Populated encrypted restore through restricted credentials — 3 November
 
 The [inactive restricted restore suite](../architecture/agent-custody-restore.md)

@@ -115,8 +115,10 @@ image/credential change, or source/provider call was made. Deployed code remains
 This is same-host fake custody in a disposable test environment. It does not prove
 independent production retention, rollback of both stores, host-loss recovery,
 production process/credential/peer isolation or safety against an administrator.
-The deployment remains the earlier private deterministic preview. A reviewed
-forward/revoke/rotation installer with effective PUBLIC/default ACL checks,
+The deployment remains the earlier private deterministic preview. The later
+[operator rehearsal](agent-controller-installation.md) now covers disposable
+installation, effective PUBLIC/default ACL review, retirement and password
+rotation without automatic reauthorization. Production installation/secret delivery,
 deployed restoration/rebinding, independent Snowflake source capture and supported
 provider submission/status/usage semantics remain separate work. Any live build,
 source/provider usage or VM testing requires its exact scope and spend approval.

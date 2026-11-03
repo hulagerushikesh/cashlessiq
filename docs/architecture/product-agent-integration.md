@@ -221,3 +221,18 @@ Additional binding/history faults, concurrent settlement and same-name/new-OID
 logins cover fail-closed recovery and no replay/refund of forgotten execution.
 This does not activate a deployed installer, independent production custody or
 live source/provider integration.
+
+
+### Installation, ACL review and retirement — 3 November
+
+The later [operator rehearsal](agent-controller-installation.md) installs the six
+inactive fake SQL packages with empty registries and reviews effective runtime,
+definer, PUBLIC and creator default permissions. Exact role/database pins,
+private recipients, routine sources and column lists are checked. SAVEPOINTs
+prevent partial installation even if an outer caller catches a policy failure.
+Epoch-first retirement removes command capabilities on existing idle sessions,
+keeps original submitted uncertainty held and preserves independent custody status
+after clinical retirement. Rotated authentication cannot enable disabled bindings
+or recreate original pending issue permission. This remains a guarded disposable
+rehearsal: production isolation/custody, secret delivery, explicit reauthorization,
+deployed restore/rebinding and independent source/provider gates are outstanding.
