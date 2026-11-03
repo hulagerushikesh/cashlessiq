@@ -4,6 +4,43 @@ Updated 3 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Separate retained receipt process — 3 November
+
+The [inactive Linux receipt peer](../architecture/agent-receipt-peer.md) moves
+retained-file ownership away from the original custody coordinator. Both ends
+check kernel OS identity before transferring receipt history. Clinical and fake
+transport UIDs cannot use its commands or read retained files. The protocol has
+no reset/provision/epoch-change/credential/path or execution-permission API.
+Lost or malformed acknowledgments preserve committed markers and close that
+client; restart and concurrent calls cannot issue the same marker twice.
+
+Revision `2f7444c` passes **33 actual separate-UID cases** in the
+[dedicated CI job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41676442415/job/126058232809),
+plus **38 new offline protocol cases** and 270 related local checks. The harness
+requires all 33 cases, actual exit/OOM/isolation metadata, unprivileged peers and
+successful process/file/container/image cleanup. It copies only required source
+and dummy helpers into an isolated, bounded CI runtime; no runner credentials or
+host directories are mounted. The existing agent/restricted-login/restore suites
+and private preview also pass on the same revision.
+
+The same exact code passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41676442415)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41676442365):
+1,027 root, 2,281 API, 72 membership, 58 client, 26 browser, fifteen source UI
+and eighteen MVP journeys, with expected skips/two existing API warnings.
+The preview independently passes eighteen journeys, matched encrypted 22-table
+restore and saved-workflow reopenings after restart/restored-volume replacement.
+All service, stack, fresh-volume, peer-process and image cleanup succeeds.
+
+This is fake process-boundary acceptance, not production custody. Next combine
+the peer with actual restricted PostgreSQL logins, bounded child exchange,
+private publication, conservative recovery and restored-state journeys in one
+disposable acceptance. Production retained custody, secret delivery/rotation,
+deployed restoration and governed Snowflake/provider integration remain open.
+No service is activated. The deployed preview remains `7940886`/`0003_mvp`;
+GCP is stopped, Docker Desktop is off, and no paid/live action or owner assistance
+was needed.
+
 ### Installation, permission review and credential retirement — 3 November
 
 The [inactive operator rehearsal](../architecture/agent-controller-installation.md)

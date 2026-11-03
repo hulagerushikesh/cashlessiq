@@ -162,3 +162,8 @@ The independently captured Snowflake clinical source and supported provider
 submission/status/usage/timeout contract remain separate gates. Only after those
 are concrete can an exact source/provider/build/test window be approved. There
 is no new paid approval, production install, source query or VM start here.
+
+The subsequent [Linux fake receipt peer](agent-receipt-peer.md) begins the process
+boundary work with distinct actual UIDs, bilateral kernel peer authentication
+and retained markers across reply loss/restart. Its separate acceptance does not
+close the production process, secret-delivery or independent host-loss gates.

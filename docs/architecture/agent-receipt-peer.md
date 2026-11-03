@@ -52,6 +52,10 @@ is no retry/fallback. A replacement client can observe status against a full
 expected inventory but cannot reconstruct the original coordinator's private
 pending issue or response. The existing coordinator consumes those private
 values once and still decides whether a bounded fake child may run.
+Peer-call latency does not reset an operation, principal window, lease or grant
+deadline. The coordinator's original monotonic exchange/publication budget
+includes those calls. A committed marker followed by an expired budget still
+sacrifices execution; no reply loss purchases another attempt or refund.
 
 The verifier/submission/recovery accept exactly either the original fake journal
 or this concrete peer client, not arbitrary duck-typed callbacks/subclasses.
@@ -66,19 +70,66 @@ selectors, duplicate/oversized histories, encoding faults and platform/UID guard
 without opening a socket. The separate guarded Linux CI suite uses actual
 different nonroot UIDs, a root-owned private `/run/ciq-receipt-peer-*` hierarchy,
 cleared child environments, no inherited file descriptors and bounded processes.
+It runs inside a separate disposable CI image containing only selected source,
+dependencies and dummy test helpers, with no host mounts or network. A read-only
+root filesystem and bounded `/run` and `/tmp` tmpfs hold invocation-owned files.
+The trusted supervisor alone retains the six capabilities needed to change UID,
+own fixture files and kill/reap children; peers drop to their separate identities.
+The image/container have bounded memory, CPU, PID and descriptor limits and are
+removed in the CI harness's finally block. The runner checkout and its credential
+configuration are never made accessible to the synthetic UIDs.
 It exercises client and server authentication, cross-UID file denials, original
 coordinator checkpoint/issue, no replacement permission, invalid frames and
 descriptor handoff, lost acknowledgments, peer restart, retained issued markers,
+concurrent single issue and malformed/trailing/missing acknowledgments,
 closed/missing custody and unsafe/stale socket handling. Every process and only
-the invocation-owned directory are removed in fixture cleanup.
+the invocation-owned directory are removed in fixture cleanup, including setup
+failures before the fixture yields.
 
-CI acceptance is pending on the implementation revision. Ordinary local testing
-skips the root/Linux opt-in suite before starting any process or file fixture.
+Revision `2f7444c5cc51b1453ded3dd9bfb784013d7ef699` passes **33 actual Linux peer
+cases in 214.77 seconds** in the
+[dedicated job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41676442415/job/126058232809).
+The harness requires that exact all-passed count plus a stopped container with
+exit code zero, no OOM/error, and reviewed actual isolation/resource metadata.
+Every child also verifies nonroot real/effective/saved UID equality, zero
+effective/permitted/ambient capabilities and `NoNewPrivs=1`. Both internal
+process/file cleanup and outer container/image cleanup pass.
+
+The **38 new offline cases** pass locally; 270 related checks pass together.
+Repository Ruff, documentation links and the manual-launch guard pass. The local
+launcher refuses before Docker; ordinary testing skips the root/Linux opt-in
+suite before starting any process or file fixture.
+
+The same revision's existing restricted-login job passes 476 agent checks,
+fourteen owner-fixture restores, 290 restricted commands, 53 installation/
+revocation/rotation cases and 27 restricted encrypted restores. Its
+[private preview workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41676442365)
+passes eighteen MVP journeys, matched encrypted 22-table restoration and saved
+workflow reopenings after restart (6.7s) and fresh restored-volume replacement
+(6.1s), with both cleanup stages successful.
+
+[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41676442415)
+passes that same exact revision: 1,027 root (three expected skips), 2,281 API
+(twenty-five expected skips/two existing warnings), 72 membership, 58 client,
+26 browser, fifteen source UI and eighteen MVP journeys. Domain wheel,
+contracts/types/lint/build, process containment and catalog/transport isolation
+pass. Both PostgreSQL-service cleanup steps and main-stack cleanup succeed.
+The GCP VM remains TERMINATED with its unchanged 1,800-second STOP; local Docker
+is off. No paid build/start, live source/provider call or deployment occurred.
+
 The fake peer does not open a PostgreSQL connection, query Snowflake, call a
 provider or create an allowance. The coordinator integration case uses its
 existing deterministic offline SQL-engine double; full actual-login lifecycle
 tests continue separately. Combined peer + restricted PostgreSQL + bounded-child
 publication/recovery/restore acceptance remains a next integration step.
+
+The initial CI setup exposed a test-only `Path.chown` mistake, corrected to
+`os.chown` with cleanup registered before setup. The runner's private home
+directory then denied synthetic UID interpreter access; no runner permissions
+were widened. The dedicated copied runtime above solves that boundary. Its
+complete process suite needs over three minutes, so the initial 180-second
+container deadline was replaced with a bounded 240-second run. Final acceptance
+checks the actual test count and container state, never just launcher success.
 
 ## Remaining operational gates
 

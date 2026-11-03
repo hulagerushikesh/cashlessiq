@@ -50,6 +50,10 @@ these inactive fake-only commands. The later
 [installation and retirement rehearsal](docs/architecture/agent-controller-installation.md)
 checks effective PUBLIC/default ACLs, exact command/definer permissions and
 credential revocation/rotation in disposable CI; it enables no deployed authority.
+The [Linux fake receipt peer](docs/architecture/agent-receipt-peer.md) separates
+retained-file ownership from the coordinator and checks both OS identities before
+receipt transfer. This remains inactive test engineering; production custody,
+secret delivery and the combined restricted-database integration remain open.
 
 ## Retained Snowflake prototype
 
