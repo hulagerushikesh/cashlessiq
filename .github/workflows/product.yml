@@ -89,6 +89,21 @@ jobs:
         run: |
           uv sync --project apps/api --frozen
           uv run --project apps/api python scripts/test_agent_receipt_peer.py
+  agent-peer-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+      - name: Restricted database commands with actual receipt peers and bounded fake child
+        env:
+          CIQ_AGENT_PEER_DATABASE_TEST: '1'
+        run: uv run --project apps/api python scripts/test_agent_peer_database.py
   foundation:
     runs-on: ubuntu-latest
     steps:

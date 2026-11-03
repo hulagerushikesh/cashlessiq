@@ -42,8 +42,7 @@ def receipt(**changes):
     ).model_copy(update=changes).model_dump(mode="json")
 
 
-@pytest.fixture
-def peers(request):
+def create_peers(request, *, pin=None):
     # /run avoids a public writable ancestor. Only this invocation is removed.
     root = Path("/run") / ("ciq-receipt-peer-" + uuid4().hex[:16])
     processes = []
@@ -72,21 +71,23 @@ def peers(request):
     secret.chmod(0o600)
     config = {
         "path": str(endpoint / "peer.sock"), "directory": str(storage / "retained"),
-        "pin": FakeEpochPin(database_id=uuid4(), epoch_id=uuid4()).model_dump(mode="json"),
+        "pin": pin or FakeEpochPin(database_id=uuid4(), epoch_id=uuid4()).model_dump(mode="json"),
         "server_uid": server_uid, "custody_uid": custody_uid, "other_secret": str(secret),
     }
 
-    def spawn(uid, **changes):
+    def spawn(uid, *, interactive=False, helper=CHILD, **changes):
         child = subprocess.Popen(
-            [sys.executable, str(CHILD)], cwd=ROOT, user=uid, group=uid, extra_groups=[],
+            [sys.executable, str(helper)], cwd=ROOT, user=uid, group=uid, extra_groups=[],
             env={"PATH": "/usr/bin:/bin", "PYTHONPATH": str(ROOT / "apps/api/src")},
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             start_new_session=True,
         )
         processes.append(child)
         child.stdin.write((json.dumps({**config, **changes}) + "\n").encode())
-        child.stdin.close()
-        child.stdin = None
+        child.stdin.flush()
+        if not interactive:
+            child.stdin.close()
+            child.stdin = None
         return child
 
     def run(uid=custody_uid, **changes):
@@ -120,7 +121,12 @@ def peers(request):
     s = SimpleNamespace(**config, root=root, server=server, start=start, stop=stop,
                         run=run, spawn=spawn, rows=rows, clinical_uid=clinical_uid,
                         transport_uid=transport_uid)
-    yield s
+    return s
+
+
+@pytest.fixture
+def peers(request):
+    return create_peers(request)
 
 
 def frame(s, command, selected=None, expected=(), **changes):
