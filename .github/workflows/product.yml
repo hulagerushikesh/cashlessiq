@@ -84,10 +84,11 @@ jobs:
         with:
           version: '0.11.25'
       - name: Independently authenticated fake receipt peers and retained state
+        env:
+          CIQ_AGENT_RECEIPT_PEER_TEST: '1'
         run: |
           uv sync --project apps/api --frozen
-          receipt_test_python="$(uv run --project apps/api python -c 'import sys; print(sys.executable)')"
-          sudo -n env GITHUB_ACTIONS=true GITHUB_REPOSITORY="$GITHUB_REPOSITORY" CIQ_AGENT_RECEIPT_PEER_TEST=1 "$receipt_test_python" -m pytest apps/api/tests/test_agent_receipt_peer_linux.py
+          uv run --project apps/api python scripts/test_agent_receipt_peer.py
   foundation:
     runs-on: ubuntu-latest
     steps:
