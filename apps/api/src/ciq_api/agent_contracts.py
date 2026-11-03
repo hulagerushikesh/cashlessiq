@@ -158,6 +158,36 @@ def capture_input(
             "rules",
         },
     )
+    return capture_selected_input(
+        tenant_id=tenant_id,
+        request_id=request_id,
+        policy_id=policy_id,
+        input_revision=input_revision,
+        review_version=review_version,
+        correlation_id=correlation_id,
+        facts=facts,
+        policy=policy,
+    )
+
+
+def capture_selected_input(
+    *,
+    tenant_id,
+    request_id,
+    policy_id,
+    input_revision,
+    review_version,
+    correlation_id,
+    facts,
+    policy,
+) -> AgentInput:
+    """Trusted narrow DB projection; no unrelated policy regression examples required.
+
+    Authorization and locking belong to the database capability. This helper
+    retains the same strict clinical validation and Python canonical hashes.
+    """
+    facts = AssessmentInput.model_validate(facts).model_dump(mode="json")
+    policy = AgentPolicySnapshot.model_validate(policy).model_dump(mode="json")
     return AgentInput(
         binding=AgentBinding(
             tenant_id=tenant_id,
