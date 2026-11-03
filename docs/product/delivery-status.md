@@ -4,6 +4,42 @@ Updated 3 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
+### Restricted fake reservation and leases — 3 November
+
+Prepared the [reservation/lease capability](../architecture/agent-controller-reservation.md)
+after the restricted capture step. A protected, disabled-by-default operator scope
+pins the exact login, case, fake grant, epoch, snapshot and configuration. Runtime
+commands can hold approved fake allowance and claim/heartbeat an unsubmitted
+operation without direct table access. Concurrent duplicates hold allowance once;
+leases retain the original deadline and reject stale versions/fences. The command
+path cannot submit, publish, refund, create a grant or reset cost history.
+
+All **50 new actual restricted-login cases** pass, together with the existing
+59 capture cases, 476 agent checks and fourteen populated encrypted recoveries.
+The latter still use the owner-level ledger and do not establish restricted
+submission/recovery integration. **27 new offline checks** pass (391 combined
+offline agent/contract/controller cases). Revision `a5a0e87` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41582984895)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41582984446):
+1,027 root, 2,038 API (seventeen expected skips), 72 membership, 58 client,
+26 browser, 15 source UI and all eighteen MVP journeys. Catalog, transport
+isolation, process containment, contracts/types/lint/build and owned cleanup pass.
+The preview separately passes eighteen journeys, encrypted 22-table restoration
+and both saved-workflow browser reopenings. The earlier fixture was corrected to
+respect immutable approval/operation identities; no safeguard was removed.
+
+The next step is independently authenticated receipt/admission verification and
+restricted checkpoint, issue, publication and conservative recovery commands.
+A caller-supplied "journal checked" flag/digest is insufficient. This reservation
+package does not replace the existing owner-connected fake executor/ledger.
+Independent source capture and provider/credential integration follow. Synthetic
+MVP workflows and tested private hosting remain complete; live agent and
+customer/real-data readiness remain separate unfinished milestones.
+
+No deployed migration, role, binding, image or source was changed. A read-only
+3 November check confirms GCP is TERMINATED with its existing 1,800-second STOP.
+No paid build/run, Snowflake call or local Docker startup was performed.
+
 ### Current scope and controller capture — 3 November
 
 The complete **synthetic MVP workflow set** is implemented: request intake and
@@ -30,7 +66,8 @@ saved-workflow browser reopenings. Earlier superseded runs were cancelled after
 correcting two test collection/name-resolution assumptions; they are not the
 accepted revision.
 No production role/binding or migration is installed. The existing ledger's write
-methods still use their owner-level test connection and remain the next batch.
+methods still use their owner-level test connection; the later reservation-only
+extension above does not replace that execution path.
 Independent source capture, provider execution, live custody/credentials and
 approved live comparison/clinical UI acceptance follow.
 

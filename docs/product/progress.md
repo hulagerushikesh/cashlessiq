@@ -12,6 +12,37 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Restricted fake reservations and unsubmitted leases — 3 November
+
+Prepared the [restricted reservation/lease package](../architecture/agent-controller-reservation.md).
+It binds exact operator-staged fake scope to the authenticated login and exposes
+only fake allowance holds and reserved-only claim/heartbeat commands. The runtime
+has no direct table access, grant creation, attempt/publication or refund/reset
+command. Duplicate/concurrent requests hold allowance once; original deadlines,
+fresh scope, version/fence checks and mapping replacement guards remain enforced.
+The scope defaults disabled; no deployed operator or runtime authority is provisioned.
+
+All 50 new actual-login cases and 27 offline checks pass. The dedicated job also
+passes the existing 59 capture cases, 476 agent checks and fourteen encrypted
+recovery cases. The latter still exercise the owning ledger connection; restricted
+admission/checkpoint/publication/recovery integration is not claimed. Revision
+`a5a0e87` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41582984895)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41582984446).
+Full regression passes 1,027 root, 2,038 API (seventeen expected skips),
+72 membership, 58 client, 26 browser, 15 source UI and all eighteen MVP journeys.
+Catalog, transport isolation, containment, contracts/types/lint/build and owned
+cleanup pass. Preview separately passes eighteen journeys, encrypted 22-table
+restoration and both saved-workflow browser reopenings. Initial fixtures were
+corrected to create new immutable approvals/historical rows; no trigger was
+disabled. The superseded product run was cancelled and cleaned up.
+
+Next implement independently authenticated receipt verification that cannot be
+bypassed by invoking runtime SQL directly, then the remaining restricted execution
+commands. A local epoch match alone cannot detect a same-epoch stale restore.
+Live source/provider integration and reviewed production custody remain later
+gates. No deployed images/schema/identity changed. GCP remains TERMINATED with
+the existing 1,800-second STOP; no paid build/run, local Docker or source call.
+
 ### Controller capture and current scope — 3 November
 
 Prepared the [principal-bound database capture](../architecture/agent-controller-capture.md)

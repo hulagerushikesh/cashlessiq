@@ -94,4 +94,19 @@ limit, stale facts/review/policy, disabled/wrong epoch scope, expiry while waiti
 replacement fences, lease replay, transaction rollback and effective ACLs. No
 local Docker, GCP VM, Snowflake source or provider is needed.
 
-Acceptance is recorded after the full CI runs complete.
+Revision `a5a0e87` passes [full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41582984895)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/41582984446).
+All **50 new actual-login cases** pass alongside the 59 capture cases, existing
+476 agent checks and fourteen encrypted recoveries. The recovery cases still use
+the existing owner-connected ledger; restricted submission/recovery acceptance
+remains outstanding. The **27 new offline cases** pass, with 391 combined offline
+agent/contract/controller checks. Full regression passes 1,027 root, 2,038 API
+(seventeen expected skips), 72 membership, 58 client, 26 browser, 15 source UI and
+all eighteen MVP journeys. Catalog, transport isolation, process containment,
+contracts/types/lint/build and owned cleanup pass. The private preview separately
+passes eighteen journeys, encrypted 22-table restoration and both saved-workflow
+browser reopenings, with owned cleanup. An earlier fixture tried rewriting an
+immutable approval; the accepted fixtures instead create new grants and valid
+historical rows without disabling any trigger. The superseded product run was
+cancelled and cleaned up. No live install, paid build/run or local Docker startup
+was performed. The GCP VM is verified TERMINATED with its 1,800-second STOP.
