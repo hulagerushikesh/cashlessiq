@@ -421,3 +421,22 @@ def test_sql_inventory_byte_bound_denies_before_returning_clinical_material(obse
         inventory(s)
     assert caught.value.orig.sqlstate == '42501'
     closed(s.verifier.check)
+
+
+def test_entire_epoch_includes_case_outside_controller_allowlist(observer, tmp_path):
+    s = observer
+    first = submission(s.setup, 0)
+    second = submission(s.setup, 1)
+    with s.admin.begin() as db:
+        assert db.scalar(text(f'SELECT request_ids FROM "{s.capture}".principal')) == ['REQ-FAKE-0']
+    raw = inventory(s)
+    assert {e['attempt']['submission_id'] for e in raw['entries']} == {
+        str(first.submission_id), str(second.submission_id),
+    }
+    assert s.verifier.check() is None
+    # A journal containing just the controller's allowed case is incomplete.
+    partial = FakeReceiptJournal.provision(tmp_path / 'partial', s.setup.admission.journal.pin)
+    with Session(s.admin) as db:
+        partial.prepare(checkpoint(db, db.get(AgentAttempt, (TENANT_ID, first.attempt_id))))
+    closed(FakeReceiptVerifier(s.observer_runtime, partial, schema=s.receipts).check)
+    assert balance(s.setup) == (2, 2, 20, 0, 0)
