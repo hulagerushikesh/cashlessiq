@@ -16,6 +16,11 @@ from ciq_api.agent_receipt_peer import MAX_PACKET, FakeReceiptPeer, FakeReceiptP
 
 def main():
     config = json.loads(sys.stdin.readline())
+    uid = os.getuid()
+    assert uid > 0 and os.getresuid() == (uid, uid, uid)
+    status = dict(line.split(":", 1) for line in Path("/proc/self/status").read_text().splitlines())
+    assert all(int(status[key].strip(), 16) == 0 for key in ("CapEff", "CapPrm", "CapAmb"))
+    assert status["NoNewPrivs"].strip() == "1"
     path, directory = Path(config["path"]), Path(config["directory"])
     pin = FakeEpochPin.model_validate(config["pin"])
     action = config["action"]

@@ -1,5 +1,6 @@
 """Explicit disposable CI only. No host mounts, credentials or local activation."""
 
+import json
 import os
 import re
 import signal
@@ -23,8 +24,14 @@ def interrupted(_signal, _frame):
 
 
 def summary(output):
-    for line in output.decode(errors="replace").splitlines():
-        if re.fullmatch(r"\d+ passed(?:, \d+ warnings?)? in [0-9.]+s", line.strip()):
+    passed = None
+    decoded = re.sub(r"\x1b\[[0-9;]*[mK]", "", output.decode(errors="replace"))
+    for line in decoded.splitlines():
+        match = re.fullmatch(
+            r"(\d+) passed(?:, \d+ warnings?)? in [0-9.]+s(?: \([0-9:]+\))?", line.strip(),
+        )
+        if match:
+            passed = int(match[1])
             print(line.strip())
         elif line.startswith(("FAILED ", "ERROR ")):
             print(line.split(" - ", 1)[0])
@@ -32,6 +39,7 @@ def summary(output):
             r"^E\s+(AssertionError|PermissionError|ModuleNotFoundError|RuntimeError)", line,
         ):
             print(line[:200])  # Fixed dummy-helper failure reasons only.
+    return passed
 
 
 def main():
@@ -63,14 +71,34 @@ def main():
             "--env", "GITHUB_REPOSITORY=hulagerushikesh/cashlessiq",
             "--env", "CIQ_AGENT_RECEIPT_PEER_TEST=1", image,
         ).stdout.decode().strip()
+        config = json.loads(docker("inspect", identifier).stdout)[0]
+        host = config["HostConfig"]
+        assert host["NetworkMode"] == "none" and not host["PortBindings"]
+        assert host["ReadonlyRootfs"] and not host["Privileged"]
+        assert host["PidMode"] != "host" and host["IpcMode"] != "host"
+        assert not any(m["Type"] != "tmpfs" for m in config["Mounts"])
+        assert set(host["Tmpfs"]) == {"/run", "/tmp"}
+        assert config["Config"]["User"] == "0:0"
+        assert {c.removeprefix("CAP_") for c in host["CapDrop"]} == {"ALL"}
+        assert {c.removeprefix("CAP_") for c in host["CapAdd"]} == {
+            "SETUID", "SETGID", "CHOWN", "DAC_OVERRIDE", "FOWNER", "KILL",
+        }
+        assert "no-new-privileges" in host["SecurityOpt"]
+        assert host["Memory"] == 512 * 1024 * 1024 and host["PidsLimit"] == 128
+        assert host["NanoCpus"] == 1_000_000_000
+        assert host["Ulimits"] == [{"Name": "nofile", "Hard": 256, "Soft": 256}]
         try:
             result = docker("start", "-a", identifier, check=False, timeout=240)
         except subprocess.TimeoutExpired as exc:
             summary(exc.stdout or b"")
             raise RuntimeError("Disposable receipt peer acceptance timed out") from None
         # Test data are synthetic, but emit only counts/fixed failure labels.
-        summary(result.stdout)
-        if result.returncode:
+        passed = summary(result.stdout)
+        state = json.loads(docker("inspect", identifier).stdout)[0]["State"]
+        if (
+            result.returncode or state["Running"] or state["ExitCode"] != 0
+            or state["OOMKilled"] or state["Error"] or passed != 33
+        ):
             raise RuntimeError("Disposable receipt peer acceptance failed")
         print("PASS: independent receipt peers and invocation-owned process/file cleanup")
     finally:
