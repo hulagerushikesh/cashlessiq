@@ -331,8 +331,11 @@ def test_live_scope_denials_before_any_projection(scope, mutation):
     ],
 )
 def test_no_direct_clinical_or_ledger_reads_writes_or_resets(scope, table):
-    for command in (f"SELECT * FROM {table}", f"DELETE FROM {table}", f"TRUNCATE {table}"):
-        denied(scope, f'SET LOCAL search_path="{scope.product}"; {command}')
+    # Qualify the known object: an inaccessible schema is intentionally omitted
+    # from search_path resolution, which would otherwise yield undefined_table.
+    target = f'"{scope.product}"."{table}"'
+    for command in (f"SELECT * FROM {target}", f"DELETE FROM {target}", f"TRUNCATE {target}"):
+        denied(scope, command)
 
 
 @pytest.mark.parametrize(
