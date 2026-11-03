@@ -35,8 +35,11 @@ compares independently read, epoch-wide submission history with retained fake
 custody through a separate restricted identity. The later inactive
 [custody checkpoint extension](docs/architecture/agent-custody-submission.md) keeps
 independent history verification and the checkpoint on one custody transaction,
-with an original-instance single-use external issue marker. Neither package
-dispatches a provider or returns execution permission.
+with an original-instance single-use external issue marker. Its
+[fixed fake exchange](docs/architecture/agent-custody-dispatch.md) now stays inside
+that original custody process, with fresh bounded deadlines and no returned
+execution permission. The candidate remains private and unvalidated; restricted
+publication/recovery and real source/provider integration remain unfinished.
 
 ## Retained Snowflake prototype
 

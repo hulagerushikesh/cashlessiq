@@ -12,6 +12,24 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Original-custody restricted fake exchange — 3 November
+
+Prepared the [fixed fake exchange](../architecture/agent-custody-dispatch.md).
+Only the original custody coordinator can consume issue and run one bounded
+fake child after both external issue and local commit. It independently builds
+the exact request envelope and checks the remaining deadline/lease and both
+principal windows. No DB lock spans child I/O; ambiguous commit, timeout, replay,
+changed clinical scope or lost custody fails without resubmission/refund. The
+unvalidated reply stays private and does not alter human review or accounting.
+
+Local focused checks pass; disposable actual-login and full product/preview CI
+acceptance is pending. Next: narrow submitted heartbeat, private validated
+comparison publication and conservative restricted recovery, including the
+fourteen encrypted restore journeys that still use an owner-connected fixture.
+Authenticated peer/process/secret custody and live source/provider remain later
+gates. No normal route, worker or startup activates this code; no paid cloud or
+source call, local Docker startup or deployed image/schema/role change is made.
+
 ### Restricted custody checkpoint and single-use issue — 3 November
 
 Prepared the [inactive fake custody transaction path](../architecture/agent-custody-submission.md).

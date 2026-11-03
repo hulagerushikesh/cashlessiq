@@ -165,3 +165,16 @@ external issue marker after confirmed checkpoint commit. No permit is returned,
 transport is not dispatched and no publication/recovery or production IPC service
 is activated. All fourteen encrypted recoveries still require migration to the
 intended restricted execution path.
+
+### Original-custody fake dispatch prepared — 3 November
+
+The [fixed fake exchange](agent-custody-dispatch.md) now consumes the original
+coordinator's pending state, independently rechecks history and clinical scope,
+commits external issue and the local transaction, then exchanges once within the
+remaining DB/monotonic/wall-clock budget. Both principal windows are included.
+No command/credential/identity selector, I/O ticket or candidate is returned;
+the unvalidated reply stays private. No DB lock spans child I/O. Failed commit,
+deadline or child loses permission without retry/refund. This is inactive trusted
+in-process fake construction, not authenticated IPC or production custody.
+Restricted validated publication, submitted heartbeat and conservative recovery,
+including all fourteen encrypted restore journeys, remain the next work.

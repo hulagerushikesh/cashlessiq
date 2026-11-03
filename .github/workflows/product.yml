@@ -43,7 +43,7 @@ jobs:
         env:
           CIQ_AGENT_CONTROLLER_TEST: '1'
           TEST_DATABASE_URL: postgresql+psycopg://postgres:ciq-disposable-agent-ledger@127.0.0.1:5432/postgres
-        run: uv run --project apps/api pytest apps/api/tests/test_agent_controller_capture.py apps/api/tests/test_agent_controller_reservation.py apps/api/tests/test_agent_receipt_verifier.py apps/api/tests/test_agent_custody_submission.py
+        run: uv run --project apps/api pytest apps/api/tests/test_agent_controller_capture.py apps/api/tests/test_agent_controller_reservation.py apps/api/tests/test_agent_receipt_verifier.py apps/api/tests/test_agent_custody_submission.py apps/api/tests/test_agent_custody_dispatch.py
   agent-transport-isolation:
     runs-on: ubuntu-latest
     timeout-minutes: 6

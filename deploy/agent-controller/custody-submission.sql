@@ -42,6 +42,7 @@ DECLARE
     approval jsonb;
     allowance record;
     operation record;
+    custody_end timestamptz;
     now_value timestamptz;
 BEGIN
     -- Authenticates custody and locks epoch before bindings/clinical/grant/op.
@@ -93,9 +94,11 @@ BEGIN
     END IF;
     -- Recheck custody expiry after waiting for clinical/grant/operation locks.
     PERFORM {receipts}.inventory_fake();
+    SELECT p.ends_at INTO custody_end FROM {receipts}.principal p
+      JOIN pg_catalog.pg_roles r ON r.oid = p.login_oid AND r.rolname = session_user;
     RETURN jsonb_build_object('tenant_id', assignment.tenant_id,
       'deadline', least(operation.deadline, operation.lease_until, allowance.ends_at,
-                       (context->>'ends_at')::timestamptz));
+                       (context->>'ends_at')::timestamptz, custody_end));
 END;
 $context$;
 ALTER FUNCTION {receipts}._submission_context(text, uuid, integer, uuid, text) OWNER TO {owner};
@@ -156,8 +159,12 @@ BEGIN
     IF NOT FOUND OR clock_timestamp() >= (context->>'deadline')::timestamptz THEN
         RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'agent_admission_quarantined';
     END IF;
-    RETURN jsonb_build_object('operation_id', p_operation, 'version', p_version,
-      'fence_id', p_fence, 'attempt_id', attempt.id, 'submission_id', attempt.submission_id);
+    -- Internal custody projection, never an IPC/browser permission. The trusted
+    -- coordinator consumes external issue and dispatches within this budget.
+    RETURN jsonb_build_object('checkpoint', jsonb_build_object(
+      'operation_id', p_operation, 'version', p_version, 'fence_id', p_fence,
+      'attempt_id', attempt.id, 'submission_id', attempt.submission_id),
+      'checked_at', clock_timestamp(), 'deadline', context->'deadline');
 END;
 $issue$;
 ALTER FUNCTION {receipts}.issue_fake(text, uuid, integer, uuid, uuid) OWNER TO {owner};

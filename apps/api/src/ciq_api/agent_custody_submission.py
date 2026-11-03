@@ -1,20 +1,35 @@
-"""Inactive fake-only custody checkpoints, with no transport/service or I/O permit.
+"""Inactive fake-only custody coordinator, with no service or transferable permit.
 
 Trusted test construction pins one request/claim and a separate custody engine.
 SQL's protected assignment authorizes the clinical principal; no impersonation,
 caller-supplied history, tenant, actor, digest or journal path is accepted.
-prepare()/issue() return None. They do NOT dispatch or enable provider execution.
+prepare()/issue()/dispatch() return None. Only dispatch() performs one fixed fake
+exchange; its unvalidated candidate stays private. There is no provider execution.
 """
 
+from datetime import UTC, datetime
+from threading import Lock
+from time import monotonic
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import AwareDatetime, Field
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
 from ciq_api.agent_admission import ERROR, FakeReceiptJournal
-from ciq_api.agent_contracts import AgentContractError, ImmutableContract
+from ciq_api.agent_contracts import (
+    AgentContractError,
+    AgentInput,
+    ImmutableContract,
+    canonical_json,
+)
+from ciq_api.agent_executor import (
+    MAX_PROCESS_SECONDS,
+    PERSISTENCE_MARGIN_SECONDS,
+    BoundedFakeProcess,
+    FakeProcessRequest,
+)
 from ciq_api.agent_ledger import ClaimReceipt
 from ciq_api.agent_receipt_verifier import FakeReceiptVerifier
 
@@ -29,6 +44,12 @@ class _CheckpointReceipt(ImmutableContract):
     submission_id: UUID
 
 
+class _IssueProjection(ImmutableContract):
+    checkpoint: _CheckpointReceipt
+    checked_at: AwareDatetime
+    deadline: AwareDatetime
+
+
 class FakeCustodySubmission:
     """One original in-process fake coordinator, never a browser/IPC endpoint.
 
@@ -40,13 +61,14 @@ class FakeCustodySubmission:
     """
 
     def __init__(self, engine, journal: FakeReceiptJournal, *, request_id, claim: ClaimReceipt,
-                 schema="ciq_agent_receipts"):
+                 schema="ciq_agent_receipts", transport: BoundedFakeProcess | None = None):
         self._verifier = FakeReceiptVerifier(engine, journal, schema=schema)
         if (
             type(request_id) is not str or not 1 <= len(request_id) <= 120
             or type(claim) is not ClaimReceipt or claim.state != "reserved"
             or type(claim.version) is not int or not 1 <= claim.version < 2_147_483_647
             or type(claim.operation_id) is not UUID or type(claim.fence_id) is not UUID
+            or (transport is not None and type(transport) is not BoundedFakeProcess)
         ):
             raise AgentContractError(ERROR) from None
         self._engine, self._journal = engine, journal
@@ -62,12 +84,18 @@ class FakeCustodySubmission:
         )
         self._started = False
         self._pending = None
+        self._stage_lock = Lock()
+        # Fixed trusted construction only. No service, caller-selected command,
+        # factory, callback or later injection of an already-issued receipt.
+        self._transport = transport
+        self._candidate = None
 
     def prepare(self):
-        if self._started:
-            raise AgentContractError(ERROR) from None
-        # No automatic retry even after a failure with an uncertain commit.
-        self._started = True
+        with self._stage_lock:
+            if self._started:
+                raise AgentContractError(ERROR) from None
+            # No automatic retry even after a failure with an uncertain commit.
+            self._started = True
         try:
             with self._engine.begin() as db:
                 _, previous = self._verifier._observe(db)
@@ -90,31 +118,96 @@ class FakeCustodySubmission:
                 self._journal.prepare(selected)
                 self._journal.check(current)
             # Assigned only after the engine context confirms local commit.
-            self._pending = (receipt, selected)
+            with self._stage_lock:
+                self._pending = (receipt, selected)
         except _FAILURES:
             raise AgentContractError(ERROR) from None
 
     def issue(self):
-        pending, self._pending = self._pending, None
-        if pending is None:
+        """Consume without dispatch; deliberately sacrifices this exchange."""
+        self._finish(dispatch=False)
+
+    def dispatch(self):
+        """Consume issue then exchange once, entirely within the original custody.
+
+        No return value, clinical publication, retry, refund or peer endpoint.
+        The response remains unvalidated private memory for a later narrow
+        publication command. Same-process trusted construction is not OS/IPC
+        peer authentication or proof of production process/secret isolation.
+        """
+        self._finish(dispatch=True)
+
+    def _finish(self, *, dispatch):
+        with self._stage_lock:
+            pending, self._pending = self._pending, None
+        if pending is None or (dispatch and self._transport is None):
             raise AgentContractError(ERROR) from None
         receipt, retained = pending
         try:
+            # Start BEFORE connecting/locking: subtracting the entire elapsed
+            # time from DB's later sample is conservative. A slow local wall
+            # clock cannot enlarge DB's remaining budget; a fast one may deny.
+            start = monotonic()
             with self._engine.begin() as db:
                 material, current = self._verifier._observe(db)
                 self._journal.check(current)
-                observed = _CheckpointReceipt.model_validate(db.scalar(self._issue, {
+                projection = _IssueProjection.model_validate(db.scalar(self._issue, {
                     **self._params, "version": receipt.version,
                     "submission": receipt.submission_id,
                 }))
+                observed = projection.checkpoint
                 if observed != receipt or self._selected(material, current, observed) != retained:
                     raise ValueError("checkpoint_mismatch")
+                selected = next(
+                    m for m in material.entries if m.operation.id == receipt.operation_id
+                )
+                op = selected.operation
+                if not (
+                    op.created_at <= projection.checked_at < projection.deadline
+                    <= min(op.deadline, selected.grant.ends_at)
+                ):
+                    raise ValueError("invalid_issue_budget")
+                end = start + (projection.deadline - projection.checked_at).total_seconds()
+                if dispatch:
+                    snapshot = AgentInput.model_validate_json(canonical_json(op.snapshot))
+                    if (
+                        snapshot.binding.tenant_id != op.tenant_id
+                        or snapshot.binding.request_id != self._params["request"]
+                    ):
+                        raise ValueError("snapshot_mismatch")
+                    request = FakeProcessRequest(
+                        operation_id=op.id, attempt_id=observed.attempt_id,
+                        submission_id=observed.submission_id, tenant_id=op.tenant_id,
+                        config_digest=op.config_digest, source_digest=op.source_digest,
+                        deadline=projection.deadline, snapshot=snapshot,
+                    ).wire()
+                    self._budget(end, projection.deadline)
                 # Single-use external issue commits before this method returns.
                 # Exit/rollback afterwards sacrifices permission; never refund or
                 # recreate it. This method returns NO transport/I/O capability.
                 self._journal.issue(retained)
+            if dispatch:
+                # Do not hold database/clinical locks or an open connection over
+                # child I/O. Commit failure or expired margin means NO child;
+                # issued cost stays held, never permission to replay/refund.
+                raw = self._transport.exchange(
+                    request, timeout=self._budget(end, projection.deadline),
+                )
+                self._budget(end, projection.deadline)
+                self._candidate = (receipt, raw)
         except _FAILURES:
             raise AgentContractError(ERROR) from None
+
+    @staticmethod
+    def _budget(end, deadline):
+        budget = min(
+            MAX_PROCESS_SECONDS,
+            end - monotonic() - PERSISTENCE_MARGIN_SECONDS,
+            (deadline - datetime.now(UTC)).total_seconds() - PERSISTENCE_MARGIN_SECONDS,
+        )
+        if budget <= 0:
+            raise ValueError("expired_issue_budget")
+        return budget
 
     def _selected(self, inventory, checkpoints, receipt):
         pairs = [(m, c) for m, c in zip(inventory.entries, checkpoints, strict=True)

@@ -43,10 +43,10 @@ from ciq_api.seed import TENANT_ID
 PACKAGE = Path(__file__).resolve().parents[3] / 'deploy/agent-controller/custody-submission.sql'
 
 
-def coordinator(s, *, request='REQ-FAKE-0', claim=None):
+def coordinator(s, *, request='REQ-FAKE-0', claim=None, transport=None):
     return FakeCustodySubmission(
         s.observer_runtime, s.setup.admission.journal,
-        schema=s.receipts, request_id=request, claim=claim or s.claim,
+        schema=s.receipts, request_id=request, claim=claim or s.claim, transport=transport,
     )
 
 

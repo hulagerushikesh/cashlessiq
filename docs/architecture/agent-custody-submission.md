@@ -74,15 +74,18 @@ both return **None**, no inventory, receipt, attestation or I/O permit.
    before returning. A failed or ambiguous stage cannot be replayed. Issued cost
    stays held even if the following local transaction fails.
 
-This is fake checkpoint/issue preparation, **not transport integration**. No child,
-network I/O, candidate publication, refund or recovery is performed. Returning
-None is not authorization for another process to dispatch later. A future trusted
-coordinator must couple original-process issue to the bounded transport itself,
-with fresh deadline margins, authenticated peer dispatch and process/secret
-isolation. In-process test construction is not proof of an authenticated OS/IPC
-peer. The existing executor and fourteen encrypted recoveries still use their
-owner-connected ledger; they must be moved to the intended restricted path before
-that integration can be claimed.
+The subsequent [original-custody fake dispatch step](agent-custody-dispatch.md)
+adds an optional trusted, fixed `BoundedFakeProcess` at construction and a third
+no-argument `dispatch()` method. It consumes the same original pending state,
+independently checks history and fresh clinical scope, commits external issue and
+the local transaction, then exchanges once within the remaining original budget.
+`issue()` still deliberately consumes without dispatch. Neither method returns
+an I/O permit. The unvalidated fake candidate stays private; publication, refund
+and recovery are not implemented here. In-process test construction is not proof
+of an authenticated OS/IPC peer or production process/secret isolation. The old
+executor and fourteen encrypted recoveries still use their owner-connected ledger;
+they must be moved to the intended restricted path before that integration can
+be claimed.
 
 Same-host SQLite remains fake custody, not protection from its owner, host loss
 or rollback of both stores. Database/private-registry owners and custody-process
@@ -123,11 +126,10 @@ change was performed.
 
 ## Next restricted execution acceptance
 
-Keep dispatch inside the original trusted custody coordinator; do not add a
-`checked=true` handoff, issued-receipt IPC ticket or a second process that can
-reconstruct issue permission. Bind the fixed bounded fake transport and exact
-request envelope through trusted configuration, verify the remaining original
-lease/deadline budget, consume external issue, then perform at most one exchange.
+Dispatch now stays inside the original trusted custody coordinator with fixed
+fake transport and independently bound envelope; its acceptance is recorded in
+the [dispatch step](agent-custody-dispatch.md). Do not add a `checked=true` handoff,
+issued-receipt IPC ticket or a second process that can reconstruct issue permission.
 No browser/clinical peer may select an executable, connection, credential,
 tenant/actor or arbitrary operation. Authenticate that peer before any exposed
 service command; the current in-process fixture does not meet that requirement.

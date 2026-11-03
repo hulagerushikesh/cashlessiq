@@ -3,6 +3,7 @@
 import ast
 import copy
 from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -29,6 +30,10 @@ class Engine:
         self.calls = []
         self.commit_error = False
         self.sql_error = False
+        now = datetime.now(UTC)
+        self.issue_projection = {
+            'checked_at': now.isoformat(), 'deadline': (now + timedelta(seconds=30)).isoformat(),
+        }
 
     @contextmanager
     def begin(self):
@@ -60,6 +65,7 @@ class Engine:
         else:
             assert 'issue_fake' in str(statement)
             self.calls.append('issue')
+            return {'checkpoint': self.receipt, **self.issue_projection}
         return self.receipt
 
 
@@ -206,7 +212,7 @@ def test_issue_rejects_changed_returned_identity_and_loses_pending_permission(cu
         assert db.execute('SELECT state FROM receipt').fetchall() == [('prepared',)]
 
 
-def test_module_is_inactive_and_has_no_dispatch_sdk_or_api_imports():
+def test_module_is_inactive_and_has_no_api_or_worker_imports():
     root = Path(__file__).resolve().parents[1] / 'src/ciq_api'
     allowed = {'agent_custody_submission.py'}
     for path in root.glob('*.py'):
