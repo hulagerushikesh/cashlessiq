@@ -134,6 +134,12 @@ disposable database. It does not replace the owning ledger connection or permit
 accounting writes. Target effective PUBLIC/default grants, narrow ledger command
 implementation and deployed forward/revoke review remain unresolved. No production
 installer is supplied. Disabling execution must preserve immutable receipt history.
+The [fake reservation/lease extension](agent-controller-reservation.md) now
+prepares the first narrow writes: exact approved allowance holds and leases on
+reserved operations only. No runtime table grants or checkpoint, issue, refund,
+recovery or publication command is added. The existing fake executor/ledger still
+uses its owner connection; independent receipt verification must not be bypassable
+through direct SQL before that execution path can be replaced.
 
 ## Source identities and secret custody
 

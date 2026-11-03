@@ -18,7 +18,7 @@ if (
 
 import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Barrier
 from uuid import uuid4
@@ -32,11 +32,11 @@ from test_agent_controller_capture import controller_database as controller_data
 from test_agent_controller_capture import engine as engine
 from test_agent_controller_capture import scope as scope
 from test_agent_controller_capture import setup as setup
-from test_agent_ledger import ACTOR, CONFIG, SOURCE, balance
+from test_agent_ledger import ACTOR, balance
 
 from ciq_api.agent_contracts import AgentContractError
 from ciq_api.agent_controller_reservation import ControllerReservation, FakeReservationApproval
-from ciq_api.agent_ledger import OperationReceipt
+from ciq_api.agent_ledger import FakeGrantSpec, OperationReceipt, operation_key
 from ciq_api.agent_ledger_models import AgentExecutionGrant, AgentOperation
 from ciq_api.mvp_models import SubmittedCase
 from ciq_api.review_models import ReviewCase
@@ -50,8 +50,8 @@ def stage(s, index=0, **changes):
         epoch=s.setup.admission.journal.pin,
         grant_id=s.setup.grant_id,
         snapshot=s.setup.snapshots[index],
-        config_digest=CONFIG,
-        source_digest=SOURCE,
+        config_digest=s.setup.spec.config_digest,
+        source_digest=s.setup.spec.source_digest,
     ).staging_values()
     approval.update(changes)
     columns = ["login_oid", *approval]
@@ -91,12 +91,17 @@ def commands(scope):
             sql.SQL("UPDATE {}.principal SET request_ids=%s").format(sql.Identifier(s.capture)),
             ([f"REQ-FAKE-{i}" for i in range(3)],),
         )
-        db.execute(
-            text(
-                "UPDATE agent_execution_grant SET starts_at=clock_timestamp()-interval '1 second', "
-                "ends_at=clock_timestamp()+interval '10 minutes'"
-            )
-        )
+    # Approval identity is immutable. Create a new fake grant at the real DB
+    # test window; never rewrite the earlier owner-ledger fixture's approval.
+    now = datetime.now(UTC)
+    s.setup.spec = FakeGrantSpec.model_validate(
+        {
+            **s.setup.spec.model_dump(),
+            "starts_at": now - timedelta(seconds=1),
+            "ends_at": now + timedelta(minutes=10),
+        }
+    )
+    s.setup.grant_id = s.setup.ledger.create_fake_grant(TENANT_ID, s.setup.spec)
     for index in range(3):
         stage(s, index, enabled=True)
     s.commands = ControllerReservation(s.runtime, schema=s.capture)
@@ -115,6 +120,52 @@ def operation(s, receipt):
 def mutate(s, statement, **params):
     with s.admin.begin() as db:
         db.execute(text(statement), params)
+
+
+def new_approval(s, **changes):
+    s.setup.spec = FakeGrantSpec.model_validate({**s.setup.spec.model_dump(), **changes})
+    s.setup.grant_id = s.setup.ledger.create_fake_grant(TENANT_ID, s.setup.spec)
+    mutate(s, f'DELETE FROM "{s.capture}".reservation_scope')
+    for index in range(3):
+        stage(s, index, enabled=True)
+
+
+def transition(s, state):
+    mutate(s, "UPDATE agent_operation SET state=:state, version=version+1", state=state)
+
+
+def historical_reservation(s, **changes):
+    now = datetime.now(UTC)
+    op = AgentOperation(
+        tenant_id=TENANT_ID,
+        id=uuid4(),
+        request_id="REQ-FAKE-0",
+        actor_id=ACTOR,
+        grant_id=s.setup.grant_id,
+        operation_key=operation_key(
+            s.setup.snapshots[0], s.setup.spec.config_digest, s.setup.spec.source_digest
+        ),
+        config_digest=s.setup.spec.config_digest,
+        source_digest=s.setup.spec.source_digest,
+        snapshot=s.setup.snapshots[0].model_dump(mode="json"),
+        state="reserved",
+        version=0,
+        created_at=now,
+        deadline=now + timedelta(seconds=120),
+    )
+    for name, value in changes.items():
+        setattr(op, name, value)
+    receipt = OperationReceipt(operation_id=op.id, state="reserved", version=0)
+    with Session(s.admin) as db, db.begin():
+        db.add(op)
+        db.execute(
+            text(
+                "UPDATE agent_execution_grant SET admitted=1, in_flight=1, "
+                "reserved_units=10 WHERE id=:id"
+            ),
+            {"id": s.setup.grant_id},
+        )
+    return receipt
 
 
 def closed(call):
@@ -163,7 +214,7 @@ def test_concurrent_duplicates_hold_one_allowance_and_deadline(commands):
 
 def test_concurrent_different_cases_cannot_overbook_concurrency(commands):
     s = commands
-    mutate(s, "UPDATE agent_execution_grant SET concurrency_limit=1")
+    new_approval(s, concurrency_limit=1)
     barrier = Barrier(2)
 
     def run(index):
@@ -248,21 +299,27 @@ def test_no_active_principal_cannot_use_any_write_command(commands, command):
 @pytest.mark.parametrize(
     "change",
     [
-        "starts_at=clock_timestamp()+interval '1 hour', "
-        "ends_at=clock_timestamp()+interval '2 hours'",
-        "starts_at=clock_timestamp()-interval '2 hours', "
-        "ends_at=clock_timestamp()-interval '1 hour'",
+        "future",
+        "expired",
         "admitted=case_limit",
         "in_flight=concurrency_limit, admitted=case_limit",
         "consumed_units=unit_limit",
         "uncertain_units=unit_limit",
         "reserved_units=unit_limit",
-        "operation_keys='[]'::jsonb",
+        "unapproved_key",
     ],
 )
 def test_window_and_all_accounting_limits_are_database_enforced(commands, change):
     s = commands
-    mutate(s, f"UPDATE agent_execution_grant SET {change}")
+    now = datetime.now(UTC)
+    if change == "future":
+        new_approval(s, starts_at=now + timedelta(hours=1), ends_at=now + timedelta(hours=2))
+    elif change == "expired":
+        new_approval(s, starts_at=now - timedelta(hours=2), ends_at=now - timedelta(hours=1))
+    elif change == "unapproved_key":
+        new_approval(s, operation_keys=tuple(letter * 64 for letter in "cde"))
+    else:
+        mutate(s, f"UPDATE agent_execution_grant SET {change} WHERE id=:id", id=s.setup.grant_id)
     before = balance(s.setup)
     closed(lambda: reserve(s))
     assert balance(s.setup) == before
@@ -322,10 +379,15 @@ def test_expired_lease_reclaim_keeps_original_deadline_and_fences_previous_owner
     receipt = reserve(s)
     first = s.commands.claim("REQ-FAKE-0", receipt)
     original = operation(s, receipt)
-    mutate(s, "UPDATE agent_operation SET lease_until=clock_timestamp()-interval '1 second'")
+    mutate(
+        s,
+        "UPDATE agent_operation SET lease_until=clock_timestamp()-interval '1 second', "
+        "version=version+1",
+    )
+    expired = first.model_copy(update={"version": first.version + 1})
     closed(lambda: s.commands.heartbeat("REQ-FAKE-0", first))
-    second = s.commands.claim("REQ-FAKE-0", first)
-    assert second.fence_id != first.fence_id and second.version == first.version + 1
+    second = s.commands.claim("REQ-FAKE-0", expired)
+    assert second.fence_id != first.fence_id and second.version == expired.version + 1
     closed(lambda: s.commands.heartbeat("REQ-FAKE-0", first))
     assert operation(s, receipt).deadline == original.deadline
     assert balance(s.setup) == (1, 1, 10, 0, 0)
@@ -335,7 +397,11 @@ def test_expired_lease_reclaim_keeps_original_deadline_and_fences_previous_owner
 def test_lease_command_never_changes_submitted_or_terminal_operations(commands, state):
     s = commands
     receipt = reserve(s)
-    mutate(s, "UPDATE agent_operation SET state=:state", state=state)
+    if state != "expired":
+        transition(s, "submitting")
+    if state != "submitting":
+        transition(s, state)
+    receipt = receipt.model_copy(update={"version": operation(s, receipt).version})
     closed(lambda: s.commands.claim("REQ-FAKE-0", receipt))
     assert operation(s, receipt).state == state and balance(s.setup) == (1, 1, 10, 0, 0)
 
@@ -343,7 +409,16 @@ def test_lease_command_never_changes_submitted_or_terminal_operations(commands, 
 @pytest.mark.parametrize("field", ["request", "operation", "actor", "snapshot", "deadline"])
 def test_no_cross_case_owner_stale_snapshot_or_expired_claim(commands, field):
     s = commands
-    receipt = reserve(s)
+    now = datetime.now(UTC)
+    changes = {
+        "actor": {"actor_id": PROFILES["processor"][0]},
+        "snapshot": {"snapshot": {}},
+        "deadline": {
+            "created_at": now - timedelta(seconds=200),
+            "deadline": now - timedelta(seconds=100),
+        },
+    }.get(field)
+    receipt = historical_reservation(s, **changes) if changes else reserve(s)
     if field == "request":
         closed(lambda: s.commands.claim("REQ-FAKE-1", receipt))
     elif field == "operation":
@@ -353,29 +428,29 @@ def test_no_cross_case_owner_stale_snapshot_or_expired_claim(commands, field):
             )
         )
     else:
-        if field == "actor":
-            mutate(s, "UPDATE agent_operation SET actor_id=:a", a=PROFILES["processor"][0])
-        elif field == "snapshot":
-            mutate(s, "UPDATE agent_operation SET snapshot='{}'::jsonb")
-        else:
-            mutate(
-                s,
-                "UPDATE agent_operation SET created_at=clock_timestamp()-interval '200 seconds', "
-                "deadline=clock_timestamp()-interval '100 seconds'",
-            )
         closed(lambda: s.commands.claim("REQ-FAKE-0", receipt))
     assert balance(s.setup) == (1, 1, 10, 0, 0)
 
 
-def test_unknown_mapping_fence_prevents_a_new_approved_key(commands):
+@pytest.mark.parametrize("state", ["reserved", "unknown", "published"])
+def test_mapping_fence_prevents_a_new_approved_key(commands, state):
     s = commands
     first = reserve(s)
-    mutate(s, "UPDATE agent_operation SET state='unknown', config_digest=repeat('c',64)")
-    # Trusted test corruption of the existing key makes the new key different;
-    # a valid new approval still cannot circumvent unresolved prior execution.
-    mutate(s, "UPDATE agent_operation SET operation_key=repeat('d',64)")
+    if state != "reserved":
+        transition(s, "submitting")
+        transition(s, state)
+    # Create distinct operator approval, without mutating existing receipt pins.
+    new_approval(
+        s,
+        config_digest="c" * 64,
+        operation_keys=tuple(
+            operation_key(snapshot, "c" * 64, s.setup.spec.source_digest)
+            for snapshot in s.setup.snapshots
+        ),
+    )
     closed(lambda: reserve(s))
-    assert operation(s, first).state == "unknown" and balance(s.setup) == (1, 1, 10, 0, 0)
+    assert operation(s, first).state == state
+    assert balance(s.setup) == (0, 0, 0, 0, 0)
 
 
 def test_direct_accounting_resets_helper_reads_and_execution_tables_denied(commands):

@@ -22,9 +22,13 @@ process/protocol and 13 PostgreSQL integration checks, plus disposable container
 isolation. The [fake admission quarantine](docs/architecture/agent-admission-quarantine.md)
 adds a default-closed epoch and separately retained single-use test receipts.
 The inactive [principal-bound capture package](docs/architecture/agent-controller-capture.md)
-prepares the first restricted database read; ledger write commands still use
-their owning test connection. Governed controller accounting, production receipt/secret custody and
-live source/transport remain; deployed workflows use deterministic rules.
+prepares the first restricted database read. Its separate
+[reservation package](docs/architecture/agent-controller-reservation.md) adds exact
+fake allowance holds and unsubmitted leases without direct runtime table access.
+It grants no submission/refund authority and does not replace the owner-connected
+fake ledger. Independent admission/checkpoint/publication commands, production
+receipt/secret custody and live source/transport remain; deployed workflows use
+deterministic rules.
 
 ## Retained Snowflake prototype
 

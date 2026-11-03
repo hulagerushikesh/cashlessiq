@@ -125,9 +125,13 @@ No route or worker activates it; the real controller still uses the owning DB
 test connection. The default-closed fake epoch, independent test receipts and
 pre-checkpoint restore quarantine are implemented; production receipt custody
 remains unselected. The [principal-bound capture package](agent-controller-capture.md)
-prepares the first narrow database read with an actual restricted-login CI harness;
-the existing ledger still uses its owner connection. Next implement governed
-ledger commands with protected accounting, finish
+prepares the first narrow database read with an actual restricted-login CI harness.
+The [reservation/lease extension](agent-controller-reservation.md) prepares exact
+fake holds and reserved-only leases with protected accounting. It does not expose
+submission, publication or refunds, and does not replace the owner-connected
+fake ledger. Next implement independently authenticated admission/custody and
+checkpoint/publication/recovery commands that cannot bypass history verification,
+finish
 independently captured source/tool mapping and prepare the
 provider checkpoint/lookup adapter with a reviewed latency budget. Live run reconciliation, credentials,
 allowances and execution require separate review and explicit approval. Do not
