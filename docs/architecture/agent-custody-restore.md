@@ -112,6 +112,12 @@ image/credential change, or source/provider call was made. Deployed code remains
 
 ## Remaining gates
 
+The later [combined encrypted restore checkpoint](agent-receipt-peer.md#combined-encrypted-restore--23-november)
+adds nine journeys using the original retained file behind an independently
+owned receipt process and actual restricted runtime children. These extend the
+direct-journal acceptance above; they do not establish production retention or
+secret delivery.
+
 This is same-host fake custody in a disposable test environment. It does not prove
 independent production retention, rollback of both stores, host-loss recovery,
 production process/credential/peer isolation or safety against an administrator.

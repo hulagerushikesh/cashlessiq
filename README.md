@@ -55,8 +55,10 @@ The [Linux fake receipt peer](docs/architecture/agent-receipt-peer.md) separates
 retained-file ownership from the coordinator and checks both OS identities before
 receipt transfer. Its combined disposable acceptance now joins actual restricted
 database logins, bounded fake exchange, private publication and conservative
-recovery. Combined restored-state acceptance, production custody, secret delivery
-and governed source/provider integration remain open. This work stays inactive.
+recovery. Its [encrypted restore checkpoint](docs/architecture/agent-receipt-peer.md#combined-encrypted-restore--23-november)
+also keeps original receipt history across older database backups and forbids
+replay or uncertain-allowance release. Production custody, secret delivery and
+governed source/provider integration remain open. This work stays inactive.
 
 ## Retained Snowflake prototype
 

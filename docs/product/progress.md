@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 3 November 2026
+Last updated: 23 November 2026
 Current engineering scope: **synthetic MVP workflows (M3–M5), private testing**.
 Governed live-source P2 and production gates remain separate.
 
@@ -11,6 +11,18 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 [1 November handoff](gcp-first-run-2026-11-01.md) retains quota/billing history;
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
+
+### Combined encrypted agent restore — 23 November
+
+The [restored-peer checkpoint](../architecture/agent-receipt-peer.md#combined-encrypted-restore--23-november)
+passes twenty combined scenarios at `e51fbc1`, including nine encrypted restores
+using the original separate-UID receipt history and actual restricted runtime
+children. An older backup cannot erase later execution evidence, replay work or
+release uncertain allowance. Human workflows and the source manifest match;
+owned process/database/container/image cleanup succeeds. Related offline checks
+pass 213 cases with two guarded skips. Production custody/secret delivery and
+live source/provider plus app job/status/comparison integration remain open.
+No deployed migration, provider call, paid service or local Docker was started.
 
 ### Combined agent process/database acceptance — 3 November
 

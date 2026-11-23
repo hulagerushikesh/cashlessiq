@@ -122,7 +122,7 @@ provider or create an allowance. The coordinator integration case uses its
 existing deterministic offline SQL-engine double; full actual-login lifecycle
 tests continued separately at that checkpoint. The subsequent combined
 acceptance below joins the peer, actual logins, child, publication and recovery;
-combined restored-state acceptance remains open.
+combined restored-state acceptance is recorded below.
 
 The initial CI setup exposed a test-only `Path.chown` mistake, corrected to
 `os.chown` with cleanup registered before setup. The runner's private home
@@ -189,10 +189,65 @@ was started; the VM remains TERMINATED with its unchanged 1,800-second STOP.
 The bounded canned child still shares the trusted custody UID; this suite does
 not claim a separate untrusted transport UID or credential sandbox. That
 containment probe remains separate. Root/DB fixture owners prepare and assert
-state, but their credentials are absent from runtime children. Combined
-encrypted restored-state journeys, real operational credential delivery and
-retained custody across host loss remain open. No route, service, worker,
+state, but their credentials are absent from runtime children. The later
+restored-state checkpoint below extends this evidence. Real operational
+credential delivery and retained custody across host loss remain open. No route, service, worker,
 provider, migration or deployed configuration is activated by this test.
+
+## Combined encrypted restore — 23 November
+
+The [restored-peer suite](../../apps/api/tests/test_agent_peer_restore.py) adds
+nine scenarios to the eleven combined cases. Revision
+`e51fbc1411e956bf9c7cd7c2b89689826e8af5a8` passes **twenty cases in 95.63 seconds**
+in the [dedicated job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45172957077/job/137686868262),
+including successful owned database/container/image cleanup. The local related
+suite passes 213 checks with two guarded skips; Ruff and whitespace checks pass.
+
+The existing exported-snapshot, encrypted-transfer and exact 22-table comparison
+harness now also runs inside the network-free combined environment. Trusted
+supervision uses PostgreSQL 17 client tools against its dummy loopback service;
+the container has no Docker socket, host ports or host mounts. Its PostgreSQL
+tools base's declared data volume is replaced with a bounded unused tmpfs, so
+the supervisor creates no anonymous retained disk volume. Existing CPU, memory,
+PID, capability and read-only-root bounds remain unchanged. The launcher requires
+twenty passes, successful exit without OOM and owned container/image cleanup.
+
+Source owners prepare synthetic history before handing the original quiescent
+receipt directory to its separate UID. The handoff checks its exact file digest
+and removes the old location; it does not provision, reconstruct or restore
+receipts from the product backup. This trusted test handoff is not a production
+credential/UID rotation or independent storage-retention protocol.
+
+Restoration carries no private authority. The existing explicit disposable
+installer stages fresh actual login identities against the original epoch,
+grant, immutable snapshot and operation. Runtime owner-ledger methods fail the
+test. Separate clinical/custody children receive only their own restricted
+credentials; direct journal methods, retained-file reads and owner methods fail.
+
+Two cases finish an unsubmitted operation's first attempt exactly once after
+restore, preserving its snapshot and original deadline. Four older-backup cases
+retain later prepared/issued/published or terminally quarantined external history:
+fresh coordinators cannot verify away that difference, replay work, publish or
+release its held allowance. Three submitted/unknown/published cases preserve
+receipts and comparisons, recover submitted expiry conservatively and settle
+only once. Human workflow hashes and the source database manifest must match.
+
+The bounded canned child still shares the trusted custody UID. Production
+secret delivery, session retirement, host-loss retention and governed live
+source/provider integration remain separate. No application route or deployed
+service is enabled, and no local Docker/GCP test is required for this checkpoint.
+
+On the same revision, the existing dedicated suites pass 476 agent, fourteen
+owner-fixture restore, 290 restricted command, 53 lifecycle, 27 restricted
+encrypted restore and 33 separate-peer cases, including their owned cleanup.
+[Full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45172957077)
+passes, including the root/API regressions, permission/catalog checks, domain
+wheel, contracts/types, lint/build, browser/source UI, eighteen MVP journeys
+and disposable stack cleanup.
+[Private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45172956844)
+also passes eighteen MVP journeys, matched encrypted 22-table restoration and
+saved-workflow reopening after restart and restored-volume replacement; preview
+stack and fresh-volume cleanup succeed.
 
 ## Remaining operational gates
 

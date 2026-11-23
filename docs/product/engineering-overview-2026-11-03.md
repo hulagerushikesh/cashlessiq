@@ -40,8 +40,11 @@ counts are regression evidence, not a completion percentage.
 
 1. **Finish agent operational acceptance.** The separate receipt process, real
    restricted PostgreSQL logins, bounded fake child, publication and recovery now
-   pass eleven combined disposable cases. Complete combined restored-state and
-   operational credential/custody acceptance next.
+   pass eleven combined disposable cases. The
+   [23 November checkpoint](../architecture/agent-receipt-peer.md#combined-encrypted-restore--23-november)
+   extends this to twenty cases, including nine encrypted restored-state
+   journeys. Production credential delivery, session retirement and independent
+   custody retention still need operational acceptance.
 2. **Current Snowflake source and provider integration.** Bind exact current
    requests/policy versions, governed tenant data, tool/search definitions and
    citation content; verify supported submission, status, usage and timeout

@@ -1,11 +1,31 @@
 # Product delivery — owner dashboard
 
-Updated 3 November 2026. This page summarizes the current product plan; the
+Updated 23 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
+
+### Combined encrypted agent restore — 23 November
+
+The [restored-peer checkpoint](../architecture/agent-receipt-peer.md#combined-encrypted-restore--23-november)
+passes **twenty combined cases** at `e51fbc1`, including nine new encrypted
+restores. Actual restricted runtime children use the original separately owned
+receipt history. First attempts finish once; older backups cannot erase later
+history, reconstruct execution permission or refund uncertain usage. Submitted
+expiry stays conservative; final comparisons and human workflows are preserved.
+The [dedicated job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45172957077/job/137686868262)
+also verifies successful owned database/container/image cleanup.
+The same exact code passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45172957077)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45172956844),
+including eighteen MVP journeys, encrypted restore and saved-workflow reopenings.
+
+This closes the combined fake restored-state test gap. Live source/provider
+integration, agent job/status and comparison UI, production credential delivery
+and independent retention remain open. Deployed code remains `7940886`/`0003_mvp`;
+no paid service or local Docker session was started for this checkpoint.
 
 ### Combined agent process/database acceptance — 3 November
 
