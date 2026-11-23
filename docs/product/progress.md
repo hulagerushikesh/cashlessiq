@@ -12,6 +12,26 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### App request to validated synthetic result — 23 November
+
+The [restricted one-shot bridge](../architecture/agent-request-execution.md)
+connects a saved app intent to an atomic clinical claim, explicit trusted custody
+assignment and one original-custody fake execution/publication. The combined
+22-case PostgreSQL/UID/peer/restore suite now includes successful HTTP result
+display and invalid-money withholding, with no human-state change or retry.
+Generic workers remain excluded. This does not activate a deployed executor,
+live source/provider integration or new cloud resources. Bounded operator
+installation/activation and governed source/provider work remain next.
+
+Accepted code `c980ff8` passes
+[product](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45219672723)
+and [private-preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45219672827)
+CI: 2,407 API checks, 69 client checks and eighteen MVP journeys in each workflow.
+All 23 new restricted claim cases pass; the combined peer/execution/restore job
+passes all 22 cases. Installation/retirement, encrypted recovery, saved-workflow
+reopening and owned stack cleanup also pass. No local Docker or paid GCP action
+was performed for this batch.
+
 ### App comparison request queue — 23 November
 
 The [request-intent workflow](../architecture/agent-request-intent.md) adds a

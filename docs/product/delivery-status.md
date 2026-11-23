@@ -7,6 +7,30 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### App request to validated synthetic result — 23 November
+
+The [one-shot execution bridge](../architecture/agent-request-execution.md)
+consumes one exact held intent through a restricted clinical login, atomically
+reserves/leases the approved fake operation and prevents duplicate claims. A
+separately configured original custody coordinator performs one fixed exchange
+and validates publication. Disposable acceptance now exercises the real HTTP
+request and result endpoints with separate clinical, custody and receipt UIDs;
+invalid money stays held without result or retry. Human records are unchanged.
+
+This is source/CI engineering, not a deployed worker. Explicit operator custody
+binding remains required; no scanner, runtime self-grant, provider call or paid
+resource was activated. Next prepare bounded operator installation/activation
+and finish governed source/provider integration before an approved rebuild and
+joint GCP testing. The existing private deployment remains unchanged.
+
+Accepted code `c980ff8` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45219672723)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45219672827):
+2,407 API checks, 69 client checks, eighteen MVP journeys in each workflow,
+313 restricted command cases (23 new), 53 installation/ACL/retirement checks,
+27 restricted restore cases and 22 combined peer/execution/restore cases.
+Encrypted preview restoration, saved-workflow reopening and owned cleanup pass.
+
 ### App comparison request queue — 23 November
 
 The [request-intent workflow](../architecture/agent-request-intent.md) adds the

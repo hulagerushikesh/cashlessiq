@@ -8,7 +8,7 @@ The normal backup still contains 22 tables. This extends the
 ## One intent, one claim
 
 `ControllerReservation.claim_requested(request_id, job_id)` uses a separately
-authenticated clinical connection. Its only SQL capability is the protected
+authenticated clinical connection. This method calls only the protected
 `claim_requested_fake(text, uuid, integer)` command; the runtime cannot read or
 update queue tables directly. A saved intent is not authority: an independently
 staged, enabled, exact fake reservation approval and principal binding must
@@ -52,6 +52,17 @@ publication and remains read-only. Human review/audit/outbox records stay intact
 The generic worker and its three-attempt retry are still excluded.
 
 ## Acceptance and limits
+
+Accepted code `c980ff8e9db3fd449b284b8b59e2b81567f0358a` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45219672723)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45219672827).
+The restricted command suite passes 313 cases, including all 23 new intent-claim
+cases; installation/ACL/retirement passes 53, restricted encrypted restore 27,
+and combined peers/execution/restore 22. Product regression passes 2,407 API
+checks, 69 client checks and eighteen MVP browser journeys. The private preview
+also passes eighteen journeys, encrypted restoration and saved-workflow reopening
+after restart/restore. Both workflows confirm owned stack cleanup. Offline
+verification passes 199 selected reservation/custody checks and repository Ruff.
 
 Offline tests cover strict intent IDs/timeouts, digest/projection validation
 before commit, fixed errors and missing transport. Dedicated PostgreSQL tests
