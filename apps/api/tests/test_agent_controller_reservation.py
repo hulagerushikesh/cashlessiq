@@ -483,6 +483,9 @@ def test_definer_has_no_refund_settlement_attempt_publication_or_approval_privil
             ("agent_operation", "state"),
             ("agent_operation", "deadline"),
             ("agent_operation", "snapshot"),
+            ("work_job", "payload"),
+            ("work_job", "actor_id"),
+            ("work_job", "attempts"),
         ]:
             assert raw.execute(
                 "SELECT has_column_privilege(%s,%s,%s,'UPDATE')",
@@ -503,7 +506,9 @@ def test_definer_has_no_refund_settlement_attempt_publication_or_approval_privil
             "WHERE n.nspname=%s AND has_function_privilege(%s,p.oid,'EXECUTE') ORDER BY 1",
             (s.capture, s.login),
         ).fetchall()
-        assert granted == [("capture",), ("lease_fake",), ("reserve_fake",)]
+        assert granted == [
+            ("capture",), ("claim_requested_fake",), ("lease_fake",), ("reserve_fake",),
+        ]
         assert raw.execute(
             "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace "
             "WHERE n.nspname IN (%s,%s) AND c.relkind IN ('r','p','v','m') AND "
@@ -518,7 +523,7 @@ def test_definer_has_no_refund_settlement_attempt_publication_or_approval_privil
             "WHERE n.nspname=%s",
             (s.capture,),
         ).fetchall()
-        assert len(functions) == 6 and all(
+        assert len(functions) == 7 and all(
             row
             == (
                 True,
