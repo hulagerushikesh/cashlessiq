@@ -114,6 +114,19 @@ class FakeCustodySubmission:
         self._transport = transport
         self._candidate = None
 
+    def run(self):
+        """One bounded fake attempt through this original custody, without retry.
+
+        Trusted construction supplies the exact operator-pinned operation and
+        fixed fake transport. No selector, credential or candidate is accepted.
+        A failed stage stops here; repeating run cannot reconstruct permission.
+        """
+        if self._transport is None:
+            raise AgentContractError(ERROR) from None
+        self.prepare()
+        self.dispatch()
+        self.publish()
+
     def prepare(self):
         with self._stage_lock:
             if self._started:

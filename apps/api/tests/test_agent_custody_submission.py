@@ -55,6 +55,13 @@ def custody(commands, observer):
     s = commands
     assert s is observer
     s.claim = s.commands.claim('REQ-FAKE-0', reserve(s))
+    install(s)
+    s.custody = coordinator(s)
+    return s
+
+
+def install(s):
+    """Trusted dummy operator pins custody to an already committed exact claim."""
     with s.admin.begin() as db:
         raw = db.connection.driver_connection
         raw.execute(sql.SQL(PACKAGE.read_text()).format(
@@ -74,8 +81,6 @@ def custody(commands, observer):
             'REQ-FAKE-0', TENANT_ID, ACTOR,
             s.claim.operation_id, s.receipt_login, s.login,
         ))
-    s.custody = coordinator(s)
-    return s
 
 
 def rows(s):

@@ -56,7 +56,10 @@ stack cleanup. All thirty new database cases pass. The combined peer image
 build initially exceeded its existing timeout before tests; that single job
 passed on one rerun without source changes or larger limits.
 
-Next: connect a separately configured, bounded synthetic dispatcher to these
+The later [restricted one-shot execution bridge](agent-request-execution.md)
+connects an exact intent to a separately configured fake executor in disposable
+acceptance. The original next-step constraints follow: connect a separately
+configured, bounded synthetic dispatcher to these
 intents through the existing restricted capture/reservation and original custody
 path. It must independently revalidate the actor, exact binding, approved fake
 grant and current authority before claiming; no browser payload or ordinary API

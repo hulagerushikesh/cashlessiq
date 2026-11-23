@@ -17,6 +17,7 @@ from sqlalchemy.exc import DBAPIError
 from ciq_api.agent_admission import FakeEpochPin
 from ciq_api.agent_contracts import AgentContractError, AgentInput, Digest, ImmutableContract
 from ciq_api.agent_ledger import ClaimReceipt, OperationReceipt, operation_key
+from ciq_api.assessment import fingerprint
 
 ERROR = "reservation_unavailable"
 
@@ -60,6 +61,43 @@ class ControllerReservation:
         self._lease = text(
             f'SELECT "{schema}".lease_fake(:request_id, :operation_id, :version, :fence_id)'
         )
+        self._requested = text(
+            f'SELECT "{schema}".claim_requested_fake(:request_id, :job_id, :timeout)'
+        )
+
+    def claim_requested(self, request_id, job_id, *, timeout_seconds=120):
+        """Consume one exact app intent and reserve/lease atomically, once.
+
+        This clinical connection cannot submit. A separate trusted operator must
+        pin custody to the returned operation before original-custody execution.
+        Lost commit acknowledgement never grants permission to claim it again.
+        """
+        if (
+            type(request_id) is not str or not 1 <= len(request_id) <= 120
+            or type(job_id) is not UUID or type(timeout_seconds) is not int
+            or not 1 <= timeout_seconds <= 120
+        ):
+            raise AgentContractError(ERROR)
+        try:
+            with self.engine.begin() as db:
+                row = db.scalar(self._requested, {
+                    "request_id": request_id, "job_id": job_id, "timeout": timeout_seconds,
+                })
+                if (
+                    type(row) is not dict or set(row) != {"claim", "binding", "binding_digest"}
+                    or type(row["binding"]) is not dict
+                    or fingerprint(row["binding"]) != row["binding_digest"]
+                ):
+                    raise ValueError("invalid_intent")
+                claim = ClaimReceipt.model_validate(row["claim"])
+                if (
+                    claim.state != "reserved"
+                    or type(claim.version) is not int or claim.version != 1
+                ):
+                    raise ValueError("invalid_claim")
+            return claim
+        except (DBAPIError, ValueError, TypeError, KeyError, RecursionError):
+            raise AgentContractError(ERROR) from None
 
     def _call(self, statement, params, model):
         if type(params["request_id"]) is not str or not 1 <= len(params["request_id"]) <= 120:

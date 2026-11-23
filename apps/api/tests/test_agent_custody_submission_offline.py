@@ -110,6 +110,12 @@ def test_prepare_commit_then_original_single_use_issue_no_transferable_result(cu
     assert not s.engine.active
 
 
+def test_one_shot_run_without_fixed_transport_cannot_prepare_or_connect(custody):
+    closed(custody.coordinator.run)
+    assert custody.engine.calls == []
+    custody.journal.check(())
+
+
 @pytest.mark.parametrize('changes', [
     {'request_id': None}, {'request_id': ''}, {'request_id': 'x' * 121}, {'claim': {}},
     {'schema': 'public'}, {'schema': 'ciq_agent_receipts;SELECT 1'},

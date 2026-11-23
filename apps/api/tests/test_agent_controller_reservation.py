@@ -80,7 +80,8 @@ def commands(scope):
                 product=sql.Identifier(s.product),
             )
         )
-        for signature in ("reserve_fake(text, integer)", "lease_fake(text, uuid, integer, uuid)"):
+        for signature in ("reserve_fake(text, integer)", "lease_fake(text, uuid, integer, uuid)",
+                          "claim_requested_fake(text, uuid, integer)"):
             # Signature is a fixed trusted test constant, never a request value.
             raw.execute(
                 sql.SQL("GRANT EXECUTE ON FUNCTION {}.{} TO {}").format(

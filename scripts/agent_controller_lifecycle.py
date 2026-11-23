@@ -16,7 +16,10 @@ from psycopg import sql
 from psycopg.pq import TransactionStatus
 
 PACKAGES = Path(__file__).resolve().parents[1] / "deploy/agent-controller"
-CLINICAL = ("capture(text)", "reserve_fake(text, integer)", "lease_fake(text, uuid, integer, uuid)")
+CLINICAL = (
+    "capture(text)", "reserve_fake(text, integer)", "lease_fake(text, uuid, integer, uuid)",
+    "claim_requested_fake(text, uuid, integer)",
+)
 CUSTODY = (
     "inventory_fake()",
     "checkpoint_fake(text, uuid, integer, uuid)",
@@ -295,6 +298,10 @@ CLINICAL_COLUMNS = {
     "agent_admission_epoch": ("id mode database_id epoch_id", "", "id"),
     "agent_execution_grant": (GRANT_COLUMNS, "", "admitted in_flight reserved_units"),
     "agent_operation": (OPERATION_COLUMNS, OPERATION_COLUMNS, "version fence_id lease_until"),
+    "work_job": (
+        "id tenant_id actor_id kind subject_id payload state attempts lease_id lease_until "
+        "result error_code", "", "state result",
+    ),
 }
 CUSTODY_COLUMNS = {
     "agent_admission_epoch": ("id mode database_id epoch_id", "", "id"),

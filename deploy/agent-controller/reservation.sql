@@ -257,3 +257,72 @@ END;
 $lease$;
 ALTER FUNCTION {capture}.lease_fake(text, uuid, integer, uuid) OWNER TO {owner};
 REVOKE ALL ON FUNCTION {capture}.lease_fake(text, uuid, integer, uuid) FROM PUBLIC;
+
+-- App-intent bridge. The protected operator approval remains authority; a job
+-- cannot select identities, grants, snapshots, mappings, epochs or transport.
+-- Runtime receives EXECUTE only, never direct queue/table rights.
+GRANT SELECT(id, tenant_id, actor_id, kind, subject_id, payload, state, attempts,
+             lease_id, lease_until, result, error_code), UPDATE(state, result)
+    ON {product}.work_job TO {owner};
+
+CREATE FUNCTION {capture}.claim_requested_fake(p_request_id text, p_job uuid,
+    p_timeout integer) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER PARALLEL UNSAFE
+SET search_path = pg_catalog, pg_temp SET row_security = on SET lock_timeout = '2s'
+AS $requested$
+DECLARE
+    context jsonb;
+    binding jsonb;
+    job record;
+    receipt jsonb;
+    claim jsonb;
+BEGIN
+    IF p_job IS NULL OR p_timeout IS NULL OR p_timeout NOT BETWEEN 1 AND 120 THEN
+        RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'reservation_unavailable';
+    END IF;
+    -- Epoch -> protected principal/approval -> fresh clinical locks -> intent ->
+    -- grant/operation. Concurrent claimers serialize before either consumes it.
+    context := {capture}._reservation_context(p_request_id);
+    binding := (context->'approval'->'snapshot'->'binding') - 'correlation_id';
+    SELECT j.* INTO job FROM (
+      SELECT id, tenant_id, actor_id, kind, subject_id, payload, state, attempts,
+             lease_id, lease_until, result, error_code FROM {product}.work_job
+      WHERE id = p_job FOR UPDATE
+    ) j;
+    IF NOT FOUND OR (
+        job.tenant_id::text = context->>'tenant_id'
+        AND job.actor_id::text = context->>'actor_id'
+        AND job.kind = 'agent_comparison' AND job.subject_id = p_request_id
+        AND job.state = 'awaiting_executor' AND job.attempts = 0
+        AND job.lease_id IS NULL AND job.lease_until IS NULL
+        AND job.result IS NULL AND job.error_code IS NULL
+        AND job.payload->'binding' = binding
+        AND jsonb_typeof(job.payload->'binding_digest') = 'string'
+        AND job.payload->>'binding_digest' ~ '^[a-f0-9]{{64}}$'
+        AND job.payload - 'binding' - 'binding_digest' = '{{}}'::jsonb
+    ) IS DISTINCT FROM true THEN
+        RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'reservation_unavailable';
+    END IF;
+    -- A saved browser intent specifically requires an assigned officer. Capture
+    -- and reservation elsewhere also permit unassigned read-only test fixtures.
+    IF NOT EXISTS (SELECT 1 FROM {product}.review_case r
+      WHERE r.tenant_id = job.tenant_id AND r.request_id = p_request_id
+        AND r.assignee_id = job.actor_id) OR EXISTS (
+      SELECT 1 FROM {product}.agent_operation o
+      WHERE o.tenant_id = job.tenant_id AND o.request_id = p_request_id
+    ) THEN
+        RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'reservation_unavailable';
+    END IF;
+    receipt := {capture}.reserve_fake(p_request_id, p_timeout);
+    claim := {capture}.lease_fake(p_request_id, (receipt->>'operation_id')::uuid,
+                                  (receipt->>'version')::integer, NULL);
+    UPDATE {product}.work_job SET state = 'executor_claimed',
+      result = jsonb_build_object('operation_id', claim->'operation_id') WHERE id = p_job;
+    -- Python checks the canonical digest BEFORE this transaction commits. Never
+    -- hash PostgreSQL JSON text as though it were the application's serializer.
+    RETURN jsonb_build_object('claim', claim, 'binding', binding,
+                             'binding_digest', job.payload->'binding_digest');
+END;
+$requested$;
+ALTER FUNCTION {capture}.claim_requested_fake(text, uuid, integer) OWNER TO {owner};
+REVOKE ALL ON FUNCTION {capture}.claim_requested_fake(text, uuid, integer) FROM PUBLIC;

@@ -54,6 +54,11 @@ SIGNATURES = (
 @pytest.fixture
 def publication(dispatch):
     s = dispatch
+    install(s)
+    return s
+
+
+def install(s):
     with s.admin.begin() as db:
         raw = db.connection.driver_connection
         raw.execute(sql.SQL(PACKAGE.read_text()).format(
@@ -64,7 +69,6 @@ def publication(dispatch):
             raw.execute(sql.SQL('GRANT EXECUTE ON FUNCTION {}.{} TO {}').format(
                 sql.Identifier(s.receipts), sql.SQL(signature), sql.Identifier(s.receipt_login),
             ))
-    return s
 
 
 def ready(s):

@@ -16,7 +16,9 @@ The [read-only synthetic comparison panel](docs/architecture/agent-result-view.m
 now connects existing fake status/results to medical-officer request and review
 screens in source. The [comparison request workflow](docs/architecture/agent-request-intent.md)
 also saves medical-officer requests in a held queue, with duplicate and stale
-version checks. Dedicated bounded dispatch and live-provider execution remain
+version checks. A [restricted one-shot bridge](docs/architecture/agent-request-execution.md)
+now connects saved intent to the separate synthetic executor and app result in
+disposable acceptance. Deployed activation and live-provider integration remain
 separate work; these changes have not been deployed to GCP.
 The inactive [agent comparison contract](docs/architecture/agent-comparison-contract.md)
 has 146 offline golden/fault checks. The inactive
