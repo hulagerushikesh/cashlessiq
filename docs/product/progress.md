@@ -12,6 +12,23 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### App comparison request queue — 23 November
+
+The [request-intent workflow](../architecture/agent-request-intent.md) adds a
+medical-officer action for assigned current reviews. Duplicate commands and
+simultaneous requests share one held job; changed versions conflict. The app
+clearly shows that the dedicated executor is inactive. Generic job claim,
+completion, retry and job pages exclude agent intent. Saving consumes no
+allowance and leaves human decisions unchanged. Dedicated restricted dispatch
+and live source/provider integration remain next; the deployment is unchanged.
+
+Accepted code `7f79a94` passes
+[product](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45181407995)
+and [private-preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45181407884)
+CI: 2,388 API checks, 69 client checks, eighteen MVP journeys in each workflow,
+22-table encrypted restore, saved-workflow reopenings and owned stack cleanup.
+The peer image-build timeout passed on a single unchanged-code job rerun.
+
 ### App-facing synthetic comparison view — 23 November
 
 The [read-only clinical agent panel](../architecture/agent-result-view.md) now

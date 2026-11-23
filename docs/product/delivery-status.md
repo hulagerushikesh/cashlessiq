@@ -17,6 +17,15 @@ retry cannot consume them; saving never changes allowance or a human decision.
 Dedicated dispatch/execution and live source/provider integration remain open.
 No migration, local Docker, GCP startup or paid call is involved.
 
+Accepted code `7f79a942353d63681ce1c8d0ff811dd8e4d354c7` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45181407995)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45181407884):
+2,388 API checks, 69 client checks and eighteen MVP journeys in both workflows.
+The preview restores all 22 tables and reopens saved workflows after restart and
+restore. Product and preview stack cleanup succeeds. The combined peer job
+initially timed out building its disposable image, before tests; only that job
+was rerun on unchanged code, and it passed. Dedicated execution remains open.
+
 ### App-facing synthetic comparison view — 23 November
 
 The [read-only agent view](../architecture/agent-result-view.md) connects existing

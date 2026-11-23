@@ -47,7 +47,14 @@ Validation adds thirty real-PostgreSQL HTTP/concurrency and worker-exclusion
 cases, three client checks, and extends the existing MVP browser journey to save
 and refresh a held request before completing the human review. The thirty golden
 projection cases also assert that published results carry no request capability.
-CI acceptance is recorded in the delivery status after completion.
+Accepted code `7f79a942353d63681ce1c8d0ff811dd8e4d354c7` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45181407995)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45181407884):
+2,388 API checks, 69 client checks, eighteen MVP journeys in each workflow,
+22-table encrypted restoration, saved-workflow reopenings and successful owned
+stack cleanup. All thirty new database cases pass. The combined peer image
+build initially exceeded its existing timeout before tests; that single job
+passed on one rerun without source changes or larger limits.
 
 Next: connect a separately configured, bounded synthetic dispatcher to these
 intents through the existing restricted capture/reservation and original custody
