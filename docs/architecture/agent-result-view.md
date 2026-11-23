@@ -43,6 +43,25 @@ browser journey's medical visibility, processor denial and completed-review stat
 The HTTP integration uses pre-existing fake-ledger test records; it does not
 claim browser-triggered or production restricted-worker execution.
 
+Accepted code `63b3c717e8b895d9a95b18eea472fe5e529e436a` passes
+[full product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45178031035)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45178030888).
+This includes 57 new offline projections, twenty new HTTP/database cases and
+eight new rendering checks. Local contract/projection checks pass 203 cases;
+the full client suite passes 66. Full CI passes 2,358 API checks with 27 expected
+skips and two existing warnings, all eighteen MVP journeys in both workflows,
+and the twenty combined restricted-process/restore baselines. The preview also
+matches all 22 restored tables and reopens saved workflows after restart and
+restore. Owned stack cleanup succeeds. Existing root, membership, source UI,
+browser, ledger, restricted-login, peer and isolation suites remain green.
+
+The acceptance corrected two test assumptions without changing runtime gates:
+the crash fixture now imports its context contract from the defining module,
+and the browser checks not-requested status after the first saved assignment.
+Earlier superseded runs were cancelled; the first complete preview exposed the
+assignment expectation and cleaned up successfully. No local Docker, GCP start,
+live source/provider call or paid build was used for this milestone.
+
 Next is a separately bounded synthetic execution/job integration with explicit
 admission and operational custody, followed by the reviewed source/provider
 adapter and approved live comparison window. The generic three-attempt MVP job

@@ -48,8 +48,9 @@ counts are regression evidence, not a completion percentage.
 2. **Current Snowflake source and provider integration.** Bind exact current
    requests/policy versions, governed tenant data, tool/search definitions and
    citation content; verify supported submission, status, usage and timeout
-   behavior. Wire the bounded agent job/status and authorised comparison API/UI
-   into the product; those inactive test components are not yet an app feature.
+   behavior. The [23 November read-only clinical panel](../architecture/agent-result-view.md)
+   now connects existing synthetic status/comparisons to the app. Bounded agent
+   job submission/execution and the live adapter remain to be connected.
    Review runtime credentials and a bounded spend window before live calls.
    Human approval remains the final decision.
 3. **Deploy and jointly test the integrated build.** Rehearse migration and

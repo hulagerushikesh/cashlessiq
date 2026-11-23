@@ -12,6 +12,10 @@ approved testing windows. See the [current delivery status](docs/product/deliver
 [short engineering overview](docs/product/engineering-overview-2026-11-03.md),
 [stable private address](docs/product/stable-private-domain.md) and
 [agent integration sequence](docs/architecture/product-agent-integration.md).
+The [read-only synthetic comparison panel](docs/architecture/agent-result-view.md)
+now connects existing fake status/results to medical-officer request and review
+screens in source. Starting agent jobs from the app and live-provider execution
+remain separate work; this change has not been deployed to GCP.
 The inactive [agent comparison contract](docs/architecture/agent-comparison-contract.md)
 has 146 offline golden/fault checks. The inactive
 [fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 90

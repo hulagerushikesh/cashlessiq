@@ -21,6 +21,11 @@ assignment and review versions, revalidates money/evidence and withholds stale
 results. Other roles cannot read private comparisons; refresh cannot start or
 retry execution or alter allowance. Synthetic execution/job wiring and governed
 live source/provider integration remain next. The cloud deployment is unchanged.
+Accepted code `63b3c71` passes
+[product](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45178031035)
+and [private-preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45178030888)
+CI, including 2,358 API checks, 66 client checks, eighteen MVP journeys in both
+workflows, matched encrypted 22-table restoration and successful owned cleanup.
 
 ### Combined encrypted agent restore — 23 November
 

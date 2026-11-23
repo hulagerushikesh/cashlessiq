@@ -19,6 +19,15 @@ human decision. Refresh cannot execute, retry, recover or settle allowance.
 Execution/job integration and live source/provider work remain open. This source
 change has not been deployed; no GCP, Docker or paid call is required.
 
+Accepted code `63b3c71` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45178031035)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45178030888):
+2,358 API checks, 66 client checks, eighteen MVP journeys in each workflow and
+the existing twenty combined agent/restore scenarios. Preview encrypted restore
+matches 22 tables and saved workflows reopen after restart/restore. Owned stacks
+are stopped successfully. The new coverage includes twenty HTTP/database cases,
+57 offline projection cases and eight rendering checks.
+
 ### Combined encrypted agent restore — 23 November
 
 The [restored-peer checkpoint](../architecture/agent-receipt-peer.md#combined-encrypted-restore--23-november)
