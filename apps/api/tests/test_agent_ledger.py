@@ -24,7 +24,7 @@ from test_agent_contracts import candidate
 
 from ciq_api import agent_ledger
 from ciq_api.agent_admission import FakeAdmissionGate
-from ciq_api.agent_contracts import AgentContractError
+from ciq_api.agent_contracts import AgentContext, AgentContractError
 from ciq_api.agent_ledger import FakeAgentLedger, FakeGrantSpec, operation_key
 from ciq_api.agent_ledger_models import (
     AgentAttempt,
@@ -325,7 +325,7 @@ def test_submission_crash_stays_unknown_and_never_returns_second_permit(setup, c
     if crash == "after_validation":
         agent_ledger.validate_candidate(
             permit.snapshot,
-            agent_ledger.AgentContext(
+            AgentContext(
                 binding=permit.snapshot.binding,
                 tenant_active=True,
                 clinical_authorized=True,
