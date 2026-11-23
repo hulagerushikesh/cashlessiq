@@ -178,6 +178,17 @@ def test_expired_submitted_read_does_not_retry_or_recover(setup, mvp, settings):
     assert balance(s) == before
 
 
+def test_reading_a_new_request_does_not_create_a_review(setup, mvp, settings):
+    with Session(setup.engine) as db, db.begin():
+        db.delete(db.get(ReviewCase, (TENANT_ID, "REQ-FAKE-0")))
+    result = get(mvp, settings)
+    assert result.status_code == 200
+    assert result.json()["state"] == "unavailable"
+    assert result.json()["comparison"] is result.json()["operation_id"] is None
+    with Session(setup.engine) as db:
+        assert db.get(ReviewCase, (TENANT_ID, "REQ-FAKE-0")) is None
+
+
 def test_tenant_is_server_selected_even_with_a_matching_request_id(setup, mvp, settings):
     s = setup
     published(s)

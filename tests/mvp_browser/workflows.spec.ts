@@ -111,13 +111,16 @@ test("policy approval, queued assessment, human decision and document visibility
       medical.page.getByRole("heading", { name: "Agent comparison", exact: true }),
     ).toBeVisible();
     await expect(
-      medical.page.getByText("No synthetic agent comparison has been requested for this review."),
+      medical.page.getByText(/Comparison unavailable for the current review/),
     ).toBeVisible();
     await medical.page
       .getByLabel("Assignee", { exact: true })
       .selectOption("00000000-0000-4000-8000-000000000012");
     await saveAndNavigate(medical.page, "Save assignment");
     await expect(medical.page.getByText("Review saved.")).toBeVisible();
+    await expect(
+      medical.page.getByText("No synthetic agent comparison has been requested for this review."),
+    ).toBeVisible();
     await medical.page
       .getByLabel("Action", { exact: true })
       .selectOption("approve_with_deductions");

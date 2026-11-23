@@ -28,6 +28,9 @@ The request and reviewer screens display the panel only for medical officers.
 They label all results synthetic, show operation/version/timing provenance and
 validated money/evidence, distinguish uncalculated amounts from zero, and escape
 the explanation as text. Unknown status states that automatic retry is blocked.
+Before the first assignment, a new request has no saved review row: the reader
+returns unavailable without creating one. Once assigned, an empty operation
+history is shown as not requested.
 An unavailable comparison leaves the normal assessment and human actions usable.
 Refresh performs a full document navigation and only repeats the read; it cannot
 renew a lease, recover status, issue transport or change allowance. There is no
