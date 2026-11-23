@@ -87,7 +87,8 @@ def test_restored_peer_finishes_first_attempt_once_with_original_snapshot_and_de
     claim = s.ledger.claim(TENANT_ID, ACTOR, subject.operation_id) if already_claimed else None
     before = operation(s)
     with restored_peer(s, request, tmp_path, monkeypatch, claim=claim) as (c, peer):
-        assert len(peer.rows()) == 1 and peer.rows()[0][-1] == "issued"
+        history = peer.rows()
+        assert len(history) == 1
         c.claim = (c.commands.heartbeat("REQ-FAKE-0", claim) if claim
                    else c.commands.claim("REQ-FAKE-0", receipt(operation(c.setup))))
         with combined_runtime(c, peer) as runtime:
@@ -100,7 +101,9 @@ def test_restored_peer_finishes_first_attempt_once_with_original_snapshot_and_de
             assert op.state == "published" and op.deadline == before.deadline
             assert op.snapshot == before.snapshot and op.created_at == before.created_at
             assert len(runtime.comparisons()) == 2 and len(peer.rows()) == 2
-            assert all(row[-1] == "issued" for row in peer.rows())
+            assert [row for row in peer.rows() if row[0] != str(subject.operation_id)] == history
+            assert [row[-1] for row in peer.rows()
+                    if row[0] == str(subject.operation_id)] == ["issued"]
             assert balance(c.setup) == (3, 1, 10, 20, 0)
 
 
