@@ -381,6 +381,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v3/requests/{request_id}/agent-result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["get_synthetic_agent_result"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v3/requests/{request_id}/amend": {
         parameters: {
             query?: never;
@@ -471,6 +488,48 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AgentLine */
+        AgentLine: {
+            /** Citations */
+            citations: components["schemas"]["EvidenceReference"][];
+            /** Claimed Inr */
+            claimed_inr: number;
+            /** Deduction Inr */
+            deduction_inr: number;
+            /** Item */
+            item: string;
+            /** Payable Inr */
+            payable_inr: number;
+        };
+        /** AgentResultView */
+        AgentResultView: {
+            comparison?: components["schemas"]["ComparisonResult"] | null;
+            /** Created At */
+            created_at?: string | null;
+            /** Deadline */
+            deadline?: string | null;
+            /** Input Revision */
+            input_revision?: number | null;
+            /**
+             * Mode
+             * @default synthetic-only
+             * @constant
+             */
+            mode: "synthetic-only";
+            /** Operation Id */
+            operation_id?: string | null;
+            /** Policy Version */
+            policy_version?: string | null;
+            /** Published At */
+            published_at?: string | null;
+            /** Review Version */
+            review_version?: number | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "not_requested" | "unavailable" | "stale" | "reserved" | "submitting" | "unknown" | "rejected" | "published" | "superseded" | "expired";
+        };
         /** Amendment */
         Amendment: {
             /**
@@ -693,6 +752,24 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** ComparisonResult */
+        ComparisonResult: {
+            /** Citations */
+            citations: components["schemas"]["EvidenceReference"][];
+            /** Claimed Inr */
+            claimed_inr: number | null;
+            /** Explanation */
+            explanation: string;
+            /** Lines */
+            lines: components["schemas"]["AgentLine"][];
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "APPROVE" | "APPROVE_WITH_DEDUCTIONS" | "QUERY" | "REFER";
+            /** Payable Inr */
+            payable_inr: number | null;
+        };
         /** ConditionInput */
         ConditionInput: {
             /** Condition Name */
@@ -713,6 +790,18 @@ export interface components {
             claimed_inr: number;
             /** Item */
             item: string;
+        };
+        /** EvidenceReference */
+        EvidenceReference: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "clause" | "record";
+            /** Source Digest */
+            source_digest: string;
+            /** Source Id */
+            source_id: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1980,6 +2069,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_synthetic_agent_result: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentResultView"];
                 };
             };
             /** @description Validation Error */

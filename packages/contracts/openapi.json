@@ -1,6 +1,176 @@
 {
   "components": {
     "schemas": {
+      "AgentLine": {
+        "additionalProperties": false,
+        "properties": {
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceReference"
+            },
+            "maxItems": 40,
+            "minItems": 1,
+            "title": "Citations",
+            "type": "array"
+          },
+          "claimed_inr": {
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Claimed Inr",
+            "type": "integer"
+          },
+          "deduction_inr": {
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Deduction Inr",
+            "type": "integer"
+          },
+          "item": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Item",
+            "type": "string"
+          },
+          "payable_inr": {
+            "maximum": 100000000.0,
+            "minimum": 0.0,
+            "title": "Payable Inr",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "item",
+          "claimed_inr",
+          "payable_inr",
+          "deduction_inr",
+          "citations"
+        ],
+        "title": "AgentLine",
+        "type": "object"
+      },
+      "AgentResultView": {
+        "additionalProperties": false,
+        "properties": {
+          "comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComparisonResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "input_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Revision"
+          },
+          "mode": {
+            "const": "synthetic-only",
+            "default": "synthetic-only",
+            "title": "Mode",
+            "type": "string"
+          },
+          "operation_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Id"
+          },
+          "policy_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Version"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "review_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Version"
+          },
+          "state": {
+            "enum": [
+              "not_requested",
+              "unavailable",
+              "stale",
+              "reserved",
+              "submitting",
+              "unknown",
+              "rejected",
+              "published",
+              "superseded",
+              "expired"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "AgentResultView",
+        "type": "object"
+      },
       "Amendment": {
         "additionalProperties": false,
         "properties": {
@@ -614,6 +784,77 @@
         "title": "ClauseInput",
         "type": "object"
       },
+      "ComparisonResult": {
+        "additionalProperties": false,
+        "properties": {
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceReference"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "claimed_inr": {
+            "anyOf": [
+              {
+                "maximum": 100000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed Inr"
+          },
+          "explanation": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Explanation",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AgentLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "outcome": {
+            "enum": [
+              "APPROVE",
+              "APPROVE_WITH_DEDUCTIONS",
+              "QUERY",
+              "REFER"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "payable_inr": {
+            "anyOf": [
+              {
+                "maximum": 100000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payable Inr"
+          }
+        },
+        "required": [
+          "outcome",
+          "claimed_inr",
+          "payable_inr",
+          "lines",
+          "citations",
+          "explanation"
+        ],
+        "title": "ComparisonResult",
+        "type": "object"
+      },
       "ConditionInput": {
         "additionalProperties": false,
         "properties": {
@@ -667,6 +908,37 @@
           "claimed_inr"
         ],
         "title": "CostInput",
+        "type": "object"
+      },
+      "EvidenceReference": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "clause",
+              "record"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "source_digest": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Digest",
+            "type": "string"
+          },
+          "source_id": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "source_id",
+          "source_digest"
+        ],
+        "title": "EvidenceReference",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -3145,6 +3417,53 @@
         "summary": "Request Detail",
         "tags": [
           "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/requests/{request_id}/agent-result": {
+      "get": {
+        "operationId": "get_synthetic_agent_result",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResultView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read",
+        "tags": [
+          "synthetic agent results"
         ]
       }
     },

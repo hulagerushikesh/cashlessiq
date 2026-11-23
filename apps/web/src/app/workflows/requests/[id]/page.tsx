@@ -6,6 +6,7 @@ import Link from "next/link";
 import { mvpApi } from "@/lib/mvp-api";
 import { currentIdentity, sessionApi } from "@/lib/server-api";
 import { CaseServiceError } from "@/components/case-workspace";
+import { AgentComparison } from "@/components/agent-comparison";
 
 import { RequestResults, SupportingDocuments } from "@/components/background-progress";
 import type { RequestProgress, Documents } from "@/lib/workflow-progress";
@@ -76,6 +77,7 @@ export default async function RequestPage({
           }}
         />
       )}
+      {record && medical && <AgentComparison requestId={id} />}
       {write && (
         <WorkflowForm
           action="/workflows/commands"

@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { randomUUID } from "node:crypto";
 import { currentIdentity, sessionApi } from "@/lib/server-api";
 import { CaseServiceError, rupees } from "@/components/case-workspace";
+import { AgentComparison } from "@/components/agent-comparison";
 
 export default async function ReviewPage({
   params,
@@ -80,6 +81,7 @@ export default async function ReviewPage({
               : "Action was not saved. Check your role, assignment, state, amount and reason, then retry."}
         </p>
       )}
+      {medical && requestId.startsWith("REQ-") && <AgentComparison requestId={requestId} />}
       {writable && (
         <section className={panel} aria-labelledby="commands-title">
           <h2 id="commands-title" className="text-lg font-semibold">

@@ -12,6 +12,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from ciq_api.agent_results import register_agent_results
 from ciq_api.auth import JWTVerifier, issue_local_token, resolve_identity
 from ciq_api.body_limit import WorkflowBodyLimit
 from ciq_api.cases import CaseRepository, SyntheticCaseRepository
@@ -205,4 +206,5 @@ def create_app(
 
     register_reviews(app, config, identity, get_session, case_repository)
     register_mvp(app, config, identity, get_session, case_repository)
+    register_agent_results(app, config, identity, get_session)
     return app

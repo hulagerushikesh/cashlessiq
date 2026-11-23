@@ -7,6 +7,7 @@ export type CaseQueue = components["schemas"]["CaseQueue"];
 export type Outcome = components["schemas"]["CaseSummary"]["outcome"];
 export type SourceCaseDetail = components["schemas"]["SourceCaseDetail"];
 export type SourceCaseQueue = components["schemas"]["SourceCaseQueue"];
+export type AgentResult = components["schemas"]["AgentResultView"];
 
 export function createApiClient(baseUrl: string, token: string) {
   return createClient<paths>({

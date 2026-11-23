@@ -12,6 +12,16 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### App-facing synthetic comparison view — 23 November
+
+The [read-only clinical agent panel](../architecture/agent-result-view.md) now
+shows existing synthetic status/comparisons on request and reviewer screens.
+The medical-only endpoint rechecks owned current facts, policy approval,
+assignment and review versions, revalidates money/evidence and withholds stale
+results. Other roles cannot read private comparisons; refresh cannot start or
+retry execution or alter allowance. Synthetic execution/job wiring and governed
+live source/provider integration remain next. The cloud deployment is unchanged.
+
 ### Combined encrypted agent restore — 23 November
 
 The [restored-peer checkpoint](../architecture/agent-receipt-peer.md#combined-encrypted-restore--23-november)

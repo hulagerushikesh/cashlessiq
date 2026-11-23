@@ -7,6 +7,18 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### App-facing synthetic comparison view — 23 November
+
+The [read-only agent view](../architecture/agent-result-view.md) connects existing
+fake operation status and validated comparisons to the request/reviewer screens.
+Only medical officers can access the endpoint/panel. Fresh owned context and all
+input/policy/evidence/review fences are checked; stale, revoked or completed
+reviews withhold prior output. Synthetic provenance, money, evidence and an
+escaped explanation remain distinct from the deterministic assessment and final
+human decision. Refresh cannot execute, retry, recover or settle allowance.
+Execution/job integration and live source/provider work remain open. This source
+change has not been deployed; no GCP, Docker or paid call is required.
+
 ### Combined encrypted agent restore — 23 November
 
 The [restored-peer checkpoint](../architecture/agent-receipt-peer.md#combined-encrypted-restore--23-november)

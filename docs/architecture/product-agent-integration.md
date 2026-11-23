@@ -87,6 +87,13 @@ citation gaps and extraction normalization issues.
 
 ## Next engineering batch
 
+The later [read-only comparison view](agent-result-view.md) adds the first
+app-facing clinical status/result endpoint and request/reviewer panel. It reads
+existing synthetic records after fresh scope/version checks and revalidation;
+it does not schedule execution, activate the worker or change allowance.
+Execution/job integration remains the next app milestone. The historical
+checkpoints below describe the inactive execution packages as they were added.
+
 The first offline batch is implemented in
 [`agent_contracts.py`](../../apps/api/src/ciq_api/agent_contracts.py) and
 [`agent_simulation.py`](../../apps/api/src/ciq_api/agent_simulation.py), with

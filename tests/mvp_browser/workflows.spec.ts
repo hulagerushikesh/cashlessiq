@@ -81,6 +81,9 @@ test("policy approval, queued assessment, human decision and document visibility
     await expect(processor.page).toHaveURL(/\/workflows\/requests\/REQ-/);
     const requestUrl = processor.page.url().split("?")[0];
     await waitFor(processor.page, "APPROVE WITH DEDUCTIONS · ₹95,000");
+    await expect(
+      processor.page.getByRole("heading", { name: "Agent comparison", exact: true }),
+    ).toHaveCount(0);
     const progressResponse = await processor.page.request.get(
       `/workflows/progress?kind=request&id=${new URL(requestUrl).pathname.split("/").at(-1)}`,
     );
@@ -104,6 +107,12 @@ test("policy approval, queued assessment, human decision and document visibility
       .getByRole("link", { name: `SYN-${product.replaceAll("_", "-")}`, exact: true })
       .click();
     await medical.page.getByRole("link", { name: "Open reviewer workflow" }).click();
+    await expect(
+      medical.page.getByRole("heading", { name: "Agent comparison", exact: true }),
+    ).toBeVisible();
+    await expect(
+      medical.page.getByText("No synthetic agent comparison has been requested for this review."),
+    ).toBeVisible();
     await medical.page
       .getByLabel("Assignee", { exact: true })
       .selectOption("00000000-0000-4000-8000-000000000012");
@@ -119,6 +128,9 @@ test("policy approval, queued assessment, human decision and document visibility
     await saveAndNavigate(medical.page, "Save reviewer action");
     await expect(
       medical.page.getByText(/Synthetic testing · APPROVED WITH DEDUCTIONS · Version 2/),
+    ).toBeVisible();
+    await expect(
+      medical.page.getByText(/Comparison unavailable for the current review/),
     ).toBeVisible();
     await medical.page
       .getByLabel("Comment or action reason")
