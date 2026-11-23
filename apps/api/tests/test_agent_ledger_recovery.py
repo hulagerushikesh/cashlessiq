@@ -90,7 +90,7 @@ def snapshot(engine):
     url = engine.url
     assert (url.host, url.port, url.username) == ("127.0.0.1", 5432, "postgres")
     assert url.database == "postgres" or re.fullmatch(
-        r"ciq_agent_restore_[a-f0-9]{24}", url.database
+        r"ciq_(?:agent_restore|controller)_[a-f0-9]{24}", url.database
     )
     assert url.password == "ciq-disposable-agent-ledger"
     with engine.connect() as db:
@@ -112,7 +112,9 @@ def snapshot(engine):
 
 
 @contextmanager
-def restored_database(s, container, directory, *, after_backup=None, owner_ledger=True):
+def restored_database(
+    s, container, directory, *, after_backup=None, owner_ledger=True, command=service_command,
+):
     from scripts.check_mvp_recovery import recovered_transfer_dump, verify_manifest
     from scripts.mvp_recovery_probe import table_manifest
     from scripts.verify_mvp_backup import digest_file, verify_package
@@ -126,13 +128,13 @@ def restored_database(s, container, directory, *, after_backup=None, owner_ledge
         snapshot_id = db.execute("SELECT pg_export_snapshot()").fetchone()[0]
         with dump.open("xb") as output:
             dump.chmod(0o600)
-            service_command(
+            command(
                 container,
                 "pg_dump",
                 "-U",
                 "postgres",
                 "-d",
-                "postgres",
+                s.engine.url.database,
                 "--format=custom",
                 "--no-owner",
                 "--no-privileges",
@@ -164,7 +166,7 @@ def restored_database(s, container, directory, *, after_backup=None, owner_ledge
     with snapshot(s.engine) as (db, source_schema):
         source_after_backup = table_manifest(db, source_schema)
     database = "ciq_agent_restore_" + uuid4().hex[:24]
-    service_command(container, "createdb", "-U", "postgres", "-T", "template0", database)
+    command(container, "createdb", "-U", "postgres", "-T", "template0", database)
     engine = create_engine(
         s.engine.url.set(database=database), connect_args={"options": f"-csearch_path={schema}"}
     )
@@ -173,7 +175,7 @@ def restored_database(s, container, directory, *, after_backup=None, owner_ledge
             assert decrypted != dump
             assert digest_file(decrypted) == digest_file(dump)
             with decrypted.open("rb") as source:
-                service_command(
+                command(
                     container,
                     "pg_restore",
                     "-U",
@@ -197,7 +199,7 @@ def restored_database(s, container, directory, *, after_backup=None, owner_ledge
         })
     finally:
         engine.dispose()
-        service_command(container, "dropdb", "-U", "postgres", "--force", database)
+        command(container, "dropdb", "-U", "postgres", "--force", database)
     # No application/ledger mutation in the restored DB may affect the original.
     with snapshot(s.engine) as (db, schema):
         verify_manifest(source_after_backup, table_manifest(db, schema))

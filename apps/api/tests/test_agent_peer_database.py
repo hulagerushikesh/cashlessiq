@@ -16,6 +16,7 @@ if (
     pytest.skip("Combined peers require the explicit disposable CI job", allow_module_level=True)
 
 import select
+from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -54,6 +55,13 @@ def response(child):
 def combined(recovered, request):
     s = recovered
     peer = create_peers(request, pin=s.setup.admission.journal.pin.model_dump(mode="json"))
+    with combined_runtime(s, peer) as runtime:
+        yield runtime
+
+
+@contextmanager
+def combined_runtime(s, peer):
+    """Same actual-UID runtime for original and explicitly rebound databases."""
     work = peer.root / "custody"
     work.mkdir(mode=0o700)
     os.chown(work, peer.custody_uid, peer.custody_uid)

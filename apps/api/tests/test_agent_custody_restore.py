@@ -15,7 +15,8 @@ if (
     or os.environ.get("GITHUB_ACTIONS") != "true"
     or os.environ.get("GITHUB_REPOSITORY") != "hulagerushikesh/cashlessiq"
     or os.environ.get("CIQ_AGENT_CONTROLLER_TEST") != "1"
-    or not os.environ.get("CIQ_AGENT_RECOVERY_CONTAINER")
+    or (not os.environ.get("CIQ_AGENT_RECOVERY_CONTAINER")
+        and os.environ.get("CIQ_AGENT_PEER_DATABASE_TEST") != "1")
 ):
     pytest.skip("Dedicated disposable restricted restore job required", allow_module_level=True)
 

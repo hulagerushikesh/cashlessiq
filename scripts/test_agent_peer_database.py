@@ -81,7 +81,11 @@ def main():
             "create", "--name", name, *common(), "--network", "container:" + pg,
             "--tmpfs", "/run:rw,nosuid,nodev,noexec,size=32m,mode=755",
             "--tmpfs", "/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1777",
+            # Override the PostgreSQL tools base's declared data volume; the
+            # supervisor starts no server and creates no anonymous disk volume.
+            "--tmpfs", "/var/lib/postgresql/data:rw,nosuid,nodev,noexec,size=1m,mode=755",
             "--env", "GITHUB_ACTIONS=true",
+            "--env", "RUNNER_OS=Linux",
             "--env", "GITHUB_REPOSITORY=hulagerushikesh/cashlessiq",
             "--env", "CIQ_AGENT_CONTROLLER_TEST=1",
             "--env", "CIQ_AGENT_RECEIPT_PEER_TEST=1",
@@ -90,9 +94,10 @@ def main():
             "ciq-disposable-agent-ledger@127.0.0.1:5432/postgres", image,
         ).stdout.decode().strip()
         owned.append(identifier)
-        isolated(inspect(identifier), "container:" + pg, ("/run", "/tmp"))
+        isolated(inspect(identifier), "container:" + pg,
+                 ("/run", "/tmp", "/var/lib/postgresql/data"))
         try:
-            result = docker("start", "-a", identifier, check=False, timeout=240)
+            result = docker("start", "-a", identifier, check=False, timeout=300)
         except subprocess.TimeoutExpired as exc:
             summary(exc.stdout or b"")
             raise RuntimeError("Combined peer acceptance timed out") from None
@@ -100,11 +105,11 @@ def main():
         state = inspect(identifier)["State"]
         if (
             result.returncode or state["Running"] or state["ExitCode"] != 0
-            or state["OOMKilled"] or state["Error"] or passed != 11
+            or state["OOMKilled"] or state["Error"] or passed != 20
         ):
             raise RuntimeError("Combined peer acceptance failed")
         assert inspect(pg)["State"]["Running"] and not inspect(pg)["State"]["OOMKilled"]
-        print("PASS: restricted PostgreSQL, separate receipt peer and bounded fake child")
+        print("PASS: restricted PostgreSQL, separate receipt peer, child and encrypted restore")
     finally:
         failures = []
         for identifier in reversed(owned):

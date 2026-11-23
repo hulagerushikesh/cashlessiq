@@ -1,5 +1,6 @@
 """Explicit disposable root supervisor; actual nonroot Linux peers, never local Docker."""
 
+import hashlib
 import json
 import os
 import re
@@ -42,7 +43,7 @@ def receipt(**changes):
     ).model_copy(update=changes).model_dump(mode="json")
 
 
-def create_peers(request, *, pin=None):
+def create_peers(request, *, pin=None, retained=None):
     # /run avoids a public writable ancestor. Only this invocation is removed.
     root = Path("/run") / ("ciq-receipt-peer-" + uuid4().hex[:16])
     processes = []
@@ -116,7 +117,24 @@ def create_peers(request, *, pin=None):
             return db.execute("SELECT operation_id,submission_id,digest,state FROM receipt "
                               "ORDER BY submission_id").fetchall()
 
-    assert run(server_uid, action="provision") == b"PASS"
+    if retained is None:
+        assert run(server_uid, action="provision") == b"PASS"
+    else:
+        # Trusted, quiescent fixture handoff of the ORIGINAL retained history.
+        # It is never provisioned, reconstructed or taken from a product dump.
+        retained = Path(retained)
+        assert retained.is_dir() and not retained.is_symlink()
+        original = retained / "fake-receipts.sqlite3"
+        assert set(retained.iterdir()) == {original} and not original.is_symlink()
+        digest = hashlib.sha256(original.read_bytes()).digest()
+        destination = Path(config["directory"])
+        shutil.move(str(retained), destination)
+        assert not retained.exists()
+        assert hashlib.sha256((destination / original.name).read_bytes()).digest() == digest
+        for item in (destination, destination / original.name):
+            os.chown(item, server_uid, server_uid)
+        assert destination.stat().st_mode & 0o777 == 0o700
+        assert (destination / original.name).stat().st_mode & 0o777 == 0o600
     server = start()
     s = SimpleNamespace(**config, root=root, server=server, start=start, stop=stop,
                         run=run, spawn=spawn, rows=rows, clinical_uid=clinical_uid,

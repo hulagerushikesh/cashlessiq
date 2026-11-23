@@ -4,6 +4,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import signal
 import sys
 from pathlib import Path
@@ -55,7 +56,8 @@ def main():
     clinical = config["action"] == "clinical"
     prefix = "ciq_scope_login_" if clinical else "ciq_receipt_login_"
     assert url.host == "127.0.0.1" and url.port == 5432
-    assert url.database.startswith("ciq_controller_") and url.username.startswith(prefix)
+    assert re.fullmatch(r"ciq_(?:controller|agent_restore)_[a-f0-9]{24}", url.database)
+    assert url.username.startswith(prefix)
     assert not set(os.environ) & {"DATABASE_URL", "TEST_DATABASE_URL",
                                   "SNOWFLAKE_TOKEN", "GOOGLE_APPLICATION_CREDENTIALS"}
     engine = create_engine(url, connect_args={
