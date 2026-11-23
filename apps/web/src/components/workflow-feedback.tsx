@@ -1,4 +1,4 @@
-import { workflowErrors } from "@/lib/workflow-feedback";
+import { workflowErrors } from "../lib/workflow-feedback";
 
 export function WorkflowFeedback({
   result,

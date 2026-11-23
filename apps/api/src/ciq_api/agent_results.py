@@ -1,4 +1,4 @@
-"""Read-only synthetic comparison views. No admission, execution or recovery commands."""
+"""Clinical comparison views and held request intent; no execution or recovery."""
 
 from datetime import datetime
 from typing import Annotated, Literal
@@ -22,9 +22,17 @@ from ciq_api.agent_contracts import (
     validate_candidate,
 )
 from ciq_api.agent_ledger_models import AgentComparison, AgentOperation
+from ciq_api.agent_requests import (
+    AgentRequestCommand,
+    AgentRequestContext,
+    AgentRequestReceipt,
+    request_comparison,
+    waiting_request,
+)
 from ciq_api.agent_scope import capture_scope
 from ciq_api.contracts import MeResponse, Outcome
 from ciq_api.mvp_models import SubmittedCase
+from ciq_api.review_models import ReviewCase
 
 
 class ComparisonResult(ImmutableContract):
@@ -40,6 +48,7 @@ class AgentResultView(ImmutableContract):
     mode: Literal["synthetic-only"] = "synthetic-only"
     state: Literal[
         "not_requested",
+        "awaiting_executor",
         "unavailable",
         "stale",
         "reserved",
@@ -58,6 +67,8 @@ class AgentResultView(ImmutableContract):
     input_revision: int | None = None
     review_version: int | None = None
     comparison: ComparisonResult | None = None
+    request_context: AgentRequestContext | None = None
+    request_job_id: UUID | None = None
 
 
 def result_view(operation, comparison, current: AgentContext, actor_id: UUID) -> AgentResultView:
@@ -149,7 +160,7 @@ def register_agent_results(app, config, identity, get_session):
         if db.get(SubmittedCase, (who.tenant.id, request_id)) is None:
             raise HTTPException(404, "Request not found")
         try:
-            _, current = capture_scope(db, who.tenant.id, who.user.id, request_id, uuid4())
+            snapshot, current = capture_scope(db, who.tenant.id, who.user.id, request_id, uuid4())
         except (ValueError, TypeError, KeyError, RecursionError):
             return AgentResultView(state="unavailable")
         # One statement observes atomic publication; no ledger row locks, writes,
@@ -171,6 +182,34 @@ def register_agent_results(app, config, identity, get_session):
             .limit(1)
             .execution_options(populate_existing=True)
         ).first()
-        return result_view(*(row or (None, None)), current, who.user.id)
+        view = result_view(*(row or (None, None)), current, who.user.id)
+        review = db.get(ReviewCase, (who.tenant.id, request_id))
+        if row is None and review.assignee_id == who.user.id:
+            waiting = waiting_request(db, who, request_id, snapshot)
+            if waiting:
+                return view.model_copy(
+                    update={
+                        "state": "awaiting_executor",
+                        "request_job_id": waiting.id,
+                    }
+                )
+            return view.model_copy(
+                update={
+                    "request_context": AgentRequestContext(
+                        input_revision=snapshot.binding.input_revision,
+                        review_version=snapshot.binding.review_version,
+                    )
+                }
+            )
+        return view
+
+    @router.post(
+        "/requests/{request_id}/agent-request",
+        response_model=AgentRequestReceipt,
+        status_code=202,
+        operation_id="request_synthetic_agent_comparison",
+    )
+    def request(request_id: str, payload: AgentRequestCommand, who: Identity, db: Database):
+        return request_comparison(db, who, request_id, payload)
 
     app.include_router(router)

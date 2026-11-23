@@ -48,6 +48,78 @@
         "title": "AgentLine",
         "type": "object"
       },
+      "AgentRequestCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "command_id": {
+            "format": "uuid",
+            "title": "Command Id",
+            "type": "string"
+          },
+          "expected_input_revision": {
+            "minimum": 0.0,
+            "title": "Expected Input Revision",
+            "type": "integer"
+          },
+          "expected_review_version": {
+            "minimum": 0.0,
+            "title": "Expected Review Version",
+            "type": "integer"
+          },
+          "synthetic_data": {
+            "title": "Synthetic Data",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "command_id",
+          "expected_input_revision",
+          "expected_review_version",
+          "synthetic_data"
+        ],
+        "title": "AgentRequestCommand",
+        "type": "object"
+      },
+      "AgentRequestContext": {
+        "additionalProperties": false,
+        "properties": {
+          "input_revision": {
+            "title": "Input Revision",
+            "type": "integer"
+          },
+          "review_version": {
+            "title": "Review Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "input_revision",
+          "review_version"
+        ],
+        "title": "AgentRequestContext",
+        "type": "object"
+      },
+      "AgentRequestReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "job_id": {
+            "format": "uuid",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "state": {
+            "const": "awaiting_executor",
+            "default": "awaiting_executor",
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "AgentRequestReceipt",
+        "type": "object"
+      },
       "AgentResultView": {
         "additionalProperties": false,
         "properties": {
@@ -137,6 +209,28 @@
             ],
             "title": "Published At"
           },
+          "request_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentRequestContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_job_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Job Id"
+          },
           "review_version": {
             "anyOf": [
               {
@@ -151,6 +245,7 @@
           "state": {
             "enum": [
               "not_requested",
+              "awaiting_executor",
               "unavailable",
               "stale",
               "reserved",
@@ -3417,6 +3512,63 @@
         "summary": "Request Detail",
         "tags": [
           "synthetic MVP"
+        ]
+      }
+    },
+    "/v3/requests/{request_id}/agent-request": {
+      "post": {
+        "operationId": "request_synthetic_agent_comparison",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRequestCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRequestReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Request",
+        "tags": [
+          "synthetic agent results"
         ]
       }
     },

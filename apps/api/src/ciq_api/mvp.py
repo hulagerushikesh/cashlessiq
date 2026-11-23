@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ciq_api.assessment import fingerprint
 from ciq_api.contracts import MeResponse
-from ciq_api.jobs import enqueue
+from ciq_api.jobs import GENERIC_JOB_KINDS, enqueue
 from ciq_api.models import AppUser, Membership, Tenant
 from ciq_api.mvp_contracts import (
     Amendment,
@@ -493,7 +493,7 @@ def register_mvp(app, config, identity, get_session, case_repository):
     def jobs(who: Identity, db: Database):
         rows = db.scalars(
             select(WorkJob)
-            .where(WorkJob.tenant_id == who.tenant.id)
+            .where(WorkJob.tenant_id == who.tenant.id, WorkJob.kind.in_(GENERIC_JOB_KINDS))
             .order_by(WorkJob.created_at.desc())
             .limit(50)
         ).all()
@@ -514,6 +514,8 @@ def register_mvp(app, config, identity, get_session, case_repository):
     @router.get("/jobs/{job_id}", operation_id="get_job")
     def job_detail(job_id: UUID, who: Identity, db: Database):
         job = owned(db, WorkJob, job_id, who)
+        if job.kind not in GENERIC_JOB_KINDS:
+            raise HTTPException(404, "Not found")
         return {
             "id": job.id,
             "kind": job.kind,
@@ -530,6 +532,8 @@ def register_mvp(app, config, identity, get_session, case_repository):
     def retry(job_id: UUID, payload: RetryCommand, who: Identity, db: Database):
         lock_who(db, who, {"operations_lead", "tenant_admin"})
         job = owned(db, WorkJob, job_id, who)
+        if job.kind not in GENERIC_JOB_KINDS:
+            raise HTTPException(409, "This job cannot use generic retry")
         digest = fingerprint({"retry_job": str(job_id), **payload.model_dump(mode="json")})
         prior = prior_event(db, who, payload.command_id, digest)
         if prior:

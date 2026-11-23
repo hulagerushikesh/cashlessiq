@@ -7,6 +7,16 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### App comparison request queue — 23 November
+
+The [request-intent workflow](../architecture/agent-request-intent.md) adds the
+medical officer's request action with fresh assignment/version checks,
+idempotent retries and concurrent-request deduplication. Requests remain visibly
+held for the inactive dedicated executor. Generic workers, job pages and manual
+retry cannot consume them; saving never changes allowance or a human decision.
+Dedicated dispatch/execution and live source/provider integration remain open.
+No migration, local Docker, GCP startup or paid call is involved.
+
 ### App-facing synthetic comparison view — 23 November
 
 The [read-only agent view](../architecture/agent-result-view.md) connects existing

@@ -33,8 +33,10 @@ returns unavailable without creating one. Once assigned, an empty operation
 history is shown as not requested.
 An unavailable comparison leaves the normal assessment and human actions usable.
 Refresh performs a full document navigation and only repeats the read; it cannot
-renew a lease, recover status, issue transport or change allowance. There is no
-run/retry control. A completed or changed review withholds prior output.
+renew a lease, recover status, issue transport or change allowance. The later
+[request-intent workflow](agent-request-intent.md) adds a save-only request
+control for assigned current reviews; it cannot run or retry execution.
+A completed or changed review withholds prior output.
 
 Validation covers all thirty golden candidates in the pure projection, binding
 and storage faults, HTTP role/tenant/revocation and read-side-effect boundaries,

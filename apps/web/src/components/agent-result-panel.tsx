@@ -3,6 +3,8 @@ import { rupees } from "../lib/money";
 
 const messages: Record<AgentResult["state"], string> = {
   not_requested: "No synthetic agent comparison has been requested for this review.",
+  awaiting_executor:
+    "Comparison request saved. Waiting for the dedicated synthetic executor; nothing has run and no allowance has been consumed.",
   unavailable:
     "Comparison unavailable for the current review. Check the assignment, policy approval and latest assessment.",
   stale: "The request, policy or review changed. The earlier comparison is withheld.",

@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { AgentResult } from "@cashlessiq/api-client";
 import { AgentResultPanel } from "../../apps/web/src/components/agent-result-panel";
+import { AgentRequestForm } from "../../apps/web/src/components/agent-request-form";
 
 const view = (state: AgentResult["state"]): AgentResult => ({
   state,
@@ -19,7 +20,7 @@ test("unavailable service preserves a clear fallback and no execution controls",
   expect(html).not.toMatch(/<button|<form|<script/);
 });
 
-for (const state of ["not_requested", "unknown", "stale", "rejected", "expired"] as const) {
+for (const state of ["not_requested", "awaiting_executor", "unknown", "stale", "rejected", "expired"] as const) {
   test(`${state} never appears as a completed comparison`, () => {
     const html = render(view(state));
     expect(html).toContain('role="status"');
@@ -29,6 +30,26 @@ for (const state of ["not_requested", "unknown", "stale", "rejected", "expired"]
     if (state === "unknown") expect(html).toContain("automatic retry is blocked");
   });
 }
+
+test("held request is explicit about execution and spending", () => {
+  const html = render(view("awaiting_executor"));
+  expect(html).toContain("nothing has run and no allowance has been consumed");
+  expect(html).not.toMatch(/<button|<form/);
+});
+
+test("request form carries versions and fictional confirmation, never authority", () => {
+  const html = renderToStaticMarkup(createElement(AgentRequestForm, {
+    requestId: "REQ-SYNTHETIC", commandId: "00000000-0000-4000-8000-000000000002",
+    context: { input_revision: 2, review_version: 3 },
+  }));
+  expect(html).toContain('action="/workflows/commands"');
+  expect(html).toContain('name="expected_input_revision" value="2"');
+  expect(html).toContain('name="expected_review_version" value="3"');
+  expect(html).toContain('name="synthetic_data"');
+  expect(html).toContain("fictional test data only");
+  expect(html).toContain("does not run AI, spend money or change your decision");
+  expect(html).not.toMatch(/name="(?:tenant_id|actor_id|grant_id|epoch_id|credential|path)"/);
+});
 
 const published: AgentResult = {
   ...view("published"),

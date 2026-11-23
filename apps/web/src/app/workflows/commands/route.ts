@@ -80,6 +80,15 @@ export async function POST(request: NextRequest) {
               clinical_note: form.get("clinical_note") || null,
             },
       });
+    } else if (operation === "agent-request") {
+      path = `requests/${id}/agent-request`;
+      destination = new URL(`/workflows/requests/${id}`, origin);
+      body = JSON.stringify({
+        command_id,
+        expected_input_revision: Number(form.get("expected_input_revision")),
+        expected_review_version: Number(form.get("expected_review_version")),
+        synthetic_data: form.get("synthetic_data") === "true",
+      });
     } else if (operation === "amend") {
       path = `requests/${id}/amend`;
       destination = new URL(`/workflows/requests/${id}`, origin);

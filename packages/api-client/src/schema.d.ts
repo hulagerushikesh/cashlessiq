@@ -381,6 +381,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v3/requests/{request_id}/agent-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request */
+        post: operations["request_synthetic_agent_comparison"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v3/requests/{request_id}/agent-result": {
         parameters: {
             query?: never;
@@ -501,6 +518,41 @@ export interface components {
             /** Payable Inr */
             payable_inr: number;
         };
+        /** AgentRequestCommand */
+        AgentRequestCommand: {
+            /**
+             * Command Id
+             * Format: uuid
+             */
+            command_id: string;
+            /** Expected Input Revision */
+            expected_input_revision: number;
+            /** Expected Review Version */
+            expected_review_version: number;
+            /** Synthetic Data */
+            synthetic_data: boolean;
+        };
+        /** AgentRequestContext */
+        AgentRequestContext: {
+            /** Input Revision */
+            input_revision: number;
+            /** Review Version */
+            review_version: number;
+        };
+        /** AgentRequestReceipt */
+        AgentRequestReceipt: {
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            /**
+             * State
+             * @default awaiting_executor
+             * @constant
+             */
+            state: "awaiting_executor";
+        };
         /** AgentResultView */
         AgentResultView: {
             comparison?: components["schemas"]["ComparisonResult"] | null;
@@ -522,13 +574,16 @@ export interface components {
             policy_version?: string | null;
             /** Published At */
             published_at?: string | null;
+            request_context?: components["schemas"]["AgentRequestContext"] | null;
+            /** Request Job Id */
+            request_job_id?: string | null;
             /** Review Version */
             review_version?: number | null;
             /**
              * State
              * @enum {string}
              */
-            state: "not_requested" | "unavailable" | "stale" | "reserved" | "submitting" | "unknown" | "rejected" | "published" | "superseded" | "expired";
+            state: "not_requested" | "awaiting_executor" | "unavailable" | "stale" | "reserved" | "submitting" | "unknown" | "rejected" | "published" | "superseded" | "expired";
         };
         /** Amendment */
         Amendment: {
@@ -2069,6 +2124,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_synthetic_agent_comparison: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentRequestCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentRequestReceipt"];
                 };
             };
             /** @description Validation Error */

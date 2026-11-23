@@ -52,7 +52,10 @@ def test_golden_comparisons_keep_exact_money_nulls_and_evidence(index):
         "input_revision",
         "review_version",
         "comparison",
+        "request_context",
+        "request_job_id",
     }
+    assert data["request_context"] is None and data["request_job_id"] is None
     assert data["mode"] == "synthetic-only"
 
 

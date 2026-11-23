@@ -21,6 +21,8 @@ from ciq_api.models import Tenant
 from ciq_api.mvp_models import AnalyticsEvent, DocumentUpload, PolicyVersion, SubmittedCase, WorkJob
 from ciq_api.review_models import ReviewOutbox
 
+GENERIC_JOB_KINDS = ("assessment", "regression", "extraction")
+
 
 def enqueue(db, who, kind, subject, payload):
     job = WorkJob(
@@ -46,13 +48,18 @@ def claim(engine):
         )
         db.execute(
             update(WorkJob)
-            .where(available, WorkJob.attempts >= 3)
+            .where(available, WorkJob.kind.in_(GENERIC_JOB_KINDS), WorkJob.attempts >= 3)
             .values(state="dead", error_code="attempt_limit", lease_id=None, lease_until=None)
         )
         job = db.scalar(
             select(WorkJob)
             .join(Tenant, Tenant.id == WorkJob.tenant_id)
-            .where(available, WorkJob.attempts < 3, Tenant.active.is_(True))
+            .where(
+                available,
+                WorkJob.kind.in_(GENERIC_JOB_KINDS),
+                WorkJob.attempts < 3,
+                Tenant.active.is_(True),
+            )
             .order_by(WorkJob.created_at, WorkJob.id)
             .with_for_update(skip_locked=True, of=WorkJob)
             .limit(1)
@@ -67,7 +74,12 @@ def claim(engine):
 def compute(engine, job_id, lease):
     with Session(engine) as db:
         job = db.get(WorkJob, job_id)
-        if job is None or job.lease_id != lease or job.state != "running":
+        if (
+            job is None
+            or job.kind not in GENERIC_JOB_KINDS
+            or job.lease_id != lease
+            or job.state != "running"
+        ):
             raise ValueError("Lost job lease")
         if job.kind == "assessment":
             case = db.get(SubmittedCase, (job.tenant_id, job.subject_id))
@@ -121,7 +133,13 @@ def complete(engine, job_id, lease, result=None, *, failed=False):
     now = datetime.now(UTC)
     with Session(engine) as db, db.begin():
         job = db.scalar(select(WorkJob).where(WorkJob.id == job_id).with_for_update())
-        if job is None or job.state != "running" or job.lease_id != lease or job.lease_until <= now:
+        if (
+            job is None
+            or job.kind not in GENERIC_JOB_KINDS
+            or job.state != "running"
+            or job.lease_id != lease
+            or job.lease_until <= now
+        ):
             return False  # An expired worker cannot publish or overwrite its successor.
         if failed:
             job.state = "dead" if job.attempts >= 3 else "queued"

@@ -91,7 +91,9 @@ The later [read-only comparison view](agent-result-view.md) adds the first
 app-facing clinical status/result endpoint and request/reviewer panel. It reads
 existing synthetic records after fresh scope/version checks and revalidation;
 it does not schedule execution, activate the worker or change allowance.
-Execution/job integration remains the next app milestone. The historical
+The later [request-intent workflow](agent-request-intent.md) adds medical-officer
+requests held outside the generic worker and retry system. Dedicated bounded
+dispatch and execution remain the next app milestone. The historical
 checkpoints below describe the inactive execution packages as they were added.
 
 The first offline batch is implemented in

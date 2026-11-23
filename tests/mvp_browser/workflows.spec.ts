@@ -121,6 +121,13 @@ test("policy approval, queued assessment, human decision and document visibility
     await expect(
       medical.page.getByText("No synthetic agent comparison has been requested for this review."),
     ).toBeVisible();
+    await medical.page.getByLabel("This comparison contains fictional test data only.").check();
+    await saveAndNavigate(medical.page, "Request synthetic comparison");
+    await expect(medical.page.getByText(/Comparison request saved. Waiting for the dedicated synthetic executor/)).toBeVisible();
+    await expect(medical.page.getByRole("button", { name: "Request synthetic comparison", exact: true })).toHaveCount(0);
+    await medical.page.getByRole("link", { name: "Refresh comparison status", exact: true }).click();
+    await expect(medical.page.getByText(/nothing has run and no allowance has been consumed/)).toBeVisible();
+    await medical.page.goto(`/reviews/${requestId}`);
     await medical.page
       .getByLabel("Action", { exact: true })
       .selectOption("approve_with_deductions");
