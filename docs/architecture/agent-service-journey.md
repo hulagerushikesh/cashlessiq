@@ -192,3 +192,7 @@ is still not part of Compose or the GCP runtime bundle, and Debian-host acceptan
 remains separate. Governed Snowflake/source/provider integration follows these
 lifecycle gates. Rebuilding or starting GCP requires a new explicit spend/window
 approval.
+
+The follow-up [coordination guard](agent-service-coordination.md) holds a cooperative
+supervisor lease through installation and teardown and denies starts after
+uncertain delivery. Protected production credential acquisition remains open.

@@ -7,6 +7,16 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Coordinated synthetic service activation — 24 November
+
+The [service supervisor](../architecture/agent-service-coordination.md) now holds
+one cooperative lifecycle lock through installation, private delivery, explicit
+activation, retirement and teardown. Uncertain delivery/start permanently blocks
+further activation; custody requires both confirmed plans. All 115 focused local
+checks and changed-file Ruff pass. The previous retirement workflow at `3a61eba`
+has now finished successfully across all nine jobs. Production protected credential
+acquisition and live activation remain separate work; Docker/GCP stay off.
+
 ### Installed-service credential retirement rehearsal — 24 November
 
 The [full journey extension](../architecture/agent-service-journey.md#retirement-and-password-rotation-extension)
@@ -19,8 +29,7 @@ pass. At `3a61eba`, the corrected
 [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45387810147/job/138423238026)
 passes all three scenarios, 21 service invocations and confirmed cleanup. A new
 old-password probe exposed localhost trust in the dummy database; explicit SCRAM
-host authentication fixes that fixture gap. Other workflow jobs remain in
-progress at this receipt. Production credential delivery, activation
+host authentication fixes that fixture gap. The complete workflow has now passed all nine jobs. Production credential delivery, activation
 coordination and explicit reauthorization remain separate work. No Docker/GCP
 startup occurred.
 

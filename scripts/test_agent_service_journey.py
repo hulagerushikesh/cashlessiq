@@ -12,6 +12,7 @@ from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from pathlib import Path
 from uuid import uuid4
 
+from scripts import agent_service_coordination as coordination
 from scripts import agent_service_plans as plans
 from scripts import agent_service_quiescence as quiescence
 from scripts import test_agent_service_packages as packages
@@ -29,16 +30,42 @@ def guard():
 
 
 class Services:
-    def __init__(self, units):
+    def __init__(self, units, lease):
         self.units = dict(units)
         self.invocations = {}
+        self.lease = lease
+        self.delivered = set()
+        self.blocked = False
+
+    def authorize(self):
+        self.lease.check()
+        if self.blocked:
+            raise RuntimeError("Service activation blocked; retain private state")
 
     def deliver(self, role, body):
-        # Trusted CI excludes concurrent activation; evidence is not a host lock.
-        quiescence.verify_stopped(self.units["custody" if role == "candidate" else role])
-        plans.stage(role, json.dumps(body).encode())
+        try:
+            self.authorize()
+            quiescence.verify_stopped(self.units["custody" if role == "candidate" else role])
+            plans.stage(role, json.dumps(body).encode())
+            self.delivered.add(role)
+        except Exception:
+            # Even a post-publication sync failure permanently blocks this supervisor.
+            self.blocked = True
+            raise
 
     def start(self, role):
+        try:
+            self.authorize()
+            required = {role, "candidate"} if role == "custody" else {role}
+            if not required <= self.delivered:
+                raise RuntimeError("Service activation requires confirmed plan delivery")
+            quiescence.verify_stopped(self.units[role])
+            self._start(role)
+        except Exception:
+            self.blocked = True
+            raise
+
+    def _start(self, role):
         unit = self.units[role]
         if (policy.value(unit, "ActiveState") not in ("inactive", "failed")
             or not policy.empty(unit)):
@@ -89,6 +116,13 @@ class Services:
 @contextmanager
 def installed_services():
     guard()
+    with coordination.exclusive() as lease, _installed_services(lease) as services:
+        yield services
+
+
+@contextmanager
+def _installed_services(lease):
+    guard()  # Recheck installation/account absence after acquiring exclusion.
     base = Path("/run") / ("ciq-service-journey-" + uuid4().hex[:16])
     paths, accounts, units = [], [], []
     services = None
@@ -119,11 +153,12 @@ def installed_services():
             units.append((role, unit, target))
         policy.run("systemd-analyze", "verify", "--man=no", *(str(t) for _, _, t in units))
         policy.run("systemctl", "daemon-reload")
-        services = Services((role, unit) for role, unit, _ in units)
+        services = Services(((role, unit) for role, unit, _ in units), lease)
         yield services
     finally:
         # Even partial installation must quiesce every owned unit before teardown.
-        (services or Services((role, unit) for role, unit, _ in units)).stop()
+        (services or Services(((role, unit) for role, unit, _ in units), lease)).stop()
+        lease.check()  # Uncertain coordination must retain the owned private fixtures.
         for _role, unit, target in reversed(units):
             target.unlink()
             policy.run("systemctl", "reset-failed", unit, check=False)

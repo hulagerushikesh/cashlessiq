@@ -12,6 +12,16 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Coordinated synthetic service activation — 24 November
+
+The [service supervisor](../architecture/agent-service-coordination.md) now holds
+one cooperative lifecycle lock through installation, private delivery, explicit
+activation, retirement and teardown. Uncertain delivery/start permanently blocks
+further activation; custody requires both confirmed plans. All 115 focused local
+checks and changed-file Ruff pass. The previous retirement workflow at `3a61eba`
+has now finished successfully across all nine jobs. Production protected credential
+acquisition and live activation remain separate work; Docker/GCP stay off.
+
 ### Installed-service credential retirement rehearsal — 24 November
 
 The [complete journey](../architecture/agent-service-journey.md#retirement-and-password-rotation-extension)
@@ -26,7 +36,7 @@ Local verification passes 19 harness checks and changed-file Ruff. The corrected
 passes all three scenarios, 21 service invocations and owned-resource cleanup at
 `3a61eba`. The new password-denial probe exposed default localhost trust in the
 disposable database; its initialization now explicitly requires SCRAM host
-authentication. Other workflow jobs remain in progress at this receipt.
+authentication. The complete workflow has now passed all nine jobs.
 Production secret delivery/activation coordination and
 reauthorization remain open. No local Docker or GCP resource was started.
 

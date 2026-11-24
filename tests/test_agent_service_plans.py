@@ -2,6 +2,7 @@
 
 import os
 import stat
+from types import SimpleNamespace
 
 import pytest
 
@@ -140,9 +141,9 @@ def test_delivery_suppresses_private_exception_and_preserves_final_on_late_failu
 
 @pytest.mark.parametrize("role", list(plans.TARGETS))
 def test_service_delivery_checks_quiescence_before_staging(monkeypatch, role):
-    services = journey.Services((key, key + ".service") for key in (
+    services = journey.Services(((key, key + ".service") for key in (
         "claim", "custody", "receipt",
-    ))
+    )), SimpleNamespace(check=lambda: None))
     seen = []
     monkeypatch.setattr(journey.quiescence, "verify_stopped", lambda unit: seen.append(unit))
     monkeypatch.setattr(journey.plans, "stage", lambda key, raw: seen.append((key, raw)))
@@ -152,7 +153,7 @@ def test_service_delivery_checks_quiescence_before_staging(monkeypatch, role):
 
 
 def test_uncertain_service_cannot_receive_plan(monkeypatch):
-    services = journey.Services([("claim", "claim.service")])
+    services = journey.Services([("claim", "claim.service")], SimpleNamespace(check=lambda: None))
 
     def deny(_):
         raise ValueError("Quiescence unconfirmed")
