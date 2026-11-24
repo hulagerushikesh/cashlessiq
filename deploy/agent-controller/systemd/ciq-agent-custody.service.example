@@ -1,0 +1,49 @@
+[Unit]
+Description=Manual one-shot synthetic CashlessIQ custody
+
+[Service]
+Type=exec
+User=ciq-agent-custody
+Group=ciq-agent-custody
+ExecStart=/usr/bin/env -i PATH=/usr/bin:/bin LANG=C.UTF-8 /opt/cashlessiq-agent/venv/bin/python -I -B -m ciq_api.agent_custody_runner
+WorkingDirectory=/
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+UMask=0077
+Restart=no
+RuntimeMaxSec=40s
+TimeoutStopSec=2s
+KillMode=control-group
+SendSIGKILL=yes
+FinalKillSignal=SIGKILL
+MemoryAccounting=yes
+MemoryMax=192M
+MemorySwapMax=0
+CPUAccounting=yes
+CPUQuota=25%
+TasksAccounting=yes
+TasksMax=16
+LimitNOFILE=64
+LimitCORE=0
+OOMPolicy=kill
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictNamespaces=yes
+RestrictAddressFamilies=AF_UNIX AF_INET
+IPAddressDeny=any
+IPAddressAllow=127.0.0.1/32
+ReadOnlyPaths=/run/ciq-agent-custody /run/ciq-agent-receipts/ipc
+InaccessiblePaths=-/run/ciq-agent-claim -/run/ciq-agent-receipts/journal-parent

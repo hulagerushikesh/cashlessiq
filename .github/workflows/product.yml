@@ -5,6 +5,13 @@ on:
 permissions:
   contents: read
 jobs:
+  agent-service-supervision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Manual service policy with disposable systemd processes only
+        run: sudo -n env GITHUB_ACTIONS=true GITHUB_REPOSITORY=hulagerushikesh/cashlessiq CIQ_AGENT_SERVICE_TEST=1 /usr/bin/python3 scripts/test_agent_services.py
   agent-ledger:
     runs-on: ubuntu-latest
     timeout-minutes: 8

@@ -26,6 +26,8 @@ The [one-shot custody runner](docs/architecture/agent-custody-runner.md) prepare
 the separately assigned original custody process and its fixed synthetic child.
 The [bounded receipt runner](docs/architecture/agent-receipt-runner.md) prepares
 separate-UID receipt startup against existing retained history, without resets.
+The [manual service supervision examples](docs/architecture/agent-service-supervision.md)
+prepare external resource ceilings and whole-cgroup shutdown, without deployment.
 The inactive [agent comparison contract](docs/architecture/agent-comparison-contract.md)
 has 146 offline golden/fault checks. The inactive
 [fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 90

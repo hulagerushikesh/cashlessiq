@@ -1,0 +1,48 @@
+[Unit]
+Description=Manual bounded synthetic CashlessIQ receipt peer
+
+[Service]
+Type=exec
+User=ciq-agent-receipt
+Group=ciq-agent-receipt
+ExecStart=/usr/bin/env -i PATH=/usr/bin:/bin LANG=C.UTF-8 /opt/cashlessiq-agent/venv/bin/python -I -B -m ciq_api.agent_receipt_runner
+WorkingDirectory=/
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+UMask=0077
+Restart=no
+RuntimeMaxSec=65s
+TimeoutStopSec=2s
+KillMode=control-group
+SendSIGKILL=yes
+FinalKillSignal=SIGKILL
+MemoryAccounting=yes
+MemoryMax=128M
+MemorySwapMax=0
+CPUAccounting=yes
+CPUQuota=25%
+TasksAccounting=yes
+TasksMax=16
+LimitNOFILE=64
+LimitCORE=0
+OOMPolicy=kill
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictNamespaces=yes
+RestrictAddressFamilies=AF_UNIX AF_INET
+IPAddressDeny=any
+ReadWritePaths=/run/ciq-agent-receipts/ipc /run/ciq-agent-receipts/journal-parent/retained
+InaccessiblePaths=-/run/ciq-agent-claim -/run/ciq-agent-custody
