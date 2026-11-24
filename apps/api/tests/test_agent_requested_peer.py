@@ -162,7 +162,7 @@ def test_app_request_runs_once_through_real_logins_and_separate_receipt_uid(
     s = requested
     assert s is observer
     peer = create_peers(request, pin=s.setup.admission.journal.pin.model_dump(mode="json"),
-                        root=Path("/run/ciq-agent-receipts"))
+                        root=Path("/run/ciq-agent-receipts"), packaged=True)
     # This UID receives only the clinical login and an intent ID. No owning DB,
     # custody credential or direct retained-journal fallback exists in the child.
     code, out, err = run_claim(s, peer)
@@ -235,7 +235,7 @@ def test_custody_process_denies_before_attempt_without_independent_authority(
 ):
     s = requested
     peer = create_peers(request, pin=s.setup.admission.journal.pin.model_dump(mode="json"),
-                        root=Path("/run/ciq-agent-receipts"))
+                        root=Path("/run/ciq-agent-receipts"), packaged=True)
     code, out, err = run_claim(s, peer)
     assert code == 0 and not err
     s.claim = ClaimReceipt.model_validate_json(out)
@@ -254,7 +254,7 @@ def test_missing_fixed_child_fixture_holds_issued_attempt_without_replay(
 ):
     s = requested
     peer = create_peers(request, pin=s.setup.admission.journal.pin.model_dump(mode="json"),
-                        root=Path("/run/ciq-agent-receipts"))
+                        root=Path("/run/ciq-agent-receipts"), packaged=True)
     code, out, err = run_claim(s, peer)
     assert code == 0 and not err
     s.claim = ClaimReceipt.model_validate_json(out)
@@ -266,3 +266,41 @@ def test_missing_fixed_child_fixture_holds_issued_attempt_without_replay(
         assert rows(s)[0].state == "submitting" and len(rows(s)[1]) == 1
         assert peer.rows()[0][-1] == "issued" and not c.comparisons()
         assert balance(s.setup) == (1, 1, 10, 0, 0)
+
+
+@pytest.mark.parametrize("fault", ["stale", "epoch", "mode", "environment", "missing", "root"])
+def test_packaged_receipt_restart_denial_preserves_retained_custody(request, fault):
+    peer = create_peers(request, root=Path("/run/ciq-agent-receipts"), packaged=True)
+    # First commit a receipt through the real authenticated client. Restart
+    # failure must preserve existing prepared history, not merely an empty file.
+    from test_agent_receipt_peer_linux import receipt
+    selected = receipt()
+    assert peer.run(action="prepare", selected=selected) == b"PASS"
+    peer.stop(peer.server)
+    journal = Path(peer.directory) / "fake-receipts.sqlite3"
+    original = journal.read_bytes()
+    if fault != "stale":
+        Path(peer.path).unlink()  # Trusted quiescent fixture, never runtime cleanup.
+    if fault == "missing":
+        journal.rename(journal.with_suffix(".held"))
+    child = peer.launch_packaged(fault=fault)
+    out, err = child.communicate(timeout=8)
+    assert child.returncode == 1 and out == b"" and err == b"fake_receipt_unavailable\n"
+    if fault == "missing":
+        assert not journal.exists()
+        assert journal.with_suffix(".held").read_bytes() == original
+    else:
+        assert journal.read_bytes() == original
+    assert Path(peer.path).exists() == (fault == "stale")
+
+
+def test_packaged_receipt_idle_exit_leaves_original_history_and_stale_endpoint(request):
+    peer = create_peers(request, root=Path("/run/ciq-agent-receipts"), packaged=True)
+    from test_agent_receipt_peer_linux import receipt
+    selected = receipt()
+    assert peer.run(action="prepare", selected=selected) == b"PASS"
+    journal = Path(peer.directory) / "fake-receipts.sqlite3"
+    original = journal.read_bytes()
+    out, err = peer.server.communicate(timeout=15)
+    assert peer.server.returncode == 1 and out == b"" and err == b"fake_receipt_unavailable\n"
+    assert journal.read_bytes() == original and Path(peer.path).exists()

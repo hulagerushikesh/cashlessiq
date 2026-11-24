@@ -12,6 +12,23 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Bounded receipt process — 24 November
+
+The [packaged receipt launcher](../architecture/agent-receipt-runner.md) replaces
+receipt's test helper in the HTTP-to-result journeys. It opens existing private
+fake-only history, checks the epoch before readiness and serves the fixed
+kernel-authenticated endpoint with hard-coded lifetime/idle/connection limits.
+No provisioning, journal reset, stale endpoint adoption or automatic restart is
+available. All three fake process stages now have packaged entry points.
+
+Local verification passes 217 focused tests, including 26 new cases, and Ruff.
+The combined Linux suite now expects 44 scenarios, adding six conservative
+restart denials and actual idle exit while preserving prepared history. CI
+acceptance is recorded after completion. Production operator supervision,
+quiescence/credential lifecycle and restore reauthorization remain next, followed
+by governed source/provider integration and separately approved GCP testing.
+No local Docker or paid resource was started; the deployed image is unchanged.
+
 ### Bounded custody process — 24 November
 
 The [packaged custody process](../architecture/agent-custody-runner.md) consumes

@@ -7,6 +7,22 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Bounded receipt process — 24 November
+
+The [receipt launcher](../architecture/agent-receipt-runner.md) opens the original
+private retained journal under its separate UID, validates the active epoch and
+serves only the fixed authenticated endpoint. Startup cannot provision or reset
+history. Fixed lifetime, idle and connection limits close the listener; stale
+socket names require explicitly quiescent operator cleanup, with no auto-restart.
+
+The two app-to-result journeys now use all three packaged processes. Seven new
+Linux scenarios cover restart denials and idle exit without changing committed
+history; the combined suite expects 44 cases. Local focused verification passes
+217 tests (26 new) and repository Ruff. CI acceptance is recorded after completion.
+Operator resource supervision, credential/UID lifecycle, quiescence and restore
+reauthorization remain next, then governed source/provider integration and an
+approved GCP build/test. No local Docker or paid resource was started.
+
 ### Bounded custody process — 24 November
 
 The [one-shot custody runner](../architecture/agent-custody-runner.md) now replaces

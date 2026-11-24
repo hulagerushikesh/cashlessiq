@@ -109,3 +109,7 @@ installer or runtime-bundle deployment. Next integrate bounded trusted operator
 and receipt-process supervision, quiescence/secret rotation and explicit restore
 reauthorization. Governed Snowflake source/provider status and usage remain later
 gates, followed by a separately approved GCP build and joint testing window.
+
+The later [bounded receipt launcher](agent-receipt-runner.md) replaces receipt's
+interactive test helper in the packaged journeys. Production operator resource
+supervision, quiescence, credential/UID lifecycle and durable storage remain open.

@@ -43,7 +43,7 @@ def receipt(**changes):
     ).model_copy(update=changes).model_dump(mode="json")
 
 
-def create_peers(request, *, pin=None, retained=None, root=None):
+def create_peers(request, *, pin=None, retained=None, root=None, packaged=False):
     # /run avoids a public writable ancestor. Only this invocation is removed.
     root = root or Path("/run") / ("ciq-receipt-peer-" + uuid4().hex[:16])
     processes = []
@@ -76,6 +76,31 @@ def create_peers(request, *, pin=None, retained=None, root=None):
         "server_uid": server_uid, "custody_uid": custody_uid, "other_secret": str(secret),
     }
 
+    def launch_packaged(*, fault=None):
+        # Trusted fixture delivery only. Production runtime cannot select paths,
+        # provision storage, install UID authority or receive test-helper IPC.
+        assert packaged and root == Path("/run/ciq-agent-receipts")
+        plan = root / "peer.json"
+        body = {"protocol": "ciq-fake-receipt-v1", "epoch": config["pin"],
+                "custody_uid": custody_uid}
+        if fault == "epoch":
+            body["epoch"] = {**body["epoch"], "epoch_id": str(uuid4())}
+        plan.write_text(json.dumps(body))
+        plan.chmod(0o644 if fault == "mode" else 0o600)
+        os.chown(plan, server_uid, server_uid)
+        env = {"PATH": "/usr/bin:/bin"}
+        if fault == "environment":
+            env["PGSERVICE"] = "MUST-NOT-BE-USED"
+        uid = 0 if fault == "root" else server_uid
+        child = subprocess.Popen(
+            [sys.executable, "-I", "-B", "-m", "ciq_api.agent_receipt_runner"],
+            cwd="/", user=uid, group=uid, extra_groups=[], env=env,
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
+        processes.append(child)
+        return child
+
     def spawn(uid, *, interactive=False, helper=CHILD, **changes):
         child = subprocess.Popen(
             [sys.executable, str(helper)], cwd=ROOT, user=uid, group=uid, extra_groups=[],
@@ -101,9 +126,14 @@ def create_peers(request, *, pin=None, retained=None, root=None):
         return out.strip()
 
     def start(**changes):
-        child = spawn(server_uid, action="server", **changes)
+        if packaged:
+            assert not changes
+            child = launch_packaged()
+        else:
+            child = spawn(server_uid, action="server", **changes)
         assert select.select([child.stdout], [], [], 5)[0], "peer readiness timed out"
-        assert child.stdout.readline() == b"READY\n", "peer did not become ready"
+        ready = b"fake_receipt_ready\n" if packaged else b"READY\n"
+        assert child.stdout.readline() == ready, "peer did not become ready"
         return child
 
     def stop(child):
@@ -137,6 +167,7 @@ def create_peers(request, *, pin=None, retained=None, root=None):
         assert (destination / original.name).stat().st_mode & 0o777 == 0o600
     server = start()
     s = SimpleNamespace(**config, root=root, server=server, start=start, stop=stop,
+                        launch_packaged=launch_packaged,
                         run=run, spawn=spawn, rows=rows, clinical_uid=clinical_uid,
                         transport_uid=transport_uid)
     return s
