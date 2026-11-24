@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 23 November 2026
+Last updated: 24 November 2026
 Current engineering scope: **synthetic MVP workflows (M3–M5), private testing**.
 Governed live-source P2 and production gates remain separate.
 
@@ -11,6 +11,28 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 [1 November handoff](gcp-first-run-2026-11-01.md) retains quota/billing history;
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
+
+### Bounded clinical claim process — 24 November
+
+The [packaged one-shot runner](../architecture/agent-claim-runner.md) consumes
+one operator-pinned intent through a private credential plan and a separately
+authenticated clinical login. Fixed process/identity checks precede the command;
+there is no queue loop, owner fallback, retry, submission or permission creation.
+The real-UID HTTP-to-result journeys now launch this module directly. Six new
+process denials cover replaced identity pins, unsafe credentials/environment,
+the wrong UID and root, without consuming an intent or allowance.
+
+Custody/supervisor/operator activation remains next, followed by governed live
+source/provider integration and separately approved GCP joint testing. The
+deployed image remains unchanged. Local Docker and paid resources were not used.
+
+Accepted code `b700d89` passes
+[product](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45318975136)
+and [private-preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45318975106)
+CI: 2,469 API checks, all 28 combined process/database/restore cases and eighteen
+MVP journeys in each workflow. Existing restricted commands, installation,
+encrypted recovery, saved-workflow reopening and owned cleanup pass. All 62 new
+offline runner checks join 45 reservation checks in the local 107-case pass.
 
 ### App request to validated synthetic result — 23 November
 

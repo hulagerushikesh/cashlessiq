@@ -70,6 +70,24 @@ environment injection, a different UID and root before consuming the intent.
 The trusted test supervisor kills/reaps each child and removes only its owned
 plan directory. Existing outer container resource and cleanup guards remain.
 
+Accepted code `b700d8907915170c6f212e2a0a31b6eaf0044311` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45318975136)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45318975106):
+all 28 combined cases (103.15s), 313 restricted command cases, 53 installation/
+retirement cases and 27 restricted encrypted restores. Product regression passes
+2,469 API checks (29 expected skips/two existing warnings), 69 client checks,
+26 browser checks, fifteen source UI checks and eighteen MVP journeys. Preview
+passes eighteen journeys plus saved-workflow reopening after restart and encrypted
+restore. Both workflows confirm owned stack cleanup; the combined harness confirms
+its containers and image were removed. Local verification passes 107 selected
+offline checks, including all 62 new runner cases, and repository Ruff.
+
+The first run exposed Python locale coercion in the strict environment check;
+`LC_CTYPE` is now accepted while libpq/credential selectors remain denied.
+An unchanged supervisor-containment probe also failed initially. It now reports
+only a fixed known test-case label on failure and passes on the accepted revision;
+its resource/time limits and supervisor implementation were not widened.
+
 This supplies the clinical one-shot process, not the full production operator.
 Separate original-custody startup, trusted exact-operation assignment, receipt
 peer supervision, production secret delivery/rotation, resource/quiescence and

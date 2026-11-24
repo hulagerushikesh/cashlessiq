@@ -1,11 +1,33 @@
 # Product delivery — owner dashboard
 
-Updated 23 November 2026. This page summarizes the current product plan; the
+Updated 24 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
+
+### Bounded clinical claim process — 24 November
+
+The [one-shot runner](../architecture/agent-claim-runner.md) replaces the test-only
+clinical claim helper with a packaged process. It reads one fixed private plan,
+checks Linux UID/capabilities/environment and exact database/login OIDs, claims
+one saved intent and exits with a small committed receipt. It cannot scan,
+submit, retry, configure approval or use the owning application connection.
+
+This is one activation component, not deployed execution. Original-custody
+startup and trusted operation assignment, receipt-peer supervision, production
+secret delivery and restore/reauthorization remain next. Governed Snowflake
+source/provider integration and an approved GCP build/testing window follow.
+No local Docker, paid cloud resource or provider call was started.
+
+Accepted `b700d89` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45318975136)
+and [private preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45318975106):
+2,469 API checks, 28 combined process/database/restore cases and eighteen MVP
+journeys in each workflow. Encrypted restoration, saved-workflow reopening and
+owned cleanup also pass. Local verification passes 107 focused offline checks
+and repository Ruff.
 
 ### App request to validated synthetic result — 23 November
 
