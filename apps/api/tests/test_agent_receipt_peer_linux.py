@@ -43,9 +43,9 @@ def receipt(**changes):
     ).model_copy(update=changes).model_dump(mode="json")
 
 
-def create_peers(request, *, pin=None, retained=None):
+def create_peers(request, *, pin=None, retained=None, root=None):
     # /run avoids a public writable ancestor. Only this invocation is removed.
-    root = Path("/run") / ("ciq-receipt-peer-" + uuid4().hex[:16])
+    root = root or Path("/run") / ("ciq-receipt-peer-" + uuid4().hex[:16])
     processes = []
     root.mkdir(mode=0o755)
 

@@ -22,6 +22,8 @@ disposable acceptance. Deployed activation and live-provider integration remain
 separate work; these changes have not been deployed to GCP.
 The [one-shot clinical runner](docs/architecture/agent-claim-runner.md) prepares
 private credential delivery and bounded process startup for one saved intent.
+The [one-shot custody runner](docs/architecture/agent-custody-runner.md) prepares
+the separately assigned original custody process and its fixed synthetic child.
 The inactive [agent comparison contract](docs/architecture/agent-comparison-contract.md)
 has 146 offline golden/fault checks. The inactive
 [fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 90

@@ -218,9 +218,9 @@ def test_issue_rejects_changed_returned_identity_and_loses_pending_permission(cu
         assert db.execute('SELECT state FROM receipt').fetchall() == [('prepared',)]
 
 
-def test_module_is_inactive_and_has_no_api_or_worker_imports():
+def test_coordinator_is_only_imported_by_its_explicit_one_shot_runner():
     root = Path(__file__).resolve().parents[1] / 'src/ciq_api'
-    allowed = {'agent_custody_submission.py'}
+    allowed = {'agent_custody_submission.py', 'agent_custody_runner.py'}
     for path in root.glob('*.py'):
         if path.name in allowed:
             continue
