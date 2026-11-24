@@ -198,7 +198,10 @@ def main():
         for mode in ("main-kill", "stop", "timeout", "memory", "tasks"):
             for item in output.iterdir():
                 item.unlink()
-            run("systemctl", "reset-failed", unit)
+            # Successful inactive units may already have been unloaded by PID 1.
+            # Only an actually failed unit needs its failed state reset.
+            if value(unit, "ActiveState") == "failed":
+                run("systemctl", "reset-failed", unit)
             changed = override.replace("probe.py check ", "probe.py " + mode + " ")
             # Shortened only for the deadline probe; the source 40s ceiling is
             # checked separately. The same systemd expiration path is exercised.
@@ -217,6 +220,9 @@ def main():
             wait_for(lambda: empty(unit))
             expected = {"main-kill": "signal", "stop": "timeout", "timeout": "timeout",
                         "memory": "oom-kill", "tasks": "success"}[mode]
+            if value(unit, "Result") != expected:
+                print("FAIL: custody scenario " + mode, flush=True)
+                diagnose(unit)
             assert value(unit, "Result") == expected
             assert (output / "checked").is_file() and not (output / "escaped").exists()
             if mode == "tasks":
