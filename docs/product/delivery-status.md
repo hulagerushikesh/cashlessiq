@@ -16,6 +16,9 @@ further activation; custody requires both confirmed plans. All 117 focused local
 checks and changed-file Ruff pass. The previous retirement workflow at `3a61eba`
 has now finished successfully across all nine jobs. Production protected credential
 acquisition and live activation remain separate work; Docker/GCP stay off.
+The [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45440469846/job/138609853225)
+passes all three scenarios, 21 service invocations and confirmed cleanup at
+`dfcc53f`. Five workflow jobs have passed; four remain running at this receipt.
 
 ### Installed-service credential retirement rehearsal — 24 November
 

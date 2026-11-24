@@ -48,3 +48,11 @@ incomplete custody plans. All 117 focused coordination, journey, atomic-delivery
 and quiescence checks pass, with changed-file Ruff. The existing Linux journey
 remains the integration gate for actual fixed-path root metadata, installed
 services, restricted database authentication and cleanup.
+
+The [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45440469846/job/138609853225)
+passes at source `dfcc53fb6026f0ca9c107d9d288ff7e38400936d`: all three scenarios
+and 21 installed-service invocations complete under the unchanged unit policies.
+All three retirement/rotation markers and owned service/private-file/account/
+installation/database/tmpfs cleanup pass. The complete workflow has five
+successful jobs and four still running at this receipt; this is the specific
+Linux integration acceptance, not a claim that the remaining jobs have finished.
