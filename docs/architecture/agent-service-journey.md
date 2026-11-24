@@ -19,7 +19,9 @@ all package-byte/ownership/dependency checks reuse the private-plan harness.
 
 A disposable PostgreSQL 17 container listens directly on `127.0.0.1:5432` in the
 CI host network namespace. There is no Docker published-port/DNAT intermediary,
-external bind, host directory mount or Docker socket mount. Its filesystem is
+external bind, host directory mount or Docker socket mount. PostgreSQL is
+initialized with explicit SCRAM host authentication, including loopback; initdb's
+default localhost trust would invalidate password-retirement assertions. Its filesystem is
 read-only apart from bounded tmpfs data/run/tmp directories; it has a 512 MiB
 memory/no-swap limit, one CPU, 64 tasks, no new privileges and only the trusted
 entrypoint capabilities needed to initialize/drop identity. This database is a
@@ -128,6 +130,11 @@ The extension passes 19 existing local harness checks and changed-file Ruff.
 Local collection skips the root/Linux integration module before host/database
 access. Actual PostgreSQL/systemd acceptance requires the dedicated CI job; no
 local Docker or GCP resource is started.
+
+The initial extension run at `d6b6493` failed the old-password denial assertion:
+the disposable database inherited localhost trust. This exposed a fixture gap,
+not a reason to weaken the denial check. The corrected fixture explicitly uses
+`--auth-host=scram-sha-256`; its dedicated Linux acceptance remains pending.
 
 ## Acceptance evidence
 

@@ -175,6 +175,7 @@ def database():
             "--tmpfs", "/var/run/postgresql:rw,nosuid,nodev,noexec,size=4m,mode=777",
             "--tmpfs", "/tmp:rw,nosuid,nodev,noexec,size=16m,mode=1777",
             "--env", "POSTGRES_PASSWORD=ciq-disposable-agent-ledger",
+            "--env", "POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256",
             "--env", "PGDATA=/var/lib/postgresql/data", "postgres:17-bookworm",
             "-c", "listen_addresses=127.0.0.1", timeout=30,
         )
@@ -230,7 +231,11 @@ def main():
             if report.when == "call" and report.passed:
                 self.passed += 1
             if report.failed and call.excinfo:
-                frame = call.excinfo.traceback[-1]
+                # pytest's raises/fail helpers can be the innermost frame; report
+                # the scenario call site rather than an unhelpful framework line.
+                frame = next((frame for frame in reversed(call.excinfo.traceback)
+                              if Path(str(frame.path)).name == "test_agent_service_journey.py"),
+                             call.excinfo.traceback[-1])
                 # Fixed phase + code location, never the exception or assertion values.
                 name = Path(str(frame.path)).name
                 if re.fullmatch(r"[a-z_]+\.py", name):
