@@ -22,7 +22,11 @@ require actual permission denials for all three service UIDs against each source
 All 151 focused offline checks, including 34 new source checks, and changed-file
 Ruff pass. The previous coordinated-activation workflow finished all nine jobs
 successfully. This step remains synthetic CI; no live secret store, provider or
-GCP activation is configured. Linux acceptance for this revision is pending.
+GCP activation is configured. The
+[Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45445006623/job/138626232014)
+passes all three workflows, 27 source-read permission denials, retirement/rotation
+and confirmed cleanup at `89fdc5d`. Five workflow jobs have passed; four remain
+running. The existing containment probe also passes on this revision.
 
 ### Coordinated synthetic service activation — 24 November
 

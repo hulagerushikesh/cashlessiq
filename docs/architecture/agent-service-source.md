@@ -51,5 +51,11 @@ Local acceptance: 34 new checks cover fixed roles, unsafe objects, ownership,
 bounded reads, changes during acquisition, descriptor closure on interruption,
 early refusal, direct-credential bypass denial, permanent blocking and renewed
 lease/quiescence evidence. All 151 focused source, coordination, delivery,
-journey and quiescence checks and changed-file Ruff pass. Linux acceptance is
-recorded separately after the pushed source completes its workflow.
+journey and quiescence checks and changed-file Ruff pass. The
+[Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45445006623/job/138626232014)
+passes at source `89fdc5d40d6e95e1c384abe292c628c76fe29463`: all three workflows,
+27 actual source-read permission denials, all three retirement/rotation checks
+and confirmed owned service/source/plan/journal/account/install/database/tmpfs
+cleanup. The existing containment probe also passes on this revision. Five
+workflow jobs have passed and four remain running at this receipt; full-workflow
+acceptance is still pending. No private credential bytes or raw logs were printed.
