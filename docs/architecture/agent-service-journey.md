@@ -95,6 +95,40 @@ of exactly three successful test-call reports independently of pytest's quiet
 text output. No collected/skipped-case count or printed success marker can
 substitute for those actual passing reports and an overall successful exit.
 
+## Retirement and password-rotation extension
+
+Each of the three scenarios now continues into a trusted disposable retirement
+rehearsal. All three units are stopped with strict cgroup/quiescence verification
+before database changes. The operator pins the original database and five role
+OIDs, then commits clinical and custody revocation separately, repeating each as
+an explicit idempotence check. An authenticated idle connection stays alive but
+loses private-command access. Its connection pool is then disposed; a bounded
+check requires no remaining sessions for that unique dummy login.
+
+Only after committed retirement and session closure does the fixture change the
+memory-only dummy password. It deliberately restores LOGIN, CONNECT and the
+installed command ACLs, but never principal/reservation/submission approval.
+Fresh authentication rejects the old password and accepts the new password for
+the original pinned role. Clinical capture and custody inventory still fail.
+An explicit invocation of each installed service using its unchanged old private
+plan must also deny access. Receipt service state and its stale endpoint are not
+reset or adopted. These six extra denial invocations bring the journey total to
+21; the wrapper still requires exactly three actual passing scenario reports.
+
+All 22 product tables are digested before retirement and checked unchanged after
+each role, alongside exact retained-journal and private-plan bytes. Published
+results stay published; uncertain operations remain held, without refunds,
+additional attempts, comparisons or human decisions. Private bytes and errors
+remain inside captured test memory. Normal fixture cleanup follows independently
+confirmed service shutdown. This is not a live retirement/rotation installer,
+production secret delivery, secure erasure, account-wide hostile-process proof,
+activation lock, fresh-credential service activation or reauthorization.
+
+The extension passes 19 existing local harness checks and changed-file Ruff.
+Local collection skips the root/Linux integration module before host/database
+access. Actual PostgreSQL/systemd acceptance requires the dedicated CI job; no
+local Docker or GCP resource is started.
+
 ## Acceptance evidence
 
 At source `60b4d66b81951e27cd23f2198c09c0157c26e0d3`, the

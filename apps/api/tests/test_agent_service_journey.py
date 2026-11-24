@@ -20,27 +20,42 @@ import shutil
 import sqlite3
 from uuid import uuid4
 
+from psycopg import sql
 from scripts import test_agent_service_journey as runner
-from sqlalchemy import text
+from scripts.agent_controller_lifecycle import (
+    CLINICAL,
+    CUSTODY,
+    Target,
+    command,
+    revoke_fake,
+    role_pin,
+)
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 from test_agent_contracts import candidate
 from test_agent_controller_capture import controller_database as controller_database
 from test_agent_controller_capture import engine as engine
 from test_agent_controller_capture import scope as scope
 from test_agent_controller_capture import setup as setup
+from test_agent_controller_lifecycle import product_digest
 from test_agent_controller_reservation import commands as commands
 from test_agent_custody_publication import install as install_publication
 from test_agent_custody_submission import install as install_custody
 from test_agent_custody_submission import rows
 from test_agent_ledger import balance
+from test_agent_receipt_verifier import closed
 from test_agent_receipt_verifier import observer as observer
 from test_agent_requested_dispatch import PATH
 from test_agent_requested_dispatch import requested as requested
 from test_identity import bearer
 
 from ciq_api.agent_admission import checkpoint
+from ciq_api.agent_contracts import AgentContractError
+from ciq_api.agent_controller_capture import ControllerCapture
 from ciq_api.agent_ledger import ClaimReceipt
 from ciq_api.agent_ledger_models import AgentComparison
+from ciq_api.agent_receipt_verifier import FakeReceiptVerifier
 from ciq_api.mvp_models import WorkJob
 from ciq_api.review_models import ReviewCase
 from ciq_api.seed import TENANT_ID
@@ -81,6 +96,106 @@ def credentials(s, engine):
                               {"name": engine.url.username})
     return {"database": engine.url.database, "database_oid": oid,
             "login": engine.url.username, "login_oid": login_oid, "password": engine.url.password}
+
+
+def retire_and_rotate(s, services):
+    """Trusted CI rehearsal only: no live secret source or automatic reauthorization."""
+    services.stop()  # All three units/cgroups, before any SQL retirement or pool closure.
+    before = product_digest(s)
+    retained = (RETAINED / "fake-receipts.sqlite3").read_bytes()
+    plans = {path: path.read_bytes() for path in packages.FILES}
+    with s.admin.begin() as db:
+        raw = db.connection.driver_connection
+        database_oid = raw.execute(
+            "SELECT oid FROM pg_database WHERE datname=current_database()"
+        ).fetchone()[0]
+        target = Target(
+            database=s.admin.url.database, database_oid=database_oid,
+            product=s.product, capture=s.capture, receipts=s.receipts,
+            installer=role_pin(raw, "postgres"), clinical_definer=role_pin(raw, s.owner),
+            custody_definer=role_pin(raw, s.receipt_owner),
+            clinical=role_pin(raw, s.login), custody=role_pin(raw, s.receipt_login),
+        )
+    for clinical, runtime_engine, role, schema in (
+        (True, s.runtime, target.clinical, s.capture),
+        (False, s.observer_runtime, target.custody, s.receipts),
+    ):
+        # Password rotation alone does not invalidate an already authenticated session.
+        with runtime_engine.connect() as idle:
+            pid = idle.scalar(text("SELECT pg_backend_pid()"))
+            idle.commit()
+            for _ in range(2):  # Explicit idempotence assertion, not a retry on failure.
+                with s.admin.begin() as db:
+                    db.execute(text("SELECT 1"))
+                    revoke_fake(db.connection.driver_connection, target, clinical=clinical)
+            assert idle.scalar(text("SELECT pg_backend_pid()")) == pid
+            idle.commit()
+            expression = "capture('REQ-FAKE-0')" if clinical else "inventory_fake()"
+            with pytest.raises(DBAPIError) as denied:
+                idle.execute(text(f'SELECT "{schema}".{expression}'))
+            assert denied.value.orig.sqlstate == "42501"
+            idle.rollback()
+        runtime_engine.dispose()  # Returned idle connections must also close before rotation.
+
+        def no_sessions(name=role.name):
+            with s.admin.connect() as db:
+                return db.scalar(text("SELECT count(*) FROM pg_stat_activity WHERE usename=:name"),
+                                 {"name": name}) == 0
+
+        policy.wait_for(no_sessions, 3)
+        with s.admin.connect() as db:
+            assert db.scalar(text("SELECT rolcanlogin FROM pg_roles WHERE oid=:oid"),
+                             {"oid": role.oid}) is False
+        password = uuid4().hex  # Dummy, memory-only, never logged or returned.
+        with s.admin.begin() as db:
+            raw = db.connection.driver_connection
+            raw.execute(sql.SQL("ALTER ROLE {} PASSWORD {} LOGIN").format(
+                sql.Identifier(role.name), sql.Literal(password)))
+            raw.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(
+                sql.Identifier(target.database), sql.Identifier(role.name)))
+            raw.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(
+                sql.Identifier(schema), sql.Identifier(role.name)))
+            # This journey installs publication, not the separate recovery package.
+            for signature in CLINICAL if clinical else CUSTODY[:6]:
+                command(raw, "GRANT", schema, signature, role.name)
+            # No principal, reservation or submission approval is re-enabled.
+        wrong = create_engine(runtime_engine.url)
+        rotated = create_engine(runtime_engine.url.set(password=password))
+        try:
+            # libpq authentication errors need not expose a SQLSTATE; successful
+            # fresh authentication below independently confirms the same endpoint.
+            with pytest.raises(DBAPIError), wrong.connect():
+                pytest.fail("Retired dummy password authenticated")
+            with rotated.begin() as db:
+                assert db.scalar(text("SELECT oid FROM pg_roles "
+                                      "WHERE rolname=session_user AND session_user=current_user")) \
+                    == role.oid
+            with s.admin.connect() as db:
+                for table in ("principal", "reservation_scope" if clinical else "submission_scope"):
+                    assert db.scalar(text(f'SELECT count(*) FROM "{schema}"."{table}" '
+                                          'WHERE enabled')) == 0
+            if clinical:
+                with pytest.raises(AgentContractError):
+                    ControllerCapture(rotated, schema=schema).capture("REQ-FAKE-0")
+            else:
+                closed(FakeReceiptVerifier(rotated, s.setup.admission.journal,
+                                           schema=schema).check)
+            # Old private files are preserved. Their stale password must fail in
+            # the actual installed module under its unchanged service policy.
+            service = "claim" if clinical else "custody"
+            services.start(service)  # Explicit denial probe, never automatic recovery.
+            assert services.finish(service, 1) == [
+                "fake_claim_unavailable" if clinical else "fake_custody_unavailable",
+            ]
+        finally:
+            wrong.dispose()
+            rotated.dispose()
+        services.stop()
+        assert product_digest(s) == before
+        assert (RETAINED / "fake-receipts.sqlite3").read_bytes() == retained
+        assert {path: path.read_bytes() for path in packages.FILES} == plans
+    print("PASS: retired service credentials and rotated passwords restore no authority",
+          flush=True)
 
 
 @pytest.mark.parametrize("scenario", ["published", "invalid-held", "unassigned-held"])
@@ -170,5 +285,6 @@ def test_http_to_installed_services_and_validated_result(journey, settings, scen
     assert services.finish("receipt", 1) == ["fake_receipt_ready", "fake_receipt_unavailable"]
     assert SOCKET.is_socket()
     assert hashlib.sha256((RETAINED / "fake-receipts.sqlite3").read_bytes()).digest() == digest
+    retire_and_rotate(s, services)
     print("PASS: exact services " + scenario + " preserve one-shot ledger and human review",
           flush=True)

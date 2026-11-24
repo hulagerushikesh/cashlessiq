@@ -7,6 +7,18 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Installed-service credential retirement rehearsal — 24 November
+
+The [full journey extension](../architecture/agent-service-journey.md#retirement-and-password-rotation-extension)
+checks committed credential retirement after actual service shutdown, loss of
+access on existing connections, pool/session closure and dummy password rotation
+without restoring approval. Old private plans remain unchanged and must fail
+under the installed service units. Product accounting, human records and retained
+receipts must remain unchanged. The 19 local harness checks and changed-file Ruff
+pass; Linux integration is pending. Production credential delivery, activation
+coordination and explicit reauthorization remain separate work. No Docker/GCP
+startup occurred.
+
 ### Atomic private-plan delivery — 24 November
 
 The [complete-journey fixture](../architecture/agent-service-plan-delivery.md)
@@ -15,8 +27,8 @@ evidence on uncertain delivery. Stopped-service checks precede staging. All 126
 focused local checks and changed-file Ruff pass. This remains disposable CI;
 production credential source, rotation and retirement are still open.
 The [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45382439775/job/138404649536)
-passes all three scenarios and confirmed cleanup at source `f074b8f`; other
-workflow checks remain pending at this receipt.
+passes all three scenarios and confirmed cleanup at source `f074b8f`; the whole
+workflow has now passed all nine jobs.
 The previous [quiescence workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242)
 has finished with all nine jobs green at source `5622a92`.
 

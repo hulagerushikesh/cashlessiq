@@ -49,5 +49,5 @@ passes at source `f074b8fc0e1f8dead3a754c51f96985e644d1544`: all three scenarios
 and fifteen actual service invocations accept the delivered files under unchanged
 unit policies. Source-matched installation and owned service, plan, account,
 runtime and loopback database/tmpfs cleanup all pass (seven fixed markers).
-The broader foundation and ledger/peer jobs remain in progress at this receipt;
-their completion must be checked before claiming the whole workflow passed.
+The [complete workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45382439775)
+has now finished successfully across all nine jobs at that same source.

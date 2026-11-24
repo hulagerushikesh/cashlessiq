@@ -12,6 +12,19 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Installed-service credential retirement rehearsal — 24 November
+
+The [complete journey](../architecture/agent-service-journey.md#retirement-and-password-rotation-extension)
+now continues each scenario through stopped-service verification, committed
+clinical/custody revocation, denial on existing idle connections, explicit pool
+closure and bounded session-absence checks. Dummy password rotation restores
+transport/command ACLs but no approvals; fresh authentication and installed-module
+denial probes check that old credentials and disabled authority stay unusable.
+All product tables, private plans and retained journal bytes must stay unchanged.
+Local verification passes 19 harness checks and changed-file Ruff; Linux
+integration is pending. Production secret delivery/activation coordination and
+reauthorization remain open. No local Docker or GCP resource was started.
+
 ### Atomic private-plan delivery — 24 November
 
 The [synthetic delivery helper](../architecture/agent-service-plan-delivery.md)
@@ -21,7 +34,7 @@ evidence and denies activation. All 126 focused local checks and changed-file
 Ruff pass. Production credential source, rotation and retirement remain open.
 The [Linux integration job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45382439775/job/138404649536)
 passes three scenarios, fifteen service invocations and owned-resource cleanup
-at source `f074b8f`; the broader workflow is still running at this receipt.
+at source `f074b8f`; the broader workflow has now passed all nine jobs.
 The preceding [quiescence workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242)
 has now completed successfully across all nine jobs at source `5622a92`.
 
