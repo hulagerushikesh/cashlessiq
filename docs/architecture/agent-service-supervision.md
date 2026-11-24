@@ -71,8 +71,9 @@ fixed runtime paths. It refuses existing paths before allocating fixtures.
 
 The CI harness copies examples to unique `/run/systemd/system` names, replacing
 only the payload and account with a trusted stdlib probe and separate dummy
-numeric UIDs. A separate owned output directory is writable only for evidence;
-stdout/stderr are discarded. It does not run the actual API modules, database,
+numeric UIDs with invocation-owned locked, no-home NSS accounts. A separate
+owned output directory is writable only for evidence; stdout is discarded and
+bounded dummy-unit diagnostics may use the journal. It does not run the actual API modules, database,
 receipt protocol, live secrets or provider. Existing packaged HTTP-to-result CI
 remains the separate evidence for those module behaviors.
 
@@ -85,7 +86,7 @@ resource/shutdown policy remains the example's. Every scenario requires no
 restart and an empty owned cgroup, including descendants.
 
 Finally the harness stops/verifies only its owned services, removes their unique
-unit files, reloads systemd and removes its dummy runtime paths. Unconfirmed stop
+unit files, reloads systemd and removes its dummy runtime paths and NSS accounts. Unconfirmed stop
 retains fixture evidence and fails acceptance. It never enables a unit, prunes
 host resources or touches pre-existing runtime directories.
 

@@ -1,6 +1,8 @@
 """Explicit disposable GHA systemd/cgroup-v2 acceptance, never a local installer."""
 
+import grp
 import os
+import pwd
 import shutil
 import signal
 import subprocess
@@ -28,6 +30,13 @@ def guard():
         raise SystemExit("Unified cgroup resource control required")
     if any(path.exists() or path.is_symlink() for path in PLANS):
         raise SystemExit("Refusing existing agent runtime paths")
+    for uid in range(53001, 53004):
+        for lookup in (pwd.getpwuid, grp.getgrgid):
+            try:
+                lookup(uid)
+            except KeyError:
+                continue
+            raise SystemExit("Refusing existing dummy service identity")
 
 
 def run(*args, check=True, timeout=10):
@@ -58,16 +67,18 @@ def empty(unit):
     return not path.exists() or "populated 0" in path.read_text().splitlines()
 
 
+def diagnose(unit):
+    print("FAIL: dummy service " + unit, flush=True)
+    for name in ("Result", "ExecMainCode", "ExecMainStatus", "StatusErrno"):
+        print(name + "=" + value(unit, name), flush=True)
+    # Only this disposable stdlib probe, never real inputs or an API module.
+    print(run("journalctl", "--unit=" + unit, "--no-pager", "--lines=12",
+              "--output=cat").stdout, flush=True)
+
+
 def start(unit):
-    result = run("systemctl", "start", unit, check=False)
-    if result.returncode:
-        print("FAIL: dummy service startup " + unit, flush=True)
-        for name in ("Result", "ExecMainCode", "ExecMainStatus", "StatusErrno"):
-            print(name + "=" + value(unit, name), flush=True)
-        # This unit runs only our disposable stdlib probe: never an API module,
-        # credentials or clinical inputs. Bound diagnostics to this owned unit.
-        print(run("journalctl", "--unit=" + unit, "--no-pager", "--lines=12",
-                  "--output=cat").stdout, flush=True)
+    if run("systemctl", "start", unit, check=False).returncode:
+        diagnose(unit)
         raise RuntimeError("Disposable agent service startup failed")
 
 
@@ -76,7 +87,7 @@ def main():
     signal.signal(signal.SIGTERM, lambda *_: sys.exit("Interrupted service acceptance"))
     prefix = "ciq-service-test-" + uuid4().hex[:16]
     base = Path("/run") / prefix
-    units, paths, outputs = [], [], []
+    units, paths, outputs, accounts = [], [], [], []
     success = False
     try:
         base.mkdir(mode=0o755)
@@ -88,8 +99,14 @@ def main():
         for leaf in ("ipc", "journal-parent/retained"):
             (PLANS[2] / leaf).mkdir(parents=True)
         for index, role in enumerate(ROLES):
-            # Numeric dummy UIDs exist only in this disposable service invocation.
+            # Current systemd also requires NSS records for fixed numeric UIDs.
+            # Create no home/password; retire only these invocation-owned names.
             uid = 53001 + index
+            account = "ciqprobe-" + prefix[-16:] + "-" + str(index)
+            run("groupadd", "--gid", str(uid), account)
+            accounts.append((account, uid))
+            run("useradd", "--system", "--uid", str(uid), "--gid", str(uid),
+                "--no-create-home", "--no-log-init", "--shell", "/usr/sbin/nologin", account)
             output = base / role
             output.mkdir(mode=0o700)
             os.chown(output, uid, uid)
@@ -112,6 +129,8 @@ def main():
         for (unit, _target, _source, _override), output in zip(units, outputs, strict=True):
             start(unit)
             wait_for(lambda unit=unit: value(unit, "ActiveState") in ("inactive", "failed"))
+            if value(unit, "Result") != "success":
+                diagnose(unit)
             assert value(unit, "Result") == "success" and (output / "checked").is_file()
             assert value(unit, "NRestarts") == "0" and empty(unit)
             print("PASS: " + unit.rsplit("-", 1)[1].removesuffix(".service") + " resource sandbox")
@@ -161,8 +180,18 @@ def main():
             raise RuntimeError("Owned service cleanup unconfirmed; fixture evidence retained")
         for path in reversed(paths):
             shutil.rmtree(path)
+        for account, uid in reversed(accounts):
+            try:
+                user = pwd.getpwnam(account)
+            except KeyError:
+                pass
+            else:
+                assert user.pw_uid == user.pw_gid == uid
+                run("userdel", account)
+            assert grp.getgrnam(account).gr_gid == uid
+            run("groupdel", account)
         assert not any(path.exists() for path in paths)
-        print("PASS: all invocation-owned services and dummy runtime paths removed")
+        print("PASS: all invocation-owned services, dummy identities and runtime paths removed")
     if not success:
         raise RuntimeError("Disposable service acceptance incomplete")
 

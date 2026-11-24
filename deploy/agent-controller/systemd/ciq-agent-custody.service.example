@@ -20,7 +20,6 @@ FinalKillSignal=SIGKILL
 MemoryAccounting=yes
 MemoryMax=192M
 MemorySwapMax=0
-CPUAccounting=yes
 CPUQuota=25%
 TasksAccounting=yes
 TasksMax=16
