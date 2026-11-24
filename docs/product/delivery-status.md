@@ -7,6 +7,27 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### External process resource limits — 24 November
+
+The [manual service examples](../architecture/agent-service-supervision.md) add
+separate fixed identities, shared parent/child cgroup limits, no swap, bounded
+shutdown and no automatic restart. Eight actual Linux probes pass: three role
+sandboxes, custody main-process SIGKILL, forced stop, timeout, out-of-memory
+termination and task exhaustion. Each leaves an empty owned cgroup; disposable
+services, accounts and files are confirmed removed. Fourteen new local checks,
+ten existing harness checks and repository Ruff pass.
+
+Accepted code `07b4f9d` passes all seven jobs in
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45335195636),
+including 2,554 API checks, 44 combined agent/restore scenarios, eighteen MVP
+journeys and confirmed stack cleanup. No application or preview runtime changed.
+
+This prepares host supervision; it is not deployed activation. The CI payload is
+a trusted dummy process, separate from the existing packaged HTTP-to-result
+acceptance. Exact unit-backed module/retained-state acceptance and private
+credential/account lifecycle remain next, then governed source/provider work
+and an approved GCP test. No local Docker or paid resources were started.
+
 ### Bounded receipt process — 24 November
 
 The [receipt launcher](../architecture/agent-receipt-runner.md) opens the original

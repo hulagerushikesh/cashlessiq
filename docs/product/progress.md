@@ -12,6 +12,23 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### External process resource limits — 24 November
+
+The [manual service supervision package](../architecture/agent-service-supervision.md)
+prepares resource ceilings, clean identities/environment, fixed network/path
+restrictions and whole-cgroup cleanup without installation or automatic startup.
+All eight disposable Linux scenarios pass, including a child in a separate
+session after main SIGKILL, stop/timeout, OOM and task exhaustion. Owned services,
+dummy accounts and files are removed. Local checks pass fourteen new cases,
+ten existing harness cases and repository Ruff. Accepted source `07b4f9d` passes
+all seven jobs in [product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45335195636):
+2,554 API checks, 44 combined scenarios, eighteen MVP journeys and successful
+owned stack/container/image cleanup. No preview runtime changed.
+
+Exact packaged-module acceptance under these units, private credential delivery,
+quiescence and account/restore lifecycle remain open. No GCP or local Docker
+resource was started, and deployed code is unchanged.
+
 ### Bounded receipt process — 24 November
 
 The [packaged receipt launcher](../architecture/agent-receipt-runner.md) replaces

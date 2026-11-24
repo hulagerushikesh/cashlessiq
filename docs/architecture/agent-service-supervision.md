@@ -7,7 +7,8 @@ The three examples in `deploy/agent-controller/systemd/` add an external Linux
 systemd/cgroup-v2 boundary around the packaged [claim](agent-claim-runner.md),
 [custody](agent-custody-runner.md) and [receipt](agent-receipt-runner.md) processes.
 They have no install targets, dependencies, timer, queue scanner, pre/post hook,
-directory creation, credential installer, journal provisioning or reset command.
+creation of credential/journal directories, credential installer, provisioning or
+reset command.
 They are not included in Compose, application startup or the GCP runtime bundle.
 
 ## Fixed limits and identities
@@ -19,7 +20,8 @@ They are not included in Compose, application startup or the GCP runtime bundle.
 | Receipt | ciq-agent-receipt | 128 MiB | 25% | 65s |
 
 Each service has a 16-task cgroup limit, no swap, 64-descriptor limit, disabled
-core dumps and a two-second stop grace followed by SIGKILL. `KillMode=control-group`
+core dumps, a five-second startup timeout and a two-second stop grace followed
+by SIGKILL. Lifetime ceilings start at service activation. `KillMode=control-group`
 and `OOMPolicy=kill` apply to descendants, including custody's separately
 sessioned exchange. The cgroup ceilings include children; they are not per-process
 allowances. These are initial synthetic limits, not measured full-stack capacity
@@ -46,7 +48,8 @@ Clinical reads its fixed private plan directory; custody reads its own plan and
 the receipt IPC directory. Each is denied the other credential/history paths.
 Only receipt can write its existing retained journal and IPC directories.
 Directories and metadata must already satisfy the runners' original checks.
-Systemd neither creates runtime state nor removes the stale socket on shutdown.
+Systemd does not create CashlessIQ plans/history or remove the stale socket on
+shutdown. Its private temporary directory is unrelated to retained authority.
 
 IP filters deny external traffic. Clinical/custody can reach only IPv4 loopback;
 receipt has no allowed IP traffic. The fixed runner still selects PostgreSQL
@@ -61,6 +64,11 @@ markers. Operators must restrict journal access/retention; no plan, password,
 candidate or clinical payload should be logged. A systemd `Type=exec` start means
 the executable started, not receipt readiness, clinical authorization or successful
 publication. No service dependency treats it as such.
+Receipt's ten-second idle limit is unchanged: plans, the confirmed clinical
+claim and independent custody assignment must be ready before receipt startup.
+A trusted bounded readiness/launch coordinator still needs acceptance; manual
+unit startup alone does not implement that ordering or authorize restarting an
+expired receipt process.
 
 ## Acceptance and remaining work
 
@@ -83,7 +91,8 @@ Three probes inspect effective memory/swap/tasks/CPU/descriptor/core limits,
 identity, capability/environment restrictions, read-only host filesystem and
 blocked connections to reachable controlled loopback listeners, with a positive
 127.0.0.1 control for clinical/custody. This handles packet-drop timeouts without
-mistaking an unreachable external host for an effective filter. Five custody probes exercise main SIGKILL with a
+mistaking an unreachable external host for an effective filter. Five custody
+probes exercise main SIGKILL with a
 separate-session child, forced stop, external timeout, cgroup OOM and task-cap
 exhaustion. Timeout alone shortens the source ceiling to two seconds; other
 resource/shutdown policy remains the example's. Every scenario requires no
@@ -94,10 +103,27 @@ unit files, reloads systemd and removes its dummy runtime paths and NSS accounts
 retains fixture evidence and fails acceptance. It never enables a unit, prunes
 host resources or touches pre-existing runtime directories.
 
+The [dedicated Linux job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45335195636/job/138245520963)
+passes all eight scenarios and confirms cleanup at source
+`07b4f9d148617b0a1b7b63ae1115f1940489c99b`. Local verification passes fourteen
+new checks, ten existing supervisor-harness checks and repository Ruff. The
+[full product workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45335195636)
+passes all seven jobs on that same source: 1,041 root checks, 2,554 API checks,
+69 client checks, 26 browser checks, fifteen source UI checks and eighteen MVP
+journeys. API retains 29 expected skips and two existing warnings. The combined
+peer/database/restore suite passes 44 cases in 207.96s; the separate peer suite
+passes 33. Ledger acceptance passes 476 baseline checks, fourteen encrypted
+restores, 313 restricted commands, 53 installation/retirement checks and 27
+restricted restores. Product stack and owned peer/container/image cleanup are
+confirmed successful. All 198 local links in the four affected documents resolve.
+Private-preview CI was not retriggered: no app or preview runtime changed; its
+previous accepted receipt-runner result remains separate historical evidence.
+
 These examples are not production installation approval. Remaining work includes
 effective installed-artifact checks, private output/secret delivery, account/UID
 lifecycle, independently verified quiescence, credential retirement/rotation and
 restore reauthorization. Joint acceptance must connect these exact unit policies
 to the packaged modules and retained state without test overrides, then governed
-Snowflake/source/provider integration. A GCP build or startup still needs a new
+Snowflake/source/provider integration. Hosted Ubuntu acceptance does not establish
+compatibility on the existing Debian GCP host. A GCP build or startup still needs a new
 explicit spend window.
