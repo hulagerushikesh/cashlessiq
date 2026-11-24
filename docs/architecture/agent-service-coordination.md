@@ -53,6 +53,7 @@ The [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/4
 passes at source `dfcc53fb6026f0ca9c107d9d288ff7e38400936d`: all three scenarios
 and 21 installed-service invocations complete under the unchanged unit policies.
 All three retirement/rotation markers and owned service/private-file/account/
-installation/database/tmpfs cleanup pass. The complete workflow has five
-successful jobs and four still running at this receipt; this is the specific
-Linux integration acceptance, not a claim that the remaining jobs have finished.
+installation/database/tmpfs cleanup pass. The complete workflow has now finished successfully across all nine jobs.
+
+The next [protected startup-plan handoff](agent-service-source.md) adds root-only
+source intake and renews lease/quiescence evidence before publication.

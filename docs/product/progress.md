@@ -12,6 +12,18 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Protected startup-plan handoff — 24 November
+
+The [root-only source handoff](../architecture/agent-service-source.md) separates
+credential acquisition from service-owned atomic delivery. Unsafe or changing
+sources deny delivery; lease and stopped-service evidence are renewed after
+acquisition. Direct credential bodies cannot bypass intake. Linux journeys now
+require actual permission denials for all three service UIDs against each source.
+All 150 focused offline checks, including 33 new source checks, and changed-file
+Ruff pass. The previous coordinated-activation workflow finished all nine jobs
+successfully. This step remains synthetic CI; no live secret store, provider or
+GCP activation is configured. Linux acceptance for this revision is pending.
+
 ### Coordinated synthetic service activation — 24 November
 
 The [service supervisor](../architecture/agent-service-coordination.md) now holds
@@ -23,7 +35,7 @@ has now finished successfully across all nine jobs. Production protected credent
 acquisition and live activation remain separate work; Docker/GCP stay off.
 The [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45440469846/job/138609853225)
 passes all three scenarios, 21 service invocations and confirmed cleanup at
-`dfcc53f`. Five workflow jobs have passed; four remain running at this receipt.
+`dfcc53f`. The complete workflow has now passed all nine jobs.
 
 ### Installed-service credential retirement rehearsal — 24 November
 

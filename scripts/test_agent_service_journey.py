@@ -15,6 +15,7 @@ from uuid import uuid4
 from scripts import agent_service_coordination as coordination
 from scripts import agent_service_plans as plans
 from scripts import agent_service_quiescence as quiescence
+from scripts import agent_service_source as source
 from scripts import test_agent_service_packages as packages
 
 policy = packages.policy
@@ -27,6 +28,8 @@ def guard():
         or os.environ.get("TEST_DATABASE_URL") != EXPECTED):
         raise SystemExit("Service journeys require the exact opted-in disposable database")
     packages.guard()  # All host/path/identity checks precede mutation or connection.
+    if source.SOURCE.exists() or source.SOURCE.is_symlink():
+        raise SystemExit("Refusing existing supervisor credential source")
 
 
 class Services:
@@ -43,10 +46,22 @@ class Services:
             raise RuntimeError("Service activation blocked; retain private state")
 
     def deliver(self, role, body):
+        # The in-memory route is only for the canned candidate, never credentials.
+        self._deliver(role, lambda: json.dumps(body).encode(), candidate=True)
+
+    def deliver_private(self, role):
+        self._deliver(role, lambda: source.acquire(role), candidate=False)
+
+    def _deliver(self, role, acquire, *, candidate):
         try:
             self.authorize()
+            if (candidate and role != "candidate") or (not candidate and role not in source.ROLES):
+                raise ValueError(source.ERROR)
             quiescence.verify_stopped(self.units["custody" if role == "candidate" else role])
-            plans.stage(role, json.dumps(body).encode())
+            raw = acquire()
+            self.authorize()
+            quiescence.verify_stopped(self.units["custody" if role == "candidate" else role])
+            plans.stage(role, raw)
             self.delivered.add(role)
         except BaseException:
             # Even a post-publication sync failure permanently blocks this supervisor.
@@ -129,6 +144,8 @@ def _installed_services(lease):
     try:
         base.mkdir(mode=0o755)
         paths.append(base)
+        source.SOURCE.mkdir(mode=0o700)
+        paths.append(source.SOURCE)
         packages.INSTALL.mkdir(mode=0o755)
         paths.append(packages.INSTALL)
         packages.install(base)
@@ -170,6 +187,35 @@ def _installed_services(lease):
             raise RuntimeError("Owned service journey cleanup unconfirmed")
         print("PASS: owned journey services, plans, retained fixtures, accounts "
               "and install removed")
+
+
+def provision_plan(role, body):
+    """Trusted CI fixture produces a root-only source; services cannot read it."""
+    source.guard(role)
+    directory = source.directory()
+    try:
+        plans.publish(directory, plans.TARGETS[role][1], 0, 0, json.dumps(body).encode())
+    finally:
+        os.close(directory)
+    code = """
+import os, sys
+try:
+    fd = os.open(sys.argv[1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+except PermissionError:
+    sys.exit(0)
+else:
+    os.close(fd)
+    sys.exit(1)
+"""
+    for _, uid in packages.ACCOUNTS:
+        result = subprocess.run(
+            [str(packages.PYTHON), "-I", "-B", "-c", code,
+             str(source.SOURCE / plans.TARGETS[role][1])],
+            stdin=subprocess.DEVNULL, capture_output=True, user=uid, group=uid,
+            extra_groups=[], timeout=5,
+        )
+        if result.returncode or result.stdout or result.stderr:
+            raise RuntimeError("Supervisor source isolation unconfirmed")
 
 
 def provision(epoch):

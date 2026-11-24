@@ -145,14 +145,15 @@ def test_uncertain_delivery_permanently_blocks_all_activation(monkeypatch, failu
                         deny if failure == "quiescence" else lambda _: None)
     monkeypatch.setattr(journey.plans, "stage",
                         deny if failure in ("publication", "interrupt") else lambda *_: None)
+    monkeypatch.setattr(journey.source, "acquire", lambda _: b"{}")
     monkeypatch.setattr(journey.policy, "run", lambda *_: pytest.fail("Service activated"))
     with pytest.raises(KeyboardInterrupt if failure == "interrupt" else ValueError):
-        services.deliver("claim", {"dummy": True})
+        services.deliver_private("claim")
     lease.check = lambda: None
     monkeypatch.setattr(journey.quiescence, "verify_stopped", lambda _: None)
     monkeypatch.setattr(journey.plans, "stage", lambda *_: pytest.fail("Delivery retried"))
     with pytest.raises(RuntimeError, match="activation blocked"):
-        services.deliver("claim", {})
+        services.deliver_private("claim")
     with pytest.raises(RuntimeError, match="activation blocked"):
         services.start("claim")
 

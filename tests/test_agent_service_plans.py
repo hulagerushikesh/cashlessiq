@@ -147,8 +147,12 @@ def test_service_delivery_checks_quiescence_before_staging(monkeypatch, role):
     seen = []
     monkeypatch.setattr(journey.quiescence, "verify_stopped", lambda unit: seen.append(unit))
     monkeypatch.setattr(journey.plans, "stage", lambda key, raw: seen.append((key, raw)))
-    services.deliver(role, {"dummy": True})
-    assert seen == [("custody" if role == "candidate" else role) + ".service",
+    monkeypatch.setattr(journey.source, "acquire", lambda key: b'{"dummy": true}')
+    if role == "candidate":
+        services.deliver(role, {"dummy": True})
+    else:
+        services.deliver_private(role)
+    assert seen == [("custody" if role == "candidate" else role) + ".service"] * 2 + [
                     (role, b'{"dummy": true}')]
 
 
@@ -161,7 +165,7 @@ def test_uncertain_service_cannot_receive_plan(monkeypatch):
     monkeypatch.setattr(journey.quiescence, "verify_stopped", deny)
     monkeypatch.setattr(journey.plans, "stage", lambda *_: pytest.fail("Plan staged"))
     with pytest.raises(ValueError, match="Quiescence unconfirmed"):
-        services.deliver("claim", {})
+        services.deliver_private("claim")
 
 
 def test_zero_write_never_publishes(tmp_path, directory, monkeypatch):

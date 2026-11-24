@@ -202,9 +202,10 @@ def retire_and_rotate(s, services):
 def test_http_to_installed_services_and_validated_result(journey, settings, scenario):
     s, services = journey
     # Only the restricted clinical login and this held intent reach the claim UID.
-    services.deliver("claim", {**credentials(s, s.runtime), "protocol": "ciq-fake-claim-v1",
+    runner.provision_plan("claim", {**credentials(s, s.runtime), "protocol": "ciq-fake-claim-v1",
                 "capture_schema": s.capture, "request_id": "REQ-FAKE-0",
                 "job_id": str(s.job_id)})
+    services.deliver_private("claim")
     services.start("claim")
     private = services.finish("claim", 0)
     assert len(private) == 1
@@ -222,13 +223,16 @@ def test_http_to_installed_services_and_validated_result(journey, settings, scen
             db.execute(text(f'UPDATE "{s.receipts}".submission_scope SET enabled=false'))
     epoch = s.setup.admission.journal.pin.model_dump(mode="json")
     runner.provision(epoch)
-    services.deliver("receipt", {"protocol": "ciq-fake-receipt-v1", "epoch": epoch,
+    runner.provision_plan("receipt", {"protocol": "ciq-fake-receipt-v1", "epoch": epoch,
                 "custody_uid": packages.ACCOUNTS[1][1]})
-    services.deliver("custody", {**credentials(s, s.observer_runtime),
+    runner.provision_plan("custody", {**credentials(s, s.observer_runtime),
                 "protocol": "ciq-fake-custody-v1",
                 "receipts_schema": s.receipts, "request_id": "REQ-FAKE-0",
                 "claim": s.claim.model_dump(mode="json"), "epoch": epoch,
                 "receipt_uid": packages.ACCOUNTS[2][1]})
+    services.deliver_private("receipt")
+    services.deliver_private("custody")
+    print("PASS: root-only sources deny all service UIDs before private delivery", flush=True)
     body = candidate(s.setup.snapshots[0], s.claim.operation_id)
     if scenario == "invalid-held":
         body["payable_inr"] = 1
