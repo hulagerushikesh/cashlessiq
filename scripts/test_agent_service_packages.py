@@ -155,8 +155,10 @@ def install(base):
     # interpreter from a purportedly root-owned installed service environment.
     policy.run("uv", "python", "install", "3.11", "--no-bin", "--install-dir",
                str(INSTALL / "python"), timeout=120)
-    interpreters = list((INSTALL / "python").glob("*/bin/python3.11"))
-    if len(interpreters) != 1:
+    # uv may add a version-family directory symlink alongside the exact build.
+    interpreters = sorted({path.resolve(strict=True)
+                           for path in (INSTALL / "python").glob("*/bin/python3.11")})
+    if len(interpreters) != 1 or not interpreters[0].is_relative_to(INSTALL / "python"):
         raise RuntimeError("Expected one private root-owned Python interpreter")
     policy.run("uv", "venv", "--python", str(interpreters[0]), "--no-python-downloads",
                str(INSTALL / "venv"), timeout=30)
@@ -331,6 +333,13 @@ FakeReceiptJournal.provision(Path('/run/ciq-agent-receipts/journal-parent/retain
             zip(units, FILES, ACCOUNTS, strict=True)
         ):
             role = policy.ROLES[index]
+            if role == "receipt":
+                # All custody consumers are stopped. Remove only the supervisor's
+                # bound dummy endpoint BEFORE receipt file faults: an existing
+                # socket must not mask accidental acceptance of an unsafe plan.
+                endpoint.close()
+                endpoint = None
+                socket_path.unlink()
             body = plan_values(role, password, epoch)
             for fault in FAULTS:
                 stage(path, uid, body, fault, password)
@@ -338,6 +347,8 @@ FakeReceiptJournal.provision(Path('/run/ciq-agent-receipts/journal-parent/retain
                 execute(unit, role)
                 if len(sink.results) != before:
                     raise RuntimeError("Unsafe private plan reached authentication")
+                if role == "receipt" and (socket_path.exists() or socket_path.is_symlink()):
+                    raise RuntimeError("Unsafe private plan created a receipt endpoint")
                 if hashlib.sha256(journal.read_bytes()).digest() != original:
                     raise RuntimeError("Private plan denial mutated retained journal")
                 # No actual module is alive; these are only our dummy plan names.
@@ -354,11 +365,6 @@ FakeReceiptJournal.provision(Path('/run/ciq-agent-receipts/journal-parent/retain
                 path.unlink()
                 print("PASS: installed " + role + " password delivered only to loopback control",
                       flush=True)
-        # Retire only the supervisor's bound dummy socket after all consumers are
-        # stopped. This is not stale real-endpoint cleanup or a production recipe.
-        endpoint.close()
-        endpoint = None
-        socket_path.unlink()
         stage(FILES[2], ACCOUNTS[2][1], plan_values("receipt", password, epoch), None, password)
         execute(units[2][0], "receipt", ready=True)
         if not socket_path.is_socket() or hashlib.sha256(journal.read_bytes()).digest() != original:
