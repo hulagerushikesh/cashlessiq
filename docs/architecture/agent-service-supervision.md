@@ -127,3 +127,8 @@ to the packaged modules and retained state without test overrides, then governed
 Snowflake/source/provider integration. Hosted Ubuntu acceptance does not establish
 compatibility on the existing Debian GCP host. A GCP build or startup still needs a new
 explicit spend window.
+
+The follow-up [installed services/private-plan acceptance](agent-service-credentials.md)
+uses the unchanged unit contents and actual installed modules for private-plan
+faults and bounded receipt lifecycle checks. It is separate from both the dummy
+resource probes above and a successful unit-backed HTTP-to-result journey.

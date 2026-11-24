@@ -12,6 +12,29 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Installed services and private plans — 24 November
+
+The [packaged-service/private-plan suite](../architecture/agent-service-credentials.md)
+connects root-owned, source-matched API/domain wheels and hash-checked locked
+dependencies to the actual modules under unchanged service unit contents. All
+25 Linux cases pass: 21 private-file denials, two fixed-loopback dummy password
+controls and two receipt idle/stale-endpoint cases. No SQL/provider/authority
+execution occurs in this job. Output is compared to fixed markers without
+printing private values, and retained journal bytes stay unchanged.
+
+All invocation-owned units/cgroups, plans, journal fixture, install and accounts
+are confirmed cleaned. Local verification passes 22 new cases, fourteen existing
+service cases and Ruff. Successful HTTP-to-result acceptance under these exact
+units and trusted readiness/launch order remain open, alongside production
+credentials, UID/quiescence/restore lifecycle and governed live-source work.
+No local Docker or paid resource was started; deployed code is unchanged.
+
+Accepted source `0feb310` passes all eight jobs in
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45352266042):
+1,063 root checks, 2,554 API checks, 44 combined scenarios and eighteen MVP
+journeys, with successful stack and owned-resource cleanup. Private-preview CI
+was not retriggered because application/preview runtime source is unchanged.
+
 ### External process resource limits — 24 November
 
 The [manual service supervision package](../architecture/agent-service-supervision.md)

@@ -7,6 +7,33 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Installed services and private plans — 24 November
+
+The [installed-service acceptance](../architecture/agent-service-credentials.md)
+now runs actual API wheel modules under byte-identical manual service policies.
+A private root-owned interpreter and frozen/hash-checked dependencies replace
+editable imports and the hosted Python toolcache; installed code bytes and
+permissions are verified. No identity, command or resource-policy override is used.
+
+All 25 Linux invocations pass: seven unsafe-file faults per role, two valid-plan
+password controls and receipt readiness/idle/stale-endpoint checks. Actual module
+output must match fixed markers in private memory; no plan/password/raw journal
+is printed to Actions. The dummy authentication control always denies and cannot
+execute SQL. Retained history remains unchanged and owned services, credentials,
+fixture journal, installation and accounts are confirmed removed. All 36 local
+service checks and repository Ruff pass.
+
+Accepted source `0feb310` passes all eight jobs in
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45352266042),
+including 1,063 root checks, 2,554 API checks, 44 combined agent/restore cases and
+eighteen MVP journeys. Stack shutdown and owned-resource cleanup pass.
+
+This is private-plan and installed-module acceptance, not the successful full
+HTTP-to-result journey under systemd. That combined journey, trusted launch order,
+production credential/account/quiescence lifecycle and restore reauthorization
+remain next, then governed source/provider integration and approved GCP testing.
+No local Docker, GCP, real credential or provider action was taken.
+
 ### External process resource limits — 24 November
 
 The [manual service examples](../architecture/agent-service-supervision.md) add
