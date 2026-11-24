@@ -58,6 +58,19 @@ def empty(unit):
     return not path.exists() or "populated 0" in path.read_text().splitlines()
 
 
+def start(unit):
+    result = run("systemctl", "start", unit, check=False)
+    if result.returncode:
+        print("FAIL: dummy service startup " + unit, flush=True)
+        for name in ("Result", "ExecMainCode", "ExecMainStatus", "StatusErrno"):
+            print(name + "=" + value(unit, name), flush=True)
+        # This unit runs only our disposable stdlib probe: never an API module,
+        # credentials or clinical inputs. Bound diagnostics to this owned unit.
+        print(run("journalctl", "--unit=" + unit, "--no-pager", "--lines=12",
+                  "--output=cat").stdout, flush=True)
+        raise RuntimeError("Disposable agent service startup failed")
+
+
 def main():
     guard()  # Every mutation is after the explicit CI/root/empty-path guard.
     signal.signal(signal.SIGTERM, lambda *_: sys.exit("Interrupted service acceptance"))
@@ -90,14 +103,14 @@ def main():
                 f"\nUser={uid}\nGroup={uid}\nExecStart=\n"
                 f"ExecStart=/usr/bin/env -i PATH=/usr/bin:/bin LANG=C.UTF-8 "
                 f"/usr/bin/python3 -I -B {base}/probe.py check {role} {output}\n"
-                f"ReadWritePaths={output}\nStandardOutput=null\nStandardError=null\n"
+                f"ReadWritePaths={output}\nStandardOutput=null\nStandardError=journal\n"
             )
             target.write_text(source + override)
             units.append((unit, target, source, override))
         run("systemd-analyze", "verify", "--man=no", *(str(item[1]) for item in units))
         run("systemctl", "daemon-reload")
         for (unit, _target, _source, _override), output in zip(units, outputs, strict=True):
-            run("systemctl", "start", unit)
+            start(unit)
             wait_for(lambda unit=unit: value(unit, "ActiveState") in ("inactive", "failed"))
             assert value(unit, "Result") == "success" and (output / "checked").is_file()
             assert value(unit, "NRestarts") == "0" and empty(unit)
@@ -115,7 +128,7 @@ def main():
                 changed += "RuntimeMaxSec=2s\n"
             target.write_text(source + changed)
             run("systemctl", "daemon-reload")
-            run("systemctl", "start", unit)
+            start(unit)
             if mode in ("main-kill", "stop", "timeout"):
                 wait_for(lambda: (output / "child").is_file())
                 if mode == "main-kill":
