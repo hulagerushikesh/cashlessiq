@@ -105,7 +105,7 @@ def main():
         state = inspect(identifier)["State"]
         if (
             result.returncode or state["Running"] or state["ExitCode"] != 0
-            or state["OOMKilled"] or state["Error"] or passed != 22
+            or state["OOMKilled"] or state["Error"] or passed != 28
         ):
             raise RuntimeError("Combined peer acceptance failed")
         assert inspect(pg)["State"]["Running"] and not inspect(pg)["State"]["OOMKilled"]

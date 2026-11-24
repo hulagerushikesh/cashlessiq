@@ -81,3 +81,7 @@ custody does not establish independent host-loss or both-store rollback safety.
 No continuous queue scanner, worker startup, service, container activation or
 deployment is supplied. Governed source mapping, live provider/checkpoint/usage
 reconciliation and separately approved paid testing remain outstanding.
+
+The later [one-shot clinical process](agent-claim-runner.md) replaces the
+test-only claim helper with fixed private-plan delivery, process checks and
+database/login OID pins. Full custody/operator activation remains separate.

@@ -17,7 +17,6 @@ from sqlalchemy.exc import DBAPIError
 from ciq_api.agent_admission import FakeEpochPin, FakeReceiptJournal
 from ciq_api.agent_contracts import AgentContractError, AgentInput
 from ciq_api.agent_controller_capture import ControllerCapture
-from ciq_api.agent_controller_reservation import ControllerReservation
 from ciq_api.agent_custody_recovery import FakeCustodyRecovery
 from ciq_api.agent_custody_submission import FakeCustodySubmission
 from ciq_api.agent_executor import BoundedFakeProcess, FakeProcessRequest
@@ -54,7 +53,7 @@ def main():
         else:
             raise AssertionError("cross_uid_file_access")
     url = make_url(config["runtime_url"])
-    clinical = config["action"] in {"clinical", "claim_requested"}
+    clinical = config["action"] == "clinical"
     prefix = "ciq_scope_login_" if clinical else "ciq_receipt_login_"
     assert url.host == "127.0.0.1" and url.port == 5432
     assert re.fullmatch(r"ciq_(?:controller|agent_restore)_[a-f0-9]{24}", url.database)
@@ -79,12 +78,6 @@ def main():
                 assert exc.orig.sqlstate == "42501"
             else:
                 raise AssertionError("direct_table_access")
-        if config["action"] == "claim_requested":
-            claim = ControllerReservation(engine, schema=config["capture"]).claim_requested(
-                "REQ-FAKE-0", UUID(config["job_id"]),
-            )
-            print("CLAIM:" + claim.model_dump_json(), flush=True)
-            return
         if clinical:
             snapshot = ControllerCapture(engine, schema=config["capture"]).capture("REQ-FAKE-0")
             expected = AgentInput.model_validate(config["snapshot"])
