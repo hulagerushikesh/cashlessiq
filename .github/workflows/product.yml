@@ -5,6 +5,21 @@ on:
 permissions:
   contents: read
 jobs:
+  agent-service-journey:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+      - name: Actual HTTP intent to installed service claim, custody, receipt and result
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:ciq-disposable-agent-ledger@127.0.0.1:5432/postgres
+        run: sudo -n env PATH="$PATH" GITHUB_ACTIONS=true GITHUB_REPOSITORY=hulagerushikesh/cashlessiq CIQ_AGENT_SERVICE_TEST=1 CIQ_AGENT_PACKAGE_TEST=1 CIQ_AGENT_CONTROLLER_TEST=1 CIQ_AGENT_SERVICE_JOURNEY_TEST=1 TEST_DATABASE_URL="$TEST_DATABASE_URL" uv run --project apps/api python -m scripts.test_agent_service_journey
   agent-service-packages:
     runs-on: ubuntu-latest
     timeout-minutes: 6
