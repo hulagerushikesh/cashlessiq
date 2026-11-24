@@ -19,6 +19,9 @@ publishes complete, synced private plans without replacing existing entries.
 The service journey checks quiescence before staging; uncertain delivery retains
 evidence and denies activation. All 126 focused local checks and changed-file
 Ruff pass. Production credential source, rotation and retirement remain open.
+The [Linux integration job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45382439775/job/138404649536)
+passes three scenarios, fifteen service invocations and owned-resource cleanup
+at source `f074b8f`; the broader workflow is still running at this receipt.
 The preceding [quiescence workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242)
 has now completed successfully across all nine jobs at source `5622a92`.
 

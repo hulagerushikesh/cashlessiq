@@ -14,6 +14,9 @@ now stages complete private files atomically, refuses overwrites and retains
 evidence on uncertain delivery. Stopped-service checks precede staging. All 126
 focused local checks and changed-file Ruff pass. This remains disposable CI;
 production credential source, rotation and retirement are still open.
+The [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45382439775/job/138404649536)
+passes all three scenarios and confirmed cleanup at source `f074b8f`; other
+workflow checks remain pending at this receipt.
 The previous [quiescence workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242)
 has finished with all nine jobs green at source `5622a92`.
 

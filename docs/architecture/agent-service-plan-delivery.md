@@ -43,3 +43,11 @@ Local acceptance passes 126 focused service checks, including 34 delivery cases,
 plus changed-file Ruff and whitespace checks. The Linux complete service journey
 is the integration gate for actual ownership, fixed paths and packaged readers.
 No local Docker, GCP resource, application runtime or service policy changed.
+
+The [Linux service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45382439775/job/138404649536)
+passes at source `f074b8fc0e1f8dead3a754c51f96985e644d1544`: all three scenarios
+and fifteen actual service invocations accept the delivered files under unchanged
+unit policies. Source-matched installation and owned service, plan, account,
+runtime and loopback database/tmpfs cleanup all pass (seven fixed markers).
+The broader foundation and ledger/peer jobs remain in progress at this receipt;
+their completion must be checked before claiming the whole workflow passed.
