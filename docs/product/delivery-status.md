@@ -7,6 +7,16 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Atomic private-plan delivery — 24 November
+
+The [complete-journey fixture](../architecture/agent-service-plan-delivery.md)
+now stages complete private files atomically, refuses overwrites and retains
+evidence on uncertain delivery. Stopped-service checks precede staging. All 126
+focused local checks and changed-file Ruff pass. This remains disposable CI;
+production credential source, rotation and retirement are still open.
+The previous [quiescence workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242)
+has finished with all nine jobs green at source `5622a92`.
+
 ### Stronger stopped-service evidence — 24 November
 
 The [new read-only verifier](../architecture/agent-service-quiescence.md) requires

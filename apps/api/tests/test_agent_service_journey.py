@@ -83,18 +83,11 @@ def credentials(s, engine):
             "login": engine.url.username, "login_oid": login_oid, "password": engine.url.password}
 
 
-def deliver(index, body, *, name=None):
-    path = packages.FILES[index]
-    if name:
-        path = path.with_name(name)
-    packages.stage(path, packages.ACCOUNTS[index][1], body, None, "unused")
-
-
 @pytest.mark.parametrize("scenario", ["published", "invalid-held", "unassigned-held"])
 def test_http_to_installed_services_and_validated_result(journey, settings, scenario):
     s, services = journey
     # Only the restricted clinical login and this held intent reach the claim UID.
-    deliver(0, {**credentials(s, s.runtime), "protocol": "ciq-fake-claim-v1",
+    services.deliver("claim", {**credentials(s, s.runtime), "protocol": "ciq-fake-claim-v1",
                 "capture_schema": s.capture, "request_id": "REQ-FAKE-0",
                 "job_id": str(s.job_id)})
     services.start("claim")
@@ -114,16 +107,17 @@ def test_http_to_installed_services_and_validated_result(journey, settings, scen
             db.execute(text(f'UPDATE "{s.receipts}".submission_scope SET enabled=false'))
     epoch = s.setup.admission.journal.pin.model_dump(mode="json")
     runner.provision(epoch)
-    deliver(2, {"protocol": "ciq-fake-receipt-v1", "epoch": epoch,
+    services.deliver("receipt", {"protocol": "ciq-fake-receipt-v1", "epoch": epoch,
                 "custody_uid": packages.ACCOUNTS[1][1]})
-    deliver(1, {**credentials(s, s.observer_runtime), "protocol": "ciq-fake-custody-v1",
+    services.deliver("custody", {**credentials(s, s.observer_runtime),
+                "protocol": "ciq-fake-custody-v1",
                 "receipts_schema": s.receipts, "request_id": "REQ-FAKE-0",
                 "claim": s.claim.model_dump(mode="json"), "epoch": epoch,
                 "receipt_uid": packages.ACCOUNTS[2][1]})
     body = candidate(s.setup.snapshots[0], s.claim.operation_id)
     if scenario == "invalid-held":
         body["payable_inr"] = 1
-    deliver(1, body, name="candidate.json")
+    services.deliver("candidate", body)
     # All private plans/candidate/authority are staged before the short idle window.
     services.start("receipt")
     services.receipt_ready()

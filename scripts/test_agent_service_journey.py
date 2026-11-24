@@ -12,6 +12,7 @@ from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from pathlib import Path
 from uuid import uuid4
 
+from scripts import agent_service_plans as plans
 from scripts import agent_service_quiescence as quiescence
 from scripts import test_agent_service_packages as packages
 
@@ -31,6 +32,11 @@ class Services:
     def __init__(self, units):
         self.units = dict(units)
         self.invocations = {}
+
+    def deliver(self, role, body):
+        # Trusted CI excludes concurrent activation; evidence is not a host lock.
+        quiescence.verify_stopped(self.units["custody" if role == "candidate" else role])
+        plans.stage(role, json.dumps(body).encode())
 
     def start(self, role):
         unit = self.units[role]

@@ -12,6 +12,16 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Atomic private-plan delivery — 24 November
+
+The [synthetic delivery helper](../architecture/agent-service-plan-delivery.md)
+publishes complete, synced private plans without replacing existing entries.
+The service journey checks quiescence before staging; uncertain delivery retains
+evidence and denies activation. All 126 focused local checks and changed-file
+Ruff pass. Production credential source, rotation and retirement remain open.
+The preceding [quiescence workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242)
+has now completed successfully across all nine jobs at source `5622a92`.
+
 ### Stronger stopped-service evidence — 24 November
 
 The [read-only quiescence helper](../architecture/agent-service-quiescence.md)

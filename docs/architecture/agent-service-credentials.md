@@ -53,6 +53,10 @@ not add a production secret-delivery API, accept a browser path or select a
 runtime identity. Credential rotation, protected secret sources and UID reuse
 remain operator-lifecycle work.
 
+The complete-journey fixture now uses [atomic no-replacement delivery](agent-service-plan-delivery.md)
+after stopped-service checks, instead of writing directly to the final name.
+The separate fault-injection suite deliberately retains its unsafe-file writer.
+
 For each of the three installed modules the suite tests seven faults: missing
 file, public-readable mode, wrong owner, symlink, multiple hard links, oversize
 file and duplicate JSON keys. The duplicate-key case starts with a random dummy
