@@ -12,6 +12,16 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Stronger stopped-service evidence — 24 November
+
+The [read-only quiescence helper](../architecture/agent-service-quiescence.md)
+checks exact stopped-unit identity, pending jobs/PIDs, restart/kill policy,
+recursive cgroup emptiness and stable before/after snapshots. The disposable
+complete-journey supervisor uses it before private-file teardown and retains
+state on uncertain evidence. Local verification passes 92 focused checks and
+changed-file Ruff. Production activation exclusion, credential/UID retirement,
+rotation and restore reauthorization remain open; no Docker/GCP startup occurred.
+
 ### Complete synthetic journey under service limits — 24 November
 
 The [full service journey](../architecture/agent-service-journey.md) passes valid

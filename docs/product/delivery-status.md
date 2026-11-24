@@ -7,6 +7,16 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Stronger stopped-service evidence — 24 November
+
+The [new read-only verifier](../architecture/agent-service-quiescence.md) requires
+stable stopped-unit identity/state, no pending jobs/PIDs, no restarts and direct
+recursive cgroup emptiness before the synthetic journey removes private files.
+Uncertain evidence retains state. All 92 focused offline checks and changed-file
+Ruff pass. This is one lifecycle prerequisite; production credential rotation,
+account retirement and activation coordination remain open. No local Docker or
+GCP resource was started.
+
 ### Complete synthetic journey under service limits — 24 November
 
 The [combined service acceptance](../architecture/agent-service-journey.md)

@@ -139,3 +139,8 @@ verified quiescence, rotation/retirement, restore
 reauthorization and independent retained storage remain open. Governed
 Snowflake/source/provider integration follows those gates. GCP rebuilding or
 startup needs a new explicit spend/window approval.
+
+The next [read-only quiescence helper](agent-service-quiescence.md) strengthens
+complete-journey teardown with stable systemd snapshots, pending-job/PID checks
+and direct recursive cgroup evidence. It does not authorize credential or UID
+retirement, exclude concurrent root activation or change deployed startup.

@@ -12,6 +12,7 @@ from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from pathlib import Path
 from uuid import uuid4
 
+from scripts import agent_service_quiescence as quiescence
 from scripts import test_agent_service_packages as packages
 
 policy = packages.policy
@@ -72,9 +73,7 @@ class Services:
         for role, unit in reversed(tuple(self.units.items())):
             try:
                 policy.run("systemctl", "stop", unit)
-                if (policy.value(unit, "ActiveState") not in ("inactive", "failed")
-                    or not policy.empty(unit)):
-                    raise RuntimeError("Owned service is not quiescent")
+                quiescence.verify_stopped(unit)
             except Exception:
                 failures.append(role)
         if failures:

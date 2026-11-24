@@ -87,19 +87,27 @@ def test_readiness_waits_for_current_invocation_marker_not_type_exec(monkeypatch
     assert seen == ["c" * 32, "c" * 32]
 
 
-def test_cleanup_checks_all_owned_units_and_preserves_files_on_uncertain_stop(monkeypatch):
+@pytest.mark.parametrize("failure", ["stop", "evidence"])
+def test_cleanup_checks_all_owned_units_and_preserves_files_on_uncertain_stop(monkeypatch, failure):
     service = runner.Services([("claim", "owned-claim"), ("receipt", "owned-receipt")])
     stopped = []
 
     def run(*args):
         stopped.append(args[-1])
-        if args[-1] == "owned-receipt":
+        if args[-1] == "owned-receipt" and failure == "stop":
             raise RuntimeError("PRIVATE")
         return SimpleNamespace(returncode=0)
 
     monkeypatch.setattr(runner.policy, "run", run)
-    monkeypatch.setattr(runner.policy, "value", lambda *_: "inactive")
-    monkeypatch.setattr(runner.policy, "empty", lambda _: True)
+    verified = []
+
+    def verify(unit):
+        verified.append(unit)
+        if unit == "owned-receipt":
+            raise ValueError("PRIVATE")
+
+    monkeypatch.setattr(runner.quiescence, "verify_stopped", verify)
     with pytest.raises(RuntimeError, match="fixtures retained") as error:
         service.stop()
     assert "PRIVATE" not in str(error.value) and stopped == ["owned-receipt", "owned-claim"]
+    assert verified == (["owned-claim"] if failure == "stop" else ["owned-receipt", "owned-claim"])
