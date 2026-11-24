@@ -2,6 +2,7 @@
 
 import configparser
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -77,3 +78,67 @@ def test_no_deployment_or_automatic_activation():
     assert '"enable"' not in source and '"restart"' not in source
     assert "shutil.rmtree(path)" in source and '"prune"' not in source
     assert "sudo -n env GITHUB_ACTIONS=true" in (ROOT / ".github/workflows/product.yml").read_text()
+
+
+@pytest.mark.parametrize("automatic_group", [False, True])
+def test_owned_identity_cleanup_handles_userdel_removing_private_group(
+    monkeypatch, automatic_group,
+):
+    users, groups = {"owned": 53001}, {"owned": 53001}
+    calls = []
+
+    def user(name):
+        return SimpleNamespace(pw_uid=users[name], pw_gid=users[name])
+
+    def group(name):
+        return SimpleNamespace(gr_gid=groups[name])
+
+    def run(command, name):
+        calls.append((command, name))
+        if command == "userdel":
+            users.pop(name)
+            if automatic_group:
+                groups.pop(name)
+        elif command == "groupdel":
+            groups.pop(name)
+        else:
+            pytest.fail("Unexpected mutation")
+
+    monkeypatch.setattr(runner.pwd, "getpwnam", user)
+    monkeypatch.setattr(runner.grp, "getgrnam", group)
+    monkeypatch.setattr(runner, "run", run)
+    runner.retire_accounts([("owned", 53001)])
+    assert not users and not groups
+    assert calls == [("userdel", "owned")] + ([] if automatic_group else [("groupdel", "owned")])
+
+
+@pytest.mark.parametrize("fault", ["replaced-user", "replaced-group", "delete-failed"])
+def test_identity_cleanup_preserves_replacements_and_attempts_other_owned_names(monkeypatch, fault):
+    users = {"good-a": 53001, "bad": 53002, "good-b": 53003}
+    groups = users.copy()
+    if fault == "replaced-user":
+        users["bad"] = 60000
+    if fault == "replaced-group":
+        groups["bad"] = 60000
+    calls = []
+
+    monkeypatch.setattr(runner.pwd, "getpwnam", lambda name: SimpleNamespace(
+        pw_uid=users[name], pw_gid=users[name],
+    ))
+    monkeypatch.setattr(runner.grp, "getgrnam", lambda name: SimpleNamespace(gr_gid=groups[name]))
+
+    def run(command, name):
+        calls.append((command, name))
+        if name == "bad" and fault == "delete-failed":
+            raise RuntimeError("dummy failure")
+        (users if command == "userdel" else groups).pop(name)
+
+    monkeypatch.setattr(runner, "run", run)
+    with pytest.raises(RuntimeError, match="cleanup unconfirmed"):
+        runner.retire_accounts([("good-a", 53001), ("bad", 53002), ("good-b", 53003)])
+    assert "good-a" not in users and "good-b" not in users
+    assert "good-a" not in groups and "good-b" not in groups
+    if fault == "replaced-user":
+        assert ("userdel", "bad") not in calls and users["bad"] == 60000
+    if fault == "replaced-group":
+        assert ("groupdel", "bad") not in calls and groups["bad"] == 60000

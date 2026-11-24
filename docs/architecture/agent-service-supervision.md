@@ -64,8 +64,10 @@ publication. No service dependency treats it as such.
 
 ## Acceptance and remaining work
 
-Nine offline checks cover fixed role/entry-point/limit/activation constraints and
-CI refusal before host reads or mutations. The explicit Linux CI job requires
+Fourteen offline checks cover fixed role/entry-point/limit/activation constraints,
+CI refusal before host reads/mutations and identity retirement failures. Cleanup
+handles automatic private-group deletion, preserves replaced identities and
+attempts other owned accounts after one failure. The explicit Linux CI job requires
 the correct repository, opt-in, root, systemd PID 1, unified cgroups and absent
 fixed runtime paths. It refuses existing paths before allocating fixtures.
 
@@ -79,7 +81,9 @@ remains the separate evidence for those module behaviors.
 
 Three probes inspect effective memory/swap/tasks/CPU/descriptor/core limits,
 identity, capability/environment restrictions, read-only host filesystem and
-actual blocked IP connections. Five custody probes exercise main SIGKILL with a
+blocked connections to reachable controlled loopback listeners, with a positive
+127.0.0.1 control for clinical/custody. This handles packet-drop timeouts without
+mistaking an unreachable external host for an effective filter. Five custody probes exercise main SIGKILL with a
 separate-session child, forced stop, external timeout, cgroup OOM and task-cap
 exhaustion. Timeout alone shortens the source ceiling to two seconds; other
 resource/shutdown policy remains the example's. Every scenario requires no

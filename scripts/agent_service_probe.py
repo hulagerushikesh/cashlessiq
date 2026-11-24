@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 def main():
-    mode, role, output = sys.argv[1:]
+    mode, role, output, port = sys.argv[1:]
     root = Path(output)
     assert os.getuid() > 0 and os.getresuid() == (os.getuid(),) * 3
     assert os.getresgid() == (os.getgid(),) * 3 and set(os.getgroups()) <= {os.getgid()}
@@ -32,10 +32,17 @@ def main():
     assert (group / "pids.max").read_text().strip() == "16"
     quota, period = (group / "cpu.max").read_text().split()
     assert int(quota) / int(period) <= 0.25
-    for target in ("192.0.2.1", "127.0.0.1") if role == "receipt" else ("192.0.2.1",):
+    # systemd's IP filter drops packets; a reachable controlled listener must
+    # remain unreachable, rather than necessarily rejecting connect with EPERM.
+    denied = (errno.EPERM, errno.EACCES, errno.EAGAIN, errno.ETIMEDOUT)
+    for target in ("127.0.0.2", "127.0.0.1") if role == "receipt" else ("127.0.0.2",):
         with socket.socket() as sock:
             sock.settimeout(0.2)
-            assert sock.connect_ex((target, 9)) in (errno.EPERM, errno.EACCES)
+            assert sock.connect_ex((target, int(port))) in denied
+    if role != "receipt":
+        with socket.socket() as sock:
+            sock.settimeout(0.5)
+            assert sock.connect_ex(("127.0.0.1", int(port))) == 0
     try:
         Path("/etc/ciq-agent-must-not-write").write_text("forbidden")
     except OSError as exc:
