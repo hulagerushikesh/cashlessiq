@@ -81,11 +81,16 @@ def journey(requested, observer, services):
         # Quiesce actual services before DB fixtures revoke/drop anything, and
         # before the trusted fixture removes its own stale endpoint/private files.
         services.stop()
-        for path in (*packages.FILES, packages.FILES[1].with_name("candidate.json"), SOCKET):
+        services.lease.check()
+        sources = tuple(runner.source.SOURCE / runner.plans.TARGETS[role][1]
+                        for role in runner.source.ROLES)
+        for path in (*packages.FILES, packages.FILES[1].with_name("candidate.json"),
+                     SOCKET, *sources):
             path.unlink(missing_ok=True)
         if RETAINED.exists():
             shutil.rmtree(RETAINED)
         assert not SOCKET.exists() and not RETAINED.exists()
+        assert not any(path.exists() or path.is_symlink() for path in sources)
 
 
 def credentials(s, engine):
@@ -103,7 +108,9 @@ def retire_and_rotate(s, services):
     services.stop()  # All three units/cgroups, before any SQL retirement or pool closure.
     before = product_digest(s)
     retained = (RETAINED / "fake-receipts.sqlite3").read_bytes()
-    plans = {path: path.read_bytes() for path in packages.FILES}
+    private_files = (*packages.FILES, *(runner.source.SOURCE / runner.plans.TARGETS[role][1]
+                                       for role in runner.source.ROLES))
+    plans = {path: path.read_bytes() for path in private_files}
     with s.admin.begin() as db:
         raw = db.connection.driver_connection
         database_oid = raw.execute(
@@ -193,7 +200,7 @@ def retire_and_rotate(s, services):
         services.stop()
         assert product_digest(s) == before
         assert (RETAINED / "fake-receipts.sqlite3").read_bytes() == retained
-        assert {path: path.read_bytes() for path in packages.FILES} == plans
+        assert {path: path.read_bytes() for path in private_files} == plans
     print("PASS: retired service credentials and rotated passwords restore no authority",
           flush=True)
 
