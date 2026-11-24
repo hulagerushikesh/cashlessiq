@@ -7,6 +7,40 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Complete synthetic journey under service limits — 24 November
+
+The [combined service acceptance](../architecture/agent-service-journey.md)
+now connects authenticated HTTP intent, installed clinical claim, independently
+assigned custody, separate receipt UID, bounded canned child and validated HTTP
+result under the unchanged manual units. The three actual Linux scenarios pass:
+valid publication, invalid money output held without publication, and disabled
+custody assignment denied before an attempt. Explicit replay probes cannot create
+a second attempt/comparison; human review and its outbox remain unchanged.
+
+The trusted fixture stages confirmed claim and independent custody authority
+before starting the short receipt idle window. Readiness requires the current
+invocation's exact marker and an active service. All fifteen service invocations
+finish with empty cgroups/no restarts. Retained receipt checkpoints and allowance
+counters match, and quiescence precedes private-file/database teardown.
+
+The [journey job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45358107478/job/138320934456)
+passes at source `60b4d66`; installed runtime, owned services/accounts/files and
+the loopback-only dummy database/tmpfs data are confirmed removed. All 54 local
+service checks and Ruff pass. No application module, unit policy, migration,
+runtime bundle, local Docker or GCP deployment changed.
+
+The [full product run](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45358107478)
+passes all nine jobs on that source: 1,081 root checks, 2,554 API checks, 44 combined
+agent/restore cases and eighteen MVP journeys, with stack cleanup confirmed.
+The separate private-preview workflow passes eighteen MVP journeys plus saved
+workflow checks after restart and encrypted fresh-volume restore; all 22 restored
+tables match and both disposable previews are removed.
+
+Next: production private credential/account lifecycle, explicit quiescence and
+rotation/retirement/restore handling; then governed source/provider integration
+and a separately approved GCP testing window. This CI fixture is not production
+credential delivery or service activation.
+
 ### Installed services and private plans — 24 November
 
 The [installed-service acceptance](../architecture/agent-service-credentials.md)
@@ -28,9 +62,10 @@ Accepted source `0feb310` passes all eight jobs in
 including 1,063 root checks, 2,554 API checks, 44 combined agent/restore cases and
 eighteen MVP journeys. Stack shutdown and owned-resource cleanup pass.
 
-This is private-plan and installed-module acceptance, not the successful full
-HTTP-to-result journey under systemd. That combined journey, trusted launch order,
-production credential/account/quiescence lifecycle and restore reauthorization
+This private-plan milestone is separate from the later
+[complete service journey](../architecture/agent-service-journey.md), which now
+connects the HTTP-to-result path and trusted fixture launch order under systemd.
+Production credential/account/quiescence lifecycle and restore reauthorization
 remain next, then governed source/provider integration and approved GCP testing.
 No local Docker, GCP, real credential or provider action was taken.
 

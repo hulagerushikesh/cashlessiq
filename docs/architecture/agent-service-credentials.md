@@ -128,12 +128,14 @@ private-preview workflow was not retriggered: no application or preview runtime
 source changed. Earlier failed setup revisions were superseded and their
 unfinished workflows canceled; only the source/run above is accepted here.
 
-The exact unit-backed successful HTTP-to-result journey is still pending. Existing
-44-case packaged HTTP/DB/peer/restore acceptance runs separately without these
-systemd policies; these proofs must not be conflated. A trusted bounded launch
-sequence must stage confirmed clinical claim and independent custody assignment
-before the receipt's idle window. Production credential delivery, account/UID
-lifecycle, separately verified quiescence, rotation/retirement, restore
+The follow-up [complete service journey](agent-service-journey.md) connects actual
+HTTP intent/result, restricted PostgreSQL, separate receipt UID and canned child
+under the exact units. Its trusted fixture stages confirmed clinical claim and
+independent custody assignment before the receipt's idle window and requires
+readiness for the current invocation. The existing 44-case packaged
+HTTP/DB/peer/restore suite remains separate evidence without these systemd
+policies. Production credential delivery, account/UID lifecycle, separately
+verified quiescence, rotation/retirement, restore
 reauthorization and independent retained storage remain open. Governed
 Snowflake/source/provider integration follows those gates. GCP rebuilding or
 startup needs a new explicit spend/window approval.

@@ -30,6 +30,9 @@ The [manual service supervision examples](docs/architecture/agent-service-superv
 prepare external resource ceilings and whole-cgroup shutdown, without deployment.
 The [installed-service private-plan checks](docs/architecture/agent-service-credentials.md)
 connect those exact policies to packaged modules in disposable Linux acceptance.
+The [complete synthetic service journey](docs/architecture/agent-service-journey.md)
+connects HTTP intent, restricted claim/custody, the separate receipt UID and
+validated HTTP result under the same limits, including conservative held cases.
 The inactive [agent comparison contract](docs/architecture/agent-comparison-contract.md)
 has 146 offline golden/fault checks. The inactive
 [fake-only database ledger](docs/architecture/agent-run-ledger.md) adds 90

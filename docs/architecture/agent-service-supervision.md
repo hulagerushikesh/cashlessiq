@@ -66,9 +66,10 @@ the executable started, not receipt readiness, clinical authorization or success
 publication. No service dependency treats it as such.
 Receipt's ten-second idle limit is unchanged: plans, the confirmed clinical
 claim and independent custody assignment must be ready before receipt startup.
-A trusted bounded readiness/launch coordinator still needs acceptance; manual
-unit startup alone does not implement that ordering or authorize restarting an
-expired receipt process.
+The [complete service fixture](agent-service-journey.md) now accepts that bounded
+ordering and current-invocation readiness in disposable CI. Production launch
+coordination remains separate; manual unit startup alone does not implement
+that ordering or authorize restarting an expired receipt process.
 
 ## Acceptance and remaining work
 
@@ -120,15 +121,15 @@ Private-preview CI was not retriggered: no app or preview runtime changed; its
 previous accepted receipt-runner result remains separate historical evidence.
 
 These examples are not production installation approval. Remaining work includes
-effective installed-artifact checks, private output/secret delivery, account/UID
-lifecycle, independently verified quiescence, credential retirement/rotation and
-restore reauthorization. Joint acceptance must connect these exact unit policies
-to the packaged modules and retained state without test overrides, then governed
-Snowflake/source/provider integration. Hosted Ubuntu acceptance does not establish
+production secret delivery, account/UID lifecycle, independently verified
+quiescence, credential retirement/rotation and restore reauthorization, then
+governed Snowflake/source/provider integration. Hosted Ubuntu acceptance does not establish
 compatibility on the existing Debian GCP host. A GCP build or startup still needs a new
 explicit spend window.
 
 The follow-up [installed services/private-plan acceptance](agent-service-credentials.md)
 uses the unchanged unit contents and actual installed modules for private-plan
-faults and bounded receipt lifecycle checks. It is separate from both the dummy
-resource probes above and a successful unit-backed HTTP-to-result journey.
+faults and bounded receipt lifecycle checks. The later
+[complete service journey](agent-service-journey.md) connects the successful
+HTTP-to-result path and two conservative held cases under the same exact units.
+These are separate evidence from the dummy exhaustion/descendant probes above.

@@ -12,6 +12,34 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Complete synthetic journey under service limits — 24 November
+
+The [full service journey](../architecture/agent-service-journey.md) passes valid
+publication and two conservative held cases through actual HTTP, restricted
+PostgreSQL logins, installed claim/custody/receipt modules, a separate retained
+journal UID and the bounded canned child under exact unchanged unit contents.
+Trusted claim/independent-assignment staging precedes current-invocation receipt
+readiness. Human review/outbox remain unchanged; explicit replay probes produce
+no second attempt or comparison. Fifteen real unit invocations leave empty
+cgroups/no restarts, with exact retained receipt and allowance assertions.
+
+Accepted source `60b4d66` passes the
+[new service journey job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45358107478/job/138320934456)
+and existing 25-case private-plan job; all owned services, credentials, retained
+fixtures, identities, installed runtime and dummy database/tmpfs data are removed.
+Local verification passes 54 focused cases, including eighteen new guards,
+readiness/quiescence and actual-report acceptance checks, plus repository Ruff.
+Production credential/UID lifecycle, verified quiescence, rotation/retirement,
+restore reauthorization and governed source/provider work remain open.
+No local Docker, GCP, live source/provider, application or deployed runtime changed.
+
+The [full product workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45358107478)
+passes all nine jobs at that source: 1,081 root checks, 2,554 API checks, 44 combined
+agent/restore cases and eighteen MVP journeys; stack and owned-resource cleanup
+pass. The separate private-preview workflow passes eighteen MVP journeys, both
+saved-workflow restart/restore checks, encrypted recovery of all 22 tables and
+preview cleanup. These are disposable CI receipts, not a new GCP deployment.
+
 ### Installed services and private plans — 24 November
 
 The [packaged-service/private-plan suite](../architecture/agent-service-credentials.md)
@@ -24,9 +52,11 @@ printing private values, and retained journal bytes stay unchanged.
 
 All invocation-owned units/cgroups, plans, journal fixture, install and accounts
 are confirmed cleaned. Local verification passes 22 new cases, fourteen existing
-service cases and Ruff. Successful HTTP-to-result acceptance under these exact
-units and trusted readiness/launch order remain open, alongside production
-credentials, UID/quiescence/restore lifecycle and governed live-source work.
+service cases and Ruff. The later
+[complete service journey](../architecture/agent-service-journey.md) now connects
+HTTP-to-result acceptance and trusted fixture readiness/launch order under these
+exact units. Production credentials, UID/quiescence/restore lifecycle and governed
+live-source work remain open.
 No local Docker or paid resource was started; deployed code is unchanged.
 
 Accepted source `0feb310` passes all eight jobs in
