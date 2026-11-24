@@ -80,11 +80,17 @@ def main():
         docker("start", prefix)
         result = json.loads(docker("wait", prefix, timeout=120))
         logs = docker("logs", prefix)
+        reports = [json.loads(row) for row in logs.splitlines()]
+        assert len(reports) <= len(CASES)
+        assert len({r["case"] for r in reports}) == len(reports)
+        assert all(set(r) == {"case", "status"} and r["case"] in CASES
+                   and r["status"] in {"PASS", "FAIL"} for r in reports)
         if result != 0:
+            for report in reports:
+                print(json.dumps(report))
             raise AssertionError(
                 "Disposable process acceptance failed; inspect test implementation"
             )
-        reports = [json.loads(row) for row in logs.splitlines()]
         assert len(reports) == len(CASES)
         assert {r["case"] for r in reports} == CASES
         assert all(r["status"] == "PASS" for r in reports)

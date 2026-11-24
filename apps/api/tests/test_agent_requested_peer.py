@@ -69,7 +69,7 @@ def run_claim(s, peer, *, fault=None):
         PLAN.chmod(0o644 if fault == "mode" else 0o600)
         os.chown(PLAN, peer.clinical_uid, peer.clinical_uid)
         os.chown(PLAN.parent, peer.clinical_uid, peer.clinical_uid)
-        environment = {"PATH": "/usr/bin:/bin"}
+        environment = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
         if fault == "environment":
             environment["PGSERVICE"] = "unapproved"
         uid = {"root": 0, "other_uid": peer.custody_uid}.get(fault, peer.clinical_uid)

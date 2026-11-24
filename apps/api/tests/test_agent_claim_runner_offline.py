@@ -243,7 +243,9 @@ def test_process_requires_clean_nonroot_identity_before_reading_plan(monkeypatch
     ), raising=False)
     monkeypatch.setattr(runner.os, "getgroups", lambda: [10002] if fault == "groups" else [])
     monkeypatch.setattr(runner.os, "environ", {"PGHOST": "alternate"}
-                        if fault == "environment" else {"PATH": "/usr/bin:/bin"})
+                        if fault == "environment" else {
+                            "PATH": "/usr/bin:/bin", "LC_CTYPE": "C.UTF-8",
+                        })
     status = "NoNewPrivs: 1\nCapInh: 0\nCapPrm: 0\nCapEff: 0\nCapAmb: 0\n"
     if fault == "caps":
         status = status.replace("CapPrm: 0", "CapPrm: 1")

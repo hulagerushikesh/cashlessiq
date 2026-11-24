@@ -31,7 +31,8 @@ UID and host administrator remain trusted; this is not protection against either
 
 The trusted supervisor launches the installed Python environment with
 `-I -B -m ciq_api.agent_claim_runner`, no arguments, stdin closed and a clean
-environment containing only optional `PATH`, `LANG` and `LC_ALL`. The runner
+environment containing only optional `PATH`, `LANG`, `LC_ALL` and `LC_CTYPE`
+(which CPython can add during locale coercion). The runner
 requires Linux, a single nonroot real/effective/saved UID and GID, no unrelated
 supplementary groups, zero inherited/permitted/effective/ambient capabilities
 and `NoNewPrivs=1`. It disables core dumps and arms a twenty-second alarm before

@@ -109,7 +109,8 @@ def guard_process():
     _require(uid > 0 and gid > 0 and os.getresuid() == (uid,) * 3
              and os.getresgid() == (gid,) * 3 and set(os.getgroups()) <= {gid})
     # libpq/Python/cloud configuration cannot supply implicit alternate identities.
-    _require(set(os.environ) <= {"PATH", "LANG", "LC_ALL"})
+    # CPython can add LC_CTYPE itself while coercing the initial C locale.
+    _require(set(os.environ) <= {"PATH", "LANG", "LC_ALL", "LC_CTYPE"})
     status = dict(line.split(":", 1) for line in Path("/proc/self/status").read_text().splitlines())
     _require(status["NoNewPrivs"].strip() == "1" and all(
         int(status[key].strip(), 16) == 0 for key in ("CapInh", "CapPrm", "CapEff", "CapAmb")

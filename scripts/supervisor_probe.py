@@ -343,7 +343,12 @@ def main():
             unknown_termination,
             blocked_controller,
         ):
-            case()
+            try:
+                case()
+            except Exception:
+                # Only a fixed test-case label, never an exception/child payload.
+                print(json.dumps({"case": case.__name__, "status": "FAIL"}), flush=True)
+                raise SystemExit(1) from None
             print(json.dumps({"case": case.__name__, "status": "PASS"}), flush=True)
     else:
         raise ValueError("Unknown test mode")
