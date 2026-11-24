@@ -15,7 +15,12 @@ access on existing connections, pool/session closure and dummy password rotation
 without restoring approval. Old private plans remain unchanged and must fail
 under the installed service units. Product accounting, human records and retained
 receipts must remain unchanged. The 19 local harness checks and changed-file Ruff
-pass; Linux integration is pending. Production credential delivery, activation
+pass. At `3a61eba`, the corrected
+[Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45387810147/job/138423238026)
+passes all three scenarios, 21 service invocations and confirmed cleanup. A new
+old-password probe exposed localhost trust in the dummy database; explicit SCRAM
+host authentication fixes that fixture gap. Other workflow jobs remain in
+progress at this receipt. Production credential delivery, activation
 coordination and explicit reauthorization remain separate work. No Docker/GCP
 startup occurred.
 

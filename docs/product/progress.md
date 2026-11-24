@@ -21,8 +21,13 @@ closure and bounded session-absence checks. Dummy password rotation restores
 transport/command ACLs but no approvals; fresh authentication and installed-module
 denial probes check that old credentials and disabled authority stay unusable.
 All product tables, private plans and retained journal bytes must stay unchanged.
-Local verification passes 19 harness checks and changed-file Ruff; Linux
-integration is pending. Production secret delivery/activation coordination and
+Local verification passes 19 harness checks and changed-file Ruff. The corrected
+[Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45387810147/job/138423238026)
+passes all three scenarios, 21 service invocations and owned-resource cleanup at
+`3a61eba`. The new password-denial probe exposed default localhost trust in the
+disposable database; its initialization now explicitly requires SCRAM host
+authentication. Other workflow jobs remain in progress at this receipt.
+Production secret delivery/activation coordination and
 reauthorization remain open. No local Docker or GCP resource was started.
 
 ### Atomic private-plan delivery — 24 November

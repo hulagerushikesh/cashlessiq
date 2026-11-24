@@ -134,7 +134,15 @@ local Docker or GCP resource is started.
 The initial extension run at `d6b6493` failed the old-password denial assertion:
 the disposable database inherited localhost trust. This exposed a fixture gap,
 not a reason to weaken the denial check. The corrected fixture explicitly uses
-`--auth-host=scram-sha-256`; its dedicated Linux acceptance remains pending.
+`--auth-host=scram-sha-256`.
+
+At corrected source `3a61eba3fd9f865f7078009014d5270d187b2fdd`, the
+[Linux journey job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45387810147/job/138423238026)
+passes all three actual scenario reports and all 21 service invocations. Each
+scenario emits its retirement/rotation acceptance marker. Owned service, private
+file, retained fixture, account, install and loopback database/tmpfs cleanup pass.
+The broader workflow is still running at this receipt; this records the specific
+Linux integration result, not completion of every other job.
 
 ## Acceptance evidence
 
