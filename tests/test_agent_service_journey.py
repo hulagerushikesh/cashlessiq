@@ -7,6 +7,15 @@ import pytest
 from scripts import test_agent_service_journey as runner
 
 
+@pytest.mark.parametrize("result,passed", [(0, 0), (0, 2), (0, 4), (1, 3), (0, 3)])
+def test_acceptance_requires_three_actual_passes_and_success_not_quiet_summary(result, passed):
+    if result == 0 and passed == 3:
+        runner.acceptance(result, passed)
+    else:
+        with pytest.raises(RuntimeError, match="private diagnostics withheld"):
+            runner.acceptance(result, passed)
+
+
 @pytest.mark.parametrize("fault", ["journey", "controller", "database"])
 def test_journey_opt_in_and_exact_database_precede_host_access(monkeypatch, fault):
     for key, value, bad in (

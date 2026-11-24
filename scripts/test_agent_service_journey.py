@@ -200,6 +200,13 @@ def database():
             print("PASS: owned loopback-only database container and tmpfs data removed")
 
 
+def acceptance(result, passed):
+    # Count actual passing call reports; pytest's inherited quiet settings may
+    # suppress its textual summary. Zero collected/skipped cases cannot pass.
+    if result != 0 or passed != 3:
+        raise RuntimeError("Disposable exact-service journey failed; private diagnostics withheld")
+
+
 def main():
     guard()
     signal.signal(signal.SIGTERM, lambda *_: policy.sys.exit("Interrupted service journey"))
@@ -208,10 +215,15 @@ def main():
     import pytest
 
     class Diagnostics:
+        def __init__(self):
+            self.passed = 0
+
         @pytest.hookimpl(hookwrapper=True)
         def pytest_runtest_makereport(self, item, call):
             outcome = yield
             report = outcome.get_result()
+            if report.when == "call" and report.passed:
+                self.passed += 1
             if report.failed and call.excinfo:
                 frame = call.excinfo.traceback[-1]
                 # Fixed phase + code location, never the exception or assertion values.
@@ -220,10 +232,11 @@ def main():
                     print(f"FAIL: journey {report.when} at {name}:{frame.lineno + 1}")
 
     output = io.StringIO()
+    diagnostics = Diagnostics()
     with redirect_stdout(output), redirect_stderr(output), database():
         result = pytest.main([
             "apps/api/tests/test_agent_service_journey.py", "--tb=no", "--no-header", "-q", "-s",
-        ], plugins=[Diagnostics()])
+        ], plugins=[diagnostics])
     # No assertion values, private invocation logs, SQL or arbitrary errors escape.
     for line in output.getvalue().splitlines():
         line = line.lstrip(".")  # pytest progress dots may precede trusted markers.
@@ -231,8 +244,7 @@ def main():
             r"[A-Za-z0-9 ,:/.-]+", line,
         ):
             print(line, flush=True)
-    if result or not re.search(r"\b3 passed\b", output.getvalue()):
-        raise RuntimeError("Disposable exact-service journey failed; private diagnostics withheld")
+    acceptance(result, diagnostics.passed)
     print("PASS: three actual HTTP-to-service journeys and confirmed cleanup")
 
 
