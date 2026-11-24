@@ -2,6 +2,7 @@
 
 import json
 import socket
+import stat
 import struct
 from types import SimpleNamespace
 from zipfile import ZipFile
@@ -142,3 +143,32 @@ def test_invocation_logs_are_scoped_and_not_printed(monkeypatch, capsys):
     assert calls[1][-1] == "--lines=8" and capsys.readouterr() == ("", "")
     with pytest.raises(ValueError, match="invocation identity"):
         runner.logs("unscoped")
+
+
+def test_only_owned_install_files_are_hardened_without_following_external_symlinks(tmp_path):
+    root = tmp_path / "install"
+    root.mkdir(mode=0o775)
+    library = root / "library.py"
+    library.write_bytes(b"exact trusted code")
+    library.chmod(0o664)
+    (root / "alias.py").symlink_to(library)
+    runner.harden_installation(root)
+    assert stat.S_IMODE(root.stat().st_mode) == 0o755
+    assert stat.S_IMODE(library.stat().st_mode) == 0o644
+    assert library.read_bytes() == b"exact trusted code"
+    outside = tmp_path / "foreign.py"
+    outside.write_bytes(b"owner bytes")
+    outside.chmod(0o664)
+    (root / "escape.py").symlink_to(outside)
+    with pytest.raises(ValueError, match="symlink escapes"):
+        runner.harden_installation(root)
+    assert outside.read_bytes() == b"owner bytes"
+    assert stat.S_IMODE(outside.stat().st_mode) == 0o664
+
+
+def test_installation_hardening_rejects_nonregular_files_without_opening_them(tmp_path):
+    root = tmp_path / "install"
+    root.mkdir()
+    runner.os.mkfifo(root / "fifo")
+    with pytest.raises(ValueError, match="file kind"):
+        runner.harden_installation(root)

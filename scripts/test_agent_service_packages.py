@@ -13,6 +13,7 @@ import secrets
 import shutil
 import signal
 import socket
+import stat
 import struct
 import subprocess
 import threading
@@ -136,6 +137,23 @@ def verify_wheel(wheel, package, source):
                 raise ValueError("Installed package source mismatch")
 
 
+def harden_installation(root):
+    # Only the fresh invocation-owned installation reaches this function.
+    # Never chmod a symlink target or repair a tree owned by another identity.
+    for parent, directories, files in os.walk(root):
+        for path in (Path(parent), *(Path(parent) / n for n in directories + files)):
+            item = path.lstat()
+            if item.st_uid != os.geteuid():
+                raise ValueError("Foreign installed-artifact owner")
+            if stat.S_ISLNK(item.st_mode):
+                if not path.resolve(strict=True).is_relative_to(root):
+                    raise ValueError("Installed-artifact symlink escapes private root")
+                continue
+            if not (stat.S_ISREG(item.st_mode) or stat.S_ISDIR(item.st_mode)):
+                raise ValueError("Unexpected installed-artifact file kind")
+            path.chmod(stat.S_IMODE(item.st_mode) & ~0o7022)
+
+
 def install(base):
     dist = base / "dist"
     dist.mkdir()
@@ -166,6 +184,7 @@ def install(base):
                "--requirements", str(requirements), "--link-mode", "copy", timeout=120)
     policy.run("uv", "pip", "install", "--python", str(PYTHON), "--no-deps",
                *(str(w) for w in wheels), "--link-mode", "copy", timeout=30)
+    harden_installation(INSTALL)
     digests = {}
     for wheel in wheels:
         with ZipFile(wheel) as archive:
