@@ -151,32 +151,52 @@ def install(base):
     requirements = base / "requirements.txt"
     policy.run("uv", "export", "--project", str(policy.ROOT / "apps/api"), "--frozen",
                "--no-dev", "--no-emit-local", "--output-file", str(requirements))
-    policy.run("uv", "venv", "--python", "3.11", "--no-python-downloads",
+    # setup-python's hosted toolcache is runner-owned. Do not follow its mutable
+    # interpreter from a purportedly root-owned installed service environment.
+    policy.run("uv", "python", "install", "3.11", "--no-bin", "--install-dir",
+               str(INSTALL / "python"), timeout=120)
+    interpreters = list((INSTALL / "python").glob("*/bin/python3.11"))
+    if len(interpreters) != 1:
+        raise RuntimeError("Expected one private root-owned Python interpreter")
+    policy.run("uv", "venv", "--python", str(interpreters[0]), "--no-python-downloads",
                str(INSTALL / "venv"), timeout=30)
     policy.run("uv", "pip", "install", "--python", str(PYTHON), "--require-hashes",
-               "--requirements", str(requirements), timeout=120)
+               "--requirements", str(requirements), "--link-mode", "copy", timeout=120)
     policy.run("uv", "pip", "install", "--python", str(PYTHON), "--no-deps",
-               *(str(w) for w in wheels), timeout=30)
+               *(str(w) for w in wheels), "--link-mode", "copy", timeout=30)
+    digests = {}
+    for wheel in wheels:
+        with ZipFile(wheel) as archive:
+            digests.update({name: hashlib.sha256(archive.read(name)).hexdigest()
+                            for name in archive.namelist() if ".dist-info/" not in name})
     # No editable install or legacy/provider runtime, and all executed modules
     # resolve inside the root-owned venv rather than the checkout/home directory.
     code = """
-import importlib.util, os, stat
+import hashlib, importlib.util, json, os, sys, sysconfig
 from pathlib import Path
 import ciq_api.agent_claim_runner, ciq_api.agent_custody_runner, ciq_api.agent_receipt_runner
 import cashlessiq_domain
 for name in ('cashlessiq', 'snowflake', 'pytest'):
-    assert importlib.util.find_spec(name) is None
-root = Path('/opt/cashlessiq-agent/venv')
+    if importlib.util.find_spec(name) is not None: sys.exit(14)
+root = Path('/opt/cashlessiq-agent')
 for module in (ciq_api.agent_claim_runner, ciq_api.agent_custody_runner,
                ciq_api.agent_receipt_runner, cashlessiq_domain):
     path = Path(module.__file__)
-    assert path.is_relative_to(root) and not path.is_symlink()
+    if not path.is_relative_to(root / 'venv') or path.is_symlink(): sys.exit(13)
 for parent, dirs, files in os.walk(root):
     for path in (Path(parent), *(Path(parent) / n for n in dirs + files)):
         item = path.stat()
-        assert item.st_uid == 0 and not item.st_mode & 0o022
+        if item.st_uid != 0: sys.exit(11)
+        if item.st_mode & 0o022: sys.exit(12)
+site = Path(sysconfig.get_path('purelib'))
+for name, digest in json.load(sys.stdin).items():
+    if hashlib.sha256((site / name).read_bytes()).hexdigest() != digest: sys.exit(15)
 """
-    policy.run(str(PYTHON), "-I", "-B", "-c", code, timeout=20)
+    result = subprocess.run([str(PYTHON), "-I", "-B", "-c", code], capture_output=True,
+                            text=True, input=json.dumps(digests), timeout=20)
+    if result.returncode or result.stdout or result.stderr:
+        raise RuntimeError("Private installed-artifact verification failed: "
+                           + str(result.returncode))
     print("PASS: source-matched API/domain wheels, locked dependencies, root-owned installation")
 
 
@@ -351,10 +371,6 @@ FakeReceiptJournal.provision(Path('/run/ciq-agent-receipts/journal-parent/retain
         if sink.results != [True, True]:
             raise RuntimeError("Unexpected authentication activity during private plan acceptance")
     finally:
-        if endpoint is not None:
-            endpoint.close()
-        if sink is not None:
-            sink.close()
         failures = []
         for unit, target in reversed(units):
             try:
@@ -367,6 +383,13 @@ FakeReceiptJournal.provision(Path('/run/ciq-agent-receipts/journal-parent/retain
             except Exception:
                 failures.append(unit)
         policy.run("systemctl", "daemon-reload")
+        if endpoint is not None:
+            endpoint.close()
+        if sink is not None:
+            try:
+                sink.close()
+            except Exception:
+                failures.append("dummy-authentication-listener")
         if failures:
             raise RuntimeError("Packaged service quiescence unconfirmed; private fixtures retained")
         for path in reversed(paths):
