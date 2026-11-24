@@ -13,6 +13,7 @@ StandardError=journal
 UMask=0077
 Restart=no
 RuntimeMaxSec=65s
+TimeoutStartSec=5s
 TimeoutStopSec=2s
 KillMode=control-group
 SendSIGKILL=yes

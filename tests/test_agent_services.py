@@ -32,6 +32,7 @@ def test_manual_fixed_unit_preserves_identity_and_whole_cgroup_cleanup(
     for key, expected in {
         "Type": "exec", "Restart": "no", "KillMode": "control-group",
         "SendSIGKILL": "yes", "FinalKillSignal": "SIGKILL", "TimeoutStopSec": "2s",
+        "TimeoutStartSec": "5s",
         "RuntimeMaxSec": str(seconds) + "s", "MemoryMax": str(memory) + "M",
         "MemorySwapMax": "0", "CPUQuota": "25%", "TasksMax": "16",
         "LimitNOFILE": "64", "LimitCORE": "0", "OOMPolicy": "kill",
