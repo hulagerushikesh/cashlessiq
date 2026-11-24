@@ -182,6 +182,25 @@ def test_direct_credential_delivery_cannot_bypass_source(monkeypatch):
         service.deliver("claim", {"password": "dummy"})
 
 
+def test_permission_probe_never_inherits_supervisor_credentials(private, monkeypatch):
+    monkeypatch.setenv("SUPERVISOR_PRIVATE_PASSWORD", "dummy-owner-secret")
+    monkeypatch.setattr(journey.plans, "publish", lambda *_: None)
+    checked = []
+
+    def run(command, **options):
+        assert options["env"] == {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"}
+        assert options["stdin"] == journey.subprocess.DEVNULL
+        assert options["extra_groups"] == [] and options["user"] == options["group"]
+        assert "dummy-owner-secret" not in repr(command)
+        assert "dummy-plan-secret" not in repr(command)
+        checked.append(options["user"])
+        return SimpleNamespace(returncode=0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr(journey.subprocess, "run", run)
+    journey.provision_plan("claim", {"password": "dummy-plan-secret"})
+    assert checked == [uid for _, uid in journey.packages.ACCOUNTS]
+
+
 @pytest.mark.parametrize("fault", ["lease", "quiescence"])
 def test_evidence_rechecked_after_acquisition_before_publication(monkeypatch, fault):
     acquired = False

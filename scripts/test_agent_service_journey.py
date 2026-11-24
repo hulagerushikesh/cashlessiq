@@ -212,7 +212,7 @@ else:
             [str(packages.PYTHON), "-I", "-B", "-c", code,
              str(source.SOURCE / plans.TARGETS[role][1])],
             stdin=subprocess.DEVNULL, capture_output=True, user=uid, group=uid,
-            extra_groups=[], timeout=5,
+            extra_groups=[], env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"}, timeout=5,
         )
         if result.returncode or result.stdout or result.stderr:
             raise RuntimeError("Supervisor source isolation unconfirmed")

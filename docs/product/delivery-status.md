@@ -14,7 +14,7 @@ credential acquisition from service-owned atomic delivery. Unsafe or changing
 sources deny delivery; lease and stopped-service evidence are renewed after
 acquisition. Direct credential bodies cannot bypass intake. Linux journeys now
 require actual permission denials for all three service UIDs against each source.
-All 150 focused offline checks, including 33 new source checks, and changed-file
+All 151 focused offline checks, including 34 new source checks, and changed-file
 Ruff pass. The previous coordinated-activation workflow finished all nine jobs
 successfully. This step remains synthetic CI; no live secret store, provider or
 GCP activation is configured. Linux acceptance for this revision is pending.

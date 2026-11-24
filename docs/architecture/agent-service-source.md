@@ -33,6 +33,8 @@ For each source plan the Linux fixture attempts an actual read as each of the
 three unprivileged service UIDs. All nine reads per scenario must fail with
 `PermissionError` and no output before the source is delivered. Passwords and
 source contents do not enter command arguments, environment or acceptance logs.
+Permission-check children receive only PATH/LANG, with empty supplementary groups
+and null stdin; they cannot inherit supervisor environment credentials.
 The existing three journeys then exercise installed units, SCRAM authentication,
 publication/held results, revocation, password rotation and owned cleanup.
 
@@ -45,9 +47,9 @@ neither unlink nor Python object disposal proves secure erasure. A live protecte
 source adapter, independent retained storage, real identity reauthorization and
 governed provider integration remain separate engineering/deployment gates.
 
-Local acceptance: 33 new checks cover fixed roles, unsafe objects, ownership,
+Local acceptance: 34 new checks cover fixed roles, unsafe objects, ownership,
 bounded reads, changes during acquisition, descriptor closure on interruption,
 early refusal, direct-credential bypass denial, permanent blocking and renewed
-lease/quiescence evidence. All 150 focused source, coordination, delivery,
+lease/quiescence evidence. All 151 focused source, coordination, delivery,
 journey and quiescence checks and changed-file Ruff pass. Linux acceptance is
 recorded separately after the pushed source completes its workflow.
