@@ -17,8 +17,13 @@ socket names require explicitly quiescent operator cleanup, with no auto-restart
 
 The two app-to-result journeys now use all three packaged processes. Seven new
 Linux scenarios cover restart denials and idle exit without changing committed
-history; the combined suite expects 44 cases. Local focused verification passes
-217 tests (26 new) and repository Ruff. CI acceptance is recorded after completion.
+history; all 44 combined cases pass with owned cleanup. Local verification passes
+217 tests (26 new) and repository Ruff. Accepted source `eca6b32` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45326398663)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45326398601):
+2,554 API checks and eighteen MVP journeys in each workflow. Saved-workflow
+reopening after restart and encrypted restore, restricted authority/retirement
+checks and both stack cleanup steps also pass.
 Operator resource supervision, credential/UID lifecycle, quiescence and restore
 reauthorization remain next, then governed source/provider integration and an
 approved GCP build/test. No local Docker or paid resource was started.

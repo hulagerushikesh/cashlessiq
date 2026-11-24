@@ -73,7 +73,19 @@ candidate-after-issue case. Seven added cases exercise six restart denials
 (stale socket, wrong epoch, public plan, injected environment, missing journal
 and root) and actual idle exit, preserving committed prepared history. The
 combined suite expects 44 cases and retains its existing outer resource/time
-limits and invocation-owned cleanup. CI acceptance is recorded after completion.
+limits and invocation-owned cleanup.
+
+Accepted code `eca6b328f7f6c5b426241ebba849517c42fb7aeb` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45326398663)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45326398601).
+All 44 combined cases pass in 210.04s with owned containers/image removed.
+The separate receipt-peer suite passes 33 cases. Ledger acceptance passes 476
+baseline checks, fourteen owner-fixture encrypted restores, 313 restricted
+commands, 53 installation/retirement checks and 27 restricted restores.
+Product passes 2,554 API checks (29 expected skips, two existing warnings), 69
+client checks, 26 browser checks, fifteen source UI checks and eighteen MVP
+journeys. Preview passes eighteen journeys and saved-workflow reopening after
+restart (7.5s) and encrypted restore (7.0s). Both stack cleanup steps succeed.
 
 The [clinical runner](agent-claim-runner.md) and
 [custody runner](agent-custody-runner.md) remain manually launched fake-only

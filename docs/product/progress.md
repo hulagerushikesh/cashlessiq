@@ -22,9 +22,13 @@ No provisioning, journal reset, stale endpoint adoption or automatic restart is
 available. All three fake process stages now have packaged entry points.
 
 Local verification passes 217 focused tests, including 26 new cases, and Ruff.
-The combined Linux suite now expects 44 scenarios, adding six conservative
+The combined Linux suite passes all 44 scenarios, adding six conservative
 restart denials and actual idle exit while preserving prepared history. CI
-acceptance is recorded after completion. Production operator supervision,
+acceptance for `eca6b32` is green in
+[product](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45326398663)
+and [private preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45326398601):
+2,554 API checks, eighteen MVP journeys in each workflow, saved workflows after
+restart/encrypted restore and owned cleanup. Production operator supervision,
 quiescence/credential lifecycle and restore reauthorization remain next, followed
 by governed source/provider integration and separately approved GCP testing.
 No local Docker or paid resource was started; the deployed image is unchanged.
