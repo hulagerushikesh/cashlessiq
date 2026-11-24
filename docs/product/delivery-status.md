@@ -13,7 +13,9 @@ The [new read-only verifier](../architecture/agent-service-quiescence.md) requir
 stable stopped-unit identity/state, no pending jobs/PIDs, no restarts and direct
 recursive cgroup emptiness before the synthetic journey removes private files.
 Uncertain evidence retains state. All 92 focused offline checks and changed-file
-Ruff pass. This is one lifecycle prerequisite; production credential rotation,
+Ruff pass. The [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242/job/138397815240)
+passes three scenarios and fifteen service invocations with owned-resource cleanup
+at source `5622a92`. This is one lifecycle prerequisite; production credential rotation,
 account retirement and activation coordination remain open. No local Docker or
 GCP resource was started.
 

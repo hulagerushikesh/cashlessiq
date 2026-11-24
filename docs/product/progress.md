@@ -19,7 +19,10 @@ checks exact stopped-unit identity, pending jobs/PIDs, restart/kill policy,
 recursive cgroup emptiness and stable before/after snapshots. The disposable
 complete-journey supervisor uses it before private-file teardown and retains
 state on uncertain evidence. Local verification passes 92 focused checks and
-changed-file Ruff. Production activation exclusion, credential/UID retirement,
+changed-file Ruff. The [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242/job/138397815240)
+passes all three scenarios, fifteen actual service invocations and confirmed
+owned-resource cleanup at source `5622a92`.
+Production activation exclusion, credential/UID retirement,
 rotation and restore reauthorization remain open; no Docker/GCP startup occurred.
 
 ### Complete synthetic journey under service limits — 24 November

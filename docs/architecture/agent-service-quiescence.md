@@ -43,5 +43,10 @@ separate acceptance; this increment strengthens the complete-journey teardown.
 
 Local verification passes 92 focused checks: 37 new read-only evidence cases,
 nineteen journey guards and 36 existing installed-service/resource checks.
-Changed Python files pass Ruff. Linux acceptance is recorded after the CI run;
-no local Docker, provider, Snowflake or GCP resource is needed.
+Changed Python files pass Ruff; all 161 local links in the four changed Markdown
+files resolve. At source `5622a92673749c7f0370d1f839cda137002b3825`, the
+[Linux service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45380455242/job/138397815240)
+passes all three scenarios and fifteen actual service invocations under unchanged
+unit policies. Its seven acceptance markers confirm scenario outcomes, stopped
+services and removal of owned private fixtures/accounts/install and the dummy
+database/tmpfs data. No local Docker, provider, Snowflake or GCP resource started.
