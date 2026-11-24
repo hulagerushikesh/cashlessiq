@@ -17,7 +17,7 @@ Earlier localhost, eight-hour and preparation-only entries below are historical.
 The [service supervisor](../architecture/agent-service-coordination.md) now holds
 one cooperative lifecycle lock through installation, private delivery, explicit
 activation, retirement and teardown. Uncertain delivery/start permanently blocks
-further activation; custody requires both confirmed plans. All 115 focused local
+further activation; custody requires both confirmed plans. All 117 focused local
 checks and changed-file Ruff pass. The previous retirement workflow at `3a61eba`
 has now finished successfully across all nine jobs. Production protected credential
 acquisition and live activation remain separate work; Docker/GCP stay off.

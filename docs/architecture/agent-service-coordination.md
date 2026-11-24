@@ -41,10 +41,10 @@ credential source. The production acquisition/delivery path and governed provide
 integration remain open. No unit, application runtime, database authority or GCP
 startup configuration changes in this step.
 
-Local acceptance: 25 new checks include actual cross-process lock contention,
+Local acceptance: 27 new checks include actual cross-process lock contention,
 release on exceptions, persistent inode reuse, unsafe existing objects, stale or
 changed leases, entry guards, permanently blocked uncertain delivery/start and
-incomplete custody plans. All 115 focused coordination, journey, atomic-delivery
+incomplete custody plans. All 117 focused coordination, journey, atomic-delivery
 and quiescence checks pass, with changed-file Ruff. The existing Linux journey
 remains the integration gate for actual fixed-path root metadata, installed
 services, restricted database authentication and cleanup.

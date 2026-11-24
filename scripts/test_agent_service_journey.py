@@ -48,7 +48,7 @@ class Services:
             quiescence.verify_stopped(self.units["custody" if role == "candidate" else role])
             plans.stage(role, json.dumps(body).encode())
             self.delivered.add(role)
-        except Exception:
+        except BaseException:
             # Even a post-publication sync failure permanently blocks this supervisor.
             self.blocked = True
             raise
@@ -61,7 +61,7 @@ class Services:
                 raise RuntimeError("Service activation requires confirmed plan delivery")
             quiescence.verify_stopped(self.units[role])
             self._start(role)
-        except Exception:
+        except BaseException:
             self.blocked = True
             raise
 

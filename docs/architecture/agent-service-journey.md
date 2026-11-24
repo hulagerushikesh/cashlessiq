@@ -141,8 +141,7 @@ At corrected source `3a61eba3fd9f865f7078009014d5270d187b2fdd`, the
 passes all three actual scenario reports and all 21 service invocations. Each
 scenario emits its retirement/rotation acceptance marker. Owned service, private
 file, retained fixture, account, install and loopback database/tmpfs cleanup pass.
-The broader workflow is still running at this receipt; this records the specific
-Linux integration result, not completion of every other job.
+The complete workflow has now passed all nine jobs at that corrected source.
 
 ## Acceptance evidence
 

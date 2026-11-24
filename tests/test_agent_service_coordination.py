@@ -132,9 +132,11 @@ def test_entry_denies_before_filesystem_access(monkeypatch, fault):
         pytest.fail("Unauthorized supervisor entered")
 
 
-@pytest.mark.parametrize("failure", ["lease", "quiescence", "publication"])
+@pytest.mark.parametrize("failure", ["lease", "quiescence", "publication", "interrupt"])
 def test_uncertain_delivery_permanently_blocks_all_activation(monkeypatch, failure):
     def deny(*_):
+        if failure == "interrupt":
+            raise KeyboardInterrupt
         raise ValueError("PRIVATE")
 
     lease = SimpleNamespace(check=deny if failure == "lease" else lambda: None)
@@ -142,9 +144,9 @@ def test_uncertain_delivery_permanently_blocks_all_activation(monkeypatch, failu
     monkeypatch.setattr(journey.quiescence, "verify_stopped",
                         deny if failure == "quiescence" else lambda _: None)
     monkeypatch.setattr(journey.plans, "stage",
-                        deny if failure == "publication" else lambda *_: None)
+                        deny if failure in ("publication", "interrupt") else lambda *_: None)
     monkeypatch.setattr(journey.policy, "run", lambda *_: pytest.fail("Service activated"))
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyboardInterrupt if failure == "interrupt" else ValueError):
         services.deliver("claim", {"dummy": True})
     lease.check = lambda: None
     monkeypatch.setattr(journey.quiescence, "verify_stopped", lambda _: None)
@@ -166,7 +168,8 @@ def test_custody_needs_both_confirmed_plans_before_any_service_access(monkeypatc
         services.start("custody")
 
 
-def test_uncertain_start_blocks_later_starts_but_still_allows_stop(monkeypatch):
+@pytest.mark.parametrize("error", [RuntimeError, KeyboardInterrupt])
+def test_uncertain_start_blocks_later_starts_but_still_allows_stop(monkeypatch, error):
     services = journey.Services([("claim", "claim.service")],
                                 SimpleNamespace(check=lambda: None))
     services.delivered.add("claim")
@@ -175,10 +178,10 @@ def test_uncertain_start_blocks_later_starts_but_still_allows_stop(monkeypatch):
     monkeypatch.setattr(journey.policy, "value", lambda *_: "inactive")
 
     def uncertain(*_):
-        raise RuntimeError("Start result unknown")
+        raise error("Start result unknown")
 
     monkeypatch.setattr(journey.policy, "run", uncertain)
-    with pytest.raises(RuntimeError, match="Start result unknown"):
+    with pytest.raises(error, match="Start result unknown"):
         services.start("claim")
     calls = []
     monkeypatch.setattr(journey.policy, "run", lambda *args: calls.append(args))
