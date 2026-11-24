@@ -94,5 +94,7 @@ peer supervision, production secret delivery/rotation, resource/quiescence and
 restore/reauthorization remain to integrate. The combined canned child still
 shares its custody UID; it is not live source/provider isolation. There is no
 Compose/systemd/startup registration, runtime-bundle inclusion or GCP deployment.
+The later [custody startup rehearsal](agent-custody-runner.md) supplies that
+one-shot process in source while operator/receipt supervision remains open.
 Governed Snowflake source and provider status/usage reconciliation remain later
 gates, followed by an explicitly approved build and joint testing window.

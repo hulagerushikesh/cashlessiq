@@ -12,6 +12,32 @@ closed. Retained storage remains; Docker Desktop stays off on the operator Mac. 
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Bounded custody process — 24 November
+
+The [packaged custody process](../architecture/agent-custody-runner.md) consumes
+one independently assigned reserved claim through a private fixed startup plan,
+original restricted login/OID pins and the fixed receipt endpoint. One original
+coordinator performs verification, checkpoint/issue, fixed canned exchange and
+fresh validated publication. No worker, scanner, permission creation, owner
+fallback, provider call, recovery or retry is activated.
+
+The combined actual-UID/DB/HTTP/restore suite passes all 37 cases and confirms
+owned container/image cleanup. Eight added pre-attempt denials and a missing
+canned file after durable issue retain allowance correctly without replay.
+Local verification passes all 59 new offline checks, existing selected custody
+checks and repository Ruff. Accepted code `a874285` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45321964685)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45321964801):
+2,528 API checks, 69 client checks and eighteen MVP journeys in each workflow.
+Saved workflows reopen after restart and encrypted restore; existing restricted
+commands, installation/retirement, encrypted recovery and owned cleanup pass.
+
+The deployed image remains unchanged. Bounded operator and receipt-process
+supervision, quiescence/credential rotation and restore reauthorization remain
+next, followed by governed Snowflake/source/provider integration and separately
+approved GCP testing. The same-UID canned child is a trusted fixture, not live
+provider containment. Local Docker and paid resources were not started.
+
 ### Bounded clinical claim process — 24 November
 
 The [packaged one-shot runner](../architecture/agent-claim-runner.md) consumes

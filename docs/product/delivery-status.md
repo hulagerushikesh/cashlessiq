@@ -7,6 +7,32 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Bounded custody process — 24 November
+
+The [one-shot custody runner](../architecture/agent-custody-runner.md) now replaces
+the interactive test helper in the real-UID HTTP-to-result journeys. Its private
+plan pins the original restricted DB identity, reserved claim and independent
+receipt UID. One original coordinator verifies history, checkpoints, issues,
+runs the fixed canned child and validates publication. No scanning, permission
+creation, owner fallback, live provider call or automatic retry is introduced.
+
+All 37 combined scenarios pass, including eight new pre-attempt denials and a
+missing child fixture that stays held after issue and relaunch. All 59 new
+offline checks pass, along with existing custody checks and repository Ruff.
+Accepted source `a874285` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45321964685)
+and [private preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45321964801):
+2,528 API checks, 69 client checks and eighteen MVP journeys in each workflow.
+Saved-workflow reopening after restart and encrypted restore, existing restricted
+commands/installation/restore checks and owned cleanup also pass.
+
+This remains source/CI preparation. Trusted operator/receipt-process supervision,
+resource/quiescence and production credential/restore handling remain next,
+then governed Snowflake/source/provider integration and an approved GCP test.
+The canned child shares custody's trusted UID; it does not prove hostile-child
+isolation. No local Docker or GCP resource was started, and the deployment is
+unchanged. No owner action or paid approval is needed for the next source work.
+
 ### Bounded clinical claim process — 24 November
 
 The [one-shot runner](../architecture/agent-claim-runner.md) replaces the test-only

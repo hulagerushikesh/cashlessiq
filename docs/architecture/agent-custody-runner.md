@@ -88,8 +88,21 @@ custody module. Eight pre-attempt faults cover replaced DB/login OIDs, public
 plan, environment injection, wrong UID, root, wrong peer UID and revoked custody
 assignment. A missing canned file after durable issue stays held across relaunch.
 The existing combined suite grows from 28 to 37 scenarios; resource limits and
-owned cleanup requirements remain unchanged. CI acceptance is recorded after
-the committed source run completes.
+owned cleanup requirements remain unchanged.
+
+Accepted code `a8742855715c909804015537fed93fc618151125` passes
+[product CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45321964685)
+and [private-preview CI](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45321964801).
+All 37 combined cases pass in 175.28s, with owned containers/image removed.
+The separate ledger job passes 476 baseline checks, fourteen owner-fixture
+encrypted restores, 313 restricted commands, 53 installation/retirement checks
+and 27 restricted restores. Product passes 2,528 API checks (29 expected skips,
+two existing warnings), 69 client checks, 26 browser checks, fifteen source UI
+checks and eighteen MVP journeys. Preview passes eighteen journeys plus saved
+workflow reopening after restart (6.4s) and encrypted restore (6.0s). Both stack
+cleanup steps succeed. All 59 new offline checks and repository Ruff also pass;
+the earlier focused custody/claim regression selection passes 272 checks before
+three additional directory cases were added and passed in the 59-case run.
 
 There is no Compose/systemd entry, worker registration, production credential
 installer or runtime-bundle deployment. Next integrate bounded trusted operator
