@@ -4,6 +4,7 @@ import json
 import socket
 import stat
 import struct
+from pathlib import Path
 from types import SimpleNamespace
 from zipfile import ZipFile
 
@@ -14,6 +15,50 @@ from scripts import test_agent_service_packages as runner
 
 def absent(_name):
     raise KeyError
+
+
+def test_runtime_inputs_copy_committed_bytes_and_refuse_existing_directory(tmp_path, monkeypatch):
+    metadata = json.dumps({runner.PYTHON_KEY: {"sha256": "reviewed digest"}}).encode()
+    pins = {"deploy/agent-controller/python-downloads.json": metadata,
+            "deploy/agent-controller/build-requirements.txt": b"reviewed build pins\n"}
+    revisions = []
+
+    def committed(revision):
+        revisions.append(revision)
+        return pins
+
+    monkeypatch.setattr(runner.dependencies.review, "committed_files", committed)
+    inputs = runner.runtime_inputs(tmp_path, "a" * 40)
+    assert revisions == ["a" * 40]
+    assert {p.name: p.read_bytes() for p in inputs.iterdir()} == {
+        name.rsplit("/", 1)[1]: data for name, data in pins.items()}
+    with pytest.raises(FileExistsError):
+        runner.runtime_inputs(tmp_path, "a" * 40)
+    assert (inputs / "python-downloads.json").read_bytes() == metadata
+
+
+@pytest.mark.parametrize("metadata", [
+    {}, {"cpython-3.12.0-linux-x86_64-gnu": {}},
+    {runner.PYTHON_KEY: {}, "cpython-3.11.15-linux-aarch64-gnu": {}},
+])
+def test_interpreter_alternatives_refuse_before_staging(tmp_path, monkeypatch, metadata):
+    monkeypatch.setattr(runner.dependencies.review, "committed_files", lambda _: {
+        "deploy/agent-controller/python-downloads.json": json.dumps(metadata).encode()})
+    with pytest.raises(ValueError, match="one pinned private interpreter"):
+        runner.runtime_inputs(tmp_path, "a" * 40)
+    assert not list(tmp_path.iterdir())
+
+
+def test_pinned_interpreter_metadata_is_accepted_by_uv_without_installing():
+    # Actual uv parsing, no download, extraction, interpreter or host mutation.
+    path = Path(__file__).resolve().parents[1] / "deploy/agent-controller/python-downloads.json"
+    result = runner.policy.run("uv", "python", "list", runner.PYTHON_KEY,
+                               "--all-platforms", "--all-arches", "--only-downloads",
+                               "--offline", "--no-config", "--output-format", "json",
+                               "--python-downloads-json-url", path.as_uri())
+    entries = json.loads(result.stdout)
+    assert len(entries) == 1 and entries[0]["key"] == runner.PYTHON_KEY
+    assert entries[0]["path"] is None and entries[0]["version"] == "3.11.15"
 
 
 def test_package_optin_precedes_all_host_access(monkeypatch):

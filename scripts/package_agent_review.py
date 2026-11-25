@@ -25,6 +25,9 @@ FIXED = (
     *(f"deploy/agent-controller/systemd/ciq-agent-{role}.service.example"
       for role in ("claim", "custody", "receipt")),
     "deploy/agent-controller/README.md",
+    "deploy/agent-controller/python-downloads.json",
+    "deploy/agent-controller/build-requirements.in",
+    "deploy/agent-controller/build-requirements.txt",
 )
 TREES = {
     "apps/api/src/ciq_api/": (".py", ".json"),

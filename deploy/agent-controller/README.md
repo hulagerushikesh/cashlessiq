@@ -40,8 +40,9 @@ are never replaced. No digest is an approval, signature or proof of source trust
 This is a review artifact, not a runnable offline installation: interpreter,
 third-party wheels, built first-party wheels and deployment-specific private
 material are absent. The separate dependency bundle below supplies locked
-third-party wheels; first-party build tooling and an exact interpreter artifact
-still need release pins. The current Ubuntu systemd/loopback
+third-party wheels; committed interpreter/build-tool pins are described below.
+The interpreter archive and build-tool wheels are still downloaded during CI
+preparation, rather than shipped in the source artifact. The current Ubuntu systemd/loopback
 PostgreSQL CI topology is not yet integrated into the Debian GCP preview.
 
 ## Linux dependency bundle
@@ -71,8 +72,9 @@ Missing/extra/changed files, symlinks, hardlinks and special files are rejected.
 The existing disposable Linux package and full-journey fixtures now install these
 dependencies with indexes, cache and source builds disabled, then check installed
 dependency consistency. First-party source-matched wheels are installed separately.
-This checks an offline dependency installation, not a complete offline build:
-the fixtures still fetch their Python interpreter and wheel build dependencies.
+This checks an offline runtime dependency installation. CI preparation still
+fetches the pinned interpreter and hash-locked build tools; subsequent first-party
+wheel builds disable network/index resolution and build isolation.
 No interpreter, first-party wheels, service accounts, private plans or receipt
 storage are included in this dependency directory. It is not a privileged host
 installer or proof that a destination host is safe to activate.
@@ -80,8 +82,44 @@ installer or proof that a destination host is safe to activate.
 At `e04d72c`, the [Linux package check](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705/job/139295015283)
 and [full service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705/job/139295015253)
 both passed with verified offline dependency installation and source-matched
-API/domain code. This receipt covers the disposable Ubuntu fixture; Debian host
-installation and a fully pinned interpreter/build toolchain remain outstanding.
+API/domain code. All nine workflow jobs passed. This receipt covers the disposable
+Ubuntu fixture; it predates the interpreter/build-tool pinning below.
+
+## Interpreter and first-party build pins
+
+`python-downloads.json` contains one CPython 3.11.15/Linux x86-64 GNU artifact:
+standalone build `20260623`, SHA-256
+`0604cd029b142dc223e131f17f5941c0c8d2d5074997c8178b515b19eea2a6c2`.
+Metadata was selected from the
+[uv 0.11.25 download inventory](https://github.com/astral-sh/uv/blob/0.11.25/crates/uv-python/download-metadata.json).
+The disposable package/journey fixtures require uv 0.11.25 and pass this
+single-entry metadata explicitly, with cache/config discovery disabled. They
+request the complete platform/version key rather than a moving `3.11` family.
+uv checks the supplied archive hash; the final installed-code probe also checks
+the interpreter's actual patch version.
+
+`build-requirements.in` selects Hatchling 1.33.0. The generated
+`build-requirements.txt` fixes all six build dependency versions and distribution
+hashes for Python 3.11. Regenerate deliberately with the reviewed uv version:
+
+```sh
+uv pip compile deploy/agent-controller/build-requirements.in --python-version 3.11 --python-platform x86_64-manylinux_2_36 --generate-hashes --only-binary :all: --no-annotate --no-header --output-file deploy/agent-controller/build-requirements.txt
+```
+
+The fixture stages the two effective pin files directly from the selected Git
+commit into its fresh invocation-owned base; working-tree edits cannot change
+them. It installs build tools with required hashes, no source builds and no cache
+into a separate temporary builder venv. Both API/domain wheels are then built
+using that environment with `--offline --no-index --no-build-isolation` and their
+complete source contents checked. Build tools stay outside the service venv.
+Existing root/CI opt-ins, inactive service policy and owned cleanup still apply.
+
+This pins preparation inputs; it does not provide a fully offline release,
+reproducible wheel-byte attestation, an independently verified uv executable,
+Debian host acceptance or a production installer. The two existing Linux jobs
+exercise the exact interpreter and complete installed journey after this change;
+their new acceptance is pending until CI completes. No account, service or paid
+resource is activated by the source package.
 
 ## Operator handoff before installation
 

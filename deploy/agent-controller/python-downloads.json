@@ -1,0 +1,16 @@
+{
+  "cpython-3.11.15-linux-x86_64-gnu": {
+    "arch": {"family": "x86_64", "variant": null},
+    "build": "20260623",
+    "libc": "gnu",
+    "major": 3,
+    "minor": 11,
+    "name": "cpython",
+    "os": "linux",
+    "patch": 15,
+    "prerelease": "",
+    "sha256": "0604cd029b142dc223e131f17f5941c0c8d2d5074997c8178b515b19eea2a6c2",
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260623/cpython-3.11.15%2B20260623-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+    "variant": null
+  }
+}

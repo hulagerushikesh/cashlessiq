@@ -5,7 +5,23 @@ Updated 25 November 2026. This page summarizes the current product plan; the
 Hackathon submission is finished and is not counted as product delivery.
 
 For a short view of completed capabilities, remaining engineering and the next
-deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
+deployment milestone, read the [25 November engineering overview](engineering-overview-2026-11-25.md).
+
+### Interpreter and build-tool pins — 25 November
+
+The disposable installed-service fixture now selects one CPython 3.11.15 Linux
+artifact, standalone build `20260623`, with its upstream SHA-256. Six build-tool
+dependencies are version/hash locked in a separate builder environment; both
+source-matched first-party wheels build offline. Effective pins are staged from
+committed Git blobs, and build tools are absent from the service runtime.
+The local two-wheel build, all 105 focused checks and changed-file Ruff pass;
+the updated Linux jobs will
+verify the exact interpreter and complete service journey. This remains CI-only,
+with preparation downloads and inactive installation work still outstanding.
+No Docker, GCP or provider activation occurred.
+
+For completed MVP capabilities, remaining gates and the next private deployment,
+see the [25 November overview](engineering-overview-2026-11-25.md).
 
 ### Locked Linux dependency bundle — 25 November
 
@@ -21,7 +37,7 @@ all nine jobs successfully. At `e04d72c`, the
 [installed-package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705/job/139295015283)
 and [full service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705/job/139295015253)
 both pass, including the offline dependency installation and source-matched code
-checks. The remaining workflow jobs are still running.
+checks. All nine workflow jobs have now completed successfully.
 
 This completes third-party dependency bundling, not the full release runtime.
 Next: exact interpreter and first-party build-tool pins, followed by inactive host

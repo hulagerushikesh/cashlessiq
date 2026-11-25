@@ -33,6 +33,8 @@ FILES = tuple(path / name for path, name in zip(
     policy.PLANS, ("claim.json", "custody.json", "peer.json"), strict=True,
 ))
 FAULTS = ("missing", "public", "owner", "symlink", "hardlink", "oversize", "duplicate")
+PYTHON_KEY = "cpython-3.11.15-linux-x86_64-gnu"
+INPUTS = ("python-downloads.json", "build-requirements.txt")
 
 
 def guard():
@@ -155,11 +157,54 @@ def harden_installation(root):
             path.chmod(stat.S_IMODE(item.st_mode) & ~0o7022)
 
 
+def runtime_inputs(base, revision):
+    """Stage reviewed public pins from Git, never dirty local download metadata."""
+    files = dependencies.review.committed_files(revision)
+    metadata = json.loads(files["deploy/agent-controller/python-downloads.json"])
+    if set(metadata) != {PYTHON_KEY}:
+        raise ValueError("Expected one pinned private interpreter")
+    directory = base / "runtime-inputs"
+    directory.mkdir()  # Fresh invocation-owned base only; refuse existing inputs.
+    for name in INPUTS:
+        with (directory / name).open("xb") as stream:
+            stream.write(files["deploy/agent-controller/" + name])
+    return directory
+
+
 def install(base):
+    revision = policy.run("git", "-c", f"safe.directory={policy.ROOT}",
+                          "-C", str(policy.ROOT), "rev-parse", "HEAD").stdout.strip()
+    inputs = runtime_inputs(base, revision)
+    version = policy.run("uv", "--version").stdout.split()
+    if version[:2] != ["uv", "0.11.25"]:
+        raise ValueError("Expected reviewed uv version")
+    # setup-python's hosted toolcache is runner-owned. Do not follow its mutable
+    # interpreter from a purportedly root-owned installed service environment.
+    # The single-entry upstream metadata pins patch, standalone build and SHA256.
+    policy.run("uv", "python", "install", PYTHON_KEY, "--no-bin", "--no-cache", "--no-config",
+               "--python-downloads-json-url", (inputs / "python-downloads.json").as_uri(),
+               "--install-dir", str(INSTALL / "python"), timeout=120)
+    # uv may add a version-family directory symlink alongside the exact build.
+    interpreters = sorted({path.resolve(strict=True)
+                           for path in (INSTALL / "python").glob("*/bin/python3.11")})
+    if len(interpreters) != 1 or not interpreters[0].is_relative_to(INSTALL / "python"):
+        raise RuntimeError("Expected one private root-owned Python interpreter")
+    # Build tools never enter the service venv. Both first-party wheels use this
+    # separate hash-locked environment with network/index resolution disabled.
+    builder = base / "builder"
+    build_python = builder / "bin/python"
+    policy.run("uv", "venv", "--no-config", "--python", str(interpreters[0]),
+               "--no-python-downloads", str(builder), timeout=30)
+    policy.run("uv", "pip", "install", "--no-config", "--python", str(build_python),
+               "--require-hashes", "--no-build", "--no-cache", "--link-mode", "copy",
+               "--requirements", str(inputs / "build-requirements.txt"), timeout=120)
+    policy.run("uv", "pip", "check", "--no-config", "--python", str(build_python), timeout=20)
     dist = base / "dist"
     dist.mkdir()
     for project in ("packages/domain", "apps/api"):
         policy.run("uv", "build", "--wheel", str(policy.ROOT / project),
+                   "--python", str(build_python), "--no-python-downloads",
+                   "--no-build-isolation", "--offline", "--no-index", "--no-cache", "--no-config",
                    "--out-dir", str(dist), timeout=120)
     wheels = sorted(dist.glob("*.whl"))
     if len(wheels) != 2:
@@ -167,20 +212,10 @@ def install(base):
     api = next(w for w in wheels if w.name.startswith("cashlessiq_api-"))
     verify_wheel(api, "ciq_api", policy.ROOT / "apps/api/src/ciq_api")
     verify_domain_wheel(next(w for w in wheels if w.name.startswith("cashlessiq_domain-")))
-    revision = policy.run("git", "-c", f"safe.directory={policy.ROOT}",
-                          "-C", str(policy.ROOT), "rev-parse", "HEAD").stdout.strip()
+    print("PASS: pinned interpreter and isolated hash-locked first-party wheel build")
     wheelhouse = base / "runtime-wheels"
     count = dependencies.create(wheelhouse, revision)
     requirements = wheelhouse / "requirements.txt"
-    # setup-python's hosted toolcache is runner-owned. Do not follow its mutable
-    # interpreter from a purportedly root-owned installed service environment.
-    policy.run("uv", "python", "install", "3.11", "--no-bin", "--install-dir",
-               str(INSTALL / "python"), timeout=120)
-    # uv may add a version-family directory symlink alongside the exact build.
-    interpreters = sorted({path.resolve(strict=True)
-                           for path in (INSTALL / "python").glob("*/bin/python3.11")})
-    if len(interpreters) != 1 or not interpreters[0].is_relative_to(INSTALL / "python"):
-        raise RuntimeError("Expected one private root-owned Python interpreter")
     policy.run("uv", "venv", "--python", str(interpreters[0]), "--no-python-downloads",
                str(INSTALL / "venv"), timeout=30)
     policy.run("uv", "pip", "install", "--python", str(PYTHON), "--require-hashes",
@@ -204,7 +239,8 @@ import hashlib, importlib.util, json, os, sys, sysconfig
 from pathlib import Path
 import ciq_api.agent_claim_runner, ciq_api.agent_custody_runner, ciq_api.agent_receipt_runner
 import cashlessiq_domain
-for name in ('cashlessiq', 'snowflake', 'pytest'):
+if sys.version_info[:3] != (3, 11, 15): sys.exit(16)
+for name in ('cashlessiq', 'snowflake', 'pytest', 'hatchling', 'pathspec', 'trove_classifiers'):
     if importlib.util.find_spec(name) is not None: sys.exit(14)
 root = Path('/opt/cashlessiq-agent')
 for module in (ciq_api.agent_claim_runner, ciq_api.agent_custody_runner,
