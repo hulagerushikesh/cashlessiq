@@ -56,6 +56,77 @@ def test_real_git_roundtrip_excludes_working_tree_and_unapproved_files(repositor
     assert path.read_bytes() == first
 
 
+def test_staged_build_tree_uses_selected_commit_not_dirty_or_newer_source(repository, tmp_path):
+    root, git, revision = repository
+    (root / "apps/api/src/ciq_api/example.py").write_text("newer committed code")
+    git("add", "--all")
+    git("-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+        "commit", "-qm", "newer source")
+    (root / "packages/domain/pyproject.toml").write_text("PRIVATE_SENTINEL")
+    (root / "apps/api/src/ciq_api/untracked.py").write_text("PRIVATE_SENTINEL")
+    destination = tmp_path / "stage"
+    count = package.stage(revision, destination)
+    files = package.committed_files(revision)
+    actual = {p.relative_to(destination).as_posix(): p.read_bytes()
+              for p in destination.rglob("*") if p.is_file()}
+    assert actual.pop(package.MANIFEST) == package.manifest(revision, files)
+    assert actual == files and count == len(files)
+    assert not any(p.is_symlink() for p in destination.rglob("*"))
+    assert b"PRIVATE_SENTINEL" not in b"".join(actual.values())
+    assert actual["apps/api/src/ciq_api/example.py"] == b"reviewed bytes\n"
+    assert (root / "packages/domain/pyproject.toml").read_text() == "PRIVATE_SENTINEL"
+
+
+@pytest.mark.parametrize("fault", ["directory", "symlink", "dangling"])
+def test_staging_refuses_existing_output_without_changing_it(repository, tmp_path, fault):
+    _, _, revision = repository
+    owner = tmp_path / "owner"
+    owner.mkdir()
+    (owner / "retained").write_bytes(b"owner bytes")
+    destination = tmp_path / "stage"
+    if fault == "directory":
+        destination.mkdir()
+        (destination / "retained").write_bytes(b"existing stage")
+    else:
+        destination.symlink_to(owner if fault == "symlink" else tmp_path / "absent")
+    with pytest.raises(FileExistsError):
+        package.stage(revision, destination)
+    assert (owner / "retained").read_bytes() == b"owner bytes"
+    if fault == "directory":
+        assert list(destination.iterdir()) == [destination / "retained"]
+        assert (destination / "retained").read_bytes() == b"existing stage"
+    else:
+        assert destination.is_symlink()
+
+
+def test_invalid_revision_does_not_create_staging_destination(repository, tmp_path):
+    destination = tmp_path / "stage"
+    with pytest.raises(ValueError, match=package.ERROR):
+        package.stage("HEAD", destination)
+    assert not destination.exists()
+
+
+def test_staging_failure_preserves_partial_output_without_completion(
+    repository, tmp_path, monkeypatch,
+):
+    _, _, revision = repository
+    destination = tmp_path / "stage"
+    original = type(destination).open
+
+    def fail(path, *args, **kwargs):
+        if path == destination / "apps/api/alembic.ini":
+            raise OSError("simulated write failure")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(type(destination), "open", fail)
+    with pytest.raises(OSError):
+        package.stage(revision, destination)
+    assert (destination / "LICENSE").read_bytes() == b"reviewed bytes\n"
+    assert not (destination / package.MANIFEST).exists()
+    with pytest.raises(FileExistsError):
+        package.stage(revision, destination)
+
+
 def test_self_consistent_tampering_and_other_revision_do_not_verify(repository):
     root, git, revision = repository
     files = package.committed_files(revision)

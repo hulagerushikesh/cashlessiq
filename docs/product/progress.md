@@ -12,6 +12,19 @@ released and the daily usage session closed. Retained storage remains; Docker De
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Pinned first-party build source — 25 November
+
+Release preparation stages exact allowlisted Git blobs into a fresh source tree.
+Both installed-runtime fixtures build and verify their API/domain wheels against
+that selected commit, including the domain initializer, rather than the checkout.
+Dirty, untracked and newer checkout content is excluded. Existing staging paths
+are refused and partial output is retained without completion metadata. All 83
+focused source/domain/package/Debian checks and changed-file Ruff pass. The prior
+interpreter-pin workflow completed all nine jobs successfully; Debian-rehearsal
+CI has nine successful jobs with foundation still running at this checkpoint.
+No local Docker, cloud start or provider call was made. Complete release artifacts,
+inactive host installation and Debian service acceptance remain open.
+
 ### Inactive Debian runtime rehearsal — 25 November
 
 The pinned interpreter/build-tool change now passes both the Ubuntu installed

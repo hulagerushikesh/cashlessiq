@@ -175,6 +175,8 @@ def install(base):
     revision = policy.run("git", "-c", f"safe.directory={policy.ROOT}",
                           "-C", str(policy.ROOT), "rev-parse", "HEAD").stdout.strip()
     inputs = runtime_inputs(base, revision)
+    source = base / "source"
+    dependencies.review.stage(revision, source)
     version = policy.run("uv", "--version").stdout.split()
     if version[:2] != ["uv", "0.11.25"]:
         raise ValueError("Expected reviewed uv version")
@@ -202,7 +204,7 @@ def install(base):
     dist = base / "dist"
     dist.mkdir()
     for project in ("packages/domain", "apps/api"):
-        policy.run("uv", "build", "--wheel", str(policy.ROOT / project),
+        policy.run("uv", "build", "--wheel", str(source / project),
                    "--python", str(build_python), "--no-python-downloads",
                    "--no-build-isolation", "--offline", "--no-index", "--no-cache", "--no-config",
                    "--out-dir", str(dist), timeout=120)
@@ -210,8 +212,10 @@ def install(base):
     if len(wheels) != 2:
         raise ValueError("Expected only API and domain wheels")
     api = next(w for w in wheels if w.name.startswith("cashlessiq_api-"))
-    verify_wheel(api, "ciq_api", policy.ROOT / "apps/api/src/ciq_api")
-    verify_domain_wheel(next(w for w in wheels if w.name.startswith("cashlessiq_domain-")))
+    verify_wheel(api, "ciq_api", source / "apps/api/src/ciq_api")
+    verify_domain_wheel(next(w for w in wheels if w.name.startswith("cashlessiq_domain-")),
+                        source_root=source)
+    print("PASS: first-party wheels built and verified against pinned Git source")
     print("PASS: pinned interpreter and isolated hash-locked first-party wheel build")
     wheelhouse = base / "runtime-wheels"
     count = dependencies.create(wheelhouse, revision)

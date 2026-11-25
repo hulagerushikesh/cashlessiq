@@ -141,6 +141,27 @@ def create(revision):
     return path, sha256(data), len(files)
 
 
+def stage(revision, destination):
+    """Materialize only pinned public blobs in a fresh caller-owned build tree.
+
+    Read all Git inputs before creating output. This does not extract an incoming
+    archive, execute a build, or install anything. The parent must already exist
+    and remain controlled by the caller; concurrent hostile writers are outside
+    this preparation helper's boundary. Preserve partial output on failure.
+    """
+    files = committed_files(revision)
+    destination.mkdir(mode=0o755)  # Refuse existing trees and dangling symlinks.
+    for name, data in sorted(files.items()):
+        path = destination / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("xb") as stream:
+            stream.write(data)
+    # Completion metadata is written last, never used as its own trust anchor.
+    with (destination / MANIFEST).open("xb") as stream:
+        stream.write(manifest(revision, files))
+    return len(files)
+
+
 def verify(path, revision):
     files = committed_files(revision)
     with path.open("rb") as stream:
@@ -151,13 +172,17 @@ def verify(path, revision):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("create", "verify"))
+    parser.add_argument("action", choices=("create", "verify", "stage"))
     parser.add_argument("path", type=Path, nargs="?")
     parser.add_argument("--revision", required=True, help="independently selected full commit SHA")
     args = parser.parse_args()
-    if (args.action == "verify") != (args.path is not None):
-        parser.error("only verify requires a package path")
+    if (args.action in ("verify", "stage")) != (args.path is not None):
+        parser.error("verify and stage require a path; create does not")
     try:
+        if args.action == "stage":
+            count = stage(args.revision, args.path)
+            print(f"Staged {count} committed files; activation disabled.")
+            return
         if args.action == "create":
             path, digest, count = create(args.revision)
             print(f"Created review package: {path}")

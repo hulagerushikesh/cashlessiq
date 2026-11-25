@@ -122,6 +122,28 @@ and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/act
 both passed with these pins. No account, service or paid resource is activated
 by the source package.
 
+## Build from the selected commit
+
+```sh
+python -m scripts.package_agent_review stage /existing-owned-parent/fresh-source --revision FULL_COMMIT_SHA
+```
+
+This materializes the same allowlisted Git blobs directly into a fresh source
+tree, without extracting an incoming archive. All inputs are validated before
+output creation. Existing directories and symlinks are refused; interrupted
+output is retained, and completion metadata is written last. Keep its existing
+parent under the preparing user's control. This is public build preparation,
+not a privileged installer or protection against another writer with that user's
+authority. The command runs no build, interpreter download, service or database.
+
+The Debian and Ubuntu package/journey fixtures now build both first-party wheels
+from this staged commit rather than the checkout. API byte/inventory checks and
+domain canonical-module, initializer and dependency checks use that same tree.
+Dirty, untracked or newer checkout code cannot become a wheel merely by matching
+another dirty working-tree file. Interpreter/build pins and runtime dependencies
+remain derived from the same full revision. This prepares immutable source inputs;
+it does not make the complete release offline or authorize host installation.
+
 ## Inactive Debian runtime rehearsal
 
 The separate `agent-debian-package` CI job uses a fresh Debian 12/glibc 2.36

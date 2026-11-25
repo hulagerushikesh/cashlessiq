@@ -17,7 +17,7 @@ add new visible workflow screens or update the stopped GCP deployment.
 | Customer readiness | Later: production identity, real-data storage/retention, malware scanning, monitoring/support and other customer launch gates. |
 
 The latest completed
-[product workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705)
+[product workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45642371334)
 passed all nine jobs, including installed service journeys, runtime dependency
 installation and the product foundation/browser checks. Recent preparation also
 packages exact committed source and 32 hash-locked Linux runtime wheels.
@@ -25,6 +25,8 @@ Interpreter/build-tool pins pass both Ubuntu package and service-journey jobs.
 The inactive Debian 12 artifact rehearsal also passes installation, source
 verification and owned cleanup. It does not activate the agent or update GCP;
 Debian systemd and production installation still need acceptance.
+Release preparation now stages exact Git source for both first-party wheel builds
+and their byte verification, excluding dirty/untracked or newer checkout content.
 
 ## How close is a private live MVP?
 
@@ -53,9 +55,11 @@ acceptance. A fresh private workflow test does not depend on finishing that work
 
 ## Next action and owner involvement
 
-Continue interpreter/build-tool pins, then inactive installation and the current
-source/provider integration. Keep local Docker off and cloud resources inactive
-during ordinary coding. No owner action is required for this packaging step.
+Continue release artifact preparation and inactive installation, then the current
+source/provider integration. Interpreter/build-tool pins and Debian artifact
+compatibility have passed CI; target-host service acceptance remains open.
+Keep local Docker off and cloud resources inactive during ordinary coding.
+No owner action is required for this packaging step.
 Before paid cloud/provider testing, agree the exact spend/window and owner
 availability. Source access or mapping decisions may need owner input earlier;
 request those when a concrete requirement is identified.

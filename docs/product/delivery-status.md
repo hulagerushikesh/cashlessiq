@@ -7,6 +7,17 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [25 November engineering overview](engineering-overview-2026-11-25.md).
 
+### Pinned first-party build source — 25 November
+
+Release preparation stages exact allowlisted Git blobs into a fresh source tree.
+Both installed-runtime fixtures build and verify their API/domain wheels against
+that selected commit, including the domain initializer, rather than the checkout.
+Dirty, untracked and newer checkout content is excluded. All 83 focused checks and
+changed-file Ruff pass. Previous interpreter-pin CI passed all nine jobs; Debian
+artifact CI has nine successful jobs with foundation still running at this
+checkpoint. Complete release artifacts, inactive host installation and Debian
+service acceptance remain open. Docker and paid resources stay off.
+
 ### Inactive Debian runtime rehearsal — 25 November
 
 The pinned interpreter/build-tool change now passes both the Ubuntu installed

@@ -50,7 +50,7 @@ print(json.dumps(DECISION_SCHEMA, sort_keys=True))
 """
 
 
-def verify_wheel(wheel: Path) -> None:
+def verify_wheel(wheel: Path, source_root: Path = ROOT) -> None:
     """Fail on omitted, rewritten or extra code and undeclared heavy dependencies."""
     expected = {f"cashlessiq_domain/{name}.py" for name in MODULES}
     expected.add("cashlessiq_domain/__init__.py")
@@ -59,9 +59,13 @@ def verify_wheel(wheel: Path) -> None:
         if code != expected:
             raise ValueError("Unexpected domain wheel contents")
         for module in MODULES:
-            canonical = ROOT / f"src/cashlessiq/{module}.py"
+            canonical = source_root / f"src/cashlessiq/{module}.py"
             if archive.read(f"cashlessiq_domain/{module}.py") != canonical.read_bytes():
                 raise ValueError("Domain wheel differs from canonical source")
+        if archive.read("cashlessiq_domain/__init__.py") != (
+            source_root / "packages/domain/src/cashlessiq_domain/__init__.py"
+        ).read_bytes():
+            raise ValueError("Domain wheel differs from canonical source")
         metadata_path = next(name for name in archive.namelist() if name.endswith("/METADATA"))
         metadata = Parser().parsestr(archive.read(metadata_path).decode())
         if metadata.get_all("Requires-Dist") != ["jsonschema<5,>=4.25"]:
