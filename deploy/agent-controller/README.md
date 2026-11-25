@@ -143,6 +143,10 @@ Dirty, untracked or newer checkout code cannot become a wheel merely by matching
 another dirty working-tree file. Interpreter/build pins and runtime dependencies
 remain derived from the same full revision. This prepares immutable source inputs;
 it does not make the complete release offline or authorize host installation.
+At `1a3fa37`, the [Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963584)
+passes commit-based wheel construction, installed-source verification, all 32
+runtime dependency wheels, inactive-state checks and owned cleanup. The updated
+Ubuntu package/service journeys are still pending at this receipt checkpoint.
 
 ## Inactive Debian runtime rehearsal
 

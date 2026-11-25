@@ -20,8 +20,11 @@ that selected commit, including the domain initializer, rather than the checkout
 Dirty, untracked and newer checkout content is excluded. Existing staging paths
 are refused and partial output is retained without completion metadata. All 83
 focused source/domain/package/Debian checks and changed-file Ruff pass. The prior
-interpreter-pin workflow completed all nine jobs successfully; Debian-rehearsal
-CI has nine successful jobs with foundation still running at this checkpoint.
+interpreter-pin workflow completed all nine jobs successfully; the previous
+Debian-rehearsal workflow now passes all ten. At `1a3fa37`, the updated
+[Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963584)
+passes commit-based wheel construction, installation, inactive-state verification
+and cleanup. Updated Ubuntu package/service journeys are still pending.
 No local Docker, cloud start or provider call was made. Complete release artifacts,
 inactive host installation and Debian service acceptance remain open.
 

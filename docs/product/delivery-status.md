@@ -13,9 +13,11 @@ Release preparation stages exact allowlisted Git blobs into a fresh source tree.
 Both installed-runtime fixtures build and verify their API/domain wheels against
 that selected commit, including the domain initializer, rather than the checkout.
 Dirty, untracked and newer checkout content is excluded. All 83 focused checks and
-changed-file Ruff pass. Previous interpreter-pin CI passed all nine jobs; Debian
-artifact CI has nine successful jobs with foundation still running at this
-checkpoint. Complete release artifacts, inactive host installation and Debian
+changed-file Ruff pass. Previous interpreter-pin CI passed all nine jobs; the
+previous Debian-rehearsal workflow now passes all ten. At `1a3fa37`, the updated
+[Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963584)
+passes the commit-based build, installed verification and cleanup. Updated Ubuntu
+package/service journeys are still pending. Complete release artifacts, inactive host installation and Debian
 service acceptance remain open. Docker and paid resources stay off.
 
 ### Inactive Debian runtime rehearsal — 25 November
