@@ -56,6 +56,9 @@ journey and quiescence checks and changed-file Ruff pass. The
 passes at source `89fdc5d40d6e95e1c384abe292c628c76fe29463`: all three workflows,
 27 actual source-read permission denials, all three retirement/rotation checks
 and confirmed owned service/source/plan/journal/account/install/database/tmpfs
-cleanup. The existing containment probe also passes on this revision. Five
-workflow jobs have passed and four remain running at this receipt; full-workflow
-acceptance is still pending. No private credential bytes or raw logs were printed.
+cleanup. The existing containment probe also passes on this revision. The complete
+workflow has now passed all nine jobs (verified 25 November 2026). No private credential bytes or raw logs were printed.
+
+The next [operator review package](../../deploy/agent-controller/README.md) pins
+committed rebuild inputs and records the evidence still needed before installation
+or activation. Packaging does not select a protected source or grant authority.

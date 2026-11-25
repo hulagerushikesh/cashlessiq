@@ -1,11 +1,28 @@
 # Product delivery — owner dashboard
 
-Updated 24 November 2026. This page summarizes the current product plan; the
+Updated 25 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
+
+### Pinned operator review package — 25 November
+
+The [activation handoff](../../deploy/agent-controller/README.md) now includes a
+credential-file-free source review artifact and a bounded offline verifier.
+The package reads fixed allowed blobs directly from an independently selected
+Git commit; dirty/untracked files and owner media cannot enter it. Verification
+compares the entire canonical archive with that commit, rejecting altered bytes,
+self-consistent forged manifests, links, duplicates and hidden trailing entries.
+All 21 focused packaging checks and changed-file Ruff pass. The prior source
+handoff workflow has now completed successfully across all nine jobs.
+
+This packages rebuild/review inputs, not an installed runtime. The handoff lists
+remaining runtime, identity, secret-custody, retained-storage and activation
+evidence. It grants no execution authority and starts no Docker/GCP/provider.
+Next: pinned Linux runtime artifacts and an inactive installation design, then
+governed source/provider integration under separately approved live scopes.
 
 ### Protected startup-plan handoff — 24 November
 
@@ -20,8 +37,8 @@ successfully. This step remains synthetic CI; no live secret store, provider or
 GCP activation is configured. The
 [Linux journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45445006623/job/138626232014)
 passes all three workflows, 27 source-read permission denials, retirement/rotation
-and confirmed cleanup at `89fdc5d`. Five workflow jobs have passed; four remain
-running. The existing containment probe also passes on this revision.
+and confirmed cleanup at `89fdc5d`. The complete workflow has passed all nine jobs. The existing
+containment probe also passes on this revision.
 
 ### Coordinated synthetic service activation — 24 November
 
