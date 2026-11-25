@@ -142,8 +142,11 @@ This tests artifact compatibility and absence of agent provisioning on the
 target OS. It creates no agent accounts, unit files, private inputs, database
 connections or receipt journal and launches no agent services. Actual Debian
 systemd/cgroup behavior, retained storage, production credentials and an inactive
-host installer remain separate acceptance work. New Debian CI acceptance is
-pending; the passing Ubuntu service jobs do not substitute for it.
+host installer remain separate acceptance work. At `64e33ec`, the
+[Debian package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45644026747/job/139310026130)
+passes the pinned interpreter/build, 32-wheel offline install, source/installed
+code verification, inactive-state check and owned artifact removal. This is
+Debian artifact acceptance; the systemd service journeys still run on Ubuntu.
 
 ## Operator handoff before installation
 

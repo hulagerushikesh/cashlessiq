@@ -16,8 +16,10 @@ CPU, PID and time bounds. It checks that no agent identities, units or private
 state exist before/after artifact installation, then removes its own artifacts.
 No agent service, database or provider is started. All 20 new offline checks,
 47 combined focused checks, changed-file Ruff and workflow YAML parsing pass.
-The new Debian acceptance is pending CI. This is an artifact-only rehearsal;
-Debian systemd acceptance and production inactive installation remain open.
+At `64e33ec`, the [Debian package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45644026747/job/139310026130)
+passes installation, source verification, inactive-state checks and owned cleanup.
+This is an artifact-only rehearsal; Debian systemd acceptance and production
+inactive installation remain open.
 Local Docker stays off and no paid cloud action is needed.
 
 ### Interpreter and build-tool pins — 25 November
