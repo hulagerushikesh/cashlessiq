@@ -27,8 +27,8 @@ verification and owned cleanup. It does not activate the agent or update GCP;
 Debian systemd and production installation still need acceptance.
 Release preparation now stages exact Git source for both first-party wheel builds
 and their byte verification, excluding dirty/untracked or newer checkout content.
-The updated Debian artifact job passes; updated Ubuntu service checks are pending
-at this checkpoint.
+The updated Debian artifact job and both Ubuntu package/service journeys pass.
+Broader workflow jobs are still running at this checkpoint.
 
 ## How close is a private live MVP?
 

@@ -146,7 +146,9 @@ it does not make the complete release offline or authorize host installation.
 At `1a3fa37`, the [Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963584)
 passes commit-based wheel construction, installed-source verification, all 32
 runtime dependency wheels, inactive-state checks and owned cleanup. The updated
-Ubuntu package/service journeys are still pending at this receipt checkpoint.
+[Ubuntu package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963506)
+and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963504)
+also pass with commit-based wheel construction. Broader workflow jobs are still running.
 
 ## Inactive Debian runtime rehearsal
 

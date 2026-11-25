@@ -17,7 +17,8 @@ changed-file Ruff pass. Previous interpreter-pin CI passed all nine jobs; the
 previous Debian-rehearsal workflow now passes all ten. At `1a3fa37`, the updated
 [Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963584)
 passes the commit-based build, installed verification and cleanup. Updated Ubuntu
-package/service journeys are still pending. Complete release artifacts, inactive host installation and Debian
+package/service journeys also pass; broader CI is still running. Complete release
+artifacts, inactive host installation and Debian
 service acceptance remain open. Docker and paid resources stay off.
 
 ### Inactive Debian runtime rehearsal — 25 November
