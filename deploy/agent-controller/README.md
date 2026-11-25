@@ -116,10 +116,34 @@ Existing root/CI opt-ins, inactive service policy and owned cleanup still apply.
 
 This pins preparation inputs; it does not provide a fully offline release,
 reproducible wheel-byte attestation, an independently verified uv executable,
-Debian host acceptance or a production installer. The two existing Linux jobs
-exercise the exact interpreter and complete installed journey after this change;
-their new acceptance is pending until CI completes. No account, service or paid
-resource is activated by the source package.
+Debian service acceptance or a production installer. At `f5ef75b`, the
+[Linux package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45642371334/job/139304168423)
+and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45642371334/job/139304168594)
+both passed with these pins. No account, service or paid resource is activated
+by the source package.
+
+## Inactive Debian runtime rehearsal
+
+The separate `agent-debian-package` CI job uses a fresh Debian 12/glibc 2.36
+container, capped at 768 MiB, one CPU, 128 PIDs and six minutes. It obtains only
+public build prerequisites; checkout credentials are not persisted and caching
+is disabled. The Mac's Docker and the paid GCP VM are not involved.
+
+`scripts/test_agent_debian_package.py` requires the explicit repository/CI opt-in,
+Linux root, the exact OS/architecture/libc and a non-systemd container context
+before installation. Existing install paths, private plan paths, service
+identities or unit entries deny the rehearsal. It installs the same pinned
+interpreter, isolated builder, source-matched wheels and offline runtime wheels
+as the service fixtures, then repeats the inactive-state checks. Success removes
+both invocation-owned artifact directories. The job container is discarded on
+failure or timeout too; uncertain runtime state is never adopted or repaired.
+
+This tests artifact compatibility and absence of agent provisioning on the
+target OS. It creates no agent accounts, unit files, private inputs, database
+connections or receipt journal and launches no agent services. Actual Debian
+systemd/cgroup behavior, retained storage, production credentials and an inactive
+host installer remain separate acceptance work. New Debian CI acceptance is
+pending; the passing Ubuntu service jobs do not substitute for it.
 
 ## Operator handoff before installation
 

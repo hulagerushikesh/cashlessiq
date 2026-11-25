@@ -5,6 +5,31 @@ on:
 permissions:
   contents: read
 jobs:
+  agent-debian-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    container:
+      image: python:3.11-slim-bookworm
+      options: --memory=768m --memory-swap=768m --cpus=1 --pids-limit=128
+    steps:
+      - name: Disposable target OS build prerequisites
+        timeout-minutes: 2
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends git ca-certificates
+          rm -rf /var/lib/apt/lists/*
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.25'
+          enable-cache: false
+      - name: Inactive installed runtime on Debian 12 without agent services
+        timeout-minutes: 4
+        env:
+          CIQ_AGENT_DEBIAN_PACKAGE_TEST: '1'
+        run: python -m scripts.test_agent_debian_package
   agent-service-journey:
     runs-on: ubuntu-latest
     timeout-minutes: 6

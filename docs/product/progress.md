@@ -12,6 +12,19 @@ released and the daily usage session closed. Retained storage remains; Docker De
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Inactive Debian runtime rehearsal — 25 November
+
+The pinned interpreter/build-tool change now passes both the Ubuntu installed
+package job and complete service journey. The next target-OS job installs that
+same runtime in a fresh Debian 12/glibc 2.36 CI container under explicit memory,
+CPU, PID and time bounds. It checks that no agent identities, units or private
+state exist before/after artifact installation, then removes its own artifacts.
+No agent service, database or provider is started. All 20 new offline checks,
+47 combined focused checks, changed-file Ruff and workflow YAML parsing pass.
+The new Debian acceptance is pending CI. This is an artifact-only rehearsal;
+Debian systemd acceptance and production inactive installation remain open.
+Local Docker stays off and no paid cloud action is needed.
+
 ### Interpreter and build-tool pins — 25 November
 
 The disposable installed-service fixture now selects one CPython 3.11.15 Linux
@@ -20,8 +33,8 @@ dependencies are version/hash locked in a separate builder environment; both
 source-matched first-party wheels build offline. Effective pins are staged from
 committed Git blobs, and build tools are absent from the service runtime.
 The local two-wheel build, all 105 focused checks and changed-file Ruff pass;
-the updated Linux jobs will
-verify the exact interpreter and complete service journey. This remains CI-only,
+both updated Linux jobs pass
+with the exact interpreter and complete service journey. This remains CI-only,
 with preparation downloads and inactive installation work still outstanding.
 No Docker, GCP or provider activation occurred.
 

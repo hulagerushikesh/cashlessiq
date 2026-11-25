@@ -21,7 +21,9 @@ The latest completed
 passed all nine jobs, including installed service journeys, runtime dependency
 installation and the product foundation/browser checks. Recent preparation also
 packages exact committed source and 32 hash-locked Linux runtime wheels.
-Interpreter/build-tool pinning is the next change under verification.
+Interpreter/build-tool pins pass both Ubuntu package and service-journey jobs.
+An inactive Debian 12 artifact rehearsal is the next target-OS check; it does
+not activate the agent or update GCP.
 
 ## How close is a private live MVP?
 
