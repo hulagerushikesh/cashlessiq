@@ -7,6 +7,23 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [3 November engineering overview](engineering-overview-2026-11-03.md).
 
+### Locked Linux dependency bundle — 25 November
+
+The [dependency bundle](../../deploy/agent-controller/README.md#linux-dependency-bundle)
+selects the API runtime graph from an independently pinned Git lockfile: 32
+CPython 3.11/Linux x86-64 wheels, 20,086,288 bytes. Downloads require the lock's
+exact size/hash; offline verification rejects changed or unexpected inputs.
+Developer dependencies, optional Snowflake execution and source builds are excluded.
+The existing Linux package/journey fixtures now install the bundle with indexes
+and cache disabled, then check dependency consistency. All 100 focused offline
+checks and changed-file Ruff pass. The previous review-package workflow completed
+all nine jobs successfully; the new installation path awaits its Linux CI receipt.
+
+This completes third-party dependency bundling, not the full release runtime.
+Next: exact interpreter and first-party build-tool pins, followed by inactive host
+installation. Docker/GCP/provider activation remains off and requires its separate
+operating approvals.
+
 ### Pinned operator review package — 25 November
 
 The [activation handoff](../../deploy/agent-controller/README.md) now includes a

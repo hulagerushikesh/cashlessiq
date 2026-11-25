@@ -21,6 +21,7 @@ from pathlib import Path
 from uuid import uuid4
 from zipfile import ZipFile
 
+from scripts import package_agent_dependencies as dependencies
 from scripts import test_agent_services as policy
 from scripts.check_domain_package import verify_wheel as verify_domain_wheel
 
@@ -166,9 +167,11 @@ def install(base):
     api = next(w for w in wheels if w.name.startswith("cashlessiq_api-"))
     verify_wheel(api, "ciq_api", policy.ROOT / "apps/api/src/ciq_api")
     verify_domain_wheel(next(w for w in wheels if w.name.startswith("cashlessiq_domain-")))
-    requirements = base / "requirements.txt"
-    policy.run("uv", "export", "--project", str(policy.ROOT / "apps/api"), "--frozen",
-               "--no-dev", "--no-emit-local", "--output-file", str(requirements))
+    revision = policy.run("git", "-c", f"safe.directory={policy.ROOT}",
+                          "-C", str(policy.ROOT), "rev-parse", "HEAD").stdout.strip()
+    wheelhouse = base / "runtime-wheels"
+    count = dependencies.create(wheelhouse, revision)
+    requirements = wheelhouse / "requirements.txt"
     # setup-python's hosted toolcache is runner-owned. Do not follow its mutable
     # interpreter from a purportedly root-owned installed service environment.
     policy.run("uv", "python", "install", "3.11", "--no-bin", "--install-dir",
@@ -181,9 +184,13 @@ def install(base):
     policy.run("uv", "venv", "--python", str(interpreters[0]), "--no-python-downloads",
                str(INSTALL / "venv"), timeout=30)
     policy.run("uv", "pip", "install", "--python", str(PYTHON), "--require-hashes",
+               "--no-index", "--no-cache", "--no-build", "--find-links", str(wheelhouse),
                "--requirements", str(requirements), "--link-mode", "copy", timeout=120)
     policy.run("uv", "pip", "install", "--python", str(PYTHON), "--no-deps",
+               "--no-index", "--no-cache", "--no-build",
                *(str(w) for w in wheels), "--link-mode", "copy", timeout=30)
+    policy.run("uv", "pip", "check", "--python", str(PYTHON), timeout=20)
+    print(f"PASS: {count} commit-locked Linux dependency wheels installed offline without cache")
     harden_installation(INSTALL)
     digests = {}
     for wheel in wheels:

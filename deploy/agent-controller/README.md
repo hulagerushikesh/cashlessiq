@@ -39,9 +39,43 @@ are never replaced. No digest is an approval, signature or proof of source trust
 
 This is a review artifact, not a runnable offline installation: interpreter,
 third-party wheels, built first-party wheels and deployment-specific private
-material are absent. A later release builder must pin and verify those runtime
-artifacts on the selected Linux target. The current Ubuntu systemd/loopback
+material are absent. The separate dependency bundle below supplies locked
+third-party wheels; first-party build tooling and an exact interpreter artifact
+still need release pins. The current Ubuntu systemd/loopback
 PostgreSQL CI topology is not yet integrated into the Debian GCP preview.
+
+## Linux dependency bundle
+
+```sh
+python -m scripts.package_agent_dependencies create output/agent-review/runtime-FULL_COMMIT_SHA --revision FULL_COMMIT_SHA
+python -m scripts.package_agent_dependencies verify output/agent-review/runtime-FULL_COMMIT_SHA --revision FULL_COMMIT_SHA
+```
+
+Creation downloads public PyPI wheels into a new directory. Verification uses
+the independently selected commit's lockfile and makes no network calls. Both
+commands leave accounts, services, databases and provider execution unchanged.
+Use an existing parent directory and a fresh destination. Failed downloads retain
+the incomplete directory without a completion manifest; never reuse that output.
+
+The target is CPython 3.11 on Linux x86-64 with glibc 2.36 (Debian 12 baseline).
+Only compatible pure/CPython/limited-ABI manylinux wheels are selected; macOS,
+musl, ARM and newer-glibc-only wheels are excluded. The graph starts at the API's
+normal dependencies, follows explicitly requested extras and excludes developer
+groups and the optional Snowflake provider. Unknown markers fail for review.
+Current selection: 32 wheels, 20,086,288 bytes. Each filename, size, SHA-256 and
+public download URL comes from the committed lockfile. Input/output sizes and
+counts are bounded. The manifest and hash-pinned requirements must match fresh
+derivation from that commit; incoming self-reported hashes are insufficient.
+Missing/extra/changed files, symlinks, hardlinks and special files are rejected.
+
+The existing disposable Linux package and full-journey fixtures now install these
+dependencies with indexes, cache and source builds disabled, then check installed
+dependency consistency. First-party source-matched wheels are installed separately.
+This checks an offline dependency installation, not a complete offline build:
+the fixtures still fetch their Python interpreter and wheel build dependencies.
+No interpreter, first-party wheels, service accounts, private plans or receipt
+storage are included in this dependency directory. It is not a privileged host
+installer or proof that a destination host is safe to activate.
 
 ## Operator handoff before installation
 

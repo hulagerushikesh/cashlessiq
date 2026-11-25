@@ -46,7 +46,10 @@ def require(value):
 
 
 def git(*args, input=None):
-    result = subprocess.run(["git", *args], cwd=ROOT, input=input,
+    # Only read the explicitly chosen checkout, also from root-owned CI fixtures.
+    # Replacement refs must not substitute different objects under the pinned SHA.
+    result = subprocess.run(["git", "--no-replace-objects", "-c", f"safe.directory={ROOT}", *args],
+                            cwd=ROOT, input=input,
                             capture_output=True, timeout=15)
     require(result.returncode == 0)
     return result.stdout

@@ -72,6 +72,19 @@ def test_self_consistent_tampering_and_other_revision_do_not_verify(repository):
         package.verify(path, next_revision)
 
 
+def test_git_replacement_refs_cannot_substitute_pinned_source(repository):
+    root, git, revision = repository
+    original = package.committed_files(revision)
+    (root / package.FIXED[0]).write_text("replacement bytes\n")
+    git("add", "--all")
+    git("-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+        "commit", "-qm", "replacement")
+    replacement = git("rev-parse", "HEAD")
+    git("replace", revision, replacement)
+    assert git("show", revision + ":" + package.FIXED[0]) == "replacement bytes"
+    assert package.committed_files(revision) == original
+
+
 @pytest.mark.parametrize("fault", ["symlink", "executable", "missing", "oversize"])
 def test_unsafe_committed_input_refuses_without_output(repository, fault, monkeypatch):
     root, git, _ = repository
