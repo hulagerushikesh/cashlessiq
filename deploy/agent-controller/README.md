@@ -77,6 +77,12 @@ No interpreter, first-party wheels, service accounts, private plans or receipt
 storage are included in this dependency directory. It is not a privileged host
 installer or proof that a destination host is safe to activate.
 
+At `e04d72c`, the [Linux package check](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705/job/139295015283)
+and [full service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705/job/139295015253)
+both passed with verified offline dependency installation and source-matched
+API/domain code. This receipt covers the disposable Ubuntu fixture; Debian host
+installation and a fully pinned interpreter/build toolchain remain outstanding.
+
 ## Operator handoff before installation
 
 The existing Linux receipt is recorded in

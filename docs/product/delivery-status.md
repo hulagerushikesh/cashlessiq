@@ -17,7 +17,11 @@ Developer dependencies, optional Snowflake execution and source builds are exclu
 The existing Linux package/journey fixtures now install the bundle with indexes
 and cache disabled, then check dependency consistency. All 100 focused offline
 checks and changed-file Ruff pass. The previous review-package workflow completed
-all nine jobs successfully; the new installation path awaits its Linux CI receipt.
+all nine jobs successfully. At `e04d72c`, the
+[installed-package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705/job/139295015283)
+and [full service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45639811705/job/139295015253)
+both pass, including the offline dependency installation and source-matched code
+checks. The remaining workflow jobs are still running.
 
 This completes third-party dependency bundling, not the full release runtime.
 Next: exact interpreter and first-party build-tool pins, followed by inactive host
