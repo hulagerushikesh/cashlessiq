@@ -36,8 +36,10 @@ also verifies independently against the reviewed digest. All ten jobs in that wo
 now verifies and retains the Git-pinned archive. Offline installation passes the
 Debian job and both Ubuntu installed-package/service journeys at `222b484`; the
 three-file downloaded archive bundle also verifies locally without installation.
-Broader CI is still running. Installer tooling, inactive host installation and live agent calls
-remain unfinished.
+All ten interpreter workflow jobs have now passed. An offline inactive Debian
+installer now uses pip from that pinned interpreter without an additional tool
+download. Its real installation is awaiting CI. Identity/unit/private-storage
+acceptance and live agent calls remain unfinished.
 
 ## How close is a private live MVP?
 

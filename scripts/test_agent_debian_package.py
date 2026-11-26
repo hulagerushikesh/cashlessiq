@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
+from scripts import install_agent_inactive as installer
 from scripts import test_agent_service_packages as packages
 
 ERROR = "Inactive Debian agent installation unconfirmed"
@@ -69,6 +70,10 @@ def main():
         shutil.copytree(base / "python-bundle", python_output)
         packages.python_bundle.verify(python_output, revision)
         print("PASS: pinned public interpreter archive exported without local paths")
+        shutil.rmtree(packages.INSTALL)
+        installer.install(output, python_output, revision, digest)
+        verify_inactive()
+        print("PASS: inactive host installer consumed only offline verified artifacts")
         # These are fresh artifact-only directories. No services were launched,
         # no database was contacted, and no private credential/receipt was made.
         shutil.rmtree(packages.INSTALL)

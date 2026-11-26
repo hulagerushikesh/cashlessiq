@@ -148,7 +148,7 @@ def manifest(revision, files):
     })
 
 
-def verify(directory, revision, manifest_sha256):
+def verified_files(directory, revision, manifest_sha256):
     """The digest must come from the reviewed build receipt, not this directory."""
     require(type(manifest_sha256) is str and re.fullmatch(r"[0-9a-f]{64}", manifest_sha256))
     files = review.committed_files(revision)
@@ -173,7 +173,12 @@ def verify(directory, revision, manifest_sha256):
         require(len(expected[name]) == wheel["size"]
                 and "sha256:" + review.sha256(expected[name]) == wheel["hash"])
     require(expected["requirements.txt"] == requirements(packages, wheels, expected))
-    return len(packages) + len(wheels)
+    return expected
+
+
+def verify(directory, revision, manifest_sha256):
+    files = verified_files(directory, revision, manifest_sha256)
+    return sum(name.endswith(".whl") for name in files)
 
 
 def create(directory, revision, dist, wheelhouse):

@@ -151,6 +151,46 @@ runtime dependency wheels, inactive-state checks and owned cleanup. The updated
 and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963504)
 also pass with commit-based wheel construction. All ten workflow jobs passed.
 
+## Offline inactive Debian installation
+
+```sh
+sudo /trusted/python3.11 -m scripts.install_agent_inactive --wheels /reviewed/wheel-release --interpreter /reviewed/python-bundle --revision FULL_COMMIT_SHA --manifest-sha256 INDEPENDENT_WHEEL_BUILD_RECEIPT_SHA256
+```
+
+Run the module from a trusted checkout of the reviewed installer revision using a
+trusted host Python with `tarfile.data_filter` support and a clean administrator
+environment. The artifact revision and external wheel manifest digest are
+independently selected review inputs; the manifest is not its own authority.
+
+The installer requires root, Debian 12, x86-64/glibc 2.36, protected `/` and `/opt`,
+a missing `/opt/cashlessiq-agent`, and absent agent account names/UIDs, private paths
+and exact service units. It creates no accounts, units, private plans, database
+state, provider connection or receipt authority. It never starts a service.
+Existing or partial installations are refused and preserved for review; this is
+not an upgrade, activation or uninstall command. Exclude concurrent privileged
+writers during installation. Root and the reviewed installer checkout are trusted.
+
+Both artifact sets are verified before writes. Wheel/requirement bytes are copied
+from the verifier's in-memory result into a private installation-owned snapshot;
+later changes to the input directory cannot change installation requirements.
+Interpreter bytes are rehashed before bounded extraction, admitting only the
+`python` tree with regular files/directories/internal links and Python's data
+extraction filter. The installer creates a venv without pip, then runs pip 24.0
+directly from the pinned interpreter's bundled wheel. Pip is isolated, all config
+files are disabled, and installation uses only explicit local hash-locked binary
+wheels with no index, dependency resolution, cache or bytecode compilation.
+No separate installer executable or bootstrap dependency download is required.
+Pip/setuptools/build/provider tools are absent from the service venv.
+
+After dependency and installed-code/import probes, root ownership and permissions
+are hardened, the inactive-state checks repeat, and `agent-install.json` is written
+last with the selected revision and artifact hashes. A failure retains its fresh
+partial tree without a completion receipt or automatic repair. The private wheel
+snapshot is removed after successful dependency installation; original inputs are
+unchanged. Target-OS execution of this installer is awaiting CI acceptance. This
+finishes only inactive runtime artifact installation; identities, units, private
+inputs, independent retention and Debian systemd acceptance remain separate.
+
 ## Offline interpreter archive preparation
 
 ```sh

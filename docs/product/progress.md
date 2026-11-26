@@ -12,6 +12,19 @@ released and the daily usage session closed. Retained storage remains; Docker De
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Offline inactive installer — 26 November
+
+A fresh Debian runtime installer now consumes the verified Python archive and
+complete wheel release without uv or bootstrap downloads. It uses pip from the
+pinned interpreter, a private snapshot of verified requirements/wheels, bounded
+filtered extraction and post-install source/import checks. It creates no accounts,
+units, private inputs, database state or provider calls. Existing installations
+are refused; partial failures are retained with no completion receipt. All 72
+focused installer/release/interpreter/Debian checks and changed-file Ruff pass;
+real target-OS installation is awaiting CI. The previous interpreter workflow
+passed all ten jobs. Docker and paid resources stay off. Inactive artifact
+installation does not finish identity/unit/private-retention or live-agent work.
+
 ### Retained offline interpreter archive — 26 November
 
 Interpreter preparation now fetches only the Git-pinned CPython archive, bounds
