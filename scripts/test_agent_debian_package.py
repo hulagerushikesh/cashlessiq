@@ -102,9 +102,20 @@ def main():
         shutil.rmtree(base)
         require(not packages.INSTALL.exists() and not base.exists())
         print("PASS: inactive Debian artifact installation removed")
-    except Exception:
+    except Exception as error:
         # The isolated job container is discarded on failure too. Never print
         # arbitrary subprocess diagnostics or attempt to adopt/repair a runtime.
+        # A fixed source location permits diagnosis without exception values,
+        # account/tool output, file contents or interpreter frame locals.
+        frame, location = error.__traceback__, None
+        while frame is not None:
+            name = Path(frame.tb_frame.f_code.co_filename).name
+            if name in {"test_agent_debian_package.py", "prepare_agent_host.py",
+                        "install_agent_inactive.py"}:
+                location = (name, frame.tb_lineno)
+            frame = frame.tb_next
+        if location:
+            print(f"FAIL: inactive Debian preparation at {location[0]}:{location[1]}", flush=True)
         raise SystemExit(ERROR) from None
 
 
