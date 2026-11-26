@@ -1,6 +1,6 @@
 # Agent activation review package
 
-25 November 2026. Source review and rebuild inputs for the synthetic agent
+26 November 2026. Source review and rebuild inputs for the synthetic agent
 services. Installation and activation remain disabled. The service runners
 accept only the fake protocol; this package does not enable Snowflake execution.
 
@@ -71,7 +71,8 @@ Missing/extra/changed files, symlinks, hardlinks and special files are rejected.
 
 The existing disposable Linux package and full-journey fixtures now install these
 dependencies with indexes, cache and source builds disabled, then check installed
-dependency consistency. First-party source-matched wheels are installed separately.
+dependency consistency. The combined wheel release below now supplies first-party
+and runtime dependency wheels in one hash-locked offline installation.
 This checks an offline runtime dependency installation. CI preparation still
 fetches the pinned interpreter and hash-locked build tools; subsequent first-party
 wheel builds disable network/index resolution and build isolation.
@@ -148,7 +149,52 @@ passes commit-based wheel construction, installed-source verification, all 32
 runtime dependency wheels, inactive-state checks and owned cleanup. The updated
 [Ubuntu package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963506)
 and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963504)
-also pass with commit-based wheel construction. Broader workflow jobs are still running.
+also pass with commit-based wheel construction. All ten workflow jobs passed.
+
+## Combined offline wheel release
+
+```sh
+python -m scripts.package_agent_release create /existing-owned-parent/fresh-release --revision FULL_COMMIT_SHA --dist /reviewed-build/dist --wheelhouse /verified/runtime-wheels
+python -m scripts.package_agent_release verify /existing-owned-parent/fresh-release --revision FULL_COMMIT_SHA --manifest-sha256 REVIEWED_BUILD_MANIFEST_SHA256
+```
+
+This assembles previously built API/domain wheels and the 32 locked runtime
+dependency wheels into one directory, alongside a source review archive,
+`requirements.txt` and `agent-release.json`. Creation and verification use only
+local files and the selected Git objects; neither command builds, downloads,
+extracts, installs or starts anything. Use a fresh destination whose existing
+parent remains under the preparing user's control. Existing outputs are refused;
+failed writes retain partial output, with the completion manifest written last.
+This is preparation, not protection against concurrent same-authority writers.
+
+First-party wheel filenames, package identity and every Python/JSON resource byte
+must match the selected Git source. Bounded ZIP inspection rejects extra scripts,
+data installation paths, duplicate members, link entries and invalid wheel records;
+only the expected code and three wheel metadata files are admitted. The third-party
+wheel set must still match the committed lock's exact names, sizes and SHA-256s.
+Requirements explicitly include all 34 packages with one hash per wheel. Package
+metadata does not choose the installed dependency graph: installation must use
+`--require-hashes --no-deps --offline --no-index --no-cache --no-build --no-config`
+and this directory's `--find-links` and `--requirements` paths. CI also checks
+installed dependency consistency, first-party bytes and isolated imports.
+
+The release manifest pins revision, target, disabled activation and the exact
+size/hash of every payload file. Its digest must come from the reviewed build
+receipt, independently of an incoming directory. Verification never trusts
+incoming manifest names, sizes or hashes to choose files; it derives the inventory
+and source/lock expectations again from Git and compares canonical metadata.
+Missing, extra, changed, linked and special files deny verification. A digest
+does not replace review of the build process, source or dependency provenance.
+
+The Debian CI job retains only this public wheel directory as
+`agent-wheel-release-FULL_COMMIT_SHA` for one day, after successful inactive runtime
+installation. The build's fixed PASS line records its revision and manifest
+SHA-256. The artifact contains no interpreter installation, builder environment,
+agent identities, private plans, credentials or receipt journal. Ubuntu package
+and full service journeys install the same combined release format. This is a
+complete runtime **wheel set**, not a complete offline bootstrap: the pinned
+interpreter archive and installer/build tools still require separate preparation.
+No production installer or Debian systemd acceptance is claimed by this bundle.
 
 ## Inactive Debian runtime rehearsal
 

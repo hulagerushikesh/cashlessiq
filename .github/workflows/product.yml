@@ -30,6 +30,13 @@ jobs:
         env:
           CIQ_AGENT_DEBIAN_PACKAGE_TEST: '1'
         run: python -m scripts.test_agent_debian_package
+      - name: Retain verified public offline wheels for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-wheel-release-${{ github.sha }}
+          path: output/agent-release/
+          if-no-files-found: error
+          retention-days: 1
   agent-service-journey:
     runs-on: ubuntu-latest
     timeout-minutes: 6

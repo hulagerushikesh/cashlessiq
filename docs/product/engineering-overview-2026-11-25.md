@@ -17,7 +17,7 @@ add new visible workflow screens or update the stopped GCP deployment.
 | Customer readiness | Later: production identity, real-data storage/retention, malware scanning, monitoring/support and other customer launch gates. |
 
 The latest completed
-[product workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45644026747)
+[product workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702)
 passed all ten jobs, including installed service journeys, runtime dependency
 installation and the product foundation/browser checks. Recent preparation also
 packages exact committed source and 32 hash-locked Linux runtime wheels.
@@ -28,7 +28,11 @@ Debian systemd and production installation still need acceptance.
 Release preparation now stages exact Git source for both first-party wheel builds
 and their byte verification, excluding dirty/untracked or newer checkout content.
 The updated Debian artifact job and both Ubuntu package/service journeys pass.
-Broader workflow jobs are still running at this checkpoint.
+All ten workflow jobs passed. The 26 November change combines both first-party
+wheels and 32 locked dependencies into one hash-pinned offline wheel release,
+which the installed-runtime fixtures now consume together. Its updated CI
+build/install acceptance is pending. This does not yet bundle the interpreter or
+installer tools, implement inactive host installation, or enable live agent calls.
 
 ## How close is a private live MVP?
 

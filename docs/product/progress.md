@@ -1,6 +1,6 @@
 # CashlessIQ product delivery checklist
 
-Last updated: 25 November 2026
+Last updated: 26 November 2026
 Current engineering scope: **synthetic MVP workflows (M3–M5), private testing**.
 Governed live-source P2 and production gates remain separate.
 
@@ -11,6 +11,24 @@ released and the daily usage session closed. Retained storage remains; Docker De
 [1 November handoff](gcp-first-run-2026-11-01.md) retains quota/billing history;
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
+
+### Combined offline wheel release — 26 November
+
+Release preparation now assembles both source-verified first-party wheels and all
+32 Git-locked third-party wheels into one directory with a source review archive,
+explicit hash-pinned requirements and disabled-activation manifest. The verifier
+requires an independently reviewed manifest digest and full commit, rederives the
+inventory/source/lock expectations, and rejects unexpected executable installation
+paths, duplicate ZIP members, invalid records and linked or altered artifacts.
+Both Ubuntu installed-service fixtures and the Debian inactive artifact fixture
+now install the entire wheel set offline with hashes and no dependency resolution.
+Debian exports only the public release directory for one day of CI review.
+All 145 focused release/dependency/source/domain/package/Debian checks,
+changed-file Ruff and workflow YAML parsing pass.
+The previous committed-source workflow passed all ten jobs. Updated real build
+and installation acceptance is pending CI. This is a complete wheel set; pinned
+interpreter/tool bootstrap and inactive host installation remain separate work.
+No Docker, GCP or provider was started, and no owner action is needed yet.
 
 ### Pinned first-party build source — 25 November
 
@@ -24,8 +42,8 @@ interpreter-pin workflow completed all nine jobs successfully; the previous
 Debian-rehearsal workflow now passes all ten. At `1a3fa37`, the updated
 [Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963584)
 passes commit-based wheel construction, installation, inactive-state verification
-and cleanup. Updated Ubuntu package/service journeys also pass; broader workflow
-jobs are still running.
+and cleanup. Updated Ubuntu package/service journeys also pass; all ten workflow
+jobs passed.
 No local Docker, cloud start or provider call was made. Complete release artifacts,
 inactive host installation and Debian service acceptance remain open.
 

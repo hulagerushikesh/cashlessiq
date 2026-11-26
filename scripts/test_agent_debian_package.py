@@ -55,9 +55,16 @@ def main():
         base = Path("/run") / ("ciq-debian-package-" + uuid4().hex[:16])
         base.mkdir(mode=0o755)
         packages.INSTALL.mkdir(mode=0o755)
-        packages.install(base)
+        release_directory, revision, digest = packages.install(base)
         verify_inactive()
         print("PASS: Debian 12/glibc 2.36 artifacts installed without agent identities or units")
+        # Export only the already verified public wheel release, never the
+        # private interpreter, builder, service inputs or arbitrary output tree.
+        output = packages.policy.ROOT / "output/agent-release"
+        output.parent.mkdir(exist_ok=True)
+        shutil.copytree(release_directory, output)  # Refuse an existing destination.
+        packages.release.verify(output, revision, digest)
+        print("PASS: verified public wheel release exported without activation inputs")
         # These are fresh artifact-only directories. No services were launched,
         # no database was contacted, and no private credential/receipt was made.
         shutil.rmtree(packages.INSTALL)

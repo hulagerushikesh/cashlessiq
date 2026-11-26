@@ -1,11 +1,26 @@
 # Product delivery — owner dashboard
 
-Updated 25 November 2026. This page summarizes the current product plan; the
+Updated 26 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [25 November engineering overview](engineering-overview-2026-11-25.md).
+
+### Combined offline wheel release — 26 November
+
+One reviewed directory now combines the source-matched API/domain wheels, all 32
+locked runtime wheels, a source archive and hash-pinned installation requirements.
+Verification requires the independently selected commit and manifest digest from
+the reviewed build receipt; incoming metadata cannot select files or dependencies.
+The installed-runtime fixtures consume all 34 wheels in one offline, hash-locked
+installation with dependency resolution disabled. Debian CI retains only the
+public wheel release for one day after successful inactive installation.
+All 145 focused checks, changed-file Ruff and workflow YAML parsing pass.
+The previous committed-source workflow completed all ten jobs successfully.
+This change still needs its actual CI build/install receipt. Interpreter/tool
+bootstrap, inactive host installation and Debian service acceptance remain open;
+the bundle enables no live provider or service. Docker and paid resources stay off.
 
 ### Pinned first-party build source — 25 November
 
@@ -17,7 +32,7 @@ changed-file Ruff pass. Previous interpreter-pin CI passed all nine jobs; the
 previous Debian-rehearsal workflow now passes all ten. At `1a3fa37`, the updated
 [Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963584)
 passes the commit-based build, installed verification and cleanup. Updated Ubuntu
-package/service journeys also pass; broader CI is still running. Complete release
+package/service journeys also pass; all ten CI jobs passed. Complete release
 artifacts, inactive host installation and Debian
 service acceptance remain open. Docker and paid resources stay off.
 

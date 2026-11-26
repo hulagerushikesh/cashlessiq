@@ -22,6 +22,7 @@ from uuid import uuid4
 from zipfile import ZipFile
 
 from scripts import package_agent_dependencies as dependencies
+from scripts import package_agent_release as release
 from scripts import test_agent_services as policy
 from scripts.check_domain_package import verify_wheel as verify_domain_wheel
 
@@ -219,16 +220,20 @@ def install(base):
     print("PASS: pinned interpreter and isolated hash-locked first-party wheel build")
     wheelhouse = base / "runtime-wheels"
     count = dependencies.create(wheelhouse, revision)
-    requirements = wheelhouse / "requirements.txt"
-    policy.run("uv", "venv", "--python", str(interpreters[0]), "--no-python-downloads",
+    release_directory = base / "release"
+    digest, release_count = release.create(release_directory, revision, dist, wheelhouse)
+    if release_count != count + 2:
+        raise ValueError("Expected complete offline wheel release")
+    print(f"PASS: offline wheel release SHA-256 {digest}; revision {revision}")
+    policy.run("uv", "venv", "--no-config", "--offline", "--python", str(interpreters[0]),
+               "--no-python-downloads",
                str(INSTALL / "venv"), timeout=30)
-    policy.run("uv", "pip", "install", "--python", str(PYTHON), "--require-hashes",
-               "--no-index", "--no-cache", "--no-build", "--find-links", str(wheelhouse),
-               "--requirements", str(requirements), "--link-mode", "copy", timeout=120)
-    policy.run("uv", "pip", "install", "--python", str(PYTHON), "--no-deps",
-               "--no-index", "--no-cache", "--no-build",
-               *(str(w) for w in wheels), "--link-mode", "copy", timeout=30)
-    policy.run("uv", "pip", "check", "--python", str(PYTHON), timeout=20)
+    policy.run("uv", "pip", "install", "--no-config", "--offline",
+               "--python", str(PYTHON), "--require-hashes", "--no-deps",
+               "--no-index", "--no-cache", "--no-build", "--find-links", str(release_directory),
+               "--requirements", str(release_directory / "requirements.txt"),
+               "--link-mode", "copy", timeout=120)
+    policy.run("uv", "pip", "check", "--no-config", "--python", str(PYTHON), timeout=20)
     print(f"PASS: {count} commit-locked Linux dependency wheels installed offline without cache")
     harden_installation(INSTALL)
     digests = {}
@@ -266,6 +271,7 @@ for name, digest in json.load(sys.stdin).items():
         raise RuntimeError("Private installed-artifact verification failed: "
                            + str(result.returncode))
     print("PASS: source-matched API/domain wheels, locked dependencies, root-owned installation")
+    return release_directory, revision, digest
 
 
 def plan_values(role, password, epoch):
