@@ -227,8 +227,10 @@ The command never calls daemon-reload/start/enable/unmask, creates no private pl
 credential, socket or receipt journal, and changes no database/provider authority.
 The units have no installation/startup hooks. Locked accounts and static files
 are host preparation, not permission to activate an executor. The disposable Debian
-job exercises actual account/unit creation, repeat refusal and owned cleanup;
-that job's PID 1 is not systemd, so it does not prove Debian service execution.
+job at `695801c` [passes actual account/unit creation, repeat refusal and owned cleanup](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45851635029/job/140019216152).
+That job's PID 1 is not systemd, so it does not prove Debian service execution.
+The existing Ubuntu package and complete installed-service journey also pass at
+that revision. The previous runtime-installer workflow completed all ten jobs.
 Retained receipt storage and governed live integration remain unfinished.
 
 ## Offline interpreter archive preparation

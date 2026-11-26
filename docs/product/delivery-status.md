@@ -13,9 +13,10 @@ Fresh-host preparation now follows the offline runtime installation: three locke
 noninteractive accounts and exact reviewed static units, with collision/permission
 checks, offline unit analysis and a completion receipt written last. It performs
 no service activation and creates no private credentials, plans or receipt journal.
-Partial failures are retained without repair or adoption. The Debian fixture now
-exercises actual preparation, repeat refusal and owned cleanup. Local validation
-and the new CI receipt are recorded in the [progress index](progress.md).
+Partial failures are retained without repair or adoption. At `695801c`, the
+[Debian CI job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45851635029/job/140019216152)
+passes actual preparation, repeat refusal and owned cleanup. All 70 focused checks
+and changed-file Ruff pass. The [progress index](progress.md) records the receipt.
 Retained storage, Debian systemd execution and governed live agent integration
 remain next. Docker and paid resources stay off; no owner action is needed yet.
 

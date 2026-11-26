@@ -22,9 +22,16 @@ match. Failures retain partial state; completion is recorded last. No credential
 plans, sockets, journal or database/provider authority are created. The earlier
 runtime guard also now refuses the actual plural `ciq-agent-receipts` path.
 All 70 focused host-preparation/runtime/Debian checks and changed-file Ruff pass.
-The Debian CI fixture exercises actual fresh identities/units, repeat refusal and
-owned cleanup; target acceptance is pending the new run. Previous installer CI
-passed all ten jobs. Retained receipt storage, Debian systemd execution and live
+At `695801c`, the [Debian CI job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45851635029/job/140019216152)
+passes actual fresh identities/units, repeat refusal and owned cleanup. Initial
+acceptance exposed an unsupported `useradd` defaults override; it was removed
+without changing account locking. Bounded code-location diagnostics retain no
+exception values or command output. Superseded runs were cancelled. Previous installer CI
+passed all ten jobs. The [Ubuntu package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45851635029/job/140019216029)
+and [complete installed-service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45851635029/job/140019215880)
+also pass at the corrected revision. The earlier containment failure passes in
+this run; broader CI still has two jobs running, with no failures so far.
+Retained receipt storage, Debian systemd execution and live
 source/provider integration remain separate. Docker and paid resources stay off.
 
 ### Offline inactive installer — 26 November
