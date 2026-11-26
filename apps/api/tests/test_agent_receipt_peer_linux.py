@@ -48,6 +48,7 @@ def create_peers(request, *, pin=None, retained=None, root=None, packaged=False)
     root = root or Path("/run") / ("ciq-receipt-peer-" + uuid4().hex[:16])
     processes = []
     root.mkdir(mode=0o755)
+    owned = [root]
 
     def cleanup():
         for child in reversed(processes):
@@ -55,8 +56,9 @@ def create_peers(request, *, pin=None, retained=None, root=None, packaged=False)
                 os.killpg(child.pid, signal.SIGKILL)
             child.communicate(timeout=5)
             assert child.poll() is not None
-        shutil.rmtree(root)
-        assert not root.exists()
+        for path in reversed(owned):
+            shutil.rmtree(path)
+            assert not path.exists()
 
     request.addfinalizer(cleanup)  # Also cleans failures BEFORE fixture yield.
     base = 200_000 + int(uuid4().hex[:5], 16)
@@ -64,8 +66,11 @@ def create_peers(request, *, pin=None, retained=None, root=None, packaged=False)
     endpoint = root / "ipc"
     endpoint.mkdir(mode=0o755)
     os.chown(endpoint, server_uid, server_uid)
-    storage = root / "journal-parent"
+    storage = (Path("/var/lib/cashlessiq-agent/receipts") if packaged
+               else root / "journal-parent")
     storage.mkdir(mode=0o700)
+    if packaged:
+        owned.append(storage)  # Fresh leaf only; never remove the mounted parent.
     os.chown(storage, server_uid, server_uid)
     secret = root / "supervisor-secret"
     secret.write_text("DUMMY-ONLY-NOT-A-CREDENTIAL")

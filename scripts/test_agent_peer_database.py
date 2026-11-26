@@ -81,6 +81,7 @@ def main():
             "create", "--name", name, *common(), "--network", "container:" + pg,
             "--tmpfs", "/run:rw,nosuid,nodev,noexec,size=32m,mode=755",
             "--tmpfs", "/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1777",
+            "--tmpfs", "/var/lib/cashlessiq-agent:rw,nosuid,nodev,noexec,size=4m,mode=755",
             # Override the PostgreSQL tools base's declared data volume; the
             # supervisor starts no server and creates no anonymous disk volume.
             "--tmpfs", "/var/lib/postgresql/data:rw,nosuid,nodev,noexec,size=1m,mode=755",
@@ -95,7 +96,7 @@ def main():
         ).stdout.decode().strip()
         owned.append(identifier)
         isolated(inspect(identifier), "container:" + pg,
-                 ("/run", "/tmp", "/var/lib/postgresql/data"))
+                 ("/run", "/tmp", "/var/lib/postgresql/data", "/var/lib/cashlessiq-agent"))
         try:
             result = docker("start", "-a", identifier, check=False, timeout=300)
         except subprocess.TimeoutExpired as exc:
