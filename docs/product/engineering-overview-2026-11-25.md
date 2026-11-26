@@ -33,8 +33,10 @@ wheels and 32 locked dependencies into one hash-pinned offline wheel release,
 which the installed-runtime fixtures now consume together. Debian installation
 and both Ubuntu package/service jobs pass at `623c43c`; the downloaded artifact
 also verifies independently against the reviewed digest. All ten jobs in that workflow have now passed. Interpreter archive preparation
-now verifies and retains the Git-pinned archive, with offline installation awaiting
-the new CI run. Installer tooling, inactive host installation and live agent calls
+now verifies and retains the Git-pinned archive. Offline installation passes the
+Debian job and both Ubuntu installed-package/service journeys at `222b484`; the
+three-file downloaded archive bundle also verifies locally without installation.
+Broader CI is still running. Installer tooling, inactive host installation and live agent calls
 remain unfinished.
 
 ## How close is a private live MVP?

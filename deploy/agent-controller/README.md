@@ -173,8 +173,11 @@ bundle, replacing the remote archive URL with its absolute local file URI. It th
 runs the reviewed uv version with `--offline --no-cache --no-config`. Local metadata
 is excluded from exported artifacts. Local distribution URLs are supported by
 [uv's documented Python download configuration](https://docs.astral.sh/uv/reference/settings/).
-The Debian job retains only the public archive bundle for one day. A real target-OS
-installation with this path is awaiting CI acceptance. This does not attest the uv
+The Debian job retains only the public archive bundle for one day. At `222b484`, the
+[Debian 12 installation/export](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45840309844/job/139979908974)
+and both Ubuntu installed-package/service journeys pass. The downloaded Debian
+artifact independently verifies against the committed archive hash: three files,
+30,890,011 bytes. This does not attest the uv
 executable, finish an inactive host installer, create identities/units or authorize
 service activation; builder preparation still obtains its hash-locked build tools.
 

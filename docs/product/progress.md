@@ -21,11 +21,15 @@ The installed-runtime fixtures now consume a verified local archive with uv
 offline mode and no cache. Debian CI exports only the three public archive
 bundle files; invocation-local paths are excluded. No archive is extracted
 or executed by the packaging commands themselves.
-All 62 focused interpreter/package/Debian checks and changed-file Ruff pass;
-actual archive installation is awaiting the new CI run. The previous wheel
-[workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027)
-has now passed all ten jobs. The independently attested installer executable
-and inactive host installer remain next. Docker and paid resources stay off.
+All 62 focused interpreter/package/Debian checks and changed-file Ruff pass.
+At `222b484`, the [Debian archive installation/export](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45840309844/job/139979908974),
+[Ubuntu installed package](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45840309844/job/139979909555)
+and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45840309844/job/139979909720)
+all pass. The downloaded Debian interpreter artifact also verifies offline:
+three files, 30,890,011 bytes. Broader CI is still running at this checkpoint.
+The previous wheel workflow passed all ten jobs. The independently attested
+installer executable and inactive host installer remain next. Docker and paid
+resources stay off; no owner action is needed yet.
 
 ### Combined offline wheel release — 26 November
 
@@ -47,7 +51,7 @@ and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/act
 all pass with their generated releases. The downloaded Debian artifact also
 passes independent offline verification: 34 wheels, 37 files, 20,442,487 bytes.
 The default uv build sidecar is suppressed; strict input inventory is retained.
-Broader CI is still running at this checkpoint. This is a complete wheel set; pinned
+All ten jobs in that workflow passed. This is a complete wheel set; pinned
 interpreter/tool bootstrap and inactive host installation remain separate work.
 No Docker, GCP or provider was started, and no owner action is needed yet.
 

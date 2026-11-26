@@ -16,11 +16,15 @@ The installed-runtime fixtures now consume a verified local archive with uv
 offline mode and no cache. Debian CI exports only the three public archive
 bundle files; invocation-local paths are excluded. No archive is extracted
 or executed by the packaging commands themselves.
-All 62 focused interpreter/package/Debian checks and changed-file Ruff pass;
-actual archive installation is awaiting the new CI run. The previous wheel
-[workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027)
-has now passed all ten jobs. The independently attested installer executable
-and inactive host installer remain next. Docker and paid resources stay off.
+All 62 focused interpreter/package/Debian checks and changed-file Ruff pass.
+At `222b484`, the [Debian archive installation/export](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45840309844/job/139979908974),
+[Ubuntu installed package](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45840309844/job/139979909555)
+and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45840309844/job/139979909720)
+all pass. The downloaded Debian interpreter artifact also verifies offline:
+three files, 30,890,011 bytes. Broader CI is still running at this checkpoint.
+The previous wheel workflow passed all ten jobs. The independently attested
+installer executable and inactive host installer remain next. Docker and paid
+resources stay off; no owner action is needed yet.
 
 ### Combined offline wheel release — 26 November
 
@@ -36,7 +40,7 @@ The previous committed-source workflow completed all ten jobs successfully.
 At `623c43c`, the [Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027/job/139949783732)
 and both Ubuntu package/service journeys pass with their generated releases.
 The downloaded Debian artifact also verifies independently: 34 wheels, 37 files,
-20,442,487 bytes. Broader CI is still running. Interpreter/tool
+20,442,487 bytes. All ten jobs passed. Interpreter/tool
 bootstrap, inactive host installation and Debian service acceptance remain open;
 the bundle enables no live provider or service. Docker and paid resources stay off.
 
