@@ -166,6 +166,8 @@ extracts, installs or starts anything. Use a fresh destination whose existing
 parent remains under the preparing user's control. Existing outputs are refused;
 failed writes retain partial output, with the completion manifest written last.
 This is preparation, not protection against concurrent same-authority writers.
+The input `dist` directory must contain exactly the two wheels; CI builds use
+uv's `--no-create-gitignore` so its default sidecar is not part of that inventory.
 
 First-party wheel filenames, package identity and every Python/JSON resource byte
 must match the selected Git source. Bounded ZIP inspection rejects extra scripts,

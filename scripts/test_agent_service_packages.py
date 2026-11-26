@@ -208,6 +208,7 @@ def install(base):
         policy.run("uv", "build", "--wheel", str(source / project),
                    "--python", str(build_python), "--no-python-downloads",
                    "--no-build-isolation", "--offline", "--no-index", "--no-cache", "--no-config",
+                   "--no-create-gitignore",
                    "--out-dir", str(dist), timeout=120)
     wheels = sorted(dist.glob("*.whl"))
     if len(wheels) != 2:
