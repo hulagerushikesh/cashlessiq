@@ -198,6 +198,18 @@ complete runtime **wheel set**, not a complete offline bootstrap: the pinned
 interpreter archive and installer/build tools still require separate preparation.
 No production installer or Debian systemd acceptance is claimed by this bundle.
 
+At `623c43c1cf48037fc59e6b68a136e53fa77a4275`, the
+[Debian installation/export](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027/job/139949783732),
+[Ubuntu package](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027/job/139949783677)
+and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027/job/139949783805)
+all passed and reported the same release manifest SHA-256:
+`db376608eb6055a5984e2a686ee484976d588f61618dd882dbf27ab10b2ab2bd`.
+The downloaded Debian artifact was independently verified without installation:
+34 wheels, 37 files, 20,442,487 bytes. All 145 focused offline checks, changed-file
+Ruff and workflow YAML parsing pass. The first assembly exposed uv's default
+`.gitignore` sidecar; disabling its creation fixed the build input inventory
+without admitting auxiliary files. Broader CI is still running at this checkpoint.
+
 ## Inactive Debian runtime rehearsal
 
 The separate `agent-debian-package` CI job uses a fresh Debian 12/glibc 2.36

@@ -30,8 +30,10 @@ and their byte verification, excluding dirty/untracked or newer checkout content
 The updated Debian artifact job and both Ubuntu package/service journeys pass.
 All ten workflow jobs passed. The 26 November change combines both first-party
 wheels and 32 locked dependencies into one hash-pinned offline wheel release,
-which the installed-runtime fixtures now consume together. Its updated CI
-build/install acceptance is pending. This does not yet bundle the interpreter or
+which the installed-runtime fixtures now consume together. Debian installation
+and both Ubuntu package/service jobs pass at `623c43c`; the downloaded artifact
+also verifies independently against the reviewed digest. Broader CI is still
+running. This does not yet bundle the interpreter or
 installer tools, implement inactive host installation, or enable live agent calls.
 
 ## How close is a private live MVP?
