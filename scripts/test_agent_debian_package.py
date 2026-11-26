@@ -65,6 +65,10 @@ def main():
         shutil.copytree(release_directory, output)  # Refuse an existing destination.
         packages.release.verify(output, revision, digest)
         print("PASS: verified public wheel release exported without activation inputs")
+        python_output = output.parent / "agent-python"
+        shutil.copytree(base / "python-bundle", python_output)
+        packages.python_bundle.verify(python_output, revision)
+        print("PASS: pinned public interpreter archive exported without local paths")
         # These are fresh artifact-only directories. No services were launched,
         # no database was contacted, and no private credential/receipt was made.
         shutil.rmtree(packages.INSTALL)

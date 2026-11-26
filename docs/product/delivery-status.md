@@ -7,6 +7,21 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [25 November engineering overview](engineering-overview-2026-11-25.md).
 
+### Retained offline interpreter archive — 26 November
+
+Interpreter preparation now fetches only the Git-pinned CPython archive, bounds
+its size and verifies SHA-256 before publishing a completion manifest. Offline
+verification rederives the archive identity and original metadata from Git.
+The installed-runtime fixtures now consume a verified local archive with uv
+offline mode and no cache. Debian CI exports only the three public archive
+bundle files; invocation-local paths are excluded. No archive is extracted
+or executed by the packaging commands themselves.
+All 62 focused interpreter/package/Debian checks and changed-file Ruff pass;
+actual archive installation is awaiting the new CI run. The previous wheel
+[workflow](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027)
+has now passed all ten jobs. The independently attested installer executable
+and inactive host installer remain next. Docker and paid resources stay off.
+
 ### Combined offline wheel release — 26 November
 
 One reviewed directory now combines the source-matched API/domain wheels, all 32

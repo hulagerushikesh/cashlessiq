@@ -37,6 +37,13 @@ jobs:
           path: output/agent-release/
           if-no-files-found: error
           retention-days: 1
+      - name: Retain verified public interpreter archive for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-python-${{ github.sha }}
+          path: output/agent-python/
+          if-no-files-found: error
+          retention-days: 1
   agent-service-journey:
     runs-on: ubuntu-latest
     timeout-minutes: 6

@@ -22,6 +22,7 @@ from uuid import uuid4
 from zipfile import ZipFile
 
 from scripts import package_agent_dependencies as dependencies
+from scripts import package_agent_python as python_bundle
 from scripts import package_agent_release as release
 from scripts import test_agent_services as policy
 from scripts.check_domain_package import verify_wheel as verify_domain_wheel
@@ -183,10 +184,15 @@ def install(base):
         raise ValueError("Expected reviewed uv version")
     # setup-python's hosted toolcache is runner-owned. Do not follow its mutable
     # interpreter from a purportedly root-owned installed service environment.
-    # The single-entry upstream metadata pins patch, standalone build and SHA256.
+    # Download preparation is separate from installation. Verify against Git,
+    # then install from the retained archive with network resolution disabled.
+    archive = base / "python-bundle"
+    python_bundle.create(archive, revision)
+    metadata = python_bundle.local_metadata(archive, revision, base / "local-python.json")
     policy.run("uv", "python", "install", PYTHON_KEY, "--no-bin", "--no-cache", "--no-config",
-               "--python-downloads-json-url", (inputs / "python-downloads.json").as_uri(),
+               "--offline", "--python-downloads-json-url", metadata.as_uri(),
                "--install-dir", str(INSTALL / "python"), timeout=120)
+    print("PASS: Git-pinned interpreter archive installed offline without cache")
     # uv may add a version-family directory symlink alongside the exact build.
     interpreters = sorted({path.resolve(strict=True)
                            for path in (INSTALL / "python").glob("*/bin/python3.11")})

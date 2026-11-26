@@ -151,6 +151,33 @@ runtime dependency wheels, inactive-state checks and owned cleanup. The updated
 and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45645686702/job/139315963504)
 also pass with commit-based wheel construction. All ten workflow jobs passed.
 
+## Offline interpreter archive preparation
+
+```sh
+python -m scripts.package_agent_python create /existing-owned-parent/fresh-python --revision FULL_COMMIT_SHA
+python -m scripts.package_agent_python verify /existing-owned-parent/fresh-python --revision FULL_COMMIT_SHA
+```
+
+Creation fetches the public CPython archive selected by the committed single-entry
+`python-downloads.json`; verification is offline. The bundle contains exactly the
+archive, the original committed metadata and `agent-python.json`. The archive is
+bounded to 64 MB and its SHA-256 must match Git before any payload is written.
+The canonical manifest records revision, target, actual size and disabled activation;
+it cannot override the committed hash. No archive extraction or execution occurs.
+Linked/special files, extra files and existing output destinations are refused.
+A failed download/write leaves partial output; do not adopt or retry into it.
+The existing parent must remain caller-controlled, without concurrent writers.
+
+The CI fixture generates fresh invocation-local metadata only after verifying the
+bundle, replacing the remote archive URL with its absolute local file URI. It then
+runs the reviewed uv version with `--offline --no-cache --no-config`. Local metadata
+is excluded from exported artifacts. Local distribution URLs are supported by
+[uv's documented Python download configuration](https://docs.astral.sh/uv/reference/settings/).
+The Debian job retains only the public archive bundle for one day. A real target-OS
+installation with this path is awaiting CI acceptance. This does not attest the uv
+executable, finish an inactive host installer, create identities/units or authorize
+service activation; builder preparation still obtains its hash-locked build tools.
+
 ## Combined offline wheel release
 
 ```sh
