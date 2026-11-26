@@ -19,7 +19,12 @@ runtime-owned `0600` leaf. Duplicate keys, extra fields, coerced UIDs, root UID,
 storage/socket selectors, database credentials, commands and limit overrides fail.
 
 The only journal is
-`/run/ciq-agent-receipts/journal-parent/retained/fake-receipts.sqlite3`.
+`/var/lib/cashlessiq-agent/receipts/retained/fake-receipts.sqlite3`.
+The journal is outside temporary `/run` plans and IPC. Fresh inactive host setup
+prepares only its private parent; it never creates an epoch/journal. The volume
+must survive reboot and be retained independently of product restore. No legacy
+`/run` fallback or automatic migration/reset is allowed. See the
+[storage handoff and retention requirements](../../deploy/agent-controller/README.md#persistent-receipt-namespace).
 Before SQLite opens it, the same private-file reader checks its ancestors and
 metadata and bounds the file to 256 KiB. Existing journal code opens `mode=rw`
 and validates the active epoch before readiness. No missing directory/file is

@@ -61,7 +61,7 @@ from ciq_api.review_models import ReviewCase
 from ciq_api.seed import TENANT_ID
 
 packages, policy = runner.packages, runner.policy
-RETAINED = policy.PLANS[2] / "journal-parent/retained"
+RETAINED = policy.STORAGE / "receipts/retained"
 SOCKET = policy.PLANS[2] / "ipc/peer.sock"
 
 

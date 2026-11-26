@@ -58,6 +58,33 @@ def test_reopen_persists_issued_tombstone_and_never_initializes_again(journal):
     journal.check((first,))
 
 
+@pytest.mark.parametrize("fail_parent", [False, True])
+def test_provision_syncs_new_journal_and_parent_or_preserves_uncertain_state(
+    tmp_path, monkeypatch, fail_parent,
+):
+    parent = tmp_path / "persistent"
+    parent.mkdir()
+    directory = parent / "retained"
+    synced = []
+    original = os.fsync
+
+    def sync(fd):
+        synced.append(os.fstat(fd).st_ino)
+        if fail_parent and len(synced) == 2:
+            raise OSError("private storage failure")
+        original(fd)
+
+    monkeypatch.setattr(os, "fsync", sync)
+    pin = FakeEpochPin(database_id=uuid4(), epoch_id=uuid4())
+    if fail_parent:
+        closed(lambda: FakeReceiptJournal.provision(directory, pin))
+    else:
+        FakeReceiptJournal.provision(directory, pin).check(())
+    assert synced == [directory.stat().st_ino, parent.stat().st_ino]
+    assert (directory / "fake-receipts.sqlite3").is_file()
+    closed(lambda: FakeReceiptJournal.provision(directory, pin))
+
+
 @pytest.mark.parametrize("phase", ["prepared", "issued"])
 def test_missing_local_history_is_quarantined_even_after_restart(journal, phase):
     first = receipt()

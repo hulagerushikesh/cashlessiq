@@ -110,12 +110,14 @@ BEGIN SELECT RAISE(ABORT,'immutable_receipt'); END;
                     "INSERT INTO identity VALUES(1,?,?,?,'active')",
                     (str(pin.database_id), str(pin.epoch_id), pin.mode),
                 )
-            # SQLite syncs its transaction; also persist the newly created name.
-            fd = os.open(journal.directory, os.O_RDONLY | os.O_DIRECTORY)
-            try:
-                os.fsync(fd)
-            finally:
-                os.close(fd)
+            # SQLite syncs its transaction; persist both the file name and the
+            # newly created journal directory's entry in the persistent parent.
+            for path in (journal.directory, journal.directory.parent):
+                fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                try:
+                    os.fsync(fd)
+                finally:
+                    os.close(fd)
             return journal
         except (OSError, sqlite3.Error):
             _closed()

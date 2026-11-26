@@ -12,6 +12,21 @@ released and the daily usage session closed. Retained storage remains; Docker De
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Persistent receipt namespace — 26 November
+
+The synthetic receipt runner now opens its fixed journal under `/var/lib`, outside
+temporary `/run` plans and IPC. Fresh inactive Debian host setup creates and syncs
+only root/private receipt directories, records disabled storage metadata, and
+refuses existing or partial storage. It creates no journal or epoch authority.
+Clinical/custody units cannot access this tree. Journal provisioning also syncs
+the newly created directory's parent. No migration, fallback, reset or disposal
+is automatic. The installed-package CI fixture now recreates temporary receipt
+runtime and requires the original journal, including an issued receipt, to reopen
+with unchanged bytes. All 228 focused offline checks and changed-file Ruff pass;
+Linux acceptance is pending.
+Real volume/reboot retention, reviewed journal handoff and live source/provider
+integration remain open. Docker and paid resources stay off.
+
 ### Inactive host identities and units — 26 November
 
 Fresh Debian host preparation now creates locked service identities and installs
@@ -30,7 +45,7 @@ exception values or command output. Superseded runs were cancelled. Previous ins
 passed all ten jobs. The [Ubuntu package job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45851635029/job/140019216029)
 and [complete installed-service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45851635029/job/140019215880)
 also pass at the corrected revision. The earlier containment failure passes in
-this run; broader CI still has two jobs running, with no failures so far.
+this run; all ten jobs have now passed.
 Retained receipt storage, Debian systemd execution and live
 source/provider integration remain separate. Docker and paid resources stay off.
 

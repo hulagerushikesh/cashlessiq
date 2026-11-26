@@ -49,11 +49,12 @@ def test_manual_fixed_unit_preserves_identity_and_whole_cgroup_cleanup(
         assert "IPAddressAllow" not in service
         assert set(service["ReadWritePaths"].split()) == {
             "/run/ciq-agent-receipts/ipc",
-            "/run/ciq-agent-receipts/journal-parent/retained",
+            "/var/lib/cashlessiq-agent/receipts/retained",
         }
     else:
         assert "ReadWritePaths" not in service
         assert service["IPAddressAllow"] == "127.0.0.1/32"
+        assert "-/var/lib/cashlessiq-agent" in service["InaccessiblePaths"].split()
 
 
 @pytest.mark.parametrize("fault", ["platform", "uid", "actions", "repo", "optin"])

@@ -370,7 +370,9 @@ def main():
             path.mkdir(mode=0o755)
             paths.append(path)
         ipc = policy.PLANS[2] / "ipc"
-        journal_parent = policy.PLANS[2] / "journal-parent"
+        policy.STORAGE.mkdir(mode=0o755)
+        paths.append(policy.STORAGE)
+        journal_parent = policy.STORAGE / "receipts"
         ipc.mkdir(mode=0o755)
         journal_parent.mkdir(mode=0o700)
         for path in (ipc, journal_parent):
@@ -380,9 +382,14 @@ def main():
         provision = """
 import json, sys
 from pathlib import Path
-from ciq_api.agent_admission import FakeEpochPin, FakeReceiptJournal
-FakeReceiptJournal.provision(Path('/run/ciq-agent-receipts/journal-parent/retained'),
-                             FakeEpochPin.model_validate(json.loads(sys.argv[1])))
+from uuid import uuid4
+from ciq_api.agent_admission import FakeCheckpoint, FakeEpochPin, FakeReceiptJournal
+journal = FakeReceiptJournal.provision(Path('/var/lib/cashlessiq-agent/receipts/retained'),
+                                      FakeEpochPin.model_validate(json.loads(sys.argv[1])))
+receipt = FakeCheckpoint(tenant_id=uuid4(), request_id='SYN-RETAINED',
+                        operation_id=uuid4(), submission_id=uuid4(), digest='a' * 64)
+journal.prepare(receipt)
+journal.issue(receipt)
 """
         result = subprocess.run([str(PYTHON), "-I", "-B", "-c", provision, json.dumps(epoch)],
                                 user=ACCOUNTS[2][1], group=ACCOUNTS[2][1], extra_groups=[],
@@ -453,6 +460,17 @@ FakeReceiptJournal.provision(Path('/run/ciq-agent-receipts/journal-parent/retain
         if not socket_path.is_socket() or hashlib.sha256(journal.read_bytes()).digest() != original:
             raise RuntimeError("Receipt stale restart mutated retained state")
         print("PASS: installed receipt refuses stale endpoint without reset or adoption")
+        # Recreate only the quiescent temporary receipt runtime, as after /run
+        # loss. The original persistent journal must reopen without provisioning.
+        shutil.rmtree(policy.PLANS[2])
+        policy.PLANS[2].mkdir(mode=0o755)
+        ipc.mkdir(mode=0o755)
+        os.chown(ipc, ACCOUNTS[2][1], ACCOUNTS[2][1])
+        stage(FILES[2], ACCOUNTS[2][1], plan_values("receipt", password, epoch), None, password)
+        execute(units[2][0], "receipt", ready=True)
+        if not socket_path.is_socket() or hashlib.sha256(journal.read_bytes()).digest() != original:
+            raise RuntimeError("Receipt runtime recreation changed persistent history")
+        print("PASS: installed receipt reopens original journal after temporary runtime loss")
         if sink.results != [True, True]:
             raise RuntimeError("Unexpected authentication activity during private plan acceptance")
     finally:

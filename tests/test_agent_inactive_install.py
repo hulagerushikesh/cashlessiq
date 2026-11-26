@@ -10,7 +10,8 @@ import pytest
 from scripts import install_agent_inactive as installer
 
 
-@pytest.mark.parametrize("path", ["/run/ciq-agent-receipts", "/run/ciq-agent-supervisor"])
+@pytest.mark.parametrize("path", ["/run/ciq-agent-receipts", "/run/ciq-agent-supervisor",
+                                  "/var/lib/cashlessiq-agent"])
 def test_existing_private_state_refused_including_dangling_receipt_path(monkeypatch, path):
     def missing(_):
         raise KeyError

@@ -44,5 +44,5 @@ LockPersonality=yes
 RestrictNamespaces=yes
 RestrictAddressFamilies=AF_UNIX AF_INET
 IPAddressDeny=any
-ReadWritePaths=/run/ciq-agent-receipts/ipc /run/ciq-agent-receipts/journal-parent/retained
+ReadWritePaths=/run/ciq-agent-receipts/ipc /var/lib/cashlessiq-agent/receipts/retained
 InaccessiblePaths=-/run/ciq-agent-claim -/run/ciq-agent-custody

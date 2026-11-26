@@ -42,8 +42,10 @@ download. Real target-OS installation, source/import checks, inactivity and clea
 pass the Debian job at `f9d063b`; both the Ubuntu package regression and complete
 installed-service journey also pass. All ten jobs passed. Fresh locked account and
 static-unit preparation now passes actual Debian CI account/unit creation,
-repeat refusal and cleanup, with no activation. Retained storage, Debian systemd execution acceptance and
-live agent calls remain unfinished.
+repeat refusal and cleanup, with no activation. All ten jobs passed. The synthetic
+journal now uses a fixed `/var/lib` path, with fresh private storage preparation
+and no temporary-path fallback. Actual volume/reboot retention, reviewed journal
+handoff, Debian systemd execution acceptance and live agent calls remain unfinished.
 
 ## How close is a private live MVP?
 

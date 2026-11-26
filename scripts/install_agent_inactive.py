@@ -17,6 +17,7 @@ from scripts import package_agent_python as python_bundle
 
 release = python_bundle.release
 INSTALL = Path("/opt/cashlessiq-agent")
+STORAGE = Path("/var/lib/cashlessiq-agent")
 ROLES = ("claim", "custody", "receipt")
 ACCOUNTS = (("ciq-agent-clinical", 53001), ("ciq-agent-custody", 53002),
             ("ciq-agent-receipt", 53003))
@@ -39,7 +40,7 @@ def inactive():
                 continue
             raise ValueError(ERROR)
     paths = [*(Path("/run") / ("ciq-agent-" + role) for role in ROLES),
-             Path("/run/ciq-agent-receipts"), Path("/run/ciq-agent-supervisor")]
+             Path("/run/ciq-agent-receipts"), Path("/run/ciq-agent-supervisor"), STORAGE]
     for parent in ("/etc/systemd/system", "/run/systemd/system",
                    "/usr/lib/systemd/system", "/lib/systemd/system"):
         paths.extend(Path(parent) / f"ciq-agent-{role}.service" for role in ROLES)

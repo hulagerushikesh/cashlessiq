@@ -17,6 +17,7 @@ SOURCES = ROOT / "deploy/agent-controller/systemd"
 ROLES = ("claim", "custody", "receipt")
 PLANS = (Path("/run/ciq-agent-claim"), Path("/run/ciq-agent-custody"),
          Path("/run/ciq-agent-receipts"))
+STORAGE = Path("/var/lib/cashlessiq-agent")
 
 
 def guard():
@@ -29,7 +30,7 @@ def guard():
         raise SystemExit("Disposable systemd host required")
     if not Path("/sys/fs/cgroup/cgroup.controllers").is_file():
         raise SystemExit("Unified cgroup resource control required")
-    if any(path.exists() or path.is_symlink() for path in PLANS):
+    if any(path.exists() or path.is_symlink() for path in (*PLANS, STORAGE)):
         raise SystemExit("Refusing existing agent runtime paths")
     for uid in range(53001, 53004):
         for lookup in (pwd.getpwuid, grp.getgrgid):
@@ -154,8 +155,10 @@ def main():
         for path in PLANS:
             path.mkdir(mode=0o755)
             paths.append(path)
-        for leaf in ("ipc", "journal-parent/retained"):
-            (PLANS[2] / leaf).mkdir(parents=True)
+        (PLANS[2] / "ipc").mkdir()
+        STORAGE.mkdir(mode=0o755)
+        paths.append(STORAGE)
+        (STORAGE / "receipts/retained").mkdir(parents=True)
         for index, role in enumerate(ROLES):
             # Current systemd also requires NSS records for fixed numeric UIDs.
             # Create no home/password; retire only these invocation-owned names.

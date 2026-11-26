@@ -18,7 +18,7 @@ from ciq_api.agent_receipt_peer import FakeReceiptPeer
 
 PLAN = Path("/run/ciq-agent-receipts/peer.json")
 SOCKET = Path("/run/ciq-agent-receipts/ipc/peer.sock")
-JOURNAL = Path("/run/ciq-agent-receipts/journal-parent/retained")
+JOURNAL = Path("/var/lib/cashlessiq-agent/receipts/retained")
 MAX_PLAN = 2048
 MAX_CONNECTIONS = 32
 IDLE_SECONDS = 10

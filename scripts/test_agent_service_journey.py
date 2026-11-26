@@ -157,8 +157,10 @@ def _installed_services(lease):
         for path in policy.PLANS:
             path.mkdir(mode=0o755)
             paths.append(path)
-        for leaf, mode in (("ipc", 0o755), ("journal-parent", 0o700)):
-            path = policy.PLANS[2] / leaf
+        policy.STORAGE.mkdir(mode=0o755)
+        paths.append(policy.STORAGE)
+        for path, mode in ((policy.PLANS[2] / "ipc", 0o755),
+                           (policy.STORAGE / "receipts", 0o700)):
             path.mkdir(mode=mode)
             os.chown(path, packages.ACCOUNTS[2][1], packages.ACCOUNTS[2][1])
         for role in policy.ROLES:
@@ -224,7 +226,7 @@ def provision(epoch):
 import json, sys
 from pathlib import Path
 from ciq_api.agent_admission import FakeEpochPin, FakeReceiptJournal
-FakeReceiptJournal.provision(Path('/run/ciq-agent-receipts/journal-parent/retained'),
+FakeReceiptJournal.provision(Path('/var/lib/cashlessiq-agent/receipts/retained'),
                              FakeEpochPin.model_validate(json.load(sys.stdin)))
 """
     uid = packages.ACCOUNTS[2][1]

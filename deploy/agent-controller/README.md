@@ -230,8 +230,40 @@ are host preparation, not permission to activate an executor. The disposable Deb
 job at `695801c` [passes actual account/unit creation, repeat refusal and owned cleanup](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45851635029/job/140019216152).
 That job's PID 1 is not systemd, so it does not prove Debian service execution.
 The existing Ubuntu package and complete installed-service journey also pass at
-that revision. The previous runtime-installer workflow completed all ten jobs.
-Retained receipt storage and governed live integration remain unfinished.
+that revision. All ten jobs in that workflow passed.
+
+### Persistent receipt namespace
+
+Fresh host setup now also prepares `/var/lib/cashlessiq-agent` (root-owned 0755)
+and its `receipts` directory (receipt UID/GID 53003, 0700), syncing the new names
+before writing the disabled `agent-inactive-host-v2` completion receipt. Existing
+storage, including dangling links, is refused by both inactive installers. Partial
+storage is preserved on failure; no ownership repair, adoption or deletion occurs.
+No journal, epoch, grant, plan or socket is created by this operation.
+
+The fixed synthetic journal location is now
+`/var/lib/cashlessiq-agent/receipts/retained/fake-receipts.sqlite3`; plans and IPC
+remain in `/run`. The receipt service can write only the existing retained
+directory and its temporary IPC directory. Clinical/custody services cannot
+access the persistent storage tree. Journal provisioning remains an explicit
+trusted operation for a reviewed fake epoch; it now syncs both the new journal
+directory and its parent. The runner only opens an existing private journal.
+Old `/run` journals are not migrated or used as fallback: preserve any existing
+history and complete a quiescent reviewed handoff before selecting this revision.
+
+The target operator must place `/var/lib/cashlessiq-agent` on reboot-persistent
+storage and retain its original history independently of product database restore
+and runtime teardown. Never delete it to clear an error, make room for another
+epoch or restart a submission. Retirement does not authorize disposal. Review
+unresolved attempts and retention before any eventual archival/removal; there is
+no automatic expiry or garbage collection. SQLite's existing 30-receipt/256-KiB
+bounds still apply. A full or uncertain journal denies further work.
+
+Disposable CI checks fresh directory ownership and runtime-loss/reopen behavior.
+It does not prove persistence through a real host reboot or volume loss. This is
+same-host storage, not an independent off-host backup or rollback authority.
+Volume retention/reboot acceptance, Debian systemd execution, reviewed journal
+delivery and governed live integration remain open. No cloud setup is included.
 
 ## Offline interpreter archive preparation
 

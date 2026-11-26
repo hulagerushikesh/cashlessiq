@@ -89,8 +89,10 @@ def preflight(revision, digest):
     runtime.inactive()  # Includes all account name/UID/GID collisions.
     for path in PRIVATE:
         absent(path)
-    for path in (Path("/etc"), Path("/etc/systemd"), UNITS, runtime.INSTALL):
+    for path in (Path("/etc"), Path("/etc/systemd"), UNITS, runtime.INSTALL,
+                 Path("/var"), Path("/var/lib")):
         protected(path)
+    absent(runtime.STORAGE)
     absent(runtime.INSTALL / "agent-host.json")
     absent(runtime.INSTALL / ".host-units")
     fresh_units()
@@ -139,6 +141,34 @@ def identities():
         require(not any(name in g.gr_mem for g in runtime.grp.getgrall()))
 
 
+def sync_directory(path):
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def prepare_storage():
+    """Fresh persistent namespace only; never initialize or adopt a journal."""
+    root = runtime.STORAGE
+    root.mkdir(mode=0o755)  # No parents/exist_ok: partial or retained state refuses.
+    root.chmod(0o755)
+    protected(root)
+    parent = root / "receipts"
+    parent.mkdir(mode=0o700)
+    parent.chmod(0o700)
+    uid = runtime.ACCOUNTS[2][1]
+    os.chown(parent, uid, uid)
+    info = parent.lstat()
+    require(stat.S_ISDIR(info.st_mode) and info.st_uid == info.st_gid == uid
+            and stat.S_IMODE(info.st_mode) == 0o700 and not any(parent.iterdir()))
+    # Persist names/ownership before a completion receipt. The trusted operator
+    # must supply a reboot-persistent volume; /var/lib is not an off-host backup.
+    for path in (parent, root, root.parent):
+        sync_directory(path)
+
+
 def prepare(revision, digest):
     units = preflight(revision, digest)  # Complete read-only review before mutations.
     for name, uid in runtime.ACCOUNTS:
@@ -168,15 +198,22 @@ def prepare(revision, digest):
     for path in PRIVATE:
         absent(path)
     manager_inactive()
+    prepare_storage()
     receipt = runtime.release.canonical({
-        "schema": "agent-inactive-host-v1", "revision": revision,
+        "schema": "agent-inactive-host-v2", "revision": revision,
         "wheel_manifest_sha256": digest, "activation": "disabled",
         "identities": dict(runtime.ACCOUNTS),
         "units": {name: runtime.release.review.sha256(data) for name, data in units.items()},
+        "storage": {"root": str(runtime.STORAGE),
+                    "receipt_parent": str(runtime.STORAGE / "receipts"),
+                    "receipt_uid": runtime.ACCOUNTS[2][1], "journal": "absent"},
     })
     with (runtime.INSTALL / "agent-host.json").open("xb") as stream:
         stream.write(receipt)
-    (runtime.INSTALL / "agent-host.json").chmod(0o644)
+        os.fchmod(stream.fileno(), 0o644)
+        stream.flush()
+        os.fsync(stream.fileno())
+    sync_directory(runtime.INSTALL)
     # Keep reviewed staging bytes. Never reload/start/enable/unmask any unit,
     # create a plan/socket/journal, make grants, or delete partial host state.
 

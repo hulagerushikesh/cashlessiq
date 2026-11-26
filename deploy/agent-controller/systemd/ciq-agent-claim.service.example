@@ -46,4 +46,4 @@ RestrictAddressFamilies=AF_UNIX AF_INET
 IPAddressDeny=any
 IPAddressAllow=127.0.0.1/32
 ReadOnlyPaths=/run/ciq-agent-claim
-InaccessiblePaths=-/run/ciq-agent-custody -/run/ciq-agent-receipts
+InaccessiblePaths=-/run/ciq-agent-custody -/run/ciq-agent-receipts -/var/lib/cashlessiq-agent

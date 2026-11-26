@@ -71,6 +71,8 @@ def test_existing_identity_blocks_inactive_receipt(monkeypatch, inactive, index)
 @pytest.mark.parametrize("path,symlink", [
     ("/run/ciq-agent-claim", False),
     ("/run/ciq-agent-supervisor", False),
+    ("/var/lib/cashlessiq-agent", False),
+    ("/var/lib/cashlessiq-agent", True),
     ("/etc/systemd/system/ciq-agent-claim.service", False),
     ("/run/systemd/system/ciq-agent-custody.service", True),
     ("/usr/lib/systemd/system/ciq-agent-receipt.service", True),

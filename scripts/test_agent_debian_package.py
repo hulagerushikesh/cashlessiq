@@ -44,7 +44,7 @@ def verify_inactive():
             except KeyError:
                 continue
             raise ValueError(ERROR)
-    paths = [*packages.policy.PLANS, Path("/run/ciq-agent-supervisor")]
+    paths = [*packages.policy.PLANS, Path("/run/ciq-agent-supervisor"), installer.STORAGE]
     for parent in ("/etc/systemd/system", "/run/systemd/system",
                    "/usr/lib/systemd/system", "/lib/systemd/system"):
         paths.extend(Path(parent) / f"ciq-agent-{role}.service" for role in packages.policy.ROLES)
@@ -89,9 +89,16 @@ def main():
         else:
             raise ValueError(ERROR)
         print("PASS: fresh Debian locked identities and static units prepared without activation")
+        info = (installer.STORAGE / "receipts").lstat()
+        require(info.st_uid == info.st_gid == installer.ACCOUNTS[2][1]
+                and info.st_mode & 0o7777 == 0o700
+                and not any((installer.STORAGE / "receipts").iterdir()))
+        require(not (installer.STORAGE / "receipts/retained").exists())
+        print("PASS: fresh persistent receipt namespace prepared without journal authority")
         # Only the fixture's fresh identities/units; never an operator uninstall.
         for role in installer.ROLES:
             (host.UNITS / f"ciq-agent-{role}.service").unlink()
+        shutil.rmtree(installer.STORAGE)  # Only this fresh empty CI fixture.
         for name, _uid in reversed(installer.ACCOUNTS):
             host.run("/usr/sbin/userdel", name)
             host.run("/usr/sbin/groupdel", name, allowed=(0, 6))  # userdel may remove its group.

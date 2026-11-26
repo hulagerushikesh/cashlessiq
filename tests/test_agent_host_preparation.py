@@ -84,7 +84,7 @@ def test_manager_requires_missing_inactive_process_free_units(monkeypatch, fault
             host.manager_inactive(missing=True)
 
 
-@pytest.mark.parametrize("failure", [None, "accounts", "analyze", "postflight"])
+@pytest.mark.parametrize("failure", [None, "accounts", "analyze", "postflight", "storage"])
 def test_fresh_preparation_writes_only_reviewed_units_and_late_receipt(
     tmp_path, monkeypatch, failure,
 ):
@@ -98,6 +98,10 @@ def test_fresh_preparation_writes_only_reviewed_units_and_late_receipt(
     monkeypatch.setattr(host, "preflight", lambda *_: expected)
     monkeypatch.setattr(host, "protected", lambda *_: None)
     monkeypatch.setattr(host, "identities", lambda: None)
+    def storage():
+        if failure == "storage":
+            raise ValueError(host.ERROR)
+    monkeypatch.setattr(host, "prepare_storage", storage)
     monkeypatch.setattr(host, "fresh_units", lambda: None)
     monkeypatch.setattr(host, "absent", lambda p: pytest.fail("Unexpected private state")
                         if p.exists() or p.is_symlink() else None)
@@ -136,6 +140,8 @@ def test_fresh_preparation_writes_only_reviewed_units_and_late_receipt(
         host.prepare("a" * 40, "b" * 64)
         receipt = json.loads((root / "agent-host.json").read_bytes())
         assert receipt["activation"] == "disabled"
+        assert receipt["schema"] == "agent-inactive-host-v2"
+        assert receipt["storage"]["journal"] == "absent"
         assert receipt["identities"] == dict(host.runtime.ACCOUNTS)
         assert receipt["units"] == {n: host.runtime.release.review.sha256(v)
                                     for n, v in expected.items()}
@@ -211,3 +217,63 @@ def test_install_receipt_mismatch_refuses_before_installed_code_or_host_mutation
     monkeypatch.setattr(host, "run", lambda *_a, **_k: pytest.fail("Host mutated"))
     with pytest.raises(ValueError, match=host.ERROR):
         host.prepare("a" * 40, "b" * 64)
+
+
+@pytest.mark.parametrize("failure", [None, "owner", "sync"])
+def test_persistent_namespace_has_private_receipt_owner_and_retains_partial_state(
+    tmp_path, monkeypatch, failure,
+):
+    root = tmp_path / "persistent"
+    parent = root / "receipts"
+    monkeypatch.setattr(host.runtime, "STORAGE", root)
+    monkeypatch.setattr(host, "protected", lambda p: None)
+    calls = []
+    monkeypatch.setattr(host.os, "chown", lambda p, u, g: calls.append((p, u, g)))
+    original = Path.lstat
+
+    def details(path, *args, **kwargs):
+        item = original(path, *args, **kwargs)
+        if path == parent:
+            return SimpleNamespace(st_mode=item.st_mode, st_uid=53003,
+                                   st_gid=53002 if failure == "owner" else 53003)
+        return item
+
+    monkeypatch.setattr(Path, "lstat", details)
+    synced = []
+
+    def sync(path):
+        synced.append(path)
+        if failure == "sync":
+            raise OSError("private diagnostic")
+
+    monkeypatch.setattr(host, "sync_directory", sync)
+    if failure:
+        with pytest.raises((ValueError, OSError)):
+            host.prepare_storage()
+    else:
+        host.prepare_storage()
+        assert synced == [parent, root, root.parent]
+    assert stat.S_IMODE(original(root).st_mode) == 0o755
+    assert stat.S_IMODE(original(parent).st_mode) == 0o700
+    assert calls == [(parent, 53003, 53003)] and not list(parent.iterdir())
+    # No journal/epoch creation, adoption, repair or partial rollback.
+    with pytest.raises(FileExistsError):
+        host.prepare_storage()
+
+
+@pytest.mark.parametrize("kind", ["retained", "dangling"])
+def test_existing_storage_is_never_followed_replaced_or_reowned(tmp_path, monkeypatch, kind):
+    root = tmp_path / "persistent"
+    monkeypatch.setattr(host.runtime, "STORAGE", root)
+    monkeypatch.setattr(host.os, "chown", lambda *_: pytest.fail("owner changed"))
+    if kind == "retained":
+        root.mkdir()
+        (root / "owner-receipts").write_bytes(b"retained")
+    else:
+        root.symlink_to(tmp_path / "missing-owner-storage")
+    with pytest.raises(FileExistsError):
+        host.prepare_storage()
+    if kind == "retained":
+        assert (root / "owner-receipts").read_bytes() == b"retained"
+    else:
+        assert root.is_symlink()
