@@ -38,7 +38,9 @@ Debian job and both Ubuntu installed-package/service journeys at `222b484`; the
 three-file downloaded archive bundle also verifies locally without installation.
 All ten interpreter workflow jobs have now passed. An offline inactive Debian
 installer now uses pip from that pinned interpreter without an additional tool
-download. Its real installation is awaiting CI. Identity/unit/private-storage
+download. Real target-OS installation, source/import checks, inactivity and cleanup
+pass the Debian job at `f9d063b`; both the Ubuntu package regression and complete
+installed-service journey also pass. Broader CI is still running. Identity/unit/private-storage
 acceptance and live agent calls remain unfinished.
 
 ## How close is a private live MVP?

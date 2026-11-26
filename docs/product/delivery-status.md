@@ -15,9 +15,12 @@ pinned interpreter, a private snapshot of verified requirements/wheels, bounded
 filtered extraction and post-install source/import checks. It creates no accounts,
 units, private inputs, database state or provider calls. Existing installations
 are refused; partial failures are retained with no completion receipt. All 72
-focused installer/release/interpreter/Debian checks and changed-file Ruff pass;
-real target-OS installation is awaiting CI. The previous interpreter workflow
-passed all ten jobs. Docker and paid resources stay off. Inactive artifact
+focused installer/release/interpreter/Debian checks and changed-file Ruff pass.
+At `f9d063b`, the [Debian target-OS installation](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45846780384/job/140002405176)
+passes a real install from exported artifacts, installed-code/import probes,
+inactive checks and owned cleanup. Both the [Ubuntu package](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45846780384/job/140002405214)
+and [complete installed-service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45846780384/job/140002405230)
+also pass. Broader CI is still running. The previous interpreter workflow passed all ten jobs. Docker and paid resources stay off. Inactive artifact
 installation does not finish identity/unit/private-retention or live-agent work.
 
 ### Retained offline interpreter archive — 26 November

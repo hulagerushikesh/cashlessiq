@@ -187,8 +187,12 @@ are hardened, the inactive-state checks repeat, and `agent-install.json` is writ
 last with the selected revision and artifact hashes. A failure retains its fresh
 partial tree without a completion receipt or automatic repair. The private wheel
 snapshot is removed after successful dependency installation; original inputs are
-unchanged. Target-OS execution of this installer is awaiting CI acceptance. This
-finishes only inactive runtime artifact installation; identities, units, private
+unchanged. At `f9d063b`, the
+[Debian 12 job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45846780384/job/140002405176)
+passes a real second installation from the exported artifacts using this installer,
+then verifies inactivity and removes the owned runtime. The normal Ubuntu package
+job and complete installed-service journey also pass. This finishes only inactive
+runtime artifact installation; identities, units, private
 inputs, independent retention and Debian systemd acceptance remain separate.
 
 ## Offline interpreter archive preparation
