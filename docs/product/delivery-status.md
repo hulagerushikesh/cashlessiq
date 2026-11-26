@@ -19,8 +19,8 @@ public wheel release for one day after successful inactive installation.
 All 145 focused checks, changed-file Ruff and workflow YAML parsing pass.
 The previous committed-source workflow completed all ten jobs successfully.
 At `623c43c`, the [Debian artifact job](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027/job/139949783732)
-and both Ubuntu package/service journeys pass with the same release manifest
-digest. The downloaded artifact also verifies independently: 34 wheels, 37 files,
+and both Ubuntu package/service journeys pass with their generated releases.
+The downloaded Debian artifact also verifies independently: 34 wheels, 37 files,
 20,442,487 bytes. Broader CI is still running. Interpreter/tool
 bootstrap, inactive host installation and Debian service acceptance remain open;
 the bundle enables no live provider or service. Docker and paid resources stay off.

@@ -29,7 +29,7 @@ The previous committed-source workflow passed all ten jobs. At `623c43c`, the
 [Debian installation/export](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027/job/139949783732),
 [Ubuntu package](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027/job/139949783677)
 and [complete service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45831682027/job/139949783805)
-all pass with the same release manifest digest. The downloaded artifact also
+all pass with their generated releases. The downloaded Debian artifact also
 passes independent offline verification: 34 wheels, 37 files, 20,442,487 bytes.
 The default uv build sidecar is suppressed; strict input inventory is retained.
 Broader CI is still running at this checkpoint. This is a complete wheel set; pinned
