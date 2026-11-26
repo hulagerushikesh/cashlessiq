@@ -29,6 +29,12 @@ def elapsed():
     return time.clock_gettime_ns(time.CLOCK_BOOTTIME)
 
 
+def expire(operation):
+    # Wait past the actual operation deadline. A fixed 70-ms sleep coupled to
+    # a 50-ms budget also made successful assertions depend on CI scheduling.
+    time.sleep(max(0, operation.deadline_ns - elapsed()) / 1e9 + 0.02)
+
+
 def command(*arguments):
     return [
         sys.executable,
@@ -117,7 +123,7 @@ class Harness:
         )
         self.controller = OfflineSupervisor(
             self.services,
-            Limits(10_000_000_000, 50_000_000, 3_000_000_000, 30_000_000_000, 2, 64),
+            Limits(10_000_000_000, 1_000_000_000, 3_000_000_000, 30_000_000_000, 2, 64),
             "test-boot",
             approval=TestApproval(),
             verify=lambda services: services == self.services,
@@ -173,7 +179,7 @@ def lifecycle():
         denied(lambda: h.controller.complete(first))
         late, p = h.job()
         # Actual elapsed time, not a fabricated clock jump.
-        time.sleep(0.07)
+        expire(late)
         denied(lambda: h.controller.complete(late))
         assert p.escalated and p.process.returncode == -signal.SIGKILL
         assert h.controller.active_count == 0
@@ -219,7 +225,7 @@ def unknown_termination():
         h.start()
         operation, p = h.job()
         h.cancel_confirmed = False
-        time.sleep(0.07)
+        expire(operation)
         denied(lambda: h.controller.complete(operation))
         assert h.controller.state is State.FENCED
         assert h.controller.active_count == 1
