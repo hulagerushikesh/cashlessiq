@@ -146,7 +146,7 @@ def prepare(revision, digest):
         run("/usr/sbin/useradd", "--system", "--uid", str(uid), "--gid", str(uid),
             "--no-user-group", "--no-create-home", "--no-log-init",
             "--home-dir", "/nonexistent", "--shell", "/usr/sbin/nologin", "--password", "!",
-            "--key", "CREATE_MAIL_SPOOL=no", "--key", "SUB_UID_COUNT=0",
+            "--key", "SUB_UID_COUNT=0",
             "--key", "SUB_GID_COUNT=0", name)
     identities()
     stage = runtime.INSTALL / ".host-units"
