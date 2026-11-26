@@ -107,14 +107,14 @@ def main():
         # arbitrary subprocess diagnostics or attempt to adopt/repair a runtime.
         # A fixed source location permits diagnosis without exception values,
         # account/tool output, file contents or interpreter frame locals.
-        frame, location = error.__traceback__, None
+        frame, locations = error.__traceback__, []
         while frame is not None:
             name = Path(frame.tb_frame.f_code.co_filename).name
             if name in {"test_agent_debian_package.py", "prepare_agent_host.py",
                         "install_agent_inactive.py"}:
-                location = (name, frame.tb_lineno)
+                locations.append((name, frame.tb_lineno))
             frame = frame.tb_next
-        if location:
+        for location in locations[-8:]:
             print(f"FAIL: inactive Debian preparation at {location[0]}:{location[1]}", flush=True)
         raise SystemExit(ERROR) from None
 
