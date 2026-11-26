@@ -260,6 +260,11 @@ no automatic expiry or garbage collection. SQLite's existing 30-receipt/256-KiB
 bounds still apply. A full or uncertain journal denies further work.
 
 Disposable CI checks fresh directory ownership and runtime-loss/reopen behavior.
+At `7bb11b5`, the [Debian preparation](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45855935241/job/140034187210),
+[installed-package/runtime-loss check](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45855935241/job/140034186769)
+and [complete installed-service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45855935241/job/140034187227)
+pass, as do the restricted peer/database and supervision jobs. The runtime-loss
+check preserves the exact original file including an issued receipt.
 It does not prove persistence through a real host reboot or volume loss. This is
 same-host storage, not an independent off-host backup or rollback authority.
 Volume retention/reboot acceptance, Debian systemd execution, reviewed journal

@@ -22,8 +22,21 @@ Clinical/custody units cannot access this tree. Journal provisioning also syncs
 the newly created directory's parent. No migration, fallback, reset or disposal
 is automatic. The installed-package CI fixture now recreates temporary receipt
 runtime and requires the original journal, including an issued receipt, to reopen
-with unchanged bytes. All 228 focused offline checks and changed-file Ruff pass;
-Linux acceptance is pending.
+with unchanged bytes. All 228 focused offline checks and changed-file Ruff pass.
+At `7bb11b5`, [nine product jobs pass](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45855935241),
+including Debian preparation, service supervision, installed packages, full
+HTTP-to-service journeys and restricted peer/database acceptance. The older
+combined-peer harness needed a fixed-path update and a bounded CI-only tmpfs;
+its memory/process/network limits remain unchanged. Superseded runs were
+cancelled. The unrelated foundation containment probe failed its lifecycle
+scenario twice, including a failed-job-only retry. Its successful-path window
+was only 50 ms. At `475099f`, the test-only window is one second and expiry cases
+wait past the actual operation deadline; production code/limits are unchanged.
+Ten focused offline containment checks pass, and all five actual Linux process
+scenarios [pass the revised foundation step](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45857170098/job/140038460128).
+Broader CI remains in progress with no failures at this checkpoint.
+The [private owner preview](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45855935188)
+also passes.
 Real volume/reboot retention, reviewed journal handoff and live source/provider
 integration remain open. Docker and paid resources stay off.
 
