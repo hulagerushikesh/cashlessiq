@@ -40,8 +40,10 @@ All ten interpreter workflow jobs have now passed. An offline inactive Debian
 installer now uses pip from that pinned interpreter without an additional tool
 download. Real target-OS installation, source/import checks, inactivity and cleanup
 pass the Debian job at `f9d063b`; both the Ubuntu package regression and complete
-installed-service journey also pass. Broader CI is still running. Identity/unit/private-storage
-acceptance and live agent calls remain unfinished.
+installed-service journey also pass. All ten jobs passed. Fresh locked account and
+static-unit preparation is now implemented, with no activation; Debian CI
+acceptance is pending. Retained storage, Debian systemd execution acceptance and
+live agent calls remain unfinished.
 
 ## How close is a private live MVP?
 

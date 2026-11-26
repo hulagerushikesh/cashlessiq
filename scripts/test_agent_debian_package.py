@@ -1,4 +1,4 @@
-"""Disposable Debian 12 CI: install artifacts only, without agent activation."""
+"""Disposable Debian 12 CI: offline runtime and fresh host setup, never activation."""
 
 import os
 import platform
@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from scripts import install_agent_inactive as installer
+from scripts import prepare_agent_host as host
 from scripts import test_agent_service_packages as packages
 
 ERROR = "Inactive Debian agent installation unconfirmed"
@@ -20,7 +21,7 @@ def require(value):
 
 def guard():
     # A separate container job, never a way to bypass the systemd fixture guard
-    # on an operator machine. It installs no accounts, units or private plans.
+    # on an operator machine. It never starts services or creates private plans.
     require(sys.platform == "linux" and os.geteuid() == 0
             and os.environ.get("GITHUB_ACTIONS") == "true"
             and os.environ.get("GITHUB_REPOSITORY") == "hulagerushikesh/cashlessiq"
@@ -74,7 +75,28 @@ def main():
         installer.install(output, python_output, revision, digest)
         verify_inactive()
         print("PASS: inactive host installer consumed only offline verified artifacts")
-        # These are fresh artifact-only directories. No services were launched,
+        host.prepare(revision, digest)
+        host.identities()
+        for role in installer.ROLES:
+            unit = host.UNITS / f"ciq-agent-{role}.service"
+            source = packages.release.review.committed_files(revision)[
+                f"deploy/agent-controller/systemd/ciq-agent-{role}.service.example"]
+            require(unit.read_bytes() == source)
+        try:
+            host.prepare(revision, digest)
+        except ValueError:
+            pass
+        else:
+            raise ValueError(ERROR)
+        print("PASS: fresh Debian locked identities and static units prepared without activation")
+        # Only the fixture's fresh identities/units; never an operator uninstall.
+        for role in installer.ROLES:
+            (host.UNITS / f"ciq-agent-{role}.service").unlink()
+        for name, _uid in reversed(installer.ACCOUNTS):
+            host.run("/usr/sbin/userdel", name)
+            host.run("/usr/sbin/groupdel", name, allowed=(0, 6))  # userdel may remove its group.
+        verify_inactive()
+        # These are fresh invocation-owned directories. No services were launched,
         # no database was contacted, and no private credential/receipt was made.
         shutil.rmtree(packages.INSTALL)
         shutil.rmtree(base)

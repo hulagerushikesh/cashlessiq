@@ -192,8 +192,44 @@ unchanged. At `f9d063b`, the
 passes a real second installation from the exported artifacts using this installer,
 then verifies inactivity and removes the owned runtime. The normal Ubuntu package
 job and complete installed-service journey also pass. This finishes only inactive
-runtime artifact installation; identities, units, private
-inputs, independent retention and Debian systemd acceptance remain separate.
+runtime artifact installation. All ten jobs in that workflow passed. Inactive
+host identity/unit setup is described below; private inputs, independent retention
+and Debian systemd execution acceptance remain separate.
+
+## Inactive host identities and static units
+
+After the successful offline installation, from the same trusted reviewed checkout:
+
+```sh
+sudo /trusted/python3.11 -m scripts.prepare_agent_host --revision FULL_COMMIT_SHA --manifest-sha256 INDEPENDENT_WHEEL_BUILD_RECEIPT_SHA256
+```
+
+This separate fresh-host operation creates three locked, noninteractive accounts
+with fixed UID/GIDs 53001–53003, no home creation, no supplementary groups and no
+subordinate ID allocation. It installs the three exact Git-reviewed manual unit
+files in `/etc/systemd/system`, after `systemd-analyze verify`. The installed
+runtime must be root-owned and protected, with a matching disabled installation
+receipt and source/import checks. Host Python 3.11, Debian's `passwd` and `systemd`
+packages and a clean administrator environment are prerequisites. Offline image
+preparation works without a running system manager; on a systemd host, exact-unit
+state checks must show no prior loaded unit/process/job before mutation and no
+active unit/process/job after delivery.
+
+Existing identities, unit files/aliases, hierarchical drop-ins, boot dependency
+links, private runtime paths and partial setup are refused. Exclude concurrent
+privileged changes: this trusts root and the OS tools, and does not defend against
+another administrator changing accounts, unit dependencies or permissions later.
+Failures preserve partial accounts/files for review; there is no automatic
+adoption, repair, retry or uninstall. `agent-host.json` is written last only after
+identity/file/state checks. Reviewed staging bytes remain under the installation.
+
+The command never calls daemon-reload/start/enable/unmask, creates no private plan,
+credential, socket or receipt journal, and changes no database/provider authority.
+The units have no installation/startup hooks. Locked accounts and static files
+are host preparation, not permission to activate an executor. The disposable Debian
+job exercises actual account/unit creation, repeat refusal and owned cleanup;
+that job's PID 1 is not systemd, so it does not prove Debian service execution.
+Retained receipt storage and governed live integration remain unfinished.
 
 ## Offline interpreter archive preparation
 

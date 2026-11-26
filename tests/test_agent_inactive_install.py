@@ -10,6 +10,20 @@ import pytest
 from scripts import install_agent_inactive as installer
 
 
+@pytest.mark.parametrize("path", ["/run/ciq-agent-receipts", "/run/ciq-agent-supervisor"])
+def test_existing_private_state_refused_including_dangling_receipt_path(monkeypatch, path):
+    def missing(_):
+        raise KeyError
+
+    for owner, name in ((installer.pwd, "getpwnam"), (installer.pwd, "getpwuid"),
+                        (installer.grp, "getgrnam"), (installer.grp, "getgrgid")):
+        monkeypatch.setattr(owner, name, missing)
+    monkeypatch.setattr(Path, "exists", lambda _: False)
+    monkeypatch.setattr(Path, "is_symlink", lambda p: str(p) == path)
+    with pytest.raises(ValueError, match=installer.ERROR):
+        installer.inactive()
+
+
 @pytest.mark.parametrize("platform,uid", [("darwin", 0), ("linux", 501)])
 def test_unsupported_host_refused_before_input_or_subprocess(monkeypatch, platform, uid):
     monkeypatch.setattr(installer.sys, "platform", platform)

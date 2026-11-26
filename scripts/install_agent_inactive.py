@@ -39,14 +39,14 @@ def inactive():
                 continue
             raise ValueError(ERROR)
     paths = [*(Path("/run") / ("ciq-agent-" + role) for role in ROLES),
-             Path("/run/ciq-agent-supervisor")]
+             Path("/run/ciq-agent-receipts"), Path("/run/ciq-agent-supervisor")]
     for parent in ("/etc/systemd/system", "/run/systemd/system",
                    "/usr/lib/systemd/system", "/lib/systemd/system"):
         paths.extend(Path(parent) / f"ciq-agent-{role}.service" for role in ROLES)
     require(not any(path.exists() or path.is_symlink() for path in paths))
 
 
-def guard():
+def host_guard():
     require(sys.platform == "linux" and os.geteuid() == 0 and hasattr(tarfile, "data_filter"))
     system = platform.freedesktop_os_release()
     require(system.get("ID") == "debian" and system.get("VERSION_ID") == "12"
@@ -54,6 +54,10 @@ def guard():
     for path in (Path("/"), INSTALL.parent):
         info = path.lstat()
         require(stat.S_ISDIR(info.st_mode) and info.st_uid == 0 and not info.st_mode & 0o022)
+
+
+def guard():
+    host_guard()
     require(not INSTALL.exists() and not INSTALL.is_symlink())
     inactive()
 

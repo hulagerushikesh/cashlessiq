@@ -16,7 +16,7 @@ jobs:
         timeout-minutes: 2
         run: |
           apt-get update -qq
-          apt-get install -y --no-install-recommends git ca-certificates
+          apt-get install -y --no-install-recommends git ca-certificates passwd systemd
           rm -rf /var/lib/apt/lists/*
       - uses: actions/checkout@v4
         with:
@@ -25,7 +25,7 @@ jobs:
         with:
           version: '0.11.25'
           enable-cache: false
-      - name: Inactive installed runtime on Debian 12 without agent services
+      - name: Offline runtime and locked static units on Debian 12 without activation
         timeout-minutes: 4
         env:
           CIQ_AGENT_DEBIAN_PACKAGE_TEST: '1'

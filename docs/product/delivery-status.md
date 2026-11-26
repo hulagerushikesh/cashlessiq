@@ -7,6 +7,18 @@ Hackathon submission is finished and is not counted as product delivery.
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [25 November engineering overview](engineering-overview-2026-11-25.md).
 
+### Inactive host identities and units — 26 November
+
+Fresh-host preparation now follows the offline runtime installation: three locked,
+noninteractive accounts and exact reviewed static units, with collision/permission
+checks, offline unit analysis and a completion receipt written last. It performs
+no service activation and creates no private credentials, plans or receipt journal.
+Partial failures are retained without repair or adoption. The Debian fixture now
+exercises actual preparation, repeat refusal and owned cleanup. Local validation
+and the new CI receipt are recorded in the [progress index](progress.md).
+Retained storage, Debian systemd execution and governed live agent integration
+remain next. Docker and paid resources stay off; no owner action is needed yet.
+
 ### Offline inactive installer — 26 November
 
 A fresh Debian runtime installer now consumes the verified Python archive and
@@ -20,7 +32,7 @@ At `f9d063b`, the [Debian target-OS installation](https://github.com/hulagerushi
 passes a real install from exported artifacts, installed-code/import probes,
 inactive checks and owned cleanup. Both the [Ubuntu package](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45846780384/job/140002405214)
 and [complete installed-service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45846780384/job/140002405230)
-also pass. Broader CI is still running. The previous interpreter workflow passed all ten jobs. Docker and paid resources stay off. Inactive artifact
+also pass. All ten jobs passed. The previous interpreter workflow passed all ten jobs. Docker and paid resources stay off. Inactive artifact
 installation does not finish identity/unit/private-retention or live-agent work.
 
 ### Retained offline interpreter archive — 26 November

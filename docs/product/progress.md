@@ -12,6 +12,21 @@ released and the daily usage session closed. Retained storage remains; Docker De
 the [operator guide](../../deploy/gcp-preview/README.md) records operating steps.
 Earlier localhost, eight-hour and preparation-only entries below are historical.
 
+### Inactive host identities and units — 26 November
+
+Fresh Debian host preparation now creates locked service identities and installs
+exact reviewed static units after offline analysis, without starting or enabling
+them. Existing identities, unit/drop-in/boot-link state and private runtime paths
+are refused; root-owned installed inputs and the original artifact receipt must
+match. Failures retain partial state; completion is recorded last. No credentials,
+plans, sockets, journal or database/provider authority are created. The earlier
+runtime guard also now refuses the actual plural `ciq-agent-receipts` path.
+All 70 focused host-preparation/runtime/Debian checks and changed-file Ruff pass.
+The Debian CI fixture exercises actual fresh identities/units, repeat refusal and
+owned cleanup; target acceptance is pending the new run. Previous installer CI
+passed all ten jobs. Retained receipt storage, Debian systemd execution and live
+source/provider integration remain separate. Docker and paid resources stay off.
+
 ### Offline inactive installer — 26 November
 
 A fresh Debian runtime installer now consumes the verified Python archive and
@@ -25,7 +40,7 @@ At `f9d063b`, the [Debian target-OS installation](https://github.com/hulagerushi
 passes a real install from exported artifacts, installed-code/import probes,
 inactive checks and owned cleanup. Both the [Ubuntu package](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45846780384/job/140002405214)
 and [complete installed-service journey](https://github.com/hulagerushikesh/cashlessiq/actions/runs/45846780384/job/140002405230)
-also pass. Broader CI is still running. The previous interpreter workflow passed all ten jobs. Docker and paid resources stay off. Inactive artifact
+also pass. All ten jobs passed. The previous interpreter workflow passed all ten jobs. Docker and paid resources stay off. Inactive artifact
 installation does not finish identity/unit/private-retention or live-agent work.
 
 ### Retained offline interpreter archive — 26 November
