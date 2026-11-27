@@ -71,3 +71,10 @@ Offline tests check strict plans, fixed wiring, existing history only, consumed
 history denial, cleanup and redacted outcomes. Disposable Linux UID tests check
 one receipt endpoint across a provider-sized wait and reject reordered commands
 before mutation. These do not substitute for host acceptance or a paid live call.
+
+The prepared [single-call launch coordinator](agent-single-call-supervision.md)
+now enforces original peer readiness, invocation-bound output, fresh host checks,
+clock/elapsed limits and all-role cleanup through a trusted adapter contract.
+It includes no installed host adapter or activation path. Disposable Linux tests
+compose the actual three runner entries with substituted SQL/HTTPS work; they do
+not establish installed host containment or off-host recovery.
