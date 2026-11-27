@@ -163,6 +163,38 @@ contract/mapping tests; the restore tests are deliberately skipped without the
 explicit disposable CI service. Python lint, whitespace and document links pass.
 GCP stays stopped; no local Docker or Snowflake call was needed.
 
+## Captured product tools — 27 November
+
+[`agent_snapshot_tools.py`](../../apps/api/src/ciq_api/agent_snapshot_tools.py)
+now provides three inactive, pure clinical tool reads for the captured-product
+path: selected case facts, the shared deterministic assessment, and exact owned
+policy clause resolution. Each call requires a freshly supplied server-owned
+`AgentContext`, revalidates the complete capture and its hashes, and rejects
+stale, revoked or unapproved scope. The context is an assertion from the trusted
+caller; these functions do not discover membership or establish authorization.
+
+Replies preserve the full product request namespace, captured remaining cover,
+integer money and uncomputed null payable. They bind the complete input/policy
+revision and content-hashed evidence. Clause lookup returns the exact selected
+title/text/page; unknown IDs cannot fall back to another policy or search index.
+Canonical payload strings prevent nested mutation and are excluded from repr.
+Fixed errors and silent serialization prevent invalid-input diagnostics from
+printing clinical values.
+
+These are labelled captured-product or deterministic tool observations, not
+independently captured Snowflake observations, provider output, citation-quality
+acceptance or a `ValidatedMapping`. They cannot be parsed as agent candidates.
+No HTTP route, tool registration, model request, source lookup, SDK, database,
+credential or worker uses them yet. In particular, the existing legacy Snowflake
+agent cannot call these Python functions without a separately reviewed transport.
+SLA and member-history enrichment remain outside this captured snapshot path.
+
+Offline acceptance covers all thirty golden outcomes/payables, owned clause
+hashes, null/money fidelity, changed wording, revoked/stale scope, corrupted
+captures and unknown clause denial. Live source definitions, service identity,
+provider transport and the account's availability still need verification before
+integration. No Snowflake access or resource activation was used for this work.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
