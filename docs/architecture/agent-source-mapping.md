@@ -331,6 +331,48 @@ local deadline within the original allowance and publish under fresh locks.
 Failures must retain uncertain allowance. Existing fake grants/processes cannot
 authorize a live call, and no deployed ledger, principal or service is changed.
 
+## Captured profile through original fake custody — 27 November
+
+[`agent_captured_exchange.py`](../../apps/api/src/ciq_api/agent_captured_exchange.py)
+connects the single-call request/response code to the existing bounded fake
+process envelope. It accepts only a synthetic fixture pinned to the entire
+original packet hash and exact prepared request digest. The packet's configured
+digest must equal the prepared endpoint/model/prompt/schema/budget configuration.
+The original operation, attempt, submission, source, deadline and captured
+snapshot are bound by that packet; changing any field invalidates the fixture.
+The fixture supplies an opaque expected provider ID independently of candidate
+text. Invalid aggregates cannot be reframed as valid candidates.
+
+The module has no network, SDK, credential, database or runtime entrypoint. An
+explicit test-only child helper returns the unchanged fake protocol's framed
+candidate after the strict final-only validator. It cannot create a tool
+continuation, repair prompt, grant, receipt or human review decision. The manual
+custody runner still selects its original canned child; nothing deploys or
+selects this new test helper automatically. No migration or privilege is added.
+
+Sixty-four exchange checks cover all thirty golden inputs, packet/config/body/
+provider pins, invalid results, expiry, malformed fixtures and an actual bounded
+child without inherited parent credentials. Five additional offline custody
+checks use real retained SQLite and the actual child with a simulated clinical
+transaction engine: independent issue commits before exchange, valid output
+publishes once, failure preserves issued history, and changed review context
+still prevents publication. The combined focused suite passes 760 checks.
+
+Four new guarded restricted-PostgreSQL CI cases stage a new exact fake approval
+before reservation, then use the original restricted custody coordinator. They
+assert committed issue and released clinical locks before child I/O, one attempt,
+atomic valid publication or retained allowance on money/tool/warning failures,
+no retry, and unchanged human review. These require the disposable Linux CI job;
+they are skipped locally. Both preceding `d8c050d` workflows passed; the new
+restricted cases still require their own CI result.
+
+The test fixture is independently supplied synthetic output, not actual provider
+execution, source parity, latency, billed usage or credential isolation. The
+child still shares custody's trusted UID. The pure bridge alone cannot discover
+fresh membership or prevent replay; those remain the original coordinator and
+restricted publication's responsibilities. Live activation, provider credentials,
+independent usage/reconciliation and the reviewed local deadline remain open.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger

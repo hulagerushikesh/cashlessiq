@@ -22,23 +22,34 @@ from psycopg import sql
 from sqlalchemy import event, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
+from test_agent_captured_exchange import CONFIG as CAPTURED_CONFIG
+from test_agent_captured_exchange import HELPER as CAPTURED_HELPER
+from test_agent_captured_exchange import fixture_for
 from test_agent_contracts import candidate
+from test_agent_contracts import context as captured_context
 from test_agent_controller_capture import controller_database as controller_database
 from test_agent_controller_capture import engine as engine
 from test_agent_controller_capture import scope as scope
 from test_agent_controller_capture import setup as setup
 from test_agent_controller_reservation import commands as commands
-from test_agent_controller_reservation import mutate
+from test_agent_controller_reservation import mutate, new_approval, reserve
 from test_agent_custody_dispatch import dispatch as dispatch
 from test_agent_custody_submission import coordinator, rows
 from test_agent_custody_submission import custody as custody
+from test_agent_custody_submission import install as install_submission
 from test_agent_ledger import ACTOR, balance
+from test_agent_provider_response import body as provider_body
+from test_agent_provider_response import text as provider_text
+from test_agent_provider_response import tool as provider_tool
 from test_agent_receipt_verifier import closed
 from test_agent_receipt_verifier import observer as observer
 
 from ciq_api import agent_custody_submission as module
-from ciq_api.agent_contracts import AgentContractError
+from ciq_api.agent_contracts import AgentContractError, canonical_json
+from ciq_api.agent_executor import BoundedFakeProcess, FakeProcessRequest
+from ciq_api.agent_ledger import operation_key
 from ciq_api.agent_ledger_models import AgentComparison
+from ciq_api.agent_one_shot import prepare_captured_one_shot
 from ciq_api.mvp_models import MvpEvent
 from ciq_api.review_models import ReviewCase
 from ciq_api.seed import TENANT_ID
@@ -229,6 +240,76 @@ def test_invalid_private_reply_never_creates_comparison_or_settles_allowance(pub
     closed(s.custody.publish)
     assert not comparisons(s) and balance(s.setup) == (1, 1, 10, 0, 0)
     assert len(s.exchanges) == 1
+
+
+@pytest.mark.parametrize('fault', ('valid', 'money', 'tool', 'warning'))
+def test_captured_profile_through_restricted_durable_issue_and_publication(
+    commands, observer, tmp_path, monkeypatch, fault,
+):
+    """A new exact fake grant, not a rewritten approval or live I/O permission."""
+    s = commands
+    assert s is observer
+    snapshot = s.setup.snapshots[0]
+    config_digest = prepare_captured_one_shot(
+        snapshot, captured_context(snapshot), uuid4(), CAPTURED_CONFIG,
+    ).config_digest
+    new_approval(
+        s, config_digest=config_digest, operation_keys=tuple(
+            operation_key(selected, config_digest, s.setup.spec.source_digest)
+            for selected in s.setup.snapshots
+        ),
+    )
+    s.claim = s.commands.claim('REQ-FAKE-0', reserve(s))
+    install_submission(s)
+    install(s)
+    fixture = tmp_path / 'captured-response.json'
+    transport = BoundedFakeProcess((
+        sys.executable, '-I', str(CAPTURED_HELPER), str(fixture),
+    ))
+    original = transport.exchange
+    exchanges = []
+
+    def exchange(raw, *, timeout):
+        request = FakeProcessRequest.model_validate_json(raw)
+        op, attempts = rows(s)  # Trusted test-owner assertions, not child capabilities.
+        assert op.state == 'submitting' and len(attempts) == 1
+        assert request.config_digest == config_digest
+        assert request.attempt_id == attempts[0].id
+        assert request.submission_id == attempts[0].submission_id
+        assert balance(s.setup) == (1, 1, 10, 0, 0)
+        with s.admin.begin() as db:
+            db.execute(text('SELECT id FROM agent_admission_epoch FOR UPDATE NOWAIT'))
+            db.execute(text('SELECT tenant_id FROM review_case FOR UPDATE NOWAIT'))
+        with s.setup.admission.journal._connection() as db:
+            assert db.execute('SELECT state FROM receipt').fetchall() == [('issued',)]
+        value = candidate(request.snapshot, request.operation_id)
+        if fault == 'money':
+            value['payable_inr'] = 1
+        response = provider_body(
+            [provider_tool()] if fault == 'tool' else [provider_text(canonical_json(value))],
+        )
+        if fault == 'warning':
+            response['warnings'] = [{'code': '399569', 'message': 'PRIVATE'}]
+        fixture.write_text(canonical_json(fixture_for(raw, response=response)))
+        fixture.chmod(0o600)
+        exchanges.append(raw)
+        return original(raw, timeout=timeout)
+
+    monkeypatch.setattr(transport, 'exchange', exchange)
+    original_custody = coordinator(s, transport=transport)
+    if fault == 'valid':
+        assert original_custody.run() is None
+        assert len(comparisons(s)) == 1 and balance(s.setup) == (1, 0, 0, 10, 0)
+    else:
+        closed(original_custody.run)
+        assert not comparisons(s) and balance(s.setup) == (1, 1, 10, 0, 0)
+    assert len(exchanges) == 1 and len(rows(s)[1]) == 1
+    with Session(s.admin) as db:
+        review = db.get(ReviewCase, (TENANT_ID, 'REQ-FAKE-0'))
+        assert (review.version, review.state, review.final_payable_inr) == (0, 'DRAFT_READY', None)
+    closed(original_custody.run)
+    closed(coordinator(s, transport=transport).dispatch)
+    assert len(exchanges) == 1
 
 
 @pytest.mark.parametrize('action', ['publish', 'heartbeat'])
