@@ -582,8 +582,9 @@ GCP VM, real PAT or Docker container is activated.
 
 [`agent_single_call_journal.py`](../../apps/api/src/ciq_api/agent_single_call_journal.py)
 prepares a separate one-call journal. It imports no fake ledger/grant/receipt
-types and changes none of their meanings. No route, runner, installer, receipt
-IPC endpoint or provider peer selects it. The artifact is not authenticated
+types and changes none of their meanings. No route, runner, installer or provider
+peer selects it. The separately prepared receipt IPC below can open this journal
+but has no activation path. The artifact is not authenticated
 owner approval, a live grant service, an I/O ticket or a complete coordinator.
 
 A trusted operator must supply the reviewed pin: grant/database/epoch/operation/
@@ -645,6 +646,63 @@ Do not copy this journal from a restored product database or seed missing
 authority. Live provider identity/role/model/CA review, protected credential
 delivery, outer service policy, result reconciliation and fresh clinical
 publication still remain. No paid resource or real credential is used here.
+
+## Inactive authenticated single-call receipt custody — 27 November
+
+[`agent_single_call_peer.py`](../../apps/api/src/ciq_api/agent_single_call_peer.py)
+prepares a separate local IPC boundary for the one-call journal. No route,
+runner, installer, coordinator or service selects it, and it cannot launch a
+provider. Existing fake receipt types and their authorization remain unchanged.
+
+The fixed endpoint is `/run/ciq-agent-single-call/ipc/receipt.sock`. Custody UID/
+GID `53002` and receipt UID/GID `53003` authenticate each other using Linux
+`SO_PEERCRED` before transferring accounting metadata or accessing retention.
+Both require exact real/effective/saved identities, no supplementary groups,
+isolated Python without bytecode, disabled core dumps and a locale-only
+environment. Root and code sharing these UIDs remain trusted. Socket ancestors
+must be root/receipt-owned with no group/other write or symlinks; the receipt-
+owned socket uses mode `0666` so custody needs no receipt group. Other local
+users can cause denial of service. This is not availability isolation.
+
+Canonical, bounded frames expose only `status`, `issue` and `observe`, pinned
+to the SHA-256 of the complete reviewed call pin. No caller clock, file path,
+clinical body, credential, reset or provisioning command crosses IPC. Duplicate
+keys, extras, truncated/extended frames, missing write-half close and passed
+descriptors fail before journal mutation. Observation sends only custody's
+response hash, opaque provider ID and reported usage. The journal's digest-only
+entry shares the existing single immutable observation transition; it does not
+authenticate the caller's provider association or release uncertain units.
+
+Issue uses the receipt process's wall clock and commits before acknowledgment.
+Responses must match the request's pin, command and accounting state. The client
+permanently closes on any denial, timeout or ambiguous acknowledgment. A new
+client can inspect retained status, but an issued journal denies reissue. An
+observed row cannot be replaced. Mutating client methods return no dispatch
+ticket, and status cannot reconstruct original in-memory execution permission.
+There is one bounded request per manually owned listener and a two-second local
+IPC budget, including framing and reply. A commit may outlive a lost reply;
+uncertainty remains held. Runtime never removes/adopts endpoints, starts a loop,
+provisions missing retention or retries a request. A trusted future supervisor
+must own fresh listener creation, lifetime and quiescent endpoint teardown.
+
+Sixty-three offline checks cover actual local sockets, retained issue/observation,
+lost acknowledgments, malformed requests/replies, missing retention, scope and
+identity/path guards. Together with the journal/provider-peer suites, 199 focused
+checks pass locally. Eleven additional controls are included in the existing
+disposable, network-disabled Linux receipt-peer acceptance: actual cross-UID
+lifecycle, read/write denial for clinical/custody/provider UIDs, wrong kernel
+clients, a false server with correct socket ownership, post-commit ACK loss,
+descriptor/extended frames and missing EOF. Hosted results must be checked after
+pushing; local Mac tests do not prove Linux identity isolation.
+
+This prepares receipt custody, not authenticated owner consent or a clinical
+executor. The next integration must match the reviewed pins to the original
+prepared body/configuration and fresh protected product authority, issue before
+provider dispatch, preserve original process memory, and recheck authority before
+publication. Receipt ACKs and provider UID authentication are not independently
+verified provider run IDs. Revocation, monotonic deadline/clock rollback fences,
+credential delivery, outer service policy and retained-history recovery remain
+open. No real credential, paid call, VM or local Docker container is activated.
 
 ## Next concrete acceptance
 

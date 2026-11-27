@@ -232,6 +232,22 @@ class SingleCallJournal:
         """
         try:
             _require(type(raw) is bytes and 0 < len(raw) <= MAX_RESPONSE_BYTES)
+            self.observe_digest(hashlib.sha256(raw).hexdigest(),
+                                provider_run_id=provider_run_id, usage=usage)
+        except Exception:
+            raise ValueError(ERROR) from None
+
+    def observe_digest(self, response_sha256: str, *, provider_run_id: str,
+                       usage: ReportedTokenUsage):
+        """Record trusted custody's digest without receiving clinical bytes.
+
+        The digest is a caller assertion, not proof of remote execution. This
+        shares the same one-observation transition as observe(), never a second
+        receipt or a release of uncertain units.
+        """
+        try:
+            _require(type(response_sha256) is str and len(response_sha256) == 64
+                     and all(char in "0123456789abcdef" for char in response_sha256))
             _require(type(provider_run_id) is str and 0 < len(provider_run_id) <= 200
                      and all(32 <= ord(char) <= 126 for char in provider_run_id))
             _require(type(usage) is ReportedTokenUsage)
@@ -244,11 +260,16 @@ class SingleCallJournal:
                     "UPDATE single_call SET phase='observed',response_sha256=?,"
                     "provider_run_id=?,usage=? "
                     "WHERE id=1 AND phase='issued'",
-                    (hashlib.sha256(raw).hexdigest(), provider_run_id,
+                    (response_sha256, provider_run_id,
                      canonical_json(usage.model_dump(mode="json"))),
                 ).rowcount == 1)
         except Exception:
             raise ValueError(ERROR) from None
+
+    @property
+    def pin_sha256(self):
+        """Construction pin only; status/issue still verify the retained row."""
+        return hashlib.sha256(self._canonical.encode()).hexdigest()
 
     def status(self) -> SingleCallStatus:
         with self._connection() as db:
