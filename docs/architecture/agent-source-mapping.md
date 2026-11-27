@@ -578,6 +578,74 @@ provisioning/rotation and reviewed identity/role/model/CA store remain open. The
 existing fake-only coordinator and grants are unchanged. No service, paid call,
 GCP VM, real PAT or Docker container is activated.
 
+## Inactive retained single-call bookkeeping — 27 November
+
+[`agent_single_call_journal.py`](../../apps/api/src/ciq_api/agent_single_call_journal.py)
+prepares a separate one-call journal. It imports no fake ledger/grant/receipt
+types and changes none of their meanings. No route, runner, installer, receipt
+IPC endpoint or provider peer selects it. The artifact is not authenticated
+owner approval, a live grant service, an I/O ticket or a complete coordinator.
+
+A trusted operator must supply the reviewed pin: grant/database/epoch/operation/
+submission identities, approval/binding/body/config/source/provider-identity
+digests, reviewed hostname, bounded window and conservative reserved units.
+Hashing an approval does not authenticate consent. Hostname validation creates
+no connection. The window is at most four hours; the prepared provider budget
+is at most eight seconds and 256–16,000 tokens, fitting inside the existing
+ten-second socket/twelve-second process envelope. These are approval ceilings,
+not proof that a supplied body, model capability or pricing has been reviewed.
+The future clinical controller must independently match the actual prepared
+request/configuration/identity and recheck current authority before issue.
+
+Explicit provisioning creates only a fresh private directory and one fixed
+`single-call.sqlite3` file, with schema and pin committed together. Runtime
+reopening uses SQLite `mode=rw`, never auto-creation. Missing/empty/corrupt,
+linked, unsafe-mode or oversized retention fails closed. Existing directories
+and dangling symlinks are never adopted or removed. Provisioning failures retain
+partial artifacts for operator review. SQLite uses `FULL` synchronization,
+delete journaling, bounded transactions/file size, and directory/parent fsync
+after initial provisioning. These checks trust the configured parent paths,
+file owner and host; they are not a protected live custody deployment.
+
+The only progression is `ready → issued → observed`. Exactly one conditional
+issue update commits before returning; concurrent/reconstructed callers cannot
+obtain another issue. The call's full units move from reserved to uncertain at
+issue and stay uncertain after observation. There is no refund, release, reset,
+replacement grant or automatic retry API. SQL triggers prevent changing pins,
+deleting the row, going backwards or replacing a completed observation. A
+trusted wall clock must be inside the approval window with at least thirteen
+seconds remaining for the original process envelope and cleanup. A separate
+supervisor must still fence clock rollback, live deadlines and revocation.
+
+An observation stores only the raw-response SHA-256, one caller-associated
+opaque provider ID and strictly typed reported input/output token counts.
+Unknown token counts stay null; zero stays zero. Request/response bodies,
+clinical facts and credentials are never stored here. The caller's association
+is not provider-ID authentication: a future authenticated wire/controller must
+establish its link to the original issue. This journal does not decode or
+publish a clinical candidate, authenticate the provider's usage report or
+reconcile an actual invoice. Lost responses and acknowledgment failures leave
+all committed uncertainty held, even when no remote work can be proven.
+
+Seventy-six offline checks exercise immutable scope pins, strict limits, time
+windows, competing issuers/observers, actual process exit before/after issue and
+observation, committed-but-lost acknowledgments, uncommitted rollback, lost or
+unsafe retention, SQL state guards and private-file preservation. Together with
+the provider identity and IPC suites, 173 focused checks pass locally. Hosted
+CI status is separate and must be checked after pushing.
+
+This is prepared retained bookkeeping, **not** live execution authorization.
+The next step is authenticated receipt custody and an original coordinator that
+matches these pins to fresh protected product state, commits issue before
+launching the provider, and holds ambiguity without reconstructing permission.
+The journal must be independently retained outside product backups. Rolling it
+back, replacing it or re-provisioning elsewhere defeats the fence; monotonic
+external custody, host recovery and off-host backup remain separate concerns.
+Do not copy this journal from a restored product database or seed missing
+authority. Live provider identity/role/model/CA review, protected credential
+delivery, outer service policy, result reconciliation and fresh clinical
+publication still remain. No paid resource or real credential is used here.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
