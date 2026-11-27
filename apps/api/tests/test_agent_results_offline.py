@@ -43,6 +43,7 @@ def test_golden_comparisons_keep_exact_money_nulls_and_evidence(index):
     }
     assert set(data) == {
         "mode",
+        "execution_profile",
         "state",
         "operation_id",
         "created_at",
