@@ -1,6 +1,7 @@
 """Offline provider identity framing; actual UID/file isolation runs in Linux CI."""
 
 import hashlib
+import json
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
@@ -11,6 +12,10 @@ from ciq_api import agent_provider_identity as identity
 BODY = b'{"synthetic":"PRIVATE captured request"}'
 TOKEN = b"DUMMY-private-provider-token"
 HOST = "reviewed-account.snowflakecomputing.com"
+PIN = {"hostname": HOST, "request_sha256": hashlib.sha256(BODY).hexdigest(),
+       "provider_identity_sha256": "f" * 64}
+PIN_DIGEST = hashlib.sha256(json.dumps(PIN, sort_keys=True,
+                                      separators=(",", ":")).encode()).hexdigest()
 
 
 @pytest.fixture
@@ -21,7 +26,7 @@ def harness(monkeypatch):
     monkeypatch.setattr(identity, "_guard", lambda: None)
 
     def plan(path, limit):
-        assert path == identity.PLAN and limit == 1024
+        assert path == identity.PLAN and limit in (1024, 4096)
         state["reads"].append("plan")
         return state["plan"]
 
@@ -177,32 +182,39 @@ def test_preparation_consumes_original_budget(harness, monkeypatch, samples, rea
 
 
 def test_reviewed_plan_pins_full_scope_and_cannot_switch_to_original_mode(harness):
-    harness["plan"].update(protocol="ciq-private-provider-v2", pin_sha256="a" * 64)
+    harness["plan"] = {"protocol": "ciq-private-provider-v2", "pin": PIN}
     attempt = identity.PrivateProviderAttempt()
-    assert attempt.exchange_reviewed(BODY, timeout=2, pin_sha256="a" * 64)
+    assert attempt.exchange_reviewed(BODY, timeout=2, pin_sha256=PIN_DIGEST)
     with pytest.raises(ValueError, match=f"^{identity.ERROR}$"):
         attempt.exchange(BODY, timeout=2)
     assert harness["reads"] == ["plan", "token"] and len(harness["exchanges"]) == 1
 
 
-@pytest.mark.parametrize("fault", ["wrong-pin", "v1-plan", "v1-entry", "extra", "body"])
+@pytest.mark.parametrize("fault", ["wrong-pin", "v1-plan", "v1-entry", "extra", "body",
+                                    "host", "shadow-host", "nonobject"])
 def test_reviewed_plan_faults_never_open_credential(harness, fault):
-    harness["plan"].update(protocol="ciq-private-provider-v2", pin_sha256="a" * 64)
+    v1 = harness["plan"]
+    harness["plan"] = {"protocol": "ciq-private-provider-v2", "pin": dict(PIN)}
     if fault == "wrong-pin":
-        harness["plan"]["pin_sha256"] = "b" * 64
+        harness["plan"]["pin"]["provider_identity_sha256"] = "b" * 64
     elif fault == "v1-plan":
-        harness["plan"].pop("pin_sha256")
-        harness["plan"]["protocol"] = "ciq-private-provider-v1"
+        harness["plan"] = v1
     elif fault == "extra":
         harness["plan"]["selector"] = "PRIVATE"
     elif fault == "body":
-        harness["plan"]["request_sha256"] = "b" * 64
+        harness["plan"]["pin"]["request_sha256"] = "b" * 64
+    elif fault == "host":
+        harness["plan"]["pin"]["hostname"] = "another-account.snowflakecomputing.com"
+    elif fault == "shadow-host":
+        harness["plan"]["hostname"] = HOST
+    elif fault == "nonobject":
+        harness["plan"]["pin"] = []
     attempt = identity.PrivateProviderAttempt()
     with pytest.raises(ValueError, match=f"^{identity.ERROR}$"):
         if fault == "v1-entry":
             attempt.exchange(BODY, timeout=2)
         else:
-            attempt.exchange_reviewed(BODY, timeout=2, pin_sha256="a" * 64)
+            attempt.exchange_reviewed(BODY, timeout=2, pin_sha256=PIN_DIGEST)
     assert harness["reads"] == ["plan"] and not harness["constructs"]
 
 

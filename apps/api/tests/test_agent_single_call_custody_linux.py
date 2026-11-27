@@ -147,12 +147,13 @@ os.write(1,b'PASS')
         ENDPOINT.parent.mkdir(mode=0o755)
         os.chown(ENDPOINT.parent, 53004, 53004)
         write_private(IDENTITY, token)
+        pinned = json.loads(pin.canonical())
+        if fault == "plan":
+            # Keep the wire pin correct while tampering with the private host.
+            # No PAT read or worker launch may occur under that inconsistency.
+            pinned["hostname"] = "another-account.snowflakecomputing.com"
         write_private(PLAN, json.dumps({
-            "protocol": "ciq-private-provider-v2", "hostname": pin.hostname,
-            "request_sha256": pin.request_sha256,
-            "pin_sha256": "0" * 64 if fault == "plan" else (
-                hashlib.sha256(pin.canonical().encode()).hexdigest()
-            ),
+            "protocol": "ciq-private-provider-v2", "pin": pinned,
         }).encode())
         # Custody can never read the dummy PAT or private provider plan.
         s.run(f"""

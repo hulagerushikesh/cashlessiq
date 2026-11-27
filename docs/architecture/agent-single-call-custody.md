@@ -40,7 +40,7 @@ sequenceDiagram
 `dispatch(current)` returns `None`. It consumes the original pending body before
 checking scope or making any call. Only a successful original issue acknowledgment
 can precede provider exchange. A receipt status query, retained issued row or new
-controller object cannot reconstruct permission. No database connection is owned
+controller object cannot reconstruct permission after issue. No database connection is owned
 by this assembly, and no caller can inject raw responses, callbacks or candidates
 through its methods. Trusted code and shared-UID memory remain trusted boundaries.
 
@@ -72,17 +72,20 @@ UID/GID/process/path guards and single-use lifetime remain the existing ones.
 V1/v2 cannot downgrade into each other. The reviewed server calls only the
 separate `PrivateProviderAttempt.exchange_reviewed` entry.
 
-The private provider-owned `0600` plan must contain exactly:
+The private provider-owned `0600` plan contains the entire canonical reviewed pin,
+with no separate host/body overrides or asserted hash. Its exact structure is:
 
-```json
-{
-  "protocol": "ciq-private-provider-v2",
-  "hostname": "reviewed-account.snowflakecomputing.com",
-  "request_sha256": "<exact body SHA-256>",
-  "pin_sha256": "<full canonical ReviewedCallPin SHA-256>"
+```python
+plan = {
+    "protocol": "ciq-private-provider-v2",
+    "pin": json.loads(reviewed_pin.canonical()),
 }
 ```
 
+The provider recomputes the full pin hash and derives its actual hostname and body
+hash from that same committed object. Changing only the private hostname cannot
+redirect an otherwise correctly pinned call. The private v2 file is bounded to
+4096 bytes; duplicate keys and non-finite values fail before credential access.
 The separate v1 entry still requires its exact v1 plan. All plan/pin/body/hostname
 checks precede the private credential read. Plan matching does not prove owner
 consent, actual PAT principal/role, immutable model revision or provider pricing.

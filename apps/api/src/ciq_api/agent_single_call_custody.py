@@ -52,7 +52,7 @@ class PreparedSingleCallCustody:
     Receipt commit/ACK precedes all provider access. No status lookup can create
     permission. Every dispatch/handoff, including denial or ambiguity, consumes
     its original pending state. A reconstructed object must issue again and is
-    denied by retained history. Methods cannot accept a response or a transport
+    denied by retained history after issue. Methods cannot accept a response or a transport
     callback. No SQL connection/transaction is owned across provider I/O.
     """
 

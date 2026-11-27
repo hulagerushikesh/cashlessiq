@@ -6,6 +6,7 @@ No fake coordinator, application route or installed unit imports this module.
 """
 
 import hashlib
+import json
 import math
 import os
 import resource
@@ -83,14 +84,23 @@ class PrivateProviderAttempt:
             if reviewed:
                 _require(type(pin_sha256) is str and len(pin_sha256) == 64
                          and all(char in "0123456789abcdef" for char in pin_sha256))
-            plan = private_object(PLAN, 1024)
+            plan = private_object(PLAN, 4096 if reviewed else 1024)
             keys = {"protocol", "hostname", "request_sha256"}
-            _require(set(plan) == (keys | {"pin_sha256"} if reviewed else keys))
+            _require(set(plan) == ({"protocol", "pin"} if reviewed else keys))
             _require(plan["protocol"] == (
                 "ciq-private-provider-v2" if reviewed else "ciq-private-provider-v1"
             ))
             if reviewed:
-                _require(plan["pin_sha256"] == pin_sha256)
+                # Derive the host/body from the exact committed pin, not from
+                # separately editable plan fields next to an asserted digest.
+                # Custody validates the full ReviewedCallPin before issuing it.
+                pinned = plan["pin"]
+                _require(type(pinned) is dict)
+                canonical = json.dumps(pinned, sort_keys=True, separators=(",", ":"),
+                                       allow_nan=False).encode("utf-8")
+                _require(hashlib.sha256(canonical).hexdigest() == pin_sha256)
+                plan = {"hostname": pinned["hostname"],
+                        "request_sha256": pinned["request_sha256"]}
             digest = hashlib.sha256(body).hexdigest()
             _require(digest == plan["request_sha256"])
             # Validate all nonsecret configuration before reading the identity.
