@@ -119,6 +119,9 @@ class ProviderPeerClient(_Once):
 
     __slots__ = ()
 
+    def _markers(self):
+        return _REQUEST, _RESPONSE
+
     def exchange(self, body: bytes, *, timeout: float) -> bytes:
         try:
             self._consume()
@@ -126,15 +129,16 @@ class ProviderPeerClient(_Once):
             _custody_guard()
             _require(type(body) is bytes and 0 < len(body) <= MAX_REQUEST_BYTES)
             digest = hashlib.sha256(body).digest()
+            request_marker, response_marker = self._markers()
             _path(connected=True)
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
                 connection.settimeout(_remaining(end))
                 connection.connect(str(ENDPOINT))
                 _peer(connection, PROVIDER_UID)  # Before sending any request bytes.
                 connection.settimeout(_remaining(end))
-                connection.sendall(_REQUEST + struct.pack("!I", len(body)) + digest + body)
+                connection.sendall(request_marker + struct.pack("!I", len(body)) + digest + body)
                 connection.shutdown(socket.SHUT_WR)
-                _require(_read(connection, len(_RESPONSE), end) == _RESPONSE)
+                _require(_read(connection, len(response_marker), end) == response_marker)
                 _require(_read(connection, 32, end) == digest)
                 length = struct.unpack("!I", _read(connection, 4, end))[0]
                 _require(0 < length <= MAX_RESPONSE_BYTES)
@@ -159,6 +163,12 @@ class ProviderPeer(_Once):
     def __init__(self):
         super().__init__()
         self._listener = None
+
+    def _markers(self):
+        return _REQUEST, _RESPONSE
+
+    def _exchange(self, body, *, timeout):
+        return PrivateProviderAttempt().exchange(body, timeout=timeout)
 
     def bind(self):
         listener = None
@@ -186,22 +196,25 @@ class ProviderPeer(_Once):
                 listener, self._listener = self._listener, None
             _require(listener is not None)
             end = _end(timeout)
+            request_marker, response_marker = self._markers()
             provider_guard()
             listener.settimeout(_remaining(end))
             connection, _ = listener.accept()
             with connection:
                 _peer(connection, CUSTODY_UID)  # Before framing or private files.
-                _require(_read(connection, len(_REQUEST), end) == _REQUEST)
+                _require(_read(connection, len(request_marker), end) == request_marker)
                 length = struct.unpack("!I", _read(connection, 4, end))[0]
                 _require(0 < length <= MAX_REQUEST_BYTES)
                 digest = _read(connection, 32, end)
                 body = _read(connection, length, end)
                 _require(hashlib.sha256(body).digest() == digest)
                 _eof(connection, end)  # No concatenation/extensions before I/O.
-                response = PrivateProviderAttempt().exchange(body, timeout=_remaining(end))
+                response = self._exchange(body, timeout=_remaining(end))
                 _require(type(response) is bytes and 0 < len(response) <= MAX_RESPONSE_BYTES)
                 connection.settimeout(_remaining(end))
-                connection.sendall(_RESPONSE + digest + struct.pack("!I", len(response)) + response)
+                connection.sendall(
+                    response_marker + digest + struct.pack("!I", len(response)) + response,
+                )
                 connection.shutdown(socket.SHUT_WR)
                 _remaining(end)
         except Exception:
@@ -218,3 +231,53 @@ class ProviderPeer(_Once):
             listener, self._listener = self._listener, None
         if listener is not None:
             listener.close()
+
+
+def _reviewed_pin(value):
+    try:
+        _require(type(value) is str and len(value) == 64
+                 and all(char in "0123456789abcdef" for char in value))
+        return value
+    except Exception:
+        raise ValueError(ERROR) from None
+
+
+class _ReviewedProtocol:
+    __slots__ = ()
+
+    @property
+    def pin_sha256(self):
+        return self._pin_sha256
+
+    def _markers(self):
+        pin = bytes.fromhex(self._pin_sha256)
+        return b"CIQ-PROVIDER-REQUEST-2\n" + pin, b"CIQ-PROVIDER-RESPONSE-2\n" + pin
+
+
+class ReviewedProviderPeerClient(_ReviewedProtocol, ProviderPeerClient):
+    """Original v2 client, matching the full call pin as well as exact body.
+
+    This separate wire cannot downgrade to v1. No runtime currently selects it.
+    The peer/plan match still cannot authenticate actual owner approval.
+    """
+
+    __slots__ = ("_pin_sha256",)
+
+    def __init__(self, pin_sha256: str):
+        self._pin_sha256 = _reviewed_pin(pin_sha256)
+        super().__init__()
+
+
+class ReviewedProviderPeer(_ReviewedProtocol, ProviderPeer):
+    """One reviewed-pin listener; v2 private plan must independently match it."""
+
+    __slots__ = ("_pin_sha256",)
+
+    def __init__(self, pin_sha256: str):
+        self._pin_sha256 = _reviewed_pin(pin_sha256)
+        super().__init__()
+
+    def _exchange(self, body, *, timeout):
+        return PrivateProviderAttempt().exchange_reviewed(
+            body, timeout=timeout, pin_sha256=self._pin_sha256,
+        )

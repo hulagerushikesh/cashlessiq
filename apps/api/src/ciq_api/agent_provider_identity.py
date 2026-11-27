@@ -55,6 +55,18 @@ class PrivateProviderAttempt:
         self._used = False
 
     def exchange(self, body: bytes, *, timeout: float) -> bytes:
+        return self._exchange(body, timeout=timeout, reviewed=False, pin_sha256=None)
+
+    def exchange_reviewed(self, body: bytes, *, timeout: float, pin_sha256: str) -> bytes:
+        """Separate v2 plan: match the full reviewed pin before opening the PAT.
+
+        A pin hash is not approval or proof that the PAT has a particular role.
+        Trusted provisioning must review the actual token/identity association.
+        The original v1 path cannot read a v2 plan, or vice versa.
+        """
+        return self._exchange(body, timeout=timeout, reviewed=True, pin_sha256=pin_sha256)
+
+    def _exchange(self, body, *, timeout, reviewed, pin_sha256):
         try:
             with self._lock:
                 _require(not self._used)
@@ -68,9 +80,17 @@ class PrivateProviderAttempt:
                      and 0 < timeout <= MAX_PROCESS_SECONDS)
             end = started + timeout
             _require(type(body) is bytes and 0 < len(body) <= MAX_REQUEST_BYTES)
+            if reviewed:
+                _require(type(pin_sha256) is str and len(pin_sha256) == 64
+                         and all(char in "0123456789abcdef" for char in pin_sha256))
             plan = private_object(PLAN, 1024)
-            _require(set(plan) == {"protocol", "hostname", "request_sha256"})
-            _require(plan["protocol"] == "ciq-private-provider-v1")
+            keys = {"protocol", "hostname", "request_sha256"}
+            _require(set(plan) == (keys | {"pin_sha256"} if reviewed else keys))
+            _require(plan["protocol"] == (
+                "ciq-private-provider-v2" if reviewed else "ciq-private-provider-v1"
+            ))
+            if reviewed:
+                _require(plan["pin_sha256"] == pin_sha256)
             digest = hashlib.sha256(body).hexdigest()
             _require(digest == plan["request_sha256"])
             # Validate all nonsecret configuration before reading the identity.

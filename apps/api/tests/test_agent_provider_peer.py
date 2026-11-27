@@ -42,6 +42,10 @@ def ipc(monkeypatch):
     monkeypatch.setattr(peer, "_peer", authenticate)
 
     class Attempt:
+        def exchange_reviewed(self, body, *, timeout, pin_sha256):
+            state["reviewed_pin"] = pin_sha256
+            return self.exchange(body, timeout=timeout)
+
         def exchange(self, body, *, timeout):
             state["calls"].append((body, timeout))
             if state.get("fault"):
@@ -51,8 +55,9 @@ def ipc(monkeypatch):
     monkeypatch.setattr(peer, "PrivateProviderAttempt", Attempt)
     threads, servers = [], []
 
-    def start(*, timeout=0.5):
-        server = peer.ProviderPeer()
+    def start(*, timeout=0.5, reviewed_pin=None):
+        server = (peer.ProviderPeer() if reviewed_pin is None
+                  else peer.ReviewedProviderPeer(reviewed_pin))
         server.bind()
         servers.append(server)
 
@@ -76,6 +81,37 @@ def ipc(monkeypatch):
         assert server._listener is None
     assert all(error == peer.ERROR for error in state["errors"])
     directory.cleanup()
+
+
+def test_reviewed_wire_matches_full_pin_and_uses_separate_private_plan_entry(ipc):
+    ipc["start"](reviewed_pin="a" * 64)
+    client = peer.ReviewedProviderPeerClient("a" * 64)
+    assert client.pin_sha256 == "a" * 64
+    assert client.exchange(BODY, timeout=0.5) == REPLY
+    assert ipc["reviewed_pin"] == "a" * 64 and len(ipc["calls"]) == 1
+    with pytest.raises(ValueError, match=f"^{peer.ERROR}$"):
+        client.exchange(BODY, timeout=0.5)
+
+
+@pytest.mark.parametrize("server_pin,client_pin", [
+    ("a" * 64, "b" * 64), ("a" * 64, None), (None, "a" * 64),
+])
+def test_reviewed_pin_mismatch_or_protocol_downgrade_never_constructs_attempt(
+    ipc, server_pin, client_pin,
+):
+    ipc["start"](reviewed_pin=server_pin)
+    client = (peer.ProviderPeerClient() if client_pin is None
+              else peer.ReviewedProviderPeerClient(client_pin))
+    with pytest.raises(ValueError, match=f"^{peer.ERROR}$"):
+        client.exchange(BODY, timeout=0.5)
+    assert not ipc["calls"]
+
+
+@pytest.mark.parametrize("pin", [None, b"a" * 64, "A" * 64, "g" * 64, "a" * 63, True])
+def test_reviewed_client_and_listener_reject_invalid_pin_before_io(pin):
+    for constructor in (peer.ReviewedProviderPeerClient, peer.ReviewedProviderPeer):
+        with pytest.raises(ValueError, match=f"^{peer.ERROR}$"):
+            constructor(pin)
 
 
 @pytest.mark.parametrize("body", [BODY, b"x" * 256_000], ids=["small", "maximum"])

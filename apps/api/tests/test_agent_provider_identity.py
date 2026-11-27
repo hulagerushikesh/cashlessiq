@@ -174,3 +174,42 @@ def test_preparation_consumes_original_budget(harness, monkeypatch, samples, rea
         with pytest.raises(ValueError, match=f"^{identity.ERROR}$"):
             attempt.exchange(BODY, timeout=1)
     assert harness["reads"] == reads and harness["exchanges"] == exchanges
+
+
+def test_reviewed_plan_pins_full_scope_and_cannot_switch_to_original_mode(harness):
+    harness["plan"].update(protocol="ciq-private-provider-v2", pin_sha256="a" * 64)
+    attempt = identity.PrivateProviderAttempt()
+    assert attempt.exchange_reviewed(BODY, timeout=2, pin_sha256="a" * 64)
+    with pytest.raises(ValueError, match=f"^{identity.ERROR}$"):
+        attempt.exchange(BODY, timeout=2)
+    assert harness["reads"] == ["plan", "token"] and len(harness["exchanges"]) == 1
+
+
+@pytest.mark.parametrize("fault", ["wrong-pin", "v1-plan", "v1-entry", "extra", "body"])
+def test_reviewed_plan_faults_never_open_credential(harness, fault):
+    harness["plan"].update(protocol="ciq-private-provider-v2", pin_sha256="a" * 64)
+    if fault == "wrong-pin":
+        harness["plan"]["pin_sha256"] = "b" * 64
+    elif fault == "v1-plan":
+        harness["plan"].pop("pin_sha256")
+        harness["plan"]["protocol"] = "ciq-private-provider-v1"
+    elif fault == "extra":
+        harness["plan"]["selector"] = "PRIVATE"
+    elif fault == "body":
+        harness["plan"]["request_sha256"] = "b" * 64
+    attempt = identity.PrivateProviderAttempt()
+    with pytest.raises(ValueError, match=f"^{identity.ERROR}$"):
+        if fault == "v1-entry":
+            attempt.exchange(BODY, timeout=2)
+        else:
+            attempt.exchange_reviewed(BODY, timeout=2, pin_sha256="a" * 64)
+    assert harness["reads"] == ["plan"] and not harness["constructs"]
+
+
+@pytest.mark.parametrize("pin", [None, b"a" * 64, "A" * 64, "g" * 64, "a" * 63, True])
+def test_malformed_reviewed_pin_consumes_before_any_file_read(harness, pin):
+    attempt = identity.PrivateProviderAttempt()
+    for value in (pin, "a" * 64):
+        with pytest.raises(ValueError, match=f"^{identity.ERROR}$"):
+            attempt.exchange_reviewed(BODY, timeout=2, pin_sha256=value)
+    assert not harness["reads"]
