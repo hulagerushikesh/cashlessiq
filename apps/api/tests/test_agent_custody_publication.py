@@ -22,9 +22,6 @@ from psycopg import sql
 from sqlalchemy import event, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
-from test_agent_captured_exchange import CONFIG as CAPTURED_CONFIG
-from test_agent_captured_exchange import HELPER as CAPTURED_HELPER
-from test_agent_captured_exchange import fixture_for
 from test_agent_contracts import candidate
 from test_agent_contracts import context as captured_context
 from test_agent_controller_capture import controller_database as controller_database
@@ -38,9 +35,6 @@ from test_agent_custody_submission import coordinator, rows
 from test_agent_custody_submission import custody as custody
 from test_agent_custody_submission import install as install_submission
 from test_agent_ledger import ACTOR, balance
-from test_agent_provider_response import body as provider_body
-from test_agent_provider_response import text as provider_text
-from test_agent_provider_response import tool as provider_tool
 from test_agent_receipt_verifier import closed
 from test_agent_receipt_verifier import observer as observer
 
@@ -247,6 +241,15 @@ def test_captured_profile_through_restricted_durable_issue_and_publication(
     commands, observer, tmp_path, monkeypatch, fault,
 ):
     """A new exact fake grant, not a rewritten approval or live I/O permission."""
+    # This module also supplies older fixtures to the deliberately minimal peer
+    # image. Keep these new test-only helpers local to their acceptance cases.
+    from test_agent_captured_exchange import CONFIG as CAPTURED_CONFIG
+    from test_agent_captured_exchange import HELPER as CAPTURED_HELPER
+    from test_agent_captured_exchange import fixture_for
+    from test_agent_provider_response import body as provider_body
+    from test_agent_provider_response import text as provider_text
+    from test_agent_provider_response import tool as provider_tool
+
     s = commands
     assert s is observer
     snapshot = s.setup.snapshots[0]
