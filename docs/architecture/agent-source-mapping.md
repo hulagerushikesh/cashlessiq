@@ -423,6 +423,53 @@ The first synchronous response's opaque provider ID is not known in advance;
 copying it from its own body into an expected-ID argument is not authentication.
 No Docker, GCP or provider resource is started by this change.
 
+## Inactive supervised HTTPS child — 27 November
+
+[`agent_https_process.py`](../../apps/api/src/ciq_api/agent_https_process.py)
+adds a single-use POSIX supervisor for the fixed
+[`agent_https_worker.py`](../../apps/api/src/ciq_api/agent_https_worker.py) module.
+No route, running worker, service or custody coordinator selects it. In particular,
+the fake coordinator's exact transport type remains unchanged; fake grants and
+receipts cannot authorize this child. There is no live credential discovery,
+provider call, deployment or new approval implied by preparing these modules.
+
+Trusted construction supplies the installed interpreter, reviewed host/token,
+exact request bytes and their digest. Configuration and clinical data travel
+only through the child's bounded private stdin pipe. The command is fixed to
+isolated Python, bytecode writing disabled and the module name; no secret enters
+argv, environment or a temporary file. The child runs from `/`, receives only
+the fixed locale environment and no inherited extra descriptors, and disables
+core dumps before reading the pipe. It rejects CA, key-log, profile and other
+environment overrides. Python/macOS may add locale/text-encoding hints.
+
+The parent consumes its locked one-use latch before validation or process
+creation, then drops its stored control reference. This is reference disposal,
+not memory zeroization or durable admission. Nonblocking input/output, response
+size, any stderr, child exit and process-group cleanup are supervised against
+one decreasing deadline of at most twelve seconds. The network primitive retains
+its ten-second socket limit. Stalls, partial output, failed cleanup and uncertain
+send outcomes cannot grant a retry or release an allowance. Cleanup has its own
+one-second reap limit. Raw successful output still needs provider/clinical
+validation and authenticated association with the original durable issue.
+
+Forty-eight checks cover real isolated children, blocked DNS in the actual
+worker, unread stdin, slow/partial response, a descendant retaining pipes,
+stdout/stderr bounds, failed exits/spawn/cleanup, exact maximum-size exchange,
+concurrent attempts, malformed controls and inherited credential/CA/FD rejection.
+They use dummy credentials and no external network. The six focused suites pass
+363 checks locally; hosted Linux acceptance is separate.
+
+This closes the ordinary blocked-DNS/HTTP exchange supervision gap, **not**
+credential isolation: the child still shares its caller's UID and file access,
+and the parent receives the token. Process groups cannot contain a hostile child
+that escapes its session. Process creation or unkillable kernel tasks still need
+an outer service/cgroup bound. A separate credential UID and delivery mechanism,
+reviewed provider identity/role/CA store, live durable authorization and issue,
+response-ID reconciliation, uncertain usage accounting and fresh publication
+remain required. No real credential should be delivered through this same-UID
+preparation. The provider budget also must fit the reviewed local envelope;
+the captured profile's allowed sixty seconds is not silently expanded here.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
