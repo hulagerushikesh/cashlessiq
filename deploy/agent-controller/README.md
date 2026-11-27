@@ -20,7 +20,7 @@ The tool does not fetch commits, extract files, execute packaged code, install
 units, change accounts/grants or contact a cloud/provider.
 
 The archive contains committed API/domain wheel build inputs, the API's frozen
-runtime lock, migrations, six restricted-command SQL definitions, three manual
+runtime lock, migrations, seven restricted-command SQL definitions, three manual
 unit examples and this guide. Its fixed allowlist excludes owner media, working
 files, credentials, generated output, legacy invocation helpers and test
 launchers. Only Python/JSON files in the named code trees are admitted; other
@@ -36,6 +36,14 @@ links, duplicates, unexpected members, changed metadata and missing files, and
 compares every byte against the independently selected Git revision. Updating
 an archive's own hashes cannot conceal changed content. Existing destinations
 are never replaced. No digest is an approval, signature or proof of source trust.
+
+The seventh SQL definition, `single-call.sql`, and the two committed single-call
+architecture guides are review inputs only. The existing fake lifecycle installer
+still installs exactly its original six definitions. It does not install or enable
+the separate reviewed-call registry. No installed manual unit selects the new
+`ProductSingleCall` adapter. See the packaged
+`docs/architecture/agent-single-call-product.md` for its distinct custody identity,
+disabled owner staging, one-use checkpoint, private advisory and activation gates.
 
 This is a review artifact, not a runnable offline installation: interpreter,
 third-party wheels, built first-party wheels and deployment-specific private

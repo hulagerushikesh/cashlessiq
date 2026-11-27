@@ -1,4 +1,4 @@
-"""Inactive original single-call assembly; no route, DB adapter or service.
+"""Inactive original single-call assembly; no route or service selects this.
 
 Trusted construction supplies a reviewed pin, captured product scope and two
 exact authenticated peers. Contexts supplied here are assertions from a future

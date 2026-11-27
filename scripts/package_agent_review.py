@@ -22,6 +22,9 @@ FIXED = (
     "deploy/agent-controller/custody-submission.sql",
     "deploy/agent-controller/custody-publication.sql",
     "deploy/agent-controller/custody-recovery.sql",
+    "deploy/agent-controller/single-call.sql",
+    "docs/architecture/agent-single-call-custody.md",
+    "docs/architecture/agent-single-call-product.md",
     *(f"deploy/agent-controller/systemd/ciq-agent-{role}.service.example"
       for role in ("claim", "custody", "receipt")),
     "deploy/agent-controller/README.md",

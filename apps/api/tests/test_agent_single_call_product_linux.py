@@ -325,6 +325,17 @@ def test_sql_checkpoint_rollback_is_not_an_external_issue(ready):
     assert rows(ready) == ("checkpointed", 0)
 
 
+@pytest.mark.parametrize("phase", ["checkpointed", "published"])
+def test_consumed_phases_cannot_have_null_deadline_or_publication_time(ready, phase):
+    if phase == "published":
+        invoke(ready)
+    with pytest.raises(DBAPIError) as failure, ready.admin.begin() as db:
+        update = ("phase='checkpointed',checkpoint_at=clock_timestamp(),deadline=NULL"
+                  if phase == "checkpointed" else "phase='published',published_at=NULL")
+        db.execute(text(f'UPDATE "{ready.schema}".authorization SET {update}'))
+    assert failure.value.orig.sqlstate == "23514"
+
+
 def test_checkpoint_commit_exception_never_reaches_independent_issue(integrated):
     s, a = integrated
 

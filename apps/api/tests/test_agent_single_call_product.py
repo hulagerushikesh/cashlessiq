@@ -5,6 +5,8 @@ authority/ACL/locking acceptance lives in the separately guarded Linux module.
 """
 
 import hashlib
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
@@ -127,6 +129,31 @@ def test_original_adapter_commits_before_io_and_publishes_private_advisory(prote
     for action in (run.run, run.dispatch, run.publish, s.make().run):
         denied(action)
     assert len(s.state["published"]) == len(s.assembly.state["calls"]) == 1
+
+
+def test_premature_publication_consumes_the_original_entry_without_later_issue(protected):
+    s = protected
+    run = s.make()
+    for action in (run.publish, run.dispatch, run.run, run.publish):
+        denied(action)
+    assert not s.assembly.state["commands"] and s.state["phase"] == "staged"
+
+
+def test_publication_competing_with_inflight_dispatch_cannot_recover_a_later_reply(protected):
+    s = protected
+    s.assembly.state["entered"], s.assembly.state["release"] = threading.Event(), threading.Event()
+    run = s.make()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        dispatched = pool.submit(run.dispatch)
+        assert s.assembly.state["entered"].wait(2)
+        try:
+            denied(run.publish)
+        finally:
+            s.assembly.state["release"].set()
+        denied(lambda: dispatched.result(timeout=3))
+    denied(run.publish)
+    assert s.assembly.journal.status().phase == "observed"
+    assert not s.state["published"] and len(s.assembly.state["calls"]) == 1
 
 
 @pytest.mark.parametrize("fault,phase", [

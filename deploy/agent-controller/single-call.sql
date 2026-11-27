@@ -41,9 +41,11 @@ CREATE TABLE {calls}.authorization (
     FOREIGN KEY (tenant_id, actor_id)
         REFERENCES {product}.tenant_membership(tenant_id, user_id),
     CHECK ((phase = 'staged' AND checkpoint_at IS NULL AND deadline IS NULL AND published_at IS NULL)
-        OR (phase = 'checkpointed' AND checkpoint_at IS NOT NULL AND deadline > checkpoint_at
+        OR (phase = 'checkpointed' AND checkpoint_at IS NOT NULL AND deadline IS NOT NULL
+            AND deadline > checkpoint_at
             AND published_at IS NULL)
-        OR (phase = 'published' AND checkpoint_at IS NOT NULL AND deadline > checkpoint_at
+        OR (phase = 'published' AND checkpoint_at IS NOT NULL AND deadline IS NOT NULL
+            AND published_at IS NOT NULL AND deadline > checkpoint_at
             AND published_at >= checkpoint_at AND published_at < deadline))
 );
 CREATE TABLE {calls}.comparison (
@@ -91,7 +93,7 @@ SET search_path = pg_catalog, pg_temp SET row_security = on SET lock_timeout = '
 AS $context$
 DECLARE
     installation record;
-    authorization record;
+    call_value record;
     clinical_end timestamptz;
     clinical jsonb;
     pin_value jsonb;
@@ -108,7 +110,7 @@ BEGIN
     IF NOT FOUND THEN
         RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'single_call_unavailable';
     END IF;
-    SELECT a.* INTO authorization FROM {calls}.authorization a
+    SELECT a.* INTO call_value FROM {calls}.authorization a
       JOIN pg_catalog.pg_roles r ON r.oid = a.custody_oid AND r.rolname = a.custody_name
       JOIN pg_catalog.pg_roles c ON c.oid = a.clinical_oid AND c.rolname = a.clinical_name
       WHERE a.slot = 1 AND a.operation_id = p_operation AND a.enabled AND a.phase = p_phase
@@ -120,27 +122,27 @@ BEGIN
     IF NOT FOUND THEN
         RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'single_call_unavailable';
     END IF;
-    pin_value := authorization.pin::jsonb;
+    pin_value := call_value.pin::jsonb;
     IF (pin_value->>'protocol' = 'prepared-single-provider-call-v1'
         AND pin_value->>'database_id' = installation.database_id::text
         AND pin_value->>'epoch_id' = installation.epoch_id::text
         AND pin_value->>'operation_id' = p_operation::text
-        AND authorization.snapshot->'binding'->>'tenant_id' = authorization.tenant_id::text
-        AND authorization.snapshot->'binding'->>'request_id' = authorization.request_id)
+        AND call_value.snapshot->'binding'->>'tenant_id' = call_value.tenant_id::text
+        AND call_value.snapshot->'binding'->>'request_id' = call_value.request_id)
         IS DISTINCT FROM true THEN
         RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'single_call_unavailable';
     END IF;
     -- Private delegation, never caller-selected identity or SET ROLE. This locks
     -- and checks the clinical principal, tenant, active user/membership, current
     -- case/policy/review and policy decisions with the existing scope function.
-    clinical := {capture}._capture_bound(authorization.clinical_oid, authorization.request_id);
+    clinical := {capture}._capture_bound(call_value.clinical_oid, call_value.request_id);
     SELECT p.ends_at INTO clinical_end FROM {capture}.principal p
-      WHERE p.login_oid = authorization.clinical_oid AND p.login_name = authorization.clinical_name
-        AND p.tenant_id = authorization.tenant_id AND p.actor_id = authorization.actor_id;
+      WHERE p.login_oid = call_value.clinical_oid AND p.login_name = call_value.clinical_name
+        AND p.tenant_id = call_value.tenant_id AND p.actor_id = call_value.actor_id;
     now_value := clock_timestamp();
     end_value := least((pin_value->>'ends_at')::timestamptz, clinical_end,
-                      coalesce(authorization.deadline, now_value + interval '18 seconds'));
-    IF clinical_end IS NULL OR (clinical->>'tenant_id' = authorization.tenant_id::text
+                      coalesce(call_value.deadline, now_value + interval '18 seconds'));
+    IF clinical_end IS NULL OR (clinical->>'tenant_id' = call_value.tenant_id::text
         AND (pin_value->>'starts_at')::timestamptz <= now_value AND now_value < end_value
         AND ((pin_value->>'ends_at')::timestamptz > (pin_value->>'starts_at')::timestamptz)
         AND ((pin_value->>'ends_at')::timestamptz <=
@@ -148,9 +150,9 @@ BEGIN
        OR (p_phase = 'staged' AND end_value < now_value + interval '18 seconds') THEN
         RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'single_call_unavailable';
     END IF;
-    RETURN jsonb_build_object('operation_id', p_operation, 'pin', authorization.pin,
-      'pin_sha256', authorization.pin_sha256, 'snapshot', authorization.snapshot,
-      'config', authorization.config, 'clinical', clinical,
+    RETURN jsonb_build_object('operation_id', p_operation, 'pin', call_value.pin,
+      'pin_sha256', call_value.pin_sha256, 'snapshot', call_value.snapshot,
+      'config', call_value.config, 'clinical', clinical,
       'checked_at', now_value, 'deadline', end_value);
 END;
 $context$;

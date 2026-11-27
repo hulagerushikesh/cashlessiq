@@ -106,6 +106,7 @@ class ProductSingleCall:
                 'CAST(:candidate AS jsonb), CAST(:observation AS jsonb))'
             )
             self._lock, self._started, self._pending = Lock(), False, None
+            self._publication_started = False
         except Exception:
             raise AgentContractError(ERROR) from None
 
@@ -119,7 +120,7 @@ class ProductSingleCall:
 
     def dispatch(self):
         with self._lock:
-            if self._started:
+            if self._started or self._publication_started:
                 raise AgentContractError(ERROR) from None
             self._started = True
         try:
@@ -142,6 +143,7 @@ class ProductSingleCall:
             assembly.dispatch(current, monotonic_deadline=end)
             self._budget(end, projection.deadline)
             with self._lock:
+                _require(not self._publication_started)
                 self._pending = assembly, projection, end
         except Exception:
             raise AgentContractError(ERROR) from None
@@ -155,6 +157,9 @@ class ProductSingleCall:
         it cannot cancel a call already admitted/in flight.
         """
         with self._lock:
+            if self._publication_started:
+                raise AgentContractError(ERROR) from None
+            self._publication_started = True
             pending, self._pending = self._pending, None
         try:
             _require(pending is not None)
