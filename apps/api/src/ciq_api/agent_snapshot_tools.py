@@ -33,7 +33,8 @@ class SnapshotToolReply(ImmutableContract):
     payload_json: str = Field(repr=False)
 
 
-def _selected(snapshot: AgentInput, current: AgentContext) -> AgentInput:
+def select_captured_snapshot(snapshot: AgentInput, current: AgentContext) -> AgentInput:
+    """Revalidate trusted capture/context values; this does not obtain authority."""
     try:
         if type(snapshot) is not AgentInput or type(current) is not AgentContext:
             raise ValueError(ERROR)
@@ -55,7 +56,7 @@ def read_captured_case(snapshot: AgentInput, current: AgentContext) -> SnapshotT
     No legacy request/policy ID is inferred, no history is enriched, and supplied
     remaining cover is not recomputed from other claims or today's date.
     """
-    snapshot = _selected(snapshot, current)
+    snapshot = select_captured_snapshot(snapshot, current)
     facts, _ = snapshot.snapshots()
     return SnapshotToolReply(
         tool="case",
@@ -74,7 +75,7 @@ def assess_captured_case(snapshot: AgentInput, current: AgentContext) -> Snapsho
     This is a deterministic observation, not generated reasoning or an agent
     outcome. A future provider must return its own separately validated response.
     """
-    snapshot = _selected(snapshot, current)
+    snapshot = select_captured_snapshot(snapshot, current)
     facts, policy = snapshot.snapshots()
     try:
         result = calculate_rules(
@@ -107,7 +108,7 @@ def read_captured_clause(
     The content hash covers the complete selected clause projection. Clause ID
     equality in another policy or account cannot establish evidence ownership.
     """
-    snapshot = _selected(snapshot, current)
+    snapshot = select_captured_snapshot(snapshot, current)
     _, policy = snapshot.snapshots()
     if type(clause_id) is not str:
         raise AgentContractError(ERROR)

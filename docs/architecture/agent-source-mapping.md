@@ -184,9 +184,10 @@ printing clinical values.
 These are labelled captured-product or deterministic tool observations, not
 independently captured Snowflake observations, provider output, citation-quality
 acceptance or a `ValidatedMapping`. They cannot be parsed as agent candidates.
-No HTTP route, tool registration, model request, source lookup, SDK, database,
-credential or worker uses them yet. In particular, the existing legacy Snowflake
-agent cannot call these Python functions without a separately reviewed transport.
+No HTTP route, model request, source lookup, SDK, database, credential or worker
+uses them yet. The inactive client-tool codec below now defines their inline
+specifications and dispatches synthetic tool-use messages. The existing legacy
+Snowflake agent is unchanged and does not call these Python functions.
 SLA and member-history enrichment remain outside this captured snapshot path.
 
 Offline acceptance covers all thirty golden outcomes/payables, owned clause
@@ -194,6 +195,47 @@ hashes, null/money fidelity, changed wording, revoked/stale scope, corrupted
 captures and unknown clause denial. Live source definitions, service identity,
 provider transport and the account's availability still need verification before
 integration. No Snowflake access or resource activation was used for this work.
+
+## Captured client-tool messages — 27 November
+
+[`agent_client_tools.py`](../../apps/api/src/ciq_api/agent_client_tools.py)
+connects the captured tools to an inactive Cortex message codec. Snowflake's
+[client-side tool documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agent-sdk/conversations#execute-client-side-tools)
+describes inline generic tools without matching `tool_resources`, client-side
+tool-use requests, and submitting the complete tool-result batch. The
+[Run API](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run)
+documents the tool-use/result JSON fields. These official references were checked
+on 27 November; the account's support for this path has not been tested.
+
+The codec advertises only selected case facts, deterministic assessment and exact
+owned clause reads. Model arguments cannot select a tenant, request, policy,
+source, command, SQL, URL or credential. It accepts a UTF-8 JSON tool-use array,
+up to eight calls and 16,000 input bytes. Unknown tools, server-side calls,
+permission-bearing calls, duplicate IDs/keys, malformed arguments, revoked scope
+and unknown clauses reject the entire batch. Every batch revalidates the trusted
+capture and supplied current context. Results preserve tool-use order and IDs,
+include structured observations and binding/evidence hashes, and are bounded to
+128,000 encoded bytes, including escaping and framing. Clinical contents are
+excluded from repr and errors use one fixed code.
+
+This is a pure codec, not an SDK integration, authenticated conversation or
+execution permit. A future transport must prove that tool uses belong to the
+original run and parent message; supply fresh clinical authorization; enforce
+total turn/tool/deadline limits; and obtain durable approval/accounting for every
+billable continuation. Recalling this pure function cannot establish remote
+idempotency or permission to send another request. No whole response or SSE stream
+is accepted, and no model prose or tool observation becomes a validated result.
+The final provider candidate still needs its own complete binding, original run
+ID, strict monetary values and exact citations through `validate_candidate`,
+followed by the existing locked publication checks. No field is manufactured by
+the codec to repair a deficient candidate.
+
+Offline transcripts cover all thirty golden inputs through facts, assessment,
+clause resolution and a separately supplied fake candidate, plus malformed,
+revoked, cross-tenant, duplicate and output-bound denials. This establishes local
+message behaviour, not actual Cortex latency, cost, citations or source parity.
+Live transport, custody integration and a reviewed paid test remain open. Docker,
+Snowflake and GCP are not required by these checks.
 
 ## Next concrete acceptance
 
