@@ -154,6 +154,14 @@ separate from new assessment execution. This plan supersedes the assumption
 that a hostname change or simple call to the legacy agent enables intelligence
 for newly submitted product requests. It does not change phase-exit status.
 
+The 27 November [single-call captured profile](agent-source-mapping.md#first-call-captured-comparison-profile--27-november)
+now prepares facts, deterministic results and cited clauses in one inline
+request, with a final-only response validator. This is the proposed first live
+comparison shape: assisted explanation of supplied results, with no client-tool
+continuations. It remains offline and is not connected to durable execution or
+runtime credentials. The existing one-attempt fake accounting is not a live
+submission approval. Multi-turn orchestration remains separate future work.
+
 
 ### Independent receipt observation prepared — 3 November
 

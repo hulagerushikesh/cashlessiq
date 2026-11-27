@@ -40,10 +40,11 @@ def select_captured_snapshot(snapshot: AgentInput, current: AgentContext) -> Age
             raise ValueError(ERROR)
         # Recheck canonical content/hashes and strict scope flags, including
         # model_copy/model_construct values that bypass Pydantic validation.
-        # Serialization warnings can contain private values; validation below
-        # still rejects invalid types without emitting those diagnostics.
-        snapshot = AgentInput.model_validate(snapshot.model_dump(mode="json", warnings=False))
-        current = AgentContext.model_validate(current.model_dump(mode="json", warnings=False))
+        # Python mode preserves invalid booleans in strict integer fields;
+        # JSON mode can normalize True to 1 before validation. Warnings can
+        # contain private values, so suppress them and revalidate the raw types.
+        snapshot = AgentInput.model_validate(snapshot.model_dump(mode="python", warnings=False))
+        current = AgentContext.model_validate(current.model_dump(mode="python", warnings=False))
         require_current(snapshot, current)
         return snapshot
     except (ValueError, TypeError, AttributeError, RecursionError):

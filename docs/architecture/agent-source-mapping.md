@@ -285,6 +285,52 @@ counts or sends a continuation. Replaying an aggregate is not prevented by this
 pure function. The execution ledger must retain uncertain allowance on failures
 and prohibit replay; final locked publication remains a separate transaction.
 
+## First-call captured comparison profile — 27 November
+
+[`agent_one_shot.py`](../../apps/api/src/ciq_api/agent_one_shot.py) prepares a
+single non-streaming request for the documented no-agent-object endpoint
+`/api/v2/cortex/agent:run`. Local captured tools supply request facts, the shared
+deterministic assessment and only its cited owned clauses before submission.
+The body contains no remote tool resources, tool inventory, analytical search,
+thread history or browser-provided instructions. A fixed prompt supplies the
+candidate schema and requires the internal operation binding, exact integer/null
+amounts and full owned evidence hashes. Prompted JSON is not provider-enforced
+structured output, and the existing validator remains mandatory.
+
+This is **explanation assistance over supplied deterministic results**, not an
+independent model calculation, legacy agent orchestration or live source parity.
+It offers a first comparison path with one API submission, fitting the existing
+one-attempt accounting shape without adding automatic billable continuations.
+The generic client-tool codec remains an inactive alternative; its multi-turn
+accounting must not be inferred from this profile. A provider tool request is
+rejected before local resolution. No repair prompt, follow-up or retry is sent.
+
+A trusted configuration must name a reviewed model and strict integer second/
+token limits (at most 60 seconds and 16,000 tokens). `auto` is rejected; model
+availability, revision stability and pricing are not certified by validation.
+The configuration digest covers endpoint, model, instructions/schema and all
+nonclinical request settings. A separate digest covers the exact clinical body.
+The complete encoded body, including nested JSON escaping, is capped at 256,000
+bytes. Provider budgets are neither a local deadline nor a hard spending cap.
+Clinical values remain hidden from repr and fixed errors; unrelated clauses and
+policy regression examples are excluded. Strict revalidation now preserves
+Python types so serialization cannot normalize an invalid boolean to revision
+or budget integer `1` before checking it.
+
+The 57 new checks include all thirty golden inputs, exact observation/citation
+selection, null money, model/budget changes, malformed configuration, revoked
+scope, revision booleans, private text, encoded size and no-tool-dispatch denial.
+The six focused suites total 569 passing checks. Both CI workflows for `a5c3108`
+passed before this change. No service imports the new profile, and no provider
+request, cloud build, VM or local container was started.
+
+Preparation is repeatable and grants no execution permission. The future
+transport must still bind the exact request/configuration to original durable
+custody, consume one issue before I/O, authenticate its reply, enforce a shorter
+local deadline within the original allowance and publish under fresh locks.
+Failures must retain uncertain allowance. Existing fake grants/processes cannot
+authorize a live call, and no deployed ledger, principal or service is changed.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
@@ -295,9 +341,11 @@ and prohibit replay; final locked publication remains a separate transaction.
    source preflight. Source-reading approval does not authorize tool execution,
    staging writes or a remote model call. Keep human administrator OAuth out of
    runtime custody.
-3. Verify supported provider submission/checkpoint/lookup semantics and prepare
-   a bounded adapter. The current 120-second legacy remote budget cannot fit
-   unchanged inside the ledger's 120-second total deadline.
+3. Bind the single-call captured profile to reviewed provider custody and verify
+   submission/checkpoint/lookup semantics with a bounded adapter. Keep client
+   continuations disabled for the first comparison. The current 120-second
+   legacy remote budget cannot fit unchanged inside the ledger's 120-second
+   total deadline; the new request budget still needs a local deadline fence.
 4. Present exact synthetic cases, identities, definitions, attempts, time window
    and expected spend for owner approval only after the package is reviewable.
    Then run live comparison and joint UI acceptance in a bounded VM window.

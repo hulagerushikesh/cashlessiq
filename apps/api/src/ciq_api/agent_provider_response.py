@@ -109,7 +109,7 @@ def _invalid_constant(_value):
 
 def decode_captured_provider_response(
     snapshot: AgentInput, current: AgentContext, operation_id: UUID,
-    expected_provider_run_id: str, raw: bytes,
+    expected_provider_run_id: str, raw: bytes, *, allow_client_tools: bool = True,
 ) -> CapturedToolTurn | CapturedFinalTurn:
     """Decode one authenticated-by-caller aggregate, not SSE or partial events.
 
@@ -119,11 +119,14 @@ def decode_captured_provider_response(
     closed. Thinking is preserved privately, never searched for a candidate.
     Provider run IDs are opaque and separate from the internal operation UUID.
     Every invocation requires freshly supplied clinical context. No retry occurs.
+    The single-call profile passes allow_client_tools=False; any requested tool
+    then fails before dispatch, without creating a continuation or tool results.
     """
     try:
         snapshot = select_captured_snapshot(snapshot, current)
         if (
-            type(operation_id) is not UUID or type(expected_provider_run_id) is not str
+            type(allow_client_tools) is not bool
+            or type(operation_id) is not UUID or type(expected_provider_run_id) is not str
             or not 1 <= len(expected_provider_run_id) <= 200
             or type(raw) is not bytes or not 0 < len(raw) <= MAX_PROVIDER_RESPONSE_BYTES
         ):
@@ -142,7 +145,7 @@ def decode_captured_provider_response(
         calls = [c.tool_use for c in response.content if isinstance(c, _ToolContent)]
         texts = [c.text for c in response.content if isinstance(c, _Text)]
         if calls:
-            if texts:
+            if texts or not allow_client_tools:
                 raise ValueError(ERROR)
             results = resolve_captured_tool_calls(
                 snapshot, current, canonical_json(calls).encode("utf-8"),
