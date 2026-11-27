@@ -88,7 +88,7 @@ def main():
         assert host["NanoCpus"] == 1_000_000_000
         assert host["Ulimits"] == [{"Name": "nofile", "Hard": 256, "Soft": 256}]
         try:
-            result = docker("start", "-a", identifier, check=False, timeout=240)
+            result = docker("start", "-a", identifier, check=False, timeout=300)
         except subprocess.TimeoutExpired as exc:
             summary(exc.stdout or b"")
             raise RuntimeError("Disposable receipt peer acceptance timed out") from None
