@@ -237,6 +237,54 @@ message behaviour, not actual Cortex latency, cost, citations or source parity.
 Live transport, custody integration and a reviewed paid test remain open. Docker,
 Snowflake and GCP are not required by these checks.
 
+## Complete provider response decoding — 27 November
+
+[`agent_provider_response.py`](../../apps/api/src/ciq_api/agent_provider_response.py)
+now connects a complete non-streaming aggregate to the captured tool dispatcher
+or the existing final-candidate validator. The official
+[Run API reference](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run#non-streaming-response-stream-false),
+checked on 27 November, documents this aggregate and its nested tool-use, text,
+thinking and metadata fields. These tests supply synthetic responses; no SDK,
+endpoint, runtime service, route or worker invokes the decoder yet.
+
+The supported profile deliberately requires `role: assistant`, explicit
+`status: completed`, matching expected provider run metadata and no warnings.
+Some documented examples omit status or metadata; those examples are rejected
+rather than silently treated as successful. Actual paused client-tool response
+status and account wire compatibility remain unverified. Provider IDs are opaque
+strings, distinct from the internal operation UUID that the candidate must echo.
+A supplied thread cursor must contain strict positive thread, user-message and
+assistant-message IDs together, with distinct user/assistant messages.
+
+The decoder accepts only a batch of client tool requests or one final text
+block, optionally accompanied by bounded private thinking. It preserves complete
+assistant content on tool turns for future reviewed continuation; thinking is
+never searched for a candidate. Server-side tools/results, mixed tool/text
+messages, unknown content extensions, permission requests and nonempty warnings
+reject the whole response. Final text must itself be one valid candidate: no
+recursive search, fence removal, prose extraction, field repair or synthesized
+citations. Fresh supplied context and capture hashes are revalidated before
+either path. All errors use a fixed code, and clinical result fields are hidden
+from repr. Both incoming UTF-8 and retained canonical JSON are bounded to
+384,000 bytes; the existing smaller call/result/candidate limits still apply.
+
+The 97 new offline checks cover all thirty golden transcripts, remote/internal
+ID separation, thread cursor shapes, malformed and duplicate JSON, failed runs,
+warning-bearing responses, candidate money/citation failures, revoked scope,
+changed review versions and Unicode expansion. The focused contracts, mapping,
+snapshot tools, client tools and provider-response suite totals 512 passing
+checks. Both CI workflows for preceding revision `4bde491` passed before this
+change; the new revision still requires its own CI result.
+
+Matching a caller-supplied run ID does not authenticate the remote response or
+prove that its tools belong to the selected request. The future transport must
+obtain the expected ID from trusted dispatch state, enforce original operation
+and parent-message bindings, and retain reported usage separately from durable
+spend authority. This decoder neither starts a conversation nor authorizes,
+counts or sends a continuation. Replaying an aggregate is not prevented by this
+pure function. The execution ledger must retain uncertain allowance on failures
+and prohibit replay; final locked publication remains a separate transaction.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
