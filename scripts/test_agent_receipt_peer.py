@@ -25,6 +25,7 @@ def interrupted(_signal, _frame):
 
 def summary(output):
     passed = None
+    completed, last_module = 0, None
     decoded = re.sub(r"\x1b\[[0-9;]*[mK]", "", output.decode(errors="replace"))
     for line in decoded.splitlines():
         match = re.fullmatch(
@@ -33,12 +34,21 @@ def summary(output):
         if match:
             passed = int(match[1])
             print(line.strip())
+        elif progress := re.fullmatch(
+            r"apps/api/tests/(test_agent_[a-z_]+\.py)::[a-zA-Z0-9_\[\]-]+ "
+            r"(?:PASSED|FAILED|ERROR)(?:\s+\[\s*\d+%\])?", line.strip(),
+        ):
+            completed += 1
+            last_module = progress[1]
         elif line.startswith(("FAILED ", "ERROR ")):
             print(line.split(" - ", 1)[0])
         elif re.match(
             r"^E\s+(AssertionError|PermissionError|ModuleNotFoundError|RuntimeError)", line,
         ):
             print(line[:200])  # Fixed dummy-helper failure reasons only.
+    if passed is None and last_module is not None:
+        # No parameter values, private test output or failure trace is printed.
+        print(f"Completed {completed} disposable checks; last module {last_module}")
     return passed
 
 
@@ -88,7 +98,9 @@ def main():
         assert host["NanoCpus"] == 1_000_000_000
         assert host["Ulimits"] == [{"Name": "nofile", "Hard": 256, "Soft": 256}]
         try:
-            result = docker("start", "-a", identifier, check=False, timeout=300)
+            # Expanded UID/exec acceptance shares the same one-CPU CI sandbox.
+            # This suite bound is separate from every actual runner/IPC deadline.
+            result = docker("start", "-a", identifier, check=False, timeout=360)
         except subprocess.TimeoutExpired as exc:
             summary(exc.stdout or b"")
             raise RuntimeError("Disposable receipt peer acceptance timed out") from None
