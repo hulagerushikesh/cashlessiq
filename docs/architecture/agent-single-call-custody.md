@@ -3,7 +3,8 @@
 The captured-product comparison now has an **inactive assembled attempt**:
 request preparation, matching receipt/provider scope, retained issue, one raw
 response, retained observation and a consumed clinical candidate handoff.
-No application route, worker, installer, runner or service selects it. It cannot
+Only the prepared manual single-call entries select it; no application route,
+worker, installer or installed service does. It cannot
 replace the fake-only controller or authorize a live call. In particular, supplied
 `AgentContext` values alone remain trusted assertions, not fresh database
 authorization. The separate [protected product adapter](agent-single-call-product.md)

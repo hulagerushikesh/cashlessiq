@@ -2,7 +2,8 @@
 
 Separate from fake grant/receipt IPC. Only hashes and accounting metadata cross
 this boundary, never clinical bodies, credentials, paths or caller clocks.
-No route, runner, installer or service selects this module.
+Only the prepared manual single-call entries select this module. No application
+route, installer or installed service does.
 """
 
 import hashlib
@@ -32,6 +33,7 @@ ENDPOINT = Path("/run/ciq-agent-single-call/ipc/receipt.sock")
 CUSTODY_UID, RECEIPT_UID = 53002, 53003
 ERROR = "single_call_peer_unavailable"
 MAX_PACKET, IPC_SECONDS = 4096, 2.0
+ATTEMPT_IPC_SECONDS = 22.0
 _REQUEST, _RESPONSE = b"CIQ-CALL-RECEIPT-1\n", b"CIQ-CALL-STATUS-1\n"
 
 
@@ -302,3 +304,45 @@ class SingleCallReceiptPeer:
             listener, self._listener = self._listener, None
         if listener is not None:
             listener.close()
+
+    def serve_attempt(self):
+        """One fixed issue -> observe pair on the original owned listener.
+
+        Bounded waiting between connections accommodates provider work without
+        widening each two-second authenticated frame/commit/ACK budget. Status,
+        duplicate issue, reordered commands and all faults terminate the pair.
+        No endpoint replacement, retry, journal creation or state reconstruction.
+        """
+        listener = None
+        try:
+            with self._lock:
+                listener, self._listener = self._listener, None
+            _require(listener is not None)
+            overall = monotonic() + ATTEMPT_IPC_SECONDS
+            for command in ("issue", "observe"):
+                _guard(RECEIPT_UID)
+                listener.settimeout(_remaining(overall))
+                connection, _ = listener.accept()
+                with connection:
+                    end = min(overall, monotonic() + IPC_SECONDS)
+                    _peer(connection, CUSTODY_UID)
+                    request = _receive(connection, _REQUEST, _Request, end)
+                    _require(request.pin_sha256 == self._journal.pin_sha256
+                             and request.command == command)
+                    if command == "issue":
+                        self._journal.issue(now=datetime.now(UTC))
+                    else:
+                        observation = request.observation
+                        self._journal.observe_digest(observation.response_sha256,
+                            provider_run_id=observation.provider_run_id, usage=observation.usage)
+                    status = self._journal.status()
+                    _send(connection, _RESPONSE, _Response(
+                        version="single-call-status-v1", pin_sha256=request.pin_sha256,
+                        command=command, status=status,
+                    ), end)
+                    _remaining(end)
+        except Exception:
+            raise ValueError(ERROR) from None
+        finally:
+            if listener is not None:
+                listener.close()

@@ -1,7 +1,8 @@
 """Inactive, single-use custody/provider IPC; not live execution authorization.
 
 Fixed Linux identities and endpoint, one complete pinned request per connection.
-No route, runner, installer, fake coordinator or service selects this module.
+Only prepared manual single-call entries select it. No application route,
+installer, fake coordinator or installed service does.
 The trusted future supervisor must gate launch on independently retained live
 issue. A peer UID and a private body pin do not establish that durable permission.
 """

@@ -1,6 +1,7 @@
 """Inactive protected product adapter for ONE manually reviewed captured call.
 
-No route, service or generic worker selects this program. The trusted supervisor
+Only the prepared manual custody entry selects this program; no installed
+service, application route or generic worker does. The trusted supervisor
 supplies a dedicated custody engine and matching independent peers; neither a
 browser nor an agent chooses authority, snapshots, configuration or responses.
 The inactive SQL package must be separately reviewed/staged by the owner. Its

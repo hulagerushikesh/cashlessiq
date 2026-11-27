@@ -1,5 +1,6 @@
 """Real local sockets/retention; OS identity enforcement is separately tested on Linux."""
 
+import errno
 import hashlib
 import socket
 import stat
@@ -220,6 +221,10 @@ def test_bad_request_never_issues(ipc, kind):
             assert connection.recv(1) == b""
         except (BrokenPipeError, ConnectionResetError):
             pass
+        except OSError as error:
+            # Darwin can report ENOTCONN when the rejecting peer closes before
+            # shutdown. The unchanged journal assertion below is still required.
+            assert error.errno == errno.ENOTCONN
     assert ipc["journal"].status().phase == "ready"
 
 

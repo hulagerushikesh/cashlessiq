@@ -80,7 +80,7 @@ directory = Path({str(directory)!r})
 
     run("SingleCallJournal.provision(directory, pin)\nos.write(1,b'PASS')", 53003)
 
-    def start(*, denied=False, lost=False):
+    def start(*, denied=False, lost=False, attempt=False):
         peer.ENDPOINT.unlink(missing_ok=True)  # Quiescent fixture-owned endpoint only.
         code = f"""
 journal = SingleCallJournal(directory, pin)
@@ -95,7 +95,7 @@ server = peer.SingleCallReceiptPeer(journal)
 server.bind()
 os.write(1,b'READY\\n')
 try:
-    server.serve_once()
+    server.serve_attempt() if {attempt!r} else server.serve_once()
     valid = {not denied!r}
 except ValueError as error:
     valid = {denied!r} and str(error) == peer.ERROR
@@ -145,6 +145,44 @@ def test_actual_uids_complete_lifecycle_and_reconstruction_denies_reissue(peers)
     server = s.start(denied=True)
     s.run(s.denial)
     s.collect(server, b"PASS")
+
+
+def test_fixed_attempt_pair_keeps_original_endpoint_across_provider_wait(peers):
+    server = peers.start(attempt=True)
+    peers.run("""
+import time
+client = peer.SingleCallReceiptClient(pin)
+assert client.issue() is None
+time.sleep(2.1)  # Beyond the per-frame budget, inside the fixed outer pair.
+assert client.observe('a'*64, provider_run_id='opaque',
+    usage=ReportedTokenUsage(input_tokens=None,output_tokens=None)) is None
+os.write(1,b'PASS')
+""")
+    peers.collect(server, b"PASS")
+    peers.run("assert SingleCallJournal(directory,pin).status().phase == 'observed'\n"
+              "os.write(1,b'PASS')", 53003)
+
+
+@pytest.mark.parametrize("command", ["status", "observe"])
+def test_fixed_pair_rejects_nonissue_first_without_retention_change(peers, command):
+    server = peers.start(attempt=True, denied=True)
+    peers.run(f"""
+client = peer.SingleCallReceiptClient(pin)
+try:
+    if {command!r} == 'status':
+        client.status()
+    else:
+        client.observe('a'*64,provider_run_id='opaque',
+            usage=ReportedTokenUsage(input_tokens=None,output_tokens=None))
+except ValueError as error:
+    assert str(error) == peer.ERROR
+else:
+    raise AssertionError('wrong first command accepted')
+os.write(1,b'PASS')
+""")
+    peers.collect(server, b"PASS")
+    peers.run("assert SingleCallJournal(directory,pin).status().phase == 'ready'\n"
+              "os.write(1,b'PASS')", 53003)
 
 
 @pytest.mark.parametrize("uid", [53001, 53002, 53004])

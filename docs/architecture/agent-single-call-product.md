@@ -2,8 +2,9 @@
 
 The inactive [`ProductSingleCall`](../../apps/api/src/ciq_api/agent_single_call_product.py)
 connects the [original prepared custody](agent-single-call-custody.md) to protected
-product admission and advisory publication. It has **no application route,
-generic worker, production migration, installer or service entry**. Adding this
+product admission and advisory publication. The prepared manual custody entry
+selects it, but no application route, generic worker, production migration,
+installer or installed service does. Adding this
 code does not enable a provider, create an approval, authorize spend or deploy it.
 
 ## Protected authority
@@ -141,7 +142,8 @@ Hosted results must pass before claiming PostgreSQL acceptance for this package.
 
 Remaining activation work:
 
-1. Review and assemble the manual supervised runtime, separate credential delivery,
+1. Review and assemble the [manual supervised runtime](agent-single-call-runtime.md),
+   now with prepared process entries, separate credential delivery,
    reviewed provider v2 plan, durable independent journal and owner-staged disabled
    database assignment. Validate effective host/service/IPC/network/filesystem
    policy, retained-history recovery/quarantine and clock fences together.
