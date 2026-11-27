@@ -704,6 +704,21 @@ verified provider run IDs. Revocation, monotonic deadline/clock rollback fences,
 credential delivery, outer service policy and retained-history recovery remain
 open. No real credential, paid call, VM or local Docker container is activated.
 
+## Original single-call assembly prepared — 27 November
+
+The [single-call custody assembly](agent-single-call-custody.md) now matches
+the captured request/configuration/binding/source pins to both authenticated
+peers, requires retained issue acknowledgment before provider dispatch, retains
+the raw-response association and allows one fresh-scope candidate handoff.
+The provider's separate v2 private plan matches the full reviewed pin before
+opening its credential. The first synchronous provider ID is an observation,
+not a copied expected-ID check. Existing fake grants/controllers stay fake-only.
+
+The assembly is inactive. Supplied context is still a trusted assertion; protected
+owner consent, product admission/revocation/publication, provisioning, outer
+service policy and retained-history recovery remain activation gates. See the
+linked design for deadline, failure, accounting and acceptance details.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
@@ -714,9 +729,9 @@ open. No real credential, paid call, VM or local Docker container is activated.
    source preflight. Source-reading approval does not authorize tool execution,
    staging writes or a remote model call. Keep human administrator OAuth out of
    runtime custody.
-3. Bind the single-call captured profile to reviewed provider custody and verify
-   submission/checkpoint/lookup semantics with a bounded adapter. Keep client
-   continuations disabled for the first comparison. The current 120-second
+3. Bind the prepared single-call assembly to protected current product authority
+   and manual runtime custody. Keep client continuations disabled for the first
+   comparison. The current 120-second
    legacy remote budget cannot fit unchanged inside the ledger's 120-second
    total deadline; the new request budget still needs a local deadline fence.
 4. Present exact synthetic cases, identities, definitions, attempts, time window

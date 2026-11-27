@@ -11,4 +11,5 @@ COPY src/cashlessiq/rules ./src/cashlessiq/rules
 RUN uv sync --project apps/api --frozen
 COPY apps/api/tests/receipt_peer_child.py apps/api/tests/test_agent_receipt_peer_linux.py apps/api/tests/test_agent_receipt_verifier_offline.py apps/api/tests/test_agent_custody_submission_offline.py ./apps/api/tests/
 COPY apps/api/tests/test_agent_single_call_peer.py apps/api/tests/test_agent_single_call_peer_linux.py ./apps/api/tests/
-CMD ["apps/api/.venv/bin/python", "-m", "pytest", "-x", "--tb=short", "-p", "no:cacheprovider", "apps/api/tests/test_agent_receipt_peer_linux.py", "apps/api/tests/test_agent_single_call_peer_linux.py"]
+COPY apps/api/tests/single_call_fixtures.py apps/api/tests/test_agent_contracts.py apps/api/tests/test_agent_single_call_custody_linux.py ./apps/api/tests/
+CMD ["apps/api/.venv/bin/python", "-m", "pytest", "-x", "--tb=short", "-p", "no:cacheprovider", "apps/api/tests/test_agent_receipt_peer_linux.py", "apps/api/tests/test_agent_single_call_peer_linux.py", "apps/api/tests/test_agent_single_call_custody_linux.py"]

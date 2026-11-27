@@ -41,7 +41,11 @@ def peers(request):
     request.addfinalizer(cleanup)
     peer.ENDPOINT.parent.mkdir(mode=0o755)
     os.chown(peer.ENDPOINT.parent, 53003, 53003)
-    pin = reviewed_pin()
+    material = None
+    if getattr(request, "param", None) == "assembly":
+        from single_call_fixtures import call_material
+        material = call_material()
+    pin = reviewed_pin() if material is None else material[2]
     # Only this fresh test parent may be written by the receipt UID.
     parent = root / "storage"
     parent.mkdir(mode=0o700)
@@ -121,7 +125,7 @@ else:
 os.write(1,b'PASS')
 """
     return SimpleNamespace(start=start, run=run, collect=collect, launch=launch,
-                           directory=directory, denial=denial, pin=pin)
+                           directory=directory, denial=denial, pin=pin, material=material)
 
 
 def test_actual_uids_complete_lifecycle_and_reconstruction_denies_reissue(peers):

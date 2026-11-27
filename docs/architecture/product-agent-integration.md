@@ -158,9 +158,12 @@ The 27 November [single-call captured profile](agent-source-mapping.md#first-cal
 now prepares facts, deterministic results and cited clauses in one inline
 request, with a final-only response validator. This is the proposed first live
 comparison shape: assisted explanation of supplied results, with no client-tool
-continuations. It remains offline and is not connected to durable execution or
-runtime credentials. The existing one-attempt fake accounting is not a live
-submission approval. Multi-turn orchestration remains separate future work.
+continuations. The [prepared original single-call assembly](agent-single-call-custody.md)
+now connects that profile to separately authenticated retained receipt/provider
+peers and a private, consumed candidate handoff. It remains inactive: protected
+current product/owner authority, publication, reviewed credential provisioning and
+outer runtime policy are not connected. The existing one-attempt fake accounting
+is not a live submission approval. Multi-turn orchestration remains separate work.
 
 
 ### Independent receipt observation prepared — 3 November

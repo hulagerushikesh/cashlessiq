@@ -165,6 +165,11 @@ class SingleCallReceiptClient:
     def status(self):
         return self._call("status")
 
+    @property
+    def pin_sha256(self):
+        """Construction scope, never a retained status or dispatch permit."""
+        return self._digest
+
     def issue(self):
         # Intentionally no return ticket/status for a mutating command.
         self._call("issue")

@@ -107,6 +107,22 @@ def _invalid_constant(_value):
     raise ValueError(ERROR)
 
 
+def _parse_response(raw):
+    """One strict aggregate parser shared by captured and synchronous profiles.
+
+    Parsing does not authenticate a transport, authorize work or validate the
+    clinical text. In particular, a run ID read here is an observed value.
+    """
+    if type(raw) is not bytes or not 0 < len(raw) <= MAX_PROVIDER_RESPONSE_BYTES:
+        raise ValueError(ERROR)
+    value = json.loads(
+        raw.decode("utf-8"), object_pairs_hook=_unique, parse_constant=_invalid_constant,
+    )
+    if len(canonical_json(value).encode("utf-8")) > MAX_PROVIDER_RESPONSE_BYTES:
+        raise ValueError(ERROR)
+    return value, _Response.model_validate(value)
+
+
 def decode_captured_provider_response(
     snapshot: AgentInput, current: AgentContext, operation_id: UUID,
     expected_provider_run_id: str, raw: bytes, *, allow_client_tools: bool = True,
@@ -128,17 +144,9 @@ def decode_captured_provider_response(
             type(allow_client_tools) is not bool
             or type(operation_id) is not UUID or type(expected_provider_run_id) is not str
             or not 1 <= len(expected_provider_run_id) <= 200
-            or type(raw) is not bytes or not 0 < len(raw) <= MAX_PROVIDER_RESPONSE_BYTES
         ):
             raise ValueError(ERROR)
-        value = json.loads(
-            raw.decode("utf-8"), object_pairs_hook=_unique, parse_constant=_invalid_constant,
-        )
-        # Also bound the canonical form retained below; escaped Unicode can
-        # expand substantially compared with its incoming UTF-8 representation.
-        if len(canonical_json(value).encode("utf-8")) > MAX_PROVIDER_RESPONSE_BYTES:
-            raise ValueError(ERROR)
-        response = _Response.model_validate(value)
+        value, response = _parse_response(raw)
         if response.metadata.run_id != expected_provider_run_id:
             raise ValueError(ERROR)
         metadata = canonical_json(value["metadata"])
