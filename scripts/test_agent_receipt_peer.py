@@ -97,7 +97,7 @@ def main():
         state = json.loads(docker("inspect", identifier).stdout)[0]["State"]
         if (
             result.returncode or state["Running"] or state["ExitCode"] != 0
-            or state["OOMKilled"] or state["Error"] or passed != 56
+            or state["OOMKilled"] or state["Error"] or passed != 66
         ):
             raise RuntimeError("Disposable receipt peer acceptance failed")
         print("PASS: independent receipt peers and invocation-owned process/file cleanup")

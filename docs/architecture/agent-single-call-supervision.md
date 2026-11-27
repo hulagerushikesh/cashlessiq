@@ -82,6 +82,8 @@ The old canned service examples are unchanged. They cannot simply select these
 new entries: among other differences, the reviewed peer guards require **empty**
 supplementary groups, while systemd normally initializes groups from the user
 database ([systemd.exec](https://www.freedesktop.org/software/systemd/man/251/systemd.exec.html)).
-New service policy must be tested with the exact identity-launch boundary rather
-than weakening those guards. No new service examples or host changes are installed
-by this batch, and external provider egress remains unconfigured.
+The [prepared identity launcher](agent-single-call-identity.md) now supplies a
+fixed permanent identity transition, exercised in the disposable composition
+fixture without weakening those guards. New service policy still must be tested
+with that exact boundary. No new service examples or host changes are installed,
+and external provider egress remains unconfigured.

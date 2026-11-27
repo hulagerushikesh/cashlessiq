@@ -76,10 +76,7 @@ def test_original_three_runner_sequence_retains_uncertainty_and_stops_all(peers,
             child = subprocess.Popen(
                 (sys.executable, "-I", "-B", "-c", codes[role]), cwd="/",
                 stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                env={"LANG": "C.UTF-8"}, user={"receipt": 53003, "provider": 53004,
-                                              "custody": 53002}[role],
-                group={"receipt": 53003, "provider": 53004, "custody": 53002}[role],
-                extra_groups=[], start_new_session=True,
+                env={"LANG": "C.UTF-8"}, extra_groups=[0, 777], start_new_session=True,
             )
             children[role] = child
             self.ids[role] = uuid4().hex
@@ -156,7 +153,12 @@ if {fault == 'issue-ack'!r}:
     peer._send=lost
 sys.exit(runner.main())
 """
-    codes = {"receipt": receipt, "provider": provider, "custody": custody}
+    # Execute the actual irreversible launcher transition rather than relying on
+    # Popen's user/group helpers. Only subsequent SQL/HTTPS work is substituted.
+    codes = {role: "from ciq_api.agent_single_call_identity import prepare_identity\n"
+             + f"prepare_identity({role!r})\n" + code
+             for role, code in {"receipt": receipt, "provider": provider,
+                                "custody": custody}.items()}
     host = Host()
     try:
         for root in (provider_root, custody_root):
