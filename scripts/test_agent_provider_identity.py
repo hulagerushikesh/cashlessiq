@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
+from scripts.agent_provider_peer_acceptance import run_controls
+
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE = Path("/run/ciq-agent-provider")
 RUNTIME = Path("/opt/ciq-agent-provider-review")
@@ -29,7 +31,7 @@ def guard():
     for path in (PRIVATE, RUNTIME):
         if path.exists() or path.is_symlink():
             raise RuntimeError("Provider identity acceptance refuses an existing host object")
-    for uid in (53002, 53004):
+    for uid in (53001, 53002, 53003, 53004):
         for lookup in (pwd.getpwuid, grp.getgrgid):
             try:
                 lookup(uid)
@@ -51,7 +53,7 @@ def main():
         package.mkdir(mode=0o755)
         (package / "__init__.py").touch(mode=0o644)
         for module in ("agent_private_file", "agent_https_transport", "agent_https_process",
-                       "agent_https_worker", "agent_provider_identity"):
+                       "agent_https_worker", "agent_provider_identity", "agent_provider_peer"):
             destination = package / (module + ".py")
             shutil.copyfile(ROOT / "apps/api/src/ciq_api" / (module + ".py"), destination)
             destination.chmod(0o644)
@@ -200,6 +202,7 @@ os._exit(1)
         write(plan_path, json.dumps(plan).encode())
         check(provider, 53004, b"OK")
         print("PASS: 20 provider-identity controls; distinct UIDs, private files, no network")
+        run_controls(runtime=RUNTIME, private=PRIVATE, worker=worker, body=BODY, reply=REPLY)
     finally:
         for path in reversed(owned):
             shutil.rmtree(path)

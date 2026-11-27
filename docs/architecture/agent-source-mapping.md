@@ -508,8 +508,8 @@ custody reads its own secret but cannot read the PAT/plan or pass the provider
 guard. Actual isolated parent/child supervision passes a dummy token through its
 private pipe to a test-only network replacement. Unsafe ownership/modes, missing,
 linked, special, malformed and oversized inputs fail without retry. It refuses
-existing paths/UIDs and removes only its own fixtures. Linux acceptance remains
-separate from the local test result until CI completes.
+existing paths/UIDs and removes only its own fixtures. The original twenty
+controls passed in hosted Linux CI for `8a0ea63`.
 
 This is private-file access and token-flow preparation, **not** a live credential
 delivery service or permission to run a model. No real token has been created,
@@ -520,6 +520,63 @@ and uncertain usage accounting remain open. A private plan is not a grant and
 reconstructing this class cannot create one. The unchanged inactive installer
 still knows only the original three fake-service identities. No GCP, Snowflake,
 Docker or paid resource is started by this change.
+
+## Inactive custody/provider IPC — 27 November
+
+[`agent_provider_peer.py`](../../apps/api/src/ciq_api/agent_provider_peer.py)
+prepares the fixed `/run/ciq-agent-provider/ipc/provider.sock` boundary. No route,
+runner, installer, fake coordinator or service selects it. Custody UID/GID
+`53002` and provider UID/GID `53004` mutually authenticate using Linux
+`SO_PEERCRED`, including positive PID and exact GID. Custody sends no bytes until
+it has authenticated the provider; the provider reads no bytes or private files
+until it has authenticated custody. The processes require exact unprivileged
+real/effective/saved identities, no supplementary groups, disabled core dumps,
+isolated Python, no bytecode and a clean locale-only environment.
+
+The endpoint is fixed in source. Every ancestor must be root/provider-owned and
+not writable by group/others, with no symlinks. The socket must be provider-owned
+mode `0666`: connecting is permitted without sharing the provider group, while
+kernel authentication remains mandatory. Other local users can cause denial of
+service; this is not availability isolation. Runtime never removes or adopts an
+existing socket. A trusted supervisor must create fresh directories, own process
+lifetime and remove its endpoint after all peers have stopped.
+
+One request contains only a fixed protocol marker, bounded length, SHA-256 and
+the complete original body. Malformed, truncated, extended, concatenated or
+descriptor-bearing frames fail before credential access. A write-half close is
+required before the provider opens its private plan/PAT. That existing plan then
+independently pins the body and host. The raw response carries the same body
+digest, a bounded length and fixed protocol marker; complete EOF is required
+before custody returns it. No token, credential path, hostname, permission,
+timeout or recovery command crosses IPC. Request/response limits remain
+256,000/384,000 bytes. This digest associates the local exchange with its body;
+it does not authenticate a provider run ID or create a clinical candidate.
+
+Each client and bound listener has one attempt, including faults, concurrent
+consumption, lost responses and timeouts. A single decreasing local budget of at
+most twelve seconds covers accepting, framing, credential preparation, child
+supervision and response transfer. Idle/missing-EOF peers cannot reset it. Child
+cleanup retains its separate bounded reap allowance. Disconnecting or timing out
+does not prove remote work stopped and cannot authorize a retry or refund.
+
+Sixty offline IPC checks cover real local sockets with dummy exchange, limits,
+framing, peer rejection, deadline consumption and fixed errors. The existing
+guarded Linux acceptance additionally tests the actual custody-to-provider-to-
+isolated-child path with its random dummy PAT, without network access. Eleven
+controls include rejected clinical/receipt UIDs, a false server with correct
+socket ownership, bad plan/body pins, malformed frames, passed descriptors,
+missing EOF and a stalled child. It asserts rejected requests open no PAT and
+spawn no provider child. CI status must be checked separately after pushing.
+
+This closes a prepared local transport boundary, **not** live admission. No
+durably issued live request authorizes constructing or launching this peer yet.
+Recreating objects/listeners is not durable replay protection. Live issue and
+independently retained accounting must precede launch, with uncertain use held
+after any ambiguous exchange. Provider-ID reconciliation, fresh protected
+clinical publication, outer service/cgroup/filesystem/network policy, credential
+provisioning/rotation and reviewed identity/role/model/CA store remain open. The
+existing fake-only coordinator and grants are unchanged. No service, paid call,
+GCP VM, real PAT or Docker container is activated.
 
 ## Next concrete acceptance
 
