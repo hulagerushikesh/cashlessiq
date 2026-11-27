@@ -373,6 +373,56 @@ fresh membership or prevent replay; those remain the original coordinator and
 restricted publication's responsibilities. Live activation, provider credentials,
 independent usage/reconciliation and the reviewed local deadline remain open.
 
+## Inactive single-POST HTTPS primitive — 27 November
+
+[`agent_https_transport.py`](../../apps/api/src/ciq_api/agent_https_transport.py)
+prepares the next transport boundary without selecting it in a service, route,
+worker, container or custody runner. It has no entrypoint, credential loader,
+database, SDK or environment/profile fallback. Trusted reviewed configuration
+supplies one exact account hostname, a PAT and the SHA-256 of the prepared body.
+Host syntax accepts a narrow public `snowflakecomputing.com` profile; it does
+not establish account ownership, token identity or least-privilege role scope.
+Browser/clinical input must never supply these constructor arguments.
+
+The primitive makes at most one direct HTTPS POST to the fixed no-agent-object
+path on port 443. An instance consumes its local latch before validation or I/O,
+including invalid, failed and concurrent attempts, and drops its stored token
+reference. This is not memory zeroization, durable replay protection or an
+execution grant. Existing fake receipts cannot authorize this network primitive.
+The body is byte-bound to its reviewed digest and capped at 256,000 bytes; its
+clinical schema/configuration still belongs to the captured preparer and custody.
+
+TLS requires certificate and hostname verification with TLS 1.2 or later.
+No environment key logging is enabled. Direct stdlib HTTPS ignores proxy, CLI
+and SDK session/retry configuration; the future isolated launcher must still
+provide a clean environment and reviewed CA store. There are no redirect,
+credential-refresh, retry, polling, cancellation or continuation requests.
+Only HTTP 200 with one JSON content type and unambiguous bounded length/chunked
+framing is accepted. Compression, SSE, asynchronous status, duplicate framing,
+oversize and incomplete bodies fail with one fixed diagnostic. HTTP error bodies
+are never returned. Raw success bytes still require the existing strict provider
+and clinical validators; transport success cannot publish or finalize a review.
+
+This uses the documented [Agent Run endpoint and non-streaming headers](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents-run)
+and [REST PAT headers](https://docs.snowflake.com/en/developer-guide/snowflake-rest-api/authentication).
+No real credential was created, loaded or tested. Ninety-two new checks use the
+actual stdlib HTTP parser with scripted sockets, plus a temporary loopback TLS
+listener with ephemeral certificates. The TLS cases prove a valid exact-host
+exchange and rejection of hostname/untrusted-certificate failures before sending
+the dummy token. They do not contact Snowflake or establish account capability.
+The five focused transport/preparation/response/exchange/dispatch suites pass
+315 checks. Hosted CI remains a separate acceptance result.
+
+The ten-second decreasing socket budget is **not a hard process deadline**:
+DNS, interim responses and slow header parsing still require external process
+supervision. A local disconnect does not prove remote work stopped. A separate
+credential UID/delivery path, pinned live authorization and durable issue,
+request/response association and provider-ID reconciliation, retained uncertain
+allowance and fresh protected publication remain required before activation.
+The first synchronous response's opaque provider ID is not known in advance;
+copying it from its own body into an expected-ID argument is not authentication.
+No Docker, GCP or provider resource is started by this change.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
