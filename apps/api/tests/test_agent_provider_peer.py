@@ -1,5 +1,6 @@
 """Real local IPC with dummy exchange; cross-UID authentication runs in Linux CI."""
 
+import errno
 import hashlib
 import socket
 import stat
@@ -145,6 +146,10 @@ def test_incomplete_or_extended_frame_never_opens_identity(ipc, wire):
             assert client.recv(1) == b""
         except (BrokenPipeError, ConnectionResetError):
             pass
+        except OSError as error:
+            # Darwin may report ENOTCONN when the rejecting peer closes before
+            # this test's shutdown. Other I/O errors must still fail the test.
+            assert error.errno == errno.ENOTCONN
     assert not ipc["calls"]
 
 

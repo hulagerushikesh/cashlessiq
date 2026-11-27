@@ -8,6 +8,7 @@ assembly until that adapter, provisioning and the outer supervisor are reviewed.
 """
 
 import hashlib
+import math
 from datetime import UTC, datetime
 from threading import Lock
 from time import monotonic
@@ -94,12 +95,14 @@ class PreparedSingleCallCustody:
         _require(remaining > 0)
         return remaining
 
-    def dispatch(self, current: AgentContext):
+    def dispatch(self, current: AgentContext, *, monotonic_deadline=None):
         """Issue, exchange, retain observation; return no response or I/O ticket.
 
-        Fresh locked clinical/owner authority must be checked by a future caller
-        immediately before invoking this inactive entry. This context alone does
-        not do that. Failures never retry, reset history or release uncertainty.
+        The optional absolute monotonic ceiling only SHORTENS this attempt. It
+        lets the protected adapter include connection/lock/validation/commit time
+        in the same original budget. It is not an authorization or clock proof.
+        Fresh locked authority belongs to that caller. Failures never retry,
+        reset history or release uncertainty.
         """
         with self._lock:
             body, self._pending = self._pending, None
@@ -110,8 +113,13 @@ class PreparedSingleCallCustody:
             _require(self._pin.starts_at <= now
                      and (self._pin.ends_at - now).total_seconds() >= ATTEMPT_SECONDS)
             self._end, self._last_wall = started + ATTEMPT_SECONDS, now
+            if monotonic_deadline is not None:
+                _require(type(monotonic_deadline) in (int, float)
+                         and math.isfinite(monotonic_deadline))
+                self._end = min(self._end, monotonic_deadline)
             select_captured_snapshot(self._snapshot, current)
-            self._remaining()
+            _require(self._remaining() > self._pin.provider_seconds + 2
+                     + _AFTER_PROVIDER_SECONDS)
             # Never dispatch on a status read, an unacknowledged issue, or a
             # reconstruction. This exact original call must confirm its issue.
             self._receipt.issue()

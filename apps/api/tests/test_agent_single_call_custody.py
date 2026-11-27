@@ -28,8 +28,13 @@ def denied(call):
 
 
 @pytest.fixture
-def assembly(tmp_path, monkeypatch):
-    snapshot, config, pin, body = call_material()
+def single_call_material():
+    return call_material()
+
+
+@pytest.fixture
+def assembly(tmp_path, monkeypatch, single_call_material):
+    snapshot, config, pin, body = single_call_material
     journal = SingleCallJournal.provision(tmp_path / "retained", pin)
     state = {"fault": None, "calls": [], "commands": [],
              "raw": response_bytes(snapshot, pin.operation_id),

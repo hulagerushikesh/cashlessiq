@@ -714,10 +714,12 @@ The provider's separate v2 private plan matches the full reviewed pin before
 opening its credential. The first synchronous provider ID is an observation,
 not a copied expected-ID check. Existing fake grants/controllers stay fake-only.
 
-The assembly is inactive. Supplied context is still a trusted assertion; protected
-owner consent, product admission/revocation/publication, provisioning, outer
-service policy and retained-history recovery remain activation gates. See the
-linked design for deadline, failure, accounting and acceptance details.
+The assembly is inactive. Its supplied context alone is still a trusted assertion.
+The separate [protected product adapter](agent-single-call-product.md) now derives
+scope from locked SQL projections, commits a one-use checkpoint before peer I/O
+and saves only a freshly validated private advisory. Default-disabled staging,
+actual owner consent, provisioning, outer service policy and retained-history
+recovery remain activation gates. No live runtime selects this adapter.
 
 ## Next concrete acceptance
 
@@ -729,8 +731,8 @@ linked design for deadline, failure, accounting and acceptance details.
    source preflight. Source-reading approval does not authorize tool execution,
    staging writes or a remote model call. Keep human administrator OAuth out of
    runtime custody.
-3. Bind the prepared single-call assembly to protected current product authority
-   and manual runtime custody. Keep client continuations disabled for the first
+3. Review the prepared protected single-call product adapter and finish manual
+   runtime custody. Keep client continuations disabled for the first
    comparison. The current 120-second
    legacy remote budget cannot fit unchanged inside the ledger's 120-second
    total deadline; the new request budget still needs a local deadline fence.

@@ -125,6 +125,11 @@ jobs:
           CIQ_AGENT_CONTROLLER_TEST: '1'
           TEST_DATABASE_URL: postgresql+psycopg://postgres:ciq-disposable-agent-ledger@127.0.0.1:5432/postgres
         run: uv run --project apps/api python -m pytest apps/api/tests/test_agent_controller_lifecycle.py
+      - name: Inactive reviewed single-call authority, custody and advisory publication
+        env:
+          CIQ_AGENT_CONTROLLER_TEST: '1'
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:ciq-disposable-agent-ledger@127.0.0.1:5432/postgres
+        run: uv run --project apps/api python -m pytest apps/api/tests/test_agent_single_call_product_linux.py
       - name: Populated encrypted restore through separately authenticated restricted commands
         env:
           CIQ_AGENT_CONTROLLER_TEST: '1'

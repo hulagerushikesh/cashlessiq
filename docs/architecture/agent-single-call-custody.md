@@ -5,7 +5,9 @@ request preparation, matching receipt/provider scope, retained issue, one raw
 response, retained observation and a consumed clinical candidate handoff.
 No application route, worker, installer, runner or service selects it. It cannot
 replace the fake-only controller or authorize a live call. In particular, supplied
-`AgentContext` values remain trusted assertions, not fresh database authorization.
+`AgentContext` values alone remain trusted assertions, not fresh database
+authorization. The separate [protected product adapter](agent-single-call-product.md)
+now constructs them from locked SQL projections; it too remains inactive.
 
 ## Original attempt
 
@@ -44,7 +46,10 @@ controller object cannot reconstruct permission after issue. No database connect
 by this assembly, and no caller can inject raw responses, callbacks or candidates
 through its methods. Trusted code and shared-UID memory remain trusted boundaries.
 
-The original monotonic deadline covers scope validation, issue IPC, provider I/O,
+The optional absolute monotonic ceiling only shortens the assembly budget, allowing
+the protected adapter to include its earlier database connection/lock/commit time.
+It is not approval evidence or a clock fence. The original monotonic deadline covers
+scope validation, issue IPC, provider I/O,
 observation and candidate handoff. The total envelope is eighteen seconds: two
 two-second receipt budgets, the twelve-second provider process budget, one second
 for process cleanup and one second for validation margin. This is a conservative
@@ -131,10 +136,10 @@ acceptance; the `/run` fixture is not persistent/off-host recovery evidence.
 
 The remaining steps are concrete and separate:
 
-1. Implement protected product admission/dispatch/publication commands for the
-   single-call profile: current owner consent, tenant/principal/policy/review
-   state, revision/config/source/identity pins and revocation under locks. Supplied
-   booleans/hashes are insufficient. Keep the existing fake-only SQL gates intact.
+1. Review the now-prepared [protected product commands and original adapter](agent-single-call-product.md)
+   for the single-call profile. They check owner-staged authority and current
+   clinical scope under locks and persist only an advisory. No real consent,
+   assignment or live service is staged. Keep existing fake-only SQL gates intact.
 2. Provision the independent journal and reviewed v2 provider identity/plan under
    a manual supervised runtime, with retained-history recovery, credential
    delivery, UID ownership, outer filesystem/network/cgroup policy and deadline

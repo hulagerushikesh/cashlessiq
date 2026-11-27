@@ -160,10 +160,13 @@ request, with a final-only response validator. This is the proposed first live
 comparison shape: assisted explanation of supplied results, with no client-tool
 continuations. The [prepared original single-call assembly](agent-single-call-custody.md)
 now connects that profile to separately authenticated retained receipt/provider
-peers and a private, consumed candidate handoff. It remains inactive: protected
-current product/owner authority, publication, reviewed credential provisioning and
-outer runtime policy are not connected. The existing one-attempt fake accounting
-is not a live submission approval. Multi-turn orchestration remains separate work.
+peers and a private, consumed candidate handoff. The separate
+[protected product adapter](agent-single-call-product.md) now prepares locked
+owner-staged/current clinical authority, a committed one-use checkpoint and fresh
+advisory publication. Both remain inactive; no real consent, credential, enabled
+assignment, installer or live runtime is staged. Reviewed provisioning, outer
+runtime policy and retained-history recovery remain. Existing one-attempt fake
+accounting is not a live approval. Multi-turn orchestration remains separate work.
 
 
 ### Independent receipt observation prepared — 3 November

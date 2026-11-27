@@ -12,8 +12,8 @@ from ciq_api.agent_single_call_journal import ReviewedCallPin
 from ciq_api.assessment import fingerprint
 
 
-def call_material(index=0):
-    snapshot, operation = capture(index), uuid4()
+def call_material(index=0, *, snapshot=None):
+    snapshot, operation = capture(index) if snapshot is None else snapshot, uuid4()
     config = CapturedOneShotConfig(model="reviewed-test-model-v1", seconds=8, tokens=256)
     request = prepare_captured_one_shot(snapshot, context(snapshot), operation, config)
     now = datetime.now(UTC)
