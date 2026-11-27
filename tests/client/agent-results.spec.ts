@@ -8,6 +8,7 @@ import { AgentRequestForm } from "../../apps/web/src/components/agent-request-fo
 const view = (state: AgentResult["state"]): AgentResult => ({
   state,
   mode: "synthetic-only",
+  execution_profile: "synthetic-executor",
 });
 const render = (result: AgentResult | null) =>
   renderToStaticMarkup(createElement(AgentResultPanel, { result }));
@@ -113,3 +114,21 @@ test("QUERY keeps unavailable money distinct from a calculated zero", () => {
   expect(html).not.toContain("₹0");
   expect(html).not.toContain("<table");
 });
+
+for (const state of ["not_requested", "reserved", "unknown", "published"] as const) {
+  test(`reviewed ${state} view never starts or retries an attempt`, () => {
+    const html = render({
+      ...(state === "published" ? published : view(state)),
+      execution_profile: "reviewed-single-call",
+    });
+    expect(html).toContain("Refreshing this page never runs AI");
+    expect(html).not.toContain("Live AI is not connected");
+    expect(html).not.toMatch(/<button|<form|<script/);
+    if (state === "reserved") expect(html).toContain("This page cannot start it");
+    if (state === "unknown" || state === "published") {
+      expect(html).toContain("Provider usage and cost are unverified");
+      expect(html).toContain("does not authorize another attempt");
+    }
+    if (state === "published") expect(html).toContain("₹95,000");
+  });
+}

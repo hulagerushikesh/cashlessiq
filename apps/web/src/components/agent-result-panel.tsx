@@ -19,6 +19,12 @@ const messages: Record<AgentResult["state"], string> = {
 
 export function AgentResultPanel({ result }: { result: AgentResult | null }) {
   const comparison = result?.state === "published" ? result.comparison : null;
+  const reviewed = result?.execution_profile === "reviewed-single-call";
+  const status = reviewed && result.state === "reserved"
+    ? "A reviewed synthetic attempt is staged. This page cannot start it."
+    : reviewed && result.state === "not_requested"
+      ? "No reviewed advisory is available for this assignment."
+      : result ? messages[result.state] : null;
   return (
     <section
       className="mt-6 rounded-xl border border-slate-200 bg-white p-6"
@@ -28,14 +34,22 @@ export function AgentResultPanel({ result }: { result: AgentResult | null }) {
         Agent comparison
       </h2>
       <p className="mt-2 text-sm text-amber-900">
-        Synthetic testing only · Live AI is not connected. A medical officer owns the final
-        decision.
+        {reviewed
+          ? "Synthetic testing only · A separately approved attempt may provide an advisory. Refreshing this page never runs AI."
+          : "Synthetic testing only · Live AI is not connected."}{" "}
+        A medical officer owns the final decision.
       </p>
       <p className="mt-3 text-sm" role="status">
         {result
-          ? messages[result.state]
+          ? status
           : "Comparison service unavailable. The deterministic assessment and reviewer actions remain available."}
       </p>
+      {reviewed && (result.state === "unknown" || result.state === "published") && (
+        <p className="mt-2 text-sm text-amber-900">
+          Provider usage and cost are unverified. This attempt cannot be automatically reused;
+          refreshing does not authorize another attempt.
+        </p>
+      )}
       {result?.operation_id && (
         <p className="mt-2 break-words text-xs text-slate-500">
           Policy {result.policy_version} · Input revision {result.input_revision} · Review version{" "}

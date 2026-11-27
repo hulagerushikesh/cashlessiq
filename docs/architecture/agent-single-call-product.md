@@ -148,9 +148,49 @@ Remaining activation work:
 2. Review actual provider identity/model support, response shape, latency, usage
    semantics, exact synthetic case, one attempt and expected spend. Obtain explicit
    owner approval before any paid provider/cloud action or enabled live staging.
-3. Run the bounded deployed synthetic comparison, confirm uncertainty/history,
-   then add the permission-checked advisory UI read/projection and joint human
-   testing. Keep the generic job retries and human decision path separate.
+3. Run the bounded deployed synthetic comparison, confirm uncertainty/history
+   and the prepared advisory UI together with joint human testing. Keep the
+   generic job retries and human decision path separate.
+
+## Optional advisory UI read (prepared, disabled)
+
+`CIQ_SINGLE_CALL_ADVISORY_READS=true` selects the reviewed single-call read path
+only within the existing synthetic/local-identity test environment. The default
+is false. It does not select an executor, provision a schema/reader, authorize a
+provider, or convert a generic comparison request into a call. Generic comparison
+requests are refused while this profile is selected; the page has no start/retry
+button for it.
+
+The package additionally has an owner-staged `reader` slot, disabled by default,
+pinning the trusted API login's OID and name. Only that distinct NOINHERIT,
+unprivileged, membership-free login may be granted `read_advisory(uuid,uuid,text)`.
+It receives neither custody commands nor private table access. The API still
+owns HTTP identity resolution: the SQL arguments are scope filters, not browser
+authentication. A compromised API credential is within the existing trusted API
+boundary. Never expose a raw SQL function to a browser.
+
+The read uses one unlocked MVCC statement over installation/reader/authorization/
+comparison, checks current database identity and enabled registrations, filters
+tenant, actor and request, and returns no pin, provider configuration, credential
+or observation. There is no capability-lock acquisition after clinical locks.
+The API first takes the existing current clinical locks, requires exact current
+assignment, then reads within a savepoint and strictly revalidates the stored
+snapshot/candidate. Stale, foreign or corrupt output exposes no comparison or
+operation metadata. Missing packages/grants return a fixed unavailable view;
+there is no fallback to earlier fake executor results.
+
+Staged is displayed as staged, a consumed unpublished checkpoint as uncertain,
+and a valid published candidate as advisory. A successful result can be read
+after its execution deadline if its clinical binding remains current. Reading
+cannot reopen an execution window. Usage remains unverified; neither a read nor
+a published candidate settles the independently retained allowance. Refreshing
+the UI does not contact a receipt/provider or change review, audit or outbox.
+
+Offline projection and UI checks plus PostgreSQL-backed HTTP tests cover these
+rules. The dedicated disposable privilege job exercises a separate restricted
+reader, default disablement, revocation/foreign scope, no table/execution grants
+and repeated reads of an actual synthetic single-call publication. These tests
+remain synthetic and do not establish live provider compatibility or host policy.
 
 Captured-product facts are still not an independently verified Snowflake source
 mapping. The existing governed-source/recovery work remains necessary for that

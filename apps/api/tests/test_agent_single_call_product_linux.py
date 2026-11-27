@@ -41,9 +41,10 @@ from test_agent_single_call_custody import assembly as assembly
 
 from ciq_api import agent_single_call_custody as assembly_module
 from ciq_api import agent_single_call_product as product
-from ciq_api.agent_contracts import AgentContractError, canonical_json
+from ciq_api.agent_contracts import AgentContext, AgentContractError, canonical_json
 from ciq_api.agent_provider_peer import ReviewedProviderPeerClient
 from ciq_api.agent_single_call_peer import SingleCallReceiptClient
+from ciq_api.agent_single_call_results import single_call_result
 from ciq_api.models import Membership
 from ciq_api.mvp_models import CaseInputRevision, MvpEvent, SubmittedCase
 from ciq_api.review_models import ReviewCase
@@ -181,6 +182,125 @@ def test_default_disabled_package_does_not_authorize_work(installed):
         invoke(installed)
     assert failure.value.orig.sqlstate == "42501"
     assert rows(installed) == ("staged", 0)
+
+
+@pytest.fixture
+def reader(ready):
+    s, runtime = ready, None
+    name, password = "ciq_advisory_reader_" + uuid4().hex[:24], uuid4().hex
+    try:
+        with s.admin.begin() as db:
+            raw = db.connection.driver_connection
+            raw.execute(sql.SQL("CREATE ROLE {} LOGIN NOINHERIT PASSWORD {} ").format(
+                sql.Identifier(name), sql.Literal(password),
+            ))
+            raw.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(
+                sql.Identifier(s.admin.url.database), sql.Identifier(name),
+            ))
+            raw.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(
+                sql.Identifier(s.schema), sql.Identifier(name),
+            ))
+            raw.execute(sql.SQL("GRANT EXECUTE ON FUNCTION {}.read_advisory(uuid,uuid,text) TO {}")
+                        .format(sql.Identifier(s.schema), sql.Identifier(name)))
+            raw.execute(sql.SQL("INSERT INTO {}.reader(slot,login_oid,login_name) "
+                                "SELECT 1,oid,rolname FROM pg_roles WHERE rolname=%s")
+                        .format(sql.Identifier(s.schema)), (name,))
+        runtime = create_engine(s.admin.url.set(username=name, password=password))
+        yield SimpleNamespace(target=s, runtime=runtime, name=name)
+    finally:
+        if runtime is not None:
+            runtime.dispose()
+        with s.admin.begin() as db:
+            raw = db.connection.driver_connection
+            raw.execute(sql.SQL("DROP OWNED BY {}").format(sql.Identifier(name)))
+            raw.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(name)))
+
+
+def read_advisory(reader, *, actor=ACTOR, tenant=TENANT_ID, request="REQ-FAKE-0"):
+    with reader.runtime.begin() as db:
+        return db.scalar(text(f'SELECT "{reader.target.schema}".read_advisory('
+                              ':tenant,:actor,:request)'),
+                         dict(tenant=tenant, actor=actor, request=request))
+
+
+def enable_reader(reader):
+    with reader.target.admin.begin() as db:
+        db.execute(text(f'UPDATE "{reader.target.schema}".reader SET enabled=true'))
+
+
+def test_api_reader_is_separately_default_disabled_and_never_consumes_checkpoint(reader):
+    assert read_advisory(reader) is None
+    enable_reader(reader)
+    row = read_advisory(reader)
+    assert row["phase"] == "staged" and row["candidate"] is None
+    assert not {"pin", "pin_sha256", "config", "observation", "custody_oid"} & row.keys()
+    assert rows(reader.target) == ("staged", 0)
+
+
+@pytest.mark.parametrize("foreign", ["actor", "tenant", "request"])
+def test_reader_arguments_scope_the_private_row(reader, foreign):
+    enable_reader(reader)
+    params = {foreign: "OTHER" if foreign == "request" else uuid4()}
+    assert read_advisory(reader, **params) is None
+    assert rows(reader.target) == ("staged", 0)
+
+
+@pytest.mark.parametrize("change", ["disabled", "inherit", "oid", "name", "installation"])
+def test_reader_identity_and_revocation_are_checked_on_every_read(reader, change):
+    enable_reader(reader)
+    s = reader.target
+    with s.admin.begin() as db:
+        if change == "disabled":
+            db.execute(text(f'UPDATE "{s.schema}".reader SET enabled=false'))
+        elif change == "inherit":
+            db.connection.driver_connection.execute(sql.SQL("ALTER ROLE {} INHERIT")
+                                                   .format(sql.Identifier(reader.name)))
+        elif change in {"oid", "name"}:
+            column, value = ("login_oid", 1) if change == "oid" else ("login_name", "missing")
+            db.execute(text(f'UPDATE "{s.schema}".reader SET {column}=:value'), {"value": value})
+        else:
+            db.execute(text(f'UPDATE "{s.schema}".installation SET enabled=false'))
+    assert read_advisory(reader) is None
+
+
+def test_reader_has_no_execution_table_or_identity_authority(reader):
+    enable_reader(reader)
+    s = reader.target
+    statements = [
+        *(f'SELECT "{s.schema}".{name}(:operation)' for name in
+          ("checkpoint", "publication_context")),
+        f'SELECT "{s.schema}".publish(:operation,\'{{}}\'::jsonb,\'{{}}\'::jsonb)',
+        f'SELECT * FROM "{s.schema}".authorization',
+        f'UPDATE "{s.schema}".reader SET enabled=true',
+        f'CREATE TABLE "{s.schema}".forbidden(id integer)',
+        f'SET ROLE "{s.login}"',
+    ]
+    for statement in statements:
+        with pytest.raises(DBAPIError), reader.runtime.begin() as db:
+            db.execute(text(statement), {"operation": s.pin.operation_id})
+    with pytest.raises(DBAPIError), s.runtime.begin() as db:
+        db.execute(text(f'SELECT "{s.schema}".read_advisory(:tenant,:actor,:request)'),
+                   dict(tenant=TENANT_ID, actor=ACTOR, request="REQ-FAKE-0"))
+    assert rows(s) == ("staged", 0)
+
+
+def test_actual_advisory_can_be_read_repeatedly_without_receipt_or_product_mutation(
+    reader, integrated,
+):
+    s, a = integrated
+    assert reader.target is s
+    enable_reader(reader)
+    make(s, a).run()
+    before, commands = a.journal.status(), list(a.state["commands"])
+    for _ in range(3):
+        row = read_advisory(reader)
+        current = AgentContext(binding=s.snapshot.binding, tenant_active=True,
+                               clinical_authorized=True, policy_approved=True, review_open=True)
+        view = single_call_result(row, current, ACTOR)
+        assert view.state == "published" and view.comparison.payable_inr == 95000
+        assert view.execution_profile == "reviewed-single-call"
+        assert a.journal.status() == before and a.state["commands"] == commands
+        assert rows(s) == ("published", 1)
 
 
 def test_restricted_checkpoint_returns_exact_protected_material_once(ready):

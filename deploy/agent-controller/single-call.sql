@@ -214,3 +214,47 @@ END;
 $publish$;
 ALTER FUNCTION {calls}.publish(uuid, jsonb, jsonb) OWNER TO {owner};
 REVOKE ALL ON FUNCTION {calls}.publish(uuid, jsonb, jsonb) FROM PUBLIC;
+
+-- Optional trusted API reader, staged separately and disabled by default. It
+-- receives ONLY read_advisory, never custody commands or table access. HTTP
+-- authentication and current clinical locks remain the API's responsibility;
+-- these arguments are not proof of the browser's identity.
+CREATE TABLE {calls}.reader (
+    slot integer PRIMARY KEY REFERENCES {calls}.installation(slot) CHECK (slot = 1),
+    login_oid oid NOT NULL UNIQUE,
+    login_name name NOT NULL UNIQUE,
+    enabled boolean NOT NULL DEFAULT false
+);
+ALTER TABLE {calls}.reader OWNER TO {owner};
+REVOKE ALL ON TABLE {calls}.reader FROM PUBLIC;
+
+CREATE FUNCTION {calls}.read_advisory(p_tenant uuid, p_actor uuid, p_request text)
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER PARALLEL UNSAFE
+SET search_path = pg_catalog, pg_temp SET row_security = on SET lock_timeout = '2s'
+AS $read$
+DECLARE result jsonb;
+BEGIN
+    -- One MVCC statement, no capability or clinical locks in reverse order.
+    -- Reads cannot issue/observe a receipt, consume a call, or recover a reply.
+    SELECT jsonb_build_object(
+        'operation_id', a.operation_id, 'tenant_id', a.tenant_id, 'actor_id', a.actor_id,
+        'request_id', a.request_id, 'phase', a.phase, 'snapshot', a.snapshot,
+        'checkpoint_at', a.checkpoint_at, 'deadline', a.deadline,
+        'published_at', a.published_at, 'candidate', c.candidate)
+      INTO result FROM {calls}.installation i
+      JOIN pg_catalog.pg_database d ON d.oid = i.database_oid AND d.datname = i.database_name
+      JOIN {calls}.reader v ON v.slot = i.slot AND v.enabled
+      JOIN pg_catalog.pg_roles r ON r.oid = v.login_oid AND r.rolname = v.login_name
+      JOIN {calls}.authorization a ON a.slot = i.slot AND a.enabled
+      LEFT JOIN {calls}.comparison c ON c.operation_id = a.operation_id
+      WHERE i.slot = 1 AND i.enabled AND d.datname = current_database()
+        AND r.rolname = session_user AND r.rolcanlogin AND NOT r.rolinherit
+        AND NOT (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls)
+        AND NOT EXISTS (SELECT 1 FROM pg_catalog.pg_auth_members m WHERE m.member = r.oid)
+        AND r.oid NOT IN (a.custody_oid, a.clinical_oid)
+        AND a.tenant_id = p_tenant AND a.actor_id = p_actor AND a.request_id = p_request;
+    RETURN result;
+END;
+$read$;
+ALTER FUNCTION {calls}.read_advisory(uuid, uuid, text) OWNER TO {owner};
+REVOKE ALL ON FUNCTION {calls}.read_advisory(uuid, uuid, text) FROM PUBLIC;

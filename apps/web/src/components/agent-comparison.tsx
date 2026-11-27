@@ -11,7 +11,8 @@ export async function AgentComparison({ requestId }: { requestId: string }) {
   return (
     <>
       <AgentResultPanel result={result} />
-      {result?.state === "not_requested" && result.request_context && (
+      {result?.execution_profile === "synthetic-executor" &&
+        result.state === "not_requested" && result.request_context && (
         <AgentRequestForm
           requestId={requestId}
           commandId={randomUUID()}

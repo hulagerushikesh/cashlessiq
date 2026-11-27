@@ -46,6 +46,7 @@ class ComparisonResult(ImmutableContract):
 
 class AgentResultView(ImmutableContract):
     mode: Literal["synthetic-only"] = "synthetic-only"
+    execution_profile: Literal["synthetic-executor", "reviewed-single-call"] = "synthetic-executor"
     state: Literal[
         "not_requested",
         "awaiting_executor",
@@ -163,6 +164,17 @@ def register_agent_results(app, config, identity, get_session):
             snapshot, current = capture_scope(db, who.tenant.id, who.user.id, request_id, uuid4())
         except (ValueError, TypeError, KeyError, RecursionError):
             return AgentResultView(state="unavailable")
+        if config.single_call_advisory_reads:
+            # This opt-in read path never imports/constructs a provider, receipt
+            # client or execution adapter. No fake result/intent fallback.
+            from ciq_api.agent_single_call_results import read_single_call_result
+
+            review = db.get(ReviewCase, (who.tenant.id, request_id))
+            if review is None or review.assignee_id != who.user.id:
+                return AgentResultView(
+                    state="unavailable", execution_profile="reviewed-single-call",
+                )
+            return read_single_call_result(db, current, who.user.id)
         # One statement observes atomic publication; no ledger row locks, writes,
         # receipt access, lease renewal, status recovery or generic-job retries.
         row = db.execute(
@@ -210,6 +222,8 @@ def register_agent_results(app, config, identity, get_session):
         operation_id="request_synthetic_agent_comparison",
     )
     def request(request_id: str, payload: AgentRequestCommand, who: Identity, db: Database):
+        if config.single_call_advisory_reads:
+            raise HTTPException(409, "Reviewed attempts require separate operator staging")
         return request_comparison(db, who, request_id, payload)
 
     app.include_router(router)

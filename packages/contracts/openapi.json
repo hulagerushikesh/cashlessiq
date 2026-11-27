@@ -157,6 +157,15 @@
             ],
             "title": "Deadline"
           },
+          "execution_profile": {
+            "default": "synthetic-executor",
+            "enum": [
+              "synthetic-executor",
+              "reviewed-single-call"
+            ],
+            "title": "Execution Profile",
+            "type": "string"
+          },
           "input_revision": {
             "anyOf": [
               {

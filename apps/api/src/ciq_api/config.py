@@ -17,10 +17,13 @@ class Settings(BaseSettings):
     oidc_audience: str = "cashlessiq-api"
     oidc_jwks_url: str = ""
     synthetic_workflows: bool = False
+    single_call_advisory_reads: bool = False
     local_embedded_worker: bool = False
 
     @model_validator(mode="after")
     def validate_auth(self) -> "Settings":
+        if self.single_call_advisory_reads and not self.synthetic_workflows:
+            raise ValueError("Single-call advisory reads require synthetic workflows")
         if self.local_embedded_worker and not self.synthetic_workflows:
             raise ValueError("Local embedded worker requires synthetic workflows")
         if self.synthetic_workflows and (

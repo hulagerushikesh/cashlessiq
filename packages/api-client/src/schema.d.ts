@@ -560,6 +560,12 @@ export interface components {
             created_at?: string | null;
             /** Deadline */
             deadline?: string | null;
+            /**
+             * Execution Profile
+             * @default synthetic-executor
+             * @enum {string}
+             */
+            execution_profile: "synthetic-executor" | "reviewed-single-call";
             /** Input Revision */
             input_revision?: number | null;
             /**
