@@ -470,6 +470,57 @@ remain required. No real credential should be delivered through this same-UID
 preparation. The provider budget also must fit the reviewed local envelope;
 the captured profile's allowed sixty seconds is not silently expanded here.
 
+## Inactive provider credential identity — 27 November
+
+[`agent_provider_identity.py`](../../apps/api/src/ciq_api/agent_provider_identity.py)
+adds the provider-side entry for a separate Linux UID/GID, both `53004`. No route,
+service, custody coordinator, installer or IPC endpoint selects it. It never
+switches identities or retains root: real, effective and saved UID/GID must all
+match, supplementary groups must be empty, core dumps disabled and Python
+isolated with bytecode disabled. Only the fixed locale environment is accepted.
+
+The caller supplies request bytes and its remaining local deadline. It cannot
+supply a token, account hostname, credential/configuration path or interpreter.
+The fixed private `/run/ciq-agent-provider/plan.json` must contain exactly the
+protocol, reviewed hostname and original body digest. Identity, environment,
+input, budget and plan faults are rejected before opening the credential. The
+token is read only from `/run/ciq-agent-provider/identity.pat`, using the existing
+bounded, no-symlink private-file reader. Every ancestor must be root/provider
+owned and not writable by group/others; each regular leaf must be provider-owned,
+mode `0600`, single-link and within its size bound. No whitespace repair,
+environment token, administrator CLI profile or discovery fallback exists.
+
+Only the provider process constructs the existing bounded HTTPS child. Both
+processes here share the provider UID; the clinical/custody identity receives
+neither the token nor a transport object. The local attempt is consumed before
+validation, including concurrent or failed calls. Time spent reading/validating
+private inputs is deducted before child supervision, without extending the
+original twelve-second envelope. The raw result still needs independent
+provider/clinical validation and authenticated association with durable issue.
+
+Thirty-seven offline identity checks and nine early CI-refusal/preservation
+checks pass. Together with transport and child supervision, 186 focused checks
+pass locally. The guarded hosted acceptance stages only five stdlib modules and
+dummy files in fresh root-owned directories. Its twenty controls use actual
+unprivileged numeric UIDs without creating users, groups, services or containers:
+the provider reads its PAT but cannot read a custody-owned dummy database secret;
+custody reads its own secret but cannot read the PAT/plan or pass the provider
+guard. Actual isolated parent/child supervision passes a dummy token through its
+private pipe to a test-only network replacement. Unsafe ownership/modes, missing,
+linked, special, malformed and oversized inputs fail without retry. It refuses
+existing paths/UIDs and removes only its own fixtures. Linux acceptance remains
+separate from the local test result until CI completes.
+
+This is private-file access and token-flow preparation, **not** a live credential
+delivery service or permission to run a model. No real token has been created,
+loaded or staged. Protected production provisioning/rotation and UID lifecycle,
+authenticated custody-to-provider IPC, fixed outer service/cgroup/filesystem/
+network policies, live durable authorization/issue, provider-ID reconciliation
+and uncertain usage accounting remain open. A private plan is not a grant and
+reconstructing this class cannot create one. The unchanged inactive installer
+still knows only the original three fake-service identities. No GCP, Snowflake,
+Docker or paid resource is started by this change.
+
 ## Next concrete acceptance
 
 1. Offline manifest/normalization fixtures and the conservative fake-ledger
