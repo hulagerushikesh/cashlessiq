@@ -81,6 +81,8 @@ jobs:
         run: sudo -n env GITHUB_ACTIONS=true GITHUB_REPOSITORY=hulagerushikesh/cashlessiq CIQ_AGENT_SERVICE_TEST=1 /usr/bin/python3 scripts/test_agent_services.py
       - name: Distinct provider credential UID with dummy private files and no network
         run: sudo -n env GITHUB_ACTIONS=true GITHUB_REPOSITORY=hulagerushikesh/cashlessiq CIQ_PROVIDER_IDENTITY_TEST=1 /usr/bin/python3 -m scripts.test_agent_provider_identity
+      - name: Original cgroup cleanup including nested separate-session descendants
+        run: sudo -n env PYTHONPATH=apps/api/src GITHUB_ACTIONS=true GITHUB_REPOSITORY=hulagerushikesh/cashlessiq CIQ_SINGLE_CALL_CGROUP_TEST=1 /usr/bin/python3 -m scripts.test_agent_single_call_cgroup
   agent-ledger:
     runs-on: ubuntu-latest
     timeout-minutes: 8

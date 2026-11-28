@@ -87,3 +87,9 @@ fixed permanent identity transition, exercised in the disposable composition
 fixture without weakening those guards. New service policy still must be tested
 with that exact boundary. No new service examples or host changes are installed,
 and external provider egress remains unconfigured.
+
+The [prepared original-cgroup cleanup primitive](agent-single-call-cgroup.md)
+now reserves fresh kernel identities and verifies recursive termination,
+including nested separate-session descendants in disposable CI. It supplies no
+process allocation or installed service policy and does not yet implement this
+coordinator's complete trusted host adapter.
