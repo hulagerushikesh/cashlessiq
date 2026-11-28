@@ -259,3 +259,35 @@ that receipt isolation preserves its required IPC/storage behavior. Custody and
 provider currently retain the host network namespace: custody-only loopback SQL
 and provider-only reviewed HTTPS containment still require separate completion.
 No claim of complete three-role egress isolation is made.
+
+## Custody IP socket policy
+
+Before Python or identity loss, custody now installs two fixed eBPF programs on
+its original fresh cgroup. The socket-creation policy admits only IPv4 TCP stream
+sockets; the connect policy admits only `127.0.0.1:5432`. UDP/DNS, IPv6, alternate
+loopback addresses/ports and external destinations are denied by the kernel.
+Programs are fixed instructions compiled into the native source; there is no
+DNS lookup, provider selector, external policy file, map update or shell command.
+The loader refuses an existing local attachment, verifies the newly loaded
+program ID against the exact group's attachment, and never replaces or detaches
+policy. Cgroup attachments survive waiter exit/descriptor closure, including an
+unexpected root-waiter death, until trusted disposal of the original group.
+Partial attachment failure prevents role exec and leaves retained state.
+
+Custody is a client, so a permanent no-new-privileges seccomp filter additionally
+denies bind/listen/accept/accept4, including implicit listener autobind. The native
+release targets reviewed Linux x86-64; alternate architectures and x32 syscall
+entry cannot bypass the filter. The filter is inherited by descendants. No
+inbound service or DNS resolver is required by custody. Unsupported/denied BPF
+or seccomp setup denies role execution, with no unrestricted fallback. These
+policies do not hide unrelated pathname Unix sockets; private host filesystem
+visibility and peer authentication remain part of final host acceptance.
+
+Disposable kernel acceptance uses a public dummy TCP listener at the fixed SQL
+address, never an existing PostgreSQL instance. It requires the allowed exchange,
+EPERM for wrong IP/port/external TCP, UDP and IPv6 socket creation, and denied
+bind/listen/accept. A separately linked failure control denies BPF and requires
+no role execution. Normal identity, memory/task/CPU, output and whole-group
+cleanup controls also run with this policy enabled. Provider still needs its
+own reviewed HTTPS destination/resolver policy and end-to-end host admission;
+this custody policy grants no provider/network/spend authority.

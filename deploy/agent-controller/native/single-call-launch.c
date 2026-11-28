@@ -4,9 +4,14 @@
  * No Python/runtime callback executes between clone3 and the fixed execve.
  */
 #define _GNU_SOURCE
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <linux/audit.h>
+#include <linux/bpf.h>
+#include <linux/filter.h>
+#include <linux/seccomp.h>
 #include <linux/magic.h>
 #include <linux/mount.h>
 #include <linux/sched.h>
@@ -14,6 +19,7 @@
 #include <sched.h>
 #include <signal.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/prctl.h>
@@ -133,6 +139,99 @@ static void filesystem_policy(const char *role) {
         if (syscall(SYS_mount_setattr, writable[i], "", AT_EMPTY_PATH, &leaf, sizeof(leaf))
             || close(writable[i])) deny();
     }
+}
+
+#define LOAD_CONTEXT(structure, member) \
+    {.code = BPF_LDX | BPF_MEM | BPF_W, .dst_reg = BPF_REG_2, .src_reg = BPF_REG_1, \
+     .off = (short)offsetof(structure, member)}
+#define NOT_EQUAL(value, distance) \
+    {.code = BPF_JMP | BPF_JNE | BPF_K, .dst_reg = BPF_REG_2, .off = distance, .imm = value}
+#define RETURN_VALUE(value) {.code = BPF_ALU64 | BPF_MOV | BPF_K, .dst_reg = BPF_REG_0, .imm = value}
+#define RETURN_NOW {.code = BPF_JMP | BPF_EXIT}
+
+static void attach_policy(int group, enum bpf_prog_type type, enum bpf_attach_type attach,
+                          const struct bpf_insn *instructions, unsigned int count) {
+    /* Fresh group only. Never replace, detach, override or repair old policy.
+     * Legacy cgroup attachment retains the program after this fd/process exits;
+     * it does not disappear if the root waiter is unexpectedly killed.
+     */
+    union bpf_attr query = {0};
+    query.query.target_fd = (unsigned int)group;
+    query.query.attach_type = attach;
+    if (syscall(SYS_bpf, BPF_PROG_QUERY, &query, sizeof(query)) || query.query.prog_cnt) deny();
+    static const char license[] = "GPL";
+    union bpf_attr load = {0};
+    load.prog_type = type;
+    load.expected_attach_type = attach;
+    load.insn_cnt = count;
+    load.insns = (uint64_t)(uintptr_t)instructions;
+    load.license = (uint64_t)(uintptr_t)license;
+    int program = (int)syscall(SYS_bpf, BPF_PROG_LOAD, &load, sizeof(load));
+    if (program < 0) deny();
+    struct bpf_prog_info info = {0};
+    union bpf_attr metadata = {0};
+    metadata.info.bpf_fd = (unsigned int)program;
+    metadata.info.info_len = sizeof(info);
+    metadata.info.info = (uint64_t)(uintptr_t)&info;
+    if (syscall(SYS_bpf, BPF_OBJ_GET_INFO_BY_FD, &metadata, sizeof(metadata)) || !info.id)
+        deny();
+    union bpf_attr binding = {0};
+    binding.target_fd = (unsigned int)group;
+    binding.attach_bpf_fd = (unsigned int)program;
+    binding.attach_type = attach;
+    int attached = (int)syscall(SYS_bpf, BPF_PROG_ATTACH, &binding, sizeof(binding));
+    (void)close(program);
+    if (attached) deny();
+    query.query.prog_cnt = 0;
+    /* A count-only query returns ENOSPC for nonempty attachments. Use one fixed
+     * ID slot to require exactly the just-installed policy and no substitution.
+     */
+    unsigned int id = 0;
+    query.query.prog_cnt = 1;
+    query.query.prog_ids = (uint64_t)(uintptr_t)&id;
+    if (syscall(SYS_bpf, BPF_PROG_QUERY, &query, sizeof(query))
+        || query.query.prog_cnt != 1 || id != info.id || query.query.attach_flags) deny();
+}
+
+static void custody_network(int group, const char *role) {
+    if (strcmp(role, "custody") != 0) return;
+    const struct bpf_insn creation[] = {
+        LOAD_CONTEXT(struct bpf_sock, family), NOT_EQUAL(AF_INET, 6),
+        LOAD_CONTEXT(struct bpf_sock, type), NOT_EQUAL(SOCK_STREAM, 4),
+        LOAD_CONTEXT(struct bpf_sock, protocol), NOT_EQUAL(IPPROTO_TCP, 2),
+        RETURN_VALUE(1), RETURN_NOW, RETURN_VALUE(0), RETURN_NOW,
+    };
+    const struct bpf_insn connection[] = {
+        LOAD_CONTEXT(struct bpf_sock_addr, user_family), NOT_EQUAL(AF_INET, 6),
+        LOAD_CONTEXT(struct bpf_sock_addr, user_ip4), NOT_EQUAL((int)htonl(INADDR_LOOPBACK), 4),
+        LOAD_CONTEXT(struct bpf_sock_addr, user_port), NOT_EQUAL((int)htons(5432), 2),
+        RETURN_VALUE(1), RETURN_NOW, RETURN_VALUE(0), RETURN_NOW,
+    };
+    attach_policy(group, BPF_PROG_TYPE_CGROUP_SOCK, BPF_CGROUP_INET_SOCK_CREATE,
+                  creation, sizeof(creation) / sizeof(creation[0]));
+    attach_policy(group, BPF_PROG_TYPE_CGROUP_SOCK_ADDR, BPF_CGROUP_INET4_CONNECT,
+                  connection, sizeof(connection) / sizeof(connection[0]));
+    /* Custody is a client only. Block inbound/listener paths, including implicit
+     * autobind by listen(), with a permanent syscall filter inherited by children.
+     * This native release targets only reviewed Linux x86-64; x32/other ABIs deny.
+     */
+    const struct sock_filter rules[] = {
+        BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, arch)),
+        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
+        BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, nr)),
+        BPF_JUMP(BPF_JMP | BPF_JSET | BPF_K, 0x40000000U, 5, 0),
+        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, SYS_bind, 4, 0),
+        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, SYS_listen, 3, 0),
+        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, SYS_accept, 2, 0),
+        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, SYS_accept4, 1, 0),
+        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | EPERM),
+    };
+    const struct sock_fprog filter = {.len = sizeof(rules) / sizeof(rules[0]),
+                                     .filter = (struct sock_filter *)rules};
+    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)
+        || prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &filter)) deny();
 }
 
 static int descriptor(const char *raw) {
@@ -289,8 +388,10 @@ int main(int argc, char **argv, char **envp) {
          * Linux clears it at identity loss; whole-group cleanup remains required.
          */
         if (prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) || getppid() != parent
-            || setsid() < 0 || close(3) || close(4) || close(timer)) deny();
+            || setsid() < 0 || close(4) || close(timer)) deny();
         filesystem_policy(argv[1]);
+        custody_network(3, argv[1]);
+        if (close(3)) deny();
         char *const command[] = {PYTHON, "-I", "-B", "-m",
                                 "ciq_api.agent_single_call_identity", argv[1], NULL};
         char *const environment[] = {"LANG=C.UTF-8", NULL};

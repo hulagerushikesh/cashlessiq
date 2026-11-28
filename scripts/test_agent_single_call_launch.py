@@ -130,6 +130,47 @@ assert not set(os.environ) - {{"LANG", "LC_CTYPE"}}
 assert Path("/proc/self/status").read_text().split("NoNewPrivs:")[1].splitlines()[0].strip()=="1"
 mode = Path("/opt/cashlessiq-agent/expected").read_text().splitlines()[1]
 marker = {READY[role]!r}
+if mode == "network":
+    import socket
+    assert {uid} == 53002
+    for family, kind in ((socket.AF_INET, socket.SOCK_DGRAM),
+                         (socket.AF_INET6, socket.SOCK_STREAM)):
+        try:
+            wrong = socket.socket(family, kind)
+        except OSError as error:
+            assert error.errno == errno.EPERM
+        else:
+            wrong.close()
+            os._exit(119)
+    for destination in (("127.0.0.1", 5433), ("127.0.0.2", 5432), ("192.0.2.1", 443)):
+        wrong = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        wrong.settimeout(0.2)
+        try:
+            wrong.connect(destination)
+        except OSError as error:
+            assert error.errno == errno.EPERM
+        else:
+            os._exit(119)
+        finally:
+            wrong.close()
+    for method, args in (("bind", (("127.0.0.1", 0),)), ("listen", (1,)), ("accept", ())):
+        wrong = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            getattr(wrong, method)(*args)
+        except OSError as error:
+            assert error.errno == errno.EPERM
+        else:
+            os._exit(119)
+        finally:
+            wrong.close()
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.settimeout(0.5)
+    client.connect(("127.0.0.1", 5432))
+    client.sendall(b"PUBLIC SQL probe")
+    assert client.recv(32) == b"PUBLIC SQL ack"
+    client.close()
+    os.write(1, marker)
+    os._exit(0)
 if mode == "mounts":
     import socket, sqlite3
     writable = {uid} == 53003
@@ -261,6 +302,40 @@ def prepare_layout():
         probe = RUNTIME / ("probe-" + str(uid))
         probe.mkdir(mode=0o700)
         os.chown(probe, uid, uid)
+
+
+def custody_network_scenario(module, binary):
+    from ciq_api.agent_single_call_supervisor import READY
+    group = module.OwnedSingleCallCgroup("custody")
+    path = Path(module.PARENT) / group.name
+    process = None
+    listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    peer = None
+    try:
+        listener.settimeout(3)
+        # Disposable guarded runner only. Refuse an occupied port; no existing
+        # PostgreSQL process is stopped, queried or adopted for this fixture.
+        listener.bind(("127.0.0.1", 5432))
+        listener.listen(1)
+        group.prepare()
+        (RUNTIME / "expected").write_text(group.name + "\nnetwork\n")
+        process = spawn(binary, group, "custody")
+        peer, _ = listener.accept()
+        peer.settimeout(1)
+        assert peer.recv(32) == b"PUBLIC SQL probe"
+        peer.sendall(b"PUBLIC SQL ack")
+        output, errors = process.communicate(timeout=3)
+        assert process.returncode == 0 and output == READY["custody"] and not errors
+        assert group.quiescent() and group.resource_limited()
+    finally:
+        try:
+            if group._created:
+                emergency_cleanup(path, process)
+        finally:
+            if peer is not None:
+                peer.close()
+            listener.close()
+            group.close()
 
 
 def mount_scenario(module, binary, role, invalid=None):
@@ -627,6 +702,8 @@ def main():
         prepare_layout()
         binary = RUNTIME / "launch"
         build(binary)
+        custody_network_scenario(module, binary)
+        print("PASS: custody kernel policy permits TCP loopback SQL; denies inbound/UDP/IPv6")
         for role in ("receipt", "provider", "custody"):
             mount_scenario(module, binary, role)
             print("PASS: native read-only mount namespace and exact writable leaves for " + role)
@@ -671,6 +748,25 @@ long __wrap_syscall(long number, ...) {
         build(mount_failure, (str(mount_wrapper), "-Wl,--wrap=syscall"))
         mount_scenario(module, mount_failure, "custody", "syscall")
         print("PASS: unsupported recursive mount policy denies role exec without fallback")
+        bpf_wrapper = RUNTIME / "bpf-wrapper.c"
+        bpf_source = mount_wrapper.read_text().replace(
+            "if (number == SYS_mount_setattr) { errno = ENOSYS; return -1; }",
+            "if (number == SYS_bpf) { errno = EPERM; return -1; }",
+        ).replace("    if (number != SYS_close_range) _exit(119);", '''    if (number == SYS_mount_setattr) {
+        int fd = va_arg(args, int);
+        const char *path = va_arg(args, const char *);
+        unsigned int flags = va_arg(args, unsigned int);
+        void *value = va_arg(args, void *);
+        size_t size = va_arg(args, size_t);
+        va_end(args);
+        return __real_syscall(number, fd, path, flags, value, size);
+    }
+    if (number != SYS_close_range) _exit(119);''')
+        bpf_wrapper.write_text(bpf_source)
+        bpf_failure = RUNTIME / "launch-no-bpf"
+        build(bpf_failure, (str(bpf_wrapper), "-Wl,--wrap=syscall"))
+        mount_scenario(module, bpf_failure, "custody", "syscall")
+        print("PASS: denied custody BPF policy prevents role exec without fallback")
         for mode in ("complete", "creation-ack-lost", "start-ack-lost", "waiter-killed"):
             owned_launch_scenario(module, binary, mode)
             print("PASS: original gate/pidfd/pipe composition " + mode + " and complete cleanup")
