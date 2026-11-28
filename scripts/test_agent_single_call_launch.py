@@ -15,6 +15,11 @@ from scripts.test_agent_single_call_cgroup import emergency_cleanup, guard, prep
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = Path("/opt/cashlessiq-agent")
 SOURCE = ROOT / "deploy/agent-controller/native/single-call-launch.c"
+PRIVATE = (Path("/run/ciq-agent-single-call"), Path("/run/ciq-agent-provider"),
+           Path("/var/lib/cashlessiq-agent"))
+WRITABLE = ((PRIVATE[0] / "ipc", 53003, 0o755),
+            (PRIVATE[1] / "ipc", 53004, 0o755),
+            (PRIVATE[2] / "single-call/retained", 53003, 0o700))
 ENV = {"LANG": "C.UTF-8"}
 ERROR = b"single_call_launch_unavailable\n"
 
@@ -97,6 +102,8 @@ try:
     expected = Path("/opt/cashlessiq-agent/expected").read_text().splitlines()[0]
     assert Path("/proc/self/cgroup").read_text() == "0::/system.slice/" + expected + "\\n"
     assert os.geteuid() in (0, 53002, 53003, 53004)
+    assert all(os.statvfs(path).f_flag & os.ST_RDONLY for path in
+               ("/", "/tmp", "/opt/cashlessiq-agent", "/sys/fs/cgroup"))
     assert all(int(fd) < 3 or not Path("/proc/self/fd/" + fd).exists()
                for fd in os.listdir("/proc/self/fd"))
 except BaseException:
@@ -121,6 +128,38 @@ assert not set(os.environ) - {{"LANG", "LC_CTYPE"}}
 assert Path("/proc/self/status").read_text().split("NoNewPrivs:")[1].splitlines()[0].strip()=="1"
 mode = Path("/opt/cashlessiq-agent/expected").read_text().splitlines()[1]
 marker = {READY[role]!r}
+if mode == "mounts":
+    import socket, sqlite3
+    writable = {uid} == 53003
+    probe = Path("/opt/cashlessiq-agent/probe-{uid}")
+    try:
+        (probe / "denied").write_bytes(b"must not persist")
+    except OSError as error:
+        assert error.errno == errno.EROFS
+    else:
+        os._exit(119)
+    allowed = {{53002: (), 53003: ("/run/ciq-agent-single-call/ipc",
+               "/var/lib/cashlessiq-agent/single-call/retained"),
+               53004: ("/run/ciq-agent-provider/ipc",)}}[{uid}]
+    for path in allowed:
+        assert not os.statvfs(path).f_flag & os.ST_RDONLY
+        target = Path(path) / "dummy.sock"
+        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        listener.bind(str(target))
+        listener.close()
+        target.unlink()
+    if writable:
+        target = Path(allowed[1]) / "dummy.sqlite3"
+        database = sqlite3.connect(target)
+        database.execute("PRAGMA journal_mode=DELETE")
+        database.execute("CREATE TABLE probe (value INTEGER)")
+        database.execute("INSERT INTO probe VALUES (1)")
+        database.commit()
+        assert database.execute("SELECT value FROM probe").fetchall() == [(1,)]
+        database.close()
+        target.unlink()
+    os.write(1, marker)
+    os._exit(0)
 if mode == "memory":
     retained = []
     for _ in range(96):  # At most 384 MiB even if the reviewed cap is broken.
@@ -185,6 +224,64 @@ os._exit(0)
     for path in RUNTIME.rglob("*"):
         if not path.is_symlink():
             path.chmod(0o755 if path.is_dir() or path.name == "python" else 0o644)
+
+
+def prepare_layout():
+    for base in PRIVATE:
+        base.mkdir(mode=0o755)
+    (PRIVATE[2] / "single-call").mkdir(mode=0o755)
+    for path, owner, mode in WRITABLE:
+        path.mkdir(mode=mode)
+        os.chown(path, owner, owner)
+        path.chmod(mode)
+    for uid in (53002, 53003, 53004):
+        probe = RUNTIME / ("probe-" + str(uid))
+        probe.mkdir(mode=0o700)
+        os.chown(probe, uid, uid)
+
+
+def mount_scenario(module, binary, role, invalid=None):
+    from ciq_api.agent_single_call_supervisor import READY
+    group = module.OwnedSingleCallCgroup(role)
+    path = Path(module.PARENT) / group.name
+    process = None
+    target = WRITABLE[1][0]
+    saved = target.with_name("ipc-original")
+    try:
+        group.prepare()
+        (RUNTIME / "expected").write_text(group.name + "\nmounts\n")
+        if invalid in ("missing", "symlink"):
+            target.rename(saved)
+            if invalid == "symlink":
+                target.symlink_to(saved, target_is_directory=True)
+        elif invalid == "owner":
+            os.chown(target, 0, 0)
+        elif invalid == "writable":
+            target.chmod(0o775)
+        elif invalid == "mode":
+            target.chmod(0o700)
+        process = spawn(binary, group, role)
+        output, errors = process.communicate(timeout=3)
+        if invalid:
+            assert process.returncode == 125 and output == b"" and errors == ERROR
+        else:
+            assert process.returncode == 0 and output == READY[role] and errors == b""
+        assert group.quiescent() and group.resource_limited()
+        # Child mount namespace must never make the controller/host read-only.
+        assert not os.statvfs(RUNTIME).f_flag & os.ST_RDONLY
+    finally:
+        try:
+            if group._created:
+                emergency_cleanup(path, process)
+        finally:
+            group.close()
+            if invalid in ("missing", "symlink"):
+                if target.is_symlink():
+                    target.unlink()
+                saved.rename(target)
+            elif invalid:
+                os.chown(target, 53004, 53004)
+                target.chmod(0o755)
 
 
 def ready(process):
@@ -479,14 +576,58 @@ def main():
             except KeyError:
                 continue
             raise RuntimeError("Atomic launch refuses an occupied dummy identity")
-    if RUNTIME.exists() or RUNTIME.is_symlink():
-        raise RuntimeError("Atomic launch refuses an existing runtime")
+    if any(path.exists() or path.is_symlink() for path in (RUNTIME, *PRIVATE)):
+        raise RuntimeError("Atomic launch refuses existing runtime/private fixture paths")
     RUNTIME.mkdir(mode=0o755)
     signal.signal(signal.SIGTERM, lambda *_: sys.exit("Interrupted atomic launch acceptance"))
     try:
         prepare_runtime()
+        prepare_layout()
         binary = RUNTIME / "launch"
         build(binary)
+        for role in ("receipt", "provider", "custody"):
+            mount_scenario(module, binary, role)
+            print("PASS: native read-only mount namespace and exact writable leaves for " + role)
+        for invalid in ("missing", "symlink", "owner", "writable", "mode"):
+            mount_scenario(module, binary, "provider", invalid)
+            print("PASS: native writable leaf " + invalid + " denied without fallback")
+        mount_wrapper = RUNTIME / "mount-wrapper.c"
+        mount_wrapper.write_text('''
+#define _GNU_SOURCE
+#include <errno.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+long __real_syscall(long, ...);
+long __wrap_syscall(long number, ...) {
+    if (number == SYS_mount_setattr) { errno = ENOSYS; return -1; }
+    va_list args;
+    va_start(args, number);
+    if (number == SYS_clone3) {
+        void *value = va_arg(args, void *);
+        size_t size = va_arg(args, size_t);
+        va_end(args);
+        return __real_syscall(number, value, size);
+    }
+    if (number == SYS_pidfd_open) {
+        pid_t pid = va_arg(args, pid_t);
+        unsigned int options = va_arg(args, unsigned int);
+        va_end(args);
+        return __real_syscall(number, pid, options);
+    }
+    if (number != SYS_close_range) _exit(119);
+    unsigned int first = va_arg(args, unsigned int);
+    unsigned int last = va_arg(args, unsigned int);
+    unsigned int flags = va_arg(args, unsigned int);
+    va_end(args);
+    return __real_syscall(number, first, last, flags);
+}
+''')
+        mount_failure = RUNTIME / "launch-no-mount-setattr"
+        build(mount_failure, (str(mount_wrapper), "-Wl,--wrap=syscall"))
+        mount_scenario(module, mount_failure, "custody", "syscall")
+        print("PASS: unsupported recursive mount policy denies role exec without fallback")
         for mode in ("complete", "creation-ack-lost", "start-ack-lost", "waiter-killed"):
             owned_launch_scenario(module, binary, mode)
             print("PASS: original gate/pidfd/pipe composition " + mode + " and complete cleanup")
@@ -587,8 +728,10 @@ long __wrap_syscall(long number, ...) {
             print("PASS: " + code + " clone3 denial without fallback or retry")
         print("PASS: atomic launch fixtures completed; no provider or private inputs")
     finally:
-        shutil.rmtree(RUNTIME)
-    assert not RUNTIME.exists()
+        for path in (*PRIVATE, RUNTIME):
+            if path.exists():
+                shutil.rmtree(path)
+    assert all(not path.exists() for path in (*PRIVATE, RUNTIME))
     print("PASS: all invocation-owned launch processes, cgroups and runtime retired")
 
 

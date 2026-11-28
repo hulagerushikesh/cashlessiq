@@ -122,8 +122,8 @@ Every fixture process, cgroup name and copied runtime is retired after testing.
 
 This is allocation/identity/cleanup composition, not a credentialed provider
 attempt or an installed containment policy. The complete host adapter, one-shot
-launch ownership before allocation, joining bounded output capture, installed resource policy,
-read-only mounts, role-specific egress, immutable installation verification,
+launch ownership before allocation, joining bounded output capture, installed policy verification,
+role-specific egress, immutable installation verification,
 fresh consent/lease/plans and retained-history recovery remain required. Native
 release/install provenance is also outstanding; the review archive includes C
 source, not a trusted binary. Existing service examples are unchanged and must
@@ -206,3 +206,35 @@ owned cgroup. It checks a complete marker plus both EOFs, creation-return loss
 without START, post-START controller loss and externally killed waiter cleanup.
 The fixture's `Popen` object is used for emergency test bookkeeping only: product
 observation, signaling and reaping use the previously transferred original pidfd.
+
+## Prepared role filesystem containment
+
+Atomic role allocation now also selects `CLONE_NEWNS`. In that child, before the
+first Python instruction, the native bootstrap makes mount propagation private
+and recursively sets every inherited mount read-only and nosuid. Custody has no
+writable filesystem exception. Receipt receives only
+`/run/ciq-agent-single-call/ipc` and
+`/var/lib/cashlessiq-agent/single-call/retained`; provider receives only
+`/run/ciq-agent-provider/ipc`. These fixed leaves are private bind mounts, writable
+with nosuid/nodev/noexec. Plans, tokens, interpreter, modules, `/tmp`, procfs and
+cgroups stay on the read-only view. Read-only mounts do not hide readable files
+or prevent device/IPC operations; separate UID/mode checks, original-FD closure,
+network policy and private-file validation remain required.
+
+There is no caller-supplied path or mount selector. Nofollow traversal checks
+protected ancestors and the exact role-owned leaf (0755 IPC, 0700 retained
+history), pins its inode before/after binding, and rejects missing, symlinked,
+changed-owner or writable-ancestor layouts. The trusted host must stage and pin
+these layouts under its exclusive lease before launch; the bootstrap does not
+create, repair or adopt them. Read-only mount setup and the fixed exceptions run
+before identity loss. `mount`/`mount_setattr` failure denies role exec with no
+writable fallback. Native child failure is still retired/reaped by the waiter.
+
+Disposable Linux checks verify a role-owned ordinary probe cannot be written
+because of EROFS, each fixed writable leaf supports Unix socket creation, and
+receipt's retained directory supports a real SQLite DELETE-journal transaction.
+They independently check the host namespace remains writable. Malformed private
+layouts and a test-only forced unsupported `mount_setattr` are denied. No real
+plans, token, retained journal or database are installed by these controls.
+This is filesystem/resource/process containment evidence; role-specific network
+egress, complete host admission and immutable installation still remain.

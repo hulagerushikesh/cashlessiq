@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <linux/magic.h>
+#include <linux/mount.h>
 #include <linux/sched.h>
 #include <poll.h>
 #include <sched.h>
@@ -16,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/prctl.h>
+#include <sys/mount.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
@@ -70,6 +72,68 @@ static int resource_policy(int group, const char *role) {
         && kernel_text(group, "cpu.max", "50000 100000\n");
 }
 
+
+/* Fixed writable leaves only. The host must stage and pin their private layout
+ * under its exclusive lease. No directory, path or mount option comes from IPC.
+ */
+static int private_directory(const char *path, uid_t owner, mode_t mode) {
+    char copy[PATH_MAX];
+    if (strlen(path) >= sizeof(copy)) deny();
+    memcpy(copy, path, strlen(path) + 1);
+    int fd = open("/", O_PATH | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (fd < 0) deny();
+    char *state = NULL;
+    struct stat info;
+    for (char *part = strtok_r(copy, "/", &state); part; part = strtok_r(NULL, "/", &state)) {
+        int next = openat(fd, part, O_PATH | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        (void)close(fd);
+        if (next < 0) deny();
+        fd = next;
+        if (fstat(fd, &info) || !S_ISDIR(info.st_mode)
+            || (info.st_uid != 0 && info.st_uid != owner) || (info.st_mode & 0022)) deny();
+    }
+    if (fstat(fd, &info) || info.st_uid != owner || (info.st_mode & 07777) != mode) deny();
+    return fd;
+}
+
+static void filesystem_policy(const char *role) {
+    /* clone3 already made a distinct mount namespace. First disconnect every
+     * propagation relationship, so these mounts never change the host view.
+     */
+    if (mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL)) deny();
+    const char *paths[2] = {NULL, NULL};
+    mode_t modes[2] = {0755, 0700};
+    uid_t owner = 0;
+    int count = 0;
+    if (strcmp(role, "receipt") == 0) {
+        paths[0] = "/run/ciq-agent-single-call/ipc";
+        paths[1] = "/var/lib/cashlessiq-agent/single-call/retained";
+        owner = 53003;
+        count = 2;
+    } else if (strcmp(role, "provider") == 0) {
+        paths[0] = "/run/ciq-agent-provider/ipc";
+        owner = 53004;
+        count = 1;
+    }
+    int writable[2] = {-1, -1};
+    for (int i = 0; i < count; ++i) {
+        int original = private_directory(paths[i], owner, modes[i]);
+        struct stat before, after;
+        if (fstat(original, &before) || mount(paths[i], paths[i], NULL, MS_BIND, NULL)) deny();
+        writable[i] = private_directory(paths[i], owner, modes[i]);
+        if (fstat(writable[i], &after) || before.st_dev != after.st_dev
+            || before.st_ino != after.st_ino || close(original)) deny();
+    }
+    struct mount_attr readonly = {.attr_set = MOUNT_ATTR_RDONLY | MOUNT_ATTR_NOSUID};
+    if (syscall(SYS_mount_setattr, AT_FDCWD, "/", AT_RECURSIVE, &readonly, sizeof(readonly)))
+        deny();
+    struct mount_attr leaf = {.attr_set = MOUNT_ATTR_NOSUID | MOUNT_ATTR_NODEV | MOUNT_ATTR_NOEXEC,
+                             .attr_clr = MOUNT_ATTR_RDONLY};
+    for (int i = 0; i < count; ++i) {
+        if (syscall(SYS_mount_setattr, writable[i], "", AT_EMPTY_PATH, &leaf, sizeof(leaf))
+            || close(writable[i])) deny();
+    }
+}
 
 static int descriptor(const char *raw) {
     if (!raw[0] || strlen(raw) > 4) deny();
@@ -212,7 +276,7 @@ int main(int argc, char **argv, char **envp) {
     int pidfd = -1;
     pid_t parent = getpid();
     struct clone_args args = {
-        .flags = CLONE_INTO_CGROUP | CLONE_PIDFD,
+        .flags = CLONE_INTO_CGROUP | CLONE_PIDFD | CLONE_NEWNS,
         .pidfd = (uint64_t)(uintptr_t)&pidfd,
         .exit_signal = SIGCHLD,
         .cgroup = 3,
@@ -225,6 +289,7 @@ int main(int argc, char **argv, char **envp) {
          */
         if (prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) || getppid() != parent
             || setsid() < 0 || close(3) || close(4) || close(timer)) deny();
+        filesystem_policy(argv[1]);
         char *const command[] = {PYTHON, "-I", "-B", "-m",
                                 "ciq_api.agent_single_call_identity", argv[1], NULL};
         char *const environment[] = {"LANG=C.UTF-8", NULL};
