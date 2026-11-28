@@ -310,6 +310,22 @@ def blocked_controller():
             watcher.stdout.close()
 
 
+def failure(case, error):
+    # Fixed categories and public fixture source line only. Never messages,
+    # locals, child output, arbitrary class names or library traceback paths.
+    causes = {"AssertionError": "assertion", "SupervisorDenied": "denied",
+              "TimeoutExpired": "timeout", "ProcessLookupError": "process_missing",
+              "ChildProcessError": "child_missing"}
+    line = 0
+    trace = error.__traceback__
+    while trace is not None:
+        if trace.tb_frame.f_code.co_filename == __file__:
+            line = trace.tb_lineno
+        trace = trace.tb_next
+    return {"case": case, "status": "FAIL", "cause": causes.get(type(error).__name__, "other"),
+            "line": line}
+
+
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else "probe"
     if mode == "child":
@@ -351,9 +367,8 @@ def main():
         ):
             try:
                 case()
-            except Exception:
-                # Only a fixed test-case label, never an exception/child payload.
-                print(json.dumps({"case": case.__name__, "status": "FAIL"}), flush=True)
+            except Exception as error:
+                print(json.dumps(failure(case.__name__, error)), flush=True)
                 raise SystemExit(1) from None
             print(json.dumps({"case": case.__name__, "status": "PASS"}), flush=True)
     else:

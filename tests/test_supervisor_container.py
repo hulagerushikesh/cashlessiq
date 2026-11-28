@@ -113,3 +113,29 @@ def test_probe_and_build_context_are_test_only():
         assert not any(n.startswith(("snowflake", "ciq_api", "sqlalchemy")) for n in names)
     for project in ("api", "worker", "membership"):
         assert "supervisor_probe" not in (root / f"apps/{project}/Dockerfile").read_text()
+
+
+@pytest.mark.parametrize("updates", ({}, {"cause": "PRIVATE error"}, {"line": True},
+                                    {"line": -1}, {"line": 10001}, {"message": "PRIVATE"}))
+def test_failure_diagnostics_only_admit_bounded_public_labels(updates):
+    value = {"case": "lifecycle", "status": "FAIL", "cause": "denied", "line": 123}
+    if updates:
+        with pytest.raises(AssertionError):
+            runner.reports(json.dumps(value | updates))
+    else:
+        assert runner.reports(json.dumps(value)) == [value]
+
+
+def test_probe_failure_never_serializes_exception_message_or_arbitrary_class_name():
+    source = ast.parse(runner.SOURCES["supervisor_probe.py"].read_text())
+    function = next(n for n in source.body
+                    if isinstance(n, ast.FunctionDef) and n.name == "failure")
+    namespace = {"__file__": __file__}
+    exec(compile(ast.Module(body=[function], type_ignores=[]), "fixture", "exec"), namespace)
+    try:
+        raise AssertionError("PRIVATE token/body/child diagnostic")
+    except AssertionError as error:
+        report = namespace["failure"]("lifecycle", error)
+    assert report["cause"] == "assertion" and report["line"] > 0
+    assert "PRIVATE" not in json.dumps(report)
+    assert runner.reports(json.dumps(report)) == [report]

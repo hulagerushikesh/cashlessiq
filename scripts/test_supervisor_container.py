@@ -23,6 +23,23 @@ CASES = {
 }
 
 
+def reports(raw):
+    assert len(raw) <= 2048
+    values = [json.loads(row) for row in raw.splitlines()]
+    assert len(values) <= len(CASES)
+    assert len({r["case"] for r in values}) == len(values)
+    for record in values:
+        assert record["case"] in CASES
+        if record["status"] == "PASS":
+            assert set(record) == {"case", "status"}
+        else:
+            assert record["status"] == "FAIL" and set(record) == {"case", "status", "cause", "line"}
+            assert record["cause"] in {"assertion", "denied", "timeout", "process_missing",
+                                      "child_missing", "other"}
+            assert type(record["line"]) is int and 0 <= record["line"] <= 10000
+    return values
+
+
 def main():
     prefix = f"ciq-supervisor-{uuid4().hex[:12]}"
     image = f"{prefix}:test"
@@ -80,20 +97,16 @@ def main():
         docker("start", prefix)
         result = json.loads(docker("wait", prefix, timeout=120))
         logs = docker("logs", prefix)
-        reports = [json.loads(row) for row in logs.splitlines()]
-        assert len(reports) <= len(CASES)
-        assert len({r["case"] for r in reports}) == len(reports)
-        assert all(set(r) == {"case", "status"} and r["case"] in CASES
-                   and r["status"] in {"PASS", "FAIL"} for r in reports)
+        values = reports(logs)
         if result != 0:
-            for report in reports:
+            for report in values:
                 print(json.dumps(report))
             raise AssertionError(
                 "Disposable process acceptance failed; inspect test implementation"
             )
-        assert len(reports) == len(CASES)
-        assert {r["case"] for r in reports} == CASES
-        assert all(r["status"] == "PASS" for r in reports)
+        assert len(values) == len(CASES)
+        assert {r["case"] for r in values} == CASES
+        assert all(r["status"] == "PASS" for r in values)
         print(logs)
         print(f"{prefix}: PASS network-free non-root process containment; test-only")
     finally:
