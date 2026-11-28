@@ -169,3 +169,40 @@ this receipt. The eventual installed binary still needs independently reviewed
 build provenance and verification together with its immutable runtime and host
 policy. Ubuntu cgroup/identity/resource acceptance remains separate from Debian
 loader compatibility; the latter container does not exercise systemd or cgroups.
+
+## Prepared controller gate and original waiter handle
+
+`OwnedSingleCallLaunch` owns a fresh private gate before bootstrap creation. It
+hands out only the original child endpoint once and closes the controller's copy
+in a `finally` after the creation attempt. Nonblocking bounded `recvmsg` retains
+all installed descriptor rights before validation. The exact packet must contain
+one pidfd and one root sender credential, with no truncation or extra ancillary
+records. The received pidfd's procfs sender identity must match the packet; kernel
+`waitid(P_PIDFD, WNOWAIT)` must establish that it is an original direct child.
+No process is discovered or signaled by a numeric PID. The installed immutable
+native source and exclusive controller/descriptor ownership remain prerequisites;
+this is not protection against a competing privileged process.
+
+Only after that handoff can `authorize()` send the fixed START packet, once.
+A short write, exception or cancellation consumes authorization and preserves
+the original pidfd for cleanup. A creation attempt whose return was lost must
+never call authorize, even if its bootstrap handle is subsequently recovered.
+An expired but authenticated direct-child waiter is retained for reaping while
+START remains denied. All faults are terminal for handoff/start; no reconstruction,
+retry, adoption or second process allocation is implemented.
+
+Observation uses only the original non-inheritable pidfd and `WNOWAIT`; reaping
+is separate, consumes its wait before a possibly lost acknowledgment, and cannot
+be repeated. Controller EOF requests native fail-closed retirement. Independent
+original application-group stop remains mandatory before forcibly terminating
+a stalled root waiter using its original pidfd. Closing handles alone proves no
+cleanup. The component never creates a process, makes an admission decision,
+installs containment or implements the complete `PreparedHost` adapter.
+
+Offline state/fault controls cover malformed/foreign handoffs, altered identities,
+uncertain START and uncertain reaping. Disposable Linux composition uses the
+actual native bootstrap, gate, permanent identity, original private pipes and
+owned cgroup. It checks a complete marker plus both EOFs, creation-return loss
+without START, post-START controller loss and externally killed waiter cleanup.
+The fixture's `Popen` object is used for emergency test bookkeeping only: product
+observation, signaling and reaping use the previously transferred original pidfd.

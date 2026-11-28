@@ -357,6 +357,88 @@ def resource_scenario(module, binary, role, mode):
             group.close()
 
 
+def owned_launch_scenario(module, binary, mode):
+    from ciq_api.agent_single_call_launch import OwnedSingleCallLaunch, WaiterStatus
+    from ciq_api.agent_single_call_output import OwnedSingleCallOutput
+    from ciq_api.agent_single_call_supervisor import READY
+    # All original owners exist before creation can become uncertain.
+    group = module.OwnedSingleCallCgroup("custody")
+    output = OwnedSingleCallOutput("custody")
+    launch = OwnedSingleCallLaunch()
+    path = Path(module.PARENT) / group.name
+    fixture_process = None
+    try:
+        group.prepare()
+        output.prepare()
+        launch.prepare()
+        fd = launch.take_descriptor()
+        writers = output.take_writers()
+        (RUNTIME / "expected").write_text(group.name + "\n" + (
+            "marker" if mode == "complete" else "tree") + "\n")
+        try:
+            # Popen return is fixture bookkeeping ONLY. The product gate retains
+            # its own original pidfd and uses only it for observe/signal/reap.
+            fixture_process = subprocess.Popen(
+                (str(binary), "custody", str(group._group), str(fd)),
+                stdin=subprocess.DEVNULL, stdout=writers[0], stderr=writers[1],
+                cwd="/", env=ENV, pass_fds=(group._group, fd), start_new_session=True,
+            )
+        finally:
+            launch.release_descriptor()
+            output.release_writers()
+        deadline = monotonic() + 3
+        while not launch.receive():
+            assert monotonic() < deadline
+            sleep(0.005)
+        if mode == "creation-ack-lost":
+            # Ownership recovered with NO START, no process-return evidence.
+            launch.disconnect()
+        else:
+            launch.authorize()
+            if mode == "start-ack-lost":
+                # Ignore all start-return evidence after the packet was sent.
+                # The private pidfd was already retained before authorization.
+                sleep(0.05)
+                launch.disconnect()
+            elif mode == "waiter-killed":
+                sleep(0.05)
+                # Fixture-only pause ensures the native waiter cannot race to
+                # exit normally when independent application cleanup happens.
+                signal.pidfd_send_signal(launch._pidfd, signal.SIGSTOP)
+                assert group.stop()  # Independently retire roles before waiter kill.
+                launch.terminate()
+        snapshot = None
+        while True:
+            assert monotonic() < deadline
+            state = launch.observe()
+            if mode == "complete":
+                snapshot = output.observe()
+            if not state.running and (mode != "complete" or snapshot.drained):
+                break
+            sleep(0.005)
+        expected = 0 if mode == "complete" else 137 if mode == "waiter-killed" else 125
+        assert state == WaiterStatus(False, expected)
+        assert group.quiescent() and group.resource_limited()
+        if mode == "complete":
+            assert snapshot.stdout == READY["custody"] and snapshot.stderr == b""
+        assert launch.reap() == state
+        # Prevent Popen's destructor from attempting another wait after product
+        # ownership already reaped the ORIGINAL direct child via P_PIDFD.
+        fixture_process.returncode = expected
+        assert group.stop() and group.quiescent()
+    finally:
+        try:
+            try:
+                launch.disconnect()
+            finally:
+                if group._created:
+                    emergency_cleanup(path, fixture_process)
+        finally:
+            launch.close()
+            output.close()
+            group.close()
+
+
 def gate_scenario(module, binary, mode):
     group = module.OwnedSingleCallCgroup("custody")
     path = Path(module.PARENT) / group.name
@@ -405,6 +487,9 @@ def main():
         prepare_runtime()
         binary = RUNTIME / "launch"
         build(binary)
+        for mode in ("complete", "creation-ack-lost", "start-ack-lost", "waiter-killed"):
+            owned_launch_scenario(module, binary, mode)
+            print("PASS: original gate/pidfd/pipe composition " + mode + " and complete cleanup")
         for mode in ("bad", "disconnect", "hold", "lost-ack"):
             gate_scenario(module, binary, mode)
             print("PASS: native pre-allocation gate " + mode + " and original cleanup")
