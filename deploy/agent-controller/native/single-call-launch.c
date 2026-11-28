@@ -276,7 +276,8 @@ int main(int argc, char **argv, char **envp) {
     int pidfd = -1;
     pid_t parent = getpid();
     struct clone_args args = {
-        .flags = CLONE_INTO_CGROUP | CLONE_PIDFD | CLONE_NEWNS,
+        .flags = CLONE_INTO_CGROUP | CLONE_PIDFD | CLONE_NEWNS
+            | (strcmp(argv[1], "receipt") == 0 ? CLONE_NEWNET : 0),
         .pidfd = (uint64_t)(uintptr_t)&pidfd,
         .exit_signal = SIGCHLD,
         .cgroup = 3,

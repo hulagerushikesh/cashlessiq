@@ -238,3 +238,24 @@ layouts and a test-only forced unsupported `mount_setattr` are denied. No real
 plans, token, retained journal or database are installed by these controls.
 This is filesystem/resource/process containment evidence; role-specific network
 egress, complete host admission and immutable installation still remain.
+
+## Receipt network namespace
+
+Receipt's atomic clone additionally requests `CLONE_NEWNET`. It inherits no
+network descriptors and receives a fresh network namespace with no host
+interfaces, routes, resolver socket or enabled loopback. After fixed identity
+loss it has no capabilities to configure one. Receipt needs only its fixed
+pathname Unix socket and retained SQLite history; neither requires access to
+PostgreSQL, DNS or provider HTTPS. The native bootstrap never enables interfaces
+or downgrades a denied network-namespace clone. Root-waiter observation and
+cleanup remain in the trusted host's namespace.
+
+Disposable acceptance checks the network namespace differs from the host, that
+only the unconfigured loopback interface exists, and that IPv4/IPv6 host-loopback
+and a documentation-only external address are unreachable. A root fixture's
+public pathname Unix socket exchanges a fixed probe across the namespace boundary,
+while the same receipt's retained SQLite transaction succeeds. This establishes
+that receipt isolation preserves its required IPC/storage behavior. Custody and
+provider currently retain the host network namespace: custody-only loopback SQL
+and provider-only reviewed HTTPS containment still require separate completion.
+No claim of complete three-role egress isolation is made.

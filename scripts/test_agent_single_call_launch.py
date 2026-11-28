@@ -102,6 +102,8 @@ try:
     expected = Path("/opt/cashlessiq-agent/expected").read_text().splitlines()[0]
     assert Path("/proc/self/cgroup").read_text() == "0::/system.slice/" + expected + "\\n"
     assert os.geteuid() in (0, 53002, 53003, 53004)
+    host_network = Path("/opt/cashlessiq-agent/host-network").read_text()
+    assert (os.readlink("/proc/self/ns/net") != host_network) == expected.endswith("-receipt")
     assert all(os.statvfs(path).f_flag & os.ST_RDONLY for path in
                ("/", "/tmp", "/opt/cashlessiq-agent", "/sys/fs/cgroup"))
     assert all(int(fd) < 3 or not Path("/proc/self/fd/" + fd).exists()
@@ -149,6 +151,26 @@ if mode == "mounts":
         listener.close()
         target.unlink()
     if writable:
+        assert socket.if_nameindex() == [(1, "lo")]
+        for family, destination in ((socket.AF_INET, ("127.0.0.1", 5432)),
+                                    (socket.AF_INET, ("192.0.2.1", 443)),
+                                    (socket.AF_INET6, ("::1", 5432))):
+            client = socket.socket(family, socket.SOCK_STREAM)
+            client.settimeout(0.2)
+            try:
+                client.connect(destination)
+            except OSError:
+                pass
+            else:
+                os._exit(119)
+            finally:
+                client.close()
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.settimeout(0.5)
+        client.connect("/run/ciq-agent-single-call/ipc/host.sock")
+        client.sendall(b"PUBLIC namespace probe")
+        assert client.recv(32) == b"PUBLIC namespace ack"
+        client.close()
         target = Path(allowed[1]) / "dummy.sqlite3"
         database = sqlite3.connect(target)
         database.execute("PRAGMA journal_mode=DELETE")
@@ -227,6 +249,7 @@ os._exit(0)
 
 
 def prepare_layout():
+    (RUNTIME / "host-network").write_text(os.readlink("/proc/self/ns/net"))
     for base in PRIVATE:
         base.mkdir(mode=0o755)
     (PRIVATE[2] / "single-call").mkdir(mode=0o755)
@@ -247,6 +270,8 @@ def mount_scenario(module, binary, role, invalid=None):
     process = None
     target = WRITABLE[1][0]
     saved = target.with_name("ipc-original")
+    listener = None
+    peer = None
     try:
         group.prepare()
         (RUNTIME / "expected").write_text(group.name + "\nmounts\n")
@@ -260,7 +285,19 @@ def mount_scenario(module, binary, role, invalid=None):
             target.chmod(0o775)
         elif invalid == "mode":
             target.chmod(0o700)
+        if role == "receipt" and not invalid:
+            listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            listener.settimeout(3)
+            endpoint = WRITABLE[0][0] / "host.sock"
+            listener.bind(str(endpoint))
+            endpoint.chmod(0o666)
+            listener.listen(1)
         process = spawn(binary, group, role)
+        if listener is not None:
+            peer, _ = listener.accept()
+            peer.settimeout(1)
+            assert peer.recv(32) == b"PUBLIC namespace probe"
+            peer.sendall(b"PUBLIC namespace ack")
         output, errors = process.communicate(timeout=3)
         if invalid:
             assert process.returncode == 125 and output == b"" and errors == ERROR
@@ -275,6 +312,11 @@ def mount_scenario(module, binary, role, invalid=None):
                 emergency_cleanup(path, process)
         finally:
             group.close()
+            if peer is not None:
+                peer.close()
+            if listener is not None:
+                listener.close()
+                endpoint.unlink()
             if invalid in ("missing", "symlink"):
                 if target.is_symlink():
                     target.unlink()
@@ -588,6 +630,7 @@ def main():
         for role in ("receipt", "provider", "custody"):
             mount_scenario(module, binary, role)
             print("PASS: native read-only mount namespace and exact writable leaves for " + role)
+        print("PASS: receipt isolated network denies IP and preserves original pathname Unix IPC")
         for invalid in ("missing", "symlink", "owner", "writable", "mode"):
             mount_scenario(module, binary, "provider", invalid)
             print("PASS: native writable leaf " + invalid + " denied without fallback")
