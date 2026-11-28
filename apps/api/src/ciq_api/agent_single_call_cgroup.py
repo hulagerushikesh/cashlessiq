@@ -19,6 +19,15 @@ DIRECTORY = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
 READ = os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC
 
 
+def resource_limits(role):
+    """Fixed review policy, never a caller-supplied capacity or retry selector."""
+    require(type(role) is str and role in {"receipt", "provider", "custody"})
+    memory = 128 if role == "receipt" else 256
+    return (("memory.max", f"{memory * 1024 * 1024}\n".encode()),
+            ("memory.swap.max", b"0\n"), ("memory.oom.group", b"1\n"),
+            ("pids.max", b"32\n"), ("cpu.max", b"50000 100000\n"))
+
+
 def require(value):
     if not value:
         raise ValueError(ERROR)
@@ -63,6 +72,7 @@ class OwnedSingleCallCgroup:
 
     def __init__(self, role):
         require(type(role) is str and role in {"receipt", "provider", "custody"})
+        self._limits = resource_limits(role)
         self._name = "ciq-single-call-" + uuid4().hex + "-" + role
         self._parent = self._group = None
         self._identity = self._parent_identity = None
@@ -121,9 +131,36 @@ class OwnedSingleCallCgroup:
             self._identity = kernel_file(self._group, directory=True)
             self._ready = True
             require(self._empty())
-        except Exception:
+            # Set every limit on the original EMPTY group, before any launch.
+            # Missing controllers/short writes/readback faults are terminal.
+            # Never enable controllers on a shared ancestor from this helper.
+            for name, raw in self._limits:
+                self._verify()
+                fd = os.open(name, os.O_WRONLY | os.O_NOFOLLOW | os.O_CLOEXEC,
+                             dir_fd=self._group)
+                try:
+                    kernel_file(fd)
+                    require(os.write(fd, raw) == len(raw))
+                finally:
+                    os.close(fd)
+                self._verify()
+                require(self._read(name) == raw and self._empty())
+            require(self.resource_limited())
+        except BaseException as error:
             self._ready = False
+            if not isinstance(error, Exception):
+                raise
             raise ValueError(ERROR) from None
+
+    def resource_limited(self):
+        """Fresh exact policy readback; never repair changed limits or grant launch."""
+        try:
+            self._verify()
+            require(all(self._read(name) == raw for name, raw in self._limits))
+            self._verify()
+            return True
+        except Exception:
+            return False
 
     def quiescent(self):
         try:

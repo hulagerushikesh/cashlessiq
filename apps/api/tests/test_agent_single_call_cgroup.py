@@ -12,8 +12,10 @@ from ciq_api import agent_single_call_cgroup as m
 @pytest.fixture
 def kernel(monkeypatch):
     state = SimpleNamespace(events=b"populated 0\nfrozen 0\n", kind=b"domain\n",
-                            identity=(1, 20), clock=0.0, written=[], closed=[])
+                            identity=(1, 20), clock=0.0, written=[], closed=[],
+                            controls={}, control_writes=[])
     names = {30: "cgroup.type", 31: "cgroup.events", 32: "cgroup.kill"}
+    names.update({40 + i: name for i, (name, _) in enumerate(m.resource_limits("custody"))})
     monkeypatch.setattr(m.sys, "platform", "linux")
     monkeypatch.setattr(m.os, "getresuid", lambda: (0, 0, 0), raising=False)
     monkeypatch.setattr(m, "open_parent", lambda: 10)
@@ -23,9 +25,21 @@ def kernel(monkeypatch):
         {value: key for key, value in names.items()}.get(name, 20)))
     monkeypatch.setattr(m.os, "stat", lambda path, **kw: SimpleNamespace(
         st_mode=0o40755, st_dev=1, st_ino=10 if path == m.PARENT else state.identity[1]))
-    monkeypatch.setattr(m.os, "read", lambda fd, count: (
-        state.kind if names[fd] == "cgroup.type" else state.events))
-    monkeypatch.setattr(m.os, "write", lambda fd, raw: state.written.append((fd, raw)) or len(raw))
+    def read(fd, count):
+        if names[fd] == "cgroup.type":
+            return state.kind
+        if names[fd] == "cgroup.events":
+            return state.events
+        return state.controls.get(names[fd], b"max\n")
+    def write(fd, raw):
+        if fd == 32:
+            state.written.append((fd, raw))
+        else:
+            state.control_writes.append((names[fd], raw))
+            state.controls[names[fd]] = raw
+        return len(raw)
+    monkeypatch.setattr(m.os, "read", read)
+    monkeypatch.setattr(m.os, "write", write)
     monkeypatch.setattr(m.os, "close", state.closed.append)
     monkeypatch.setattr(m, "monotonic", lambda: state.clock)
     monkeypatch.setattr(m, "sleep", lambda seconds: setattr(state, "clock", state.clock + seconds))
@@ -212,3 +226,71 @@ def test_parent_walk_uses_only_fixed_nofollow_components_and_closes_on_fault(mon
         assert m.open_parent() == 14
         assert opened == ["/", "sys", "fs", "cgroup", "system.slice"]
         assert closed == [10, 11, 12, 13]
+
+
+@pytest.mark.parametrize("role,memory", [("receipt", 134217728), ("provider", 268435456),
+                                         ("custody", 268435456)])
+def test_limits_are_fixed_before_launch_with_fresh_readback(kernel, role, memory):
+    group = m.OwnedSingleCallCgroup(role)
+    group.prepare()
+    assert kernel.control_writes == [
+        ("memory.max", f"{memory}\n".encode()), ("memory.swap.max", b"0\n"),
+        ("memory.oom.group", b"1\n"), ("pids.max", b"32\n"),
+        ("cpu.max", b"50000 100000\n"),
+    ]
+    assert group.resource_limited()
+    before = list(kernel.control_writes)
+    assert group.stop() and group.resource_limited()
+    assert kernel.control_writes == before  # Verification and cleanup never rewrite policy.
+    group.close()
+    assert not group.resource_limited()
+
+
+@pytest.mark.parametrize("name,raw", [("memory.max", b"max\n"), ("memory.swap.max", b"1\n"),
+                                     ("memory.oom.group", b"0\n"), ("pids.max", b"33\n"),
+                                     ("cpu.max", b"50001 100000\n")])
+def test_policy_drift_denies_resource_evidence_but_preserves_kill(kernel, name, raw):
+    group = m.OwnedSingleCallCgroup("custody")
+    group.prepare()
+    kernel.controls[name] = raw
+    assert not group.resource_limited()
+    assert group.stop() and kernel.written == [(32, b"1\n")]
+    assert kernel.controls[name] == raw  # No repair or restart authority.
+
+
+@pytest.mark.parametrize("fault", ["missing", "protected", "short", "lost-ack", "readback",
+                                   "populated", "cancelled"])
+def test_limit_setup_fault_is_terminal_and_never_rewrites(kernel, monkeypatch, fault):
+    group = m.OwnedSingleCallCgroup("provider")
+    original_open, original_write = m.os.open, m.os.write
+    def open_control(name, *args, **kwargs):
+        if name == "memory.max" and fault == "missing":
+            raise FileNotFoundError("PRIVATE")
+        if name == "memory.max" and fault == "protected":
+            raise PermissionError("PRIVATE")
+        return original_open(name, *args, **kwargs)
+    def write_control(fd, raw):
+        result = original_write(fd, raw)
+        if fault == "short":
+            return result - 1
+        if fault == "lost-ack":
+            raise OSError("PRIVATE")
+        if fault == "cancelled":
+            raise KeyboardInterrupt("PRIVATE")
+        if fault == "readback":
+            kernel.controls["memory.max"] = b"max\n"
+        if fault == "populated":
+            kernel.events = b"populated 1\nfrozen 0\n"
+        return result
+    monkeypatch.setattr(m.os, "open", open_control)
+    monkeypatch.setattr(m.os, "write", write_control)
+    expected = KeyboardInterrupt if fault == "cancelled" else ValueError
+    with pytest.raises(expected):
+        group.prepare()
+    attempts = list(kernel.control_writes)
+    assert len(attempts) == (0 if fault in ("missing", "protected") else 1)
+    assert not group.resource_limited() and not group.quiescent()
+    with pytest.raises(ValueError, match=m.ERROR):
+        group.prepare()
+    assert kernel.control_writes == attempts and not kernel.written
+    group.close()  # Retain failed namespace; no allocation or destructive rollback.

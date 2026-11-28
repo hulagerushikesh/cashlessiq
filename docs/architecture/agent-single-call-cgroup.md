@@ -37,6 +37,27 @@ testing; the complete host adapter and installed policy remain outstanding.
 
 ## Recursive stop and uncertainty
 
+Before `prepare()` can succeed, the original empty group now receives fixed
+limits: receipt memory 128 MiB, provider/custody memory 256 MiB each; every role
+has zero swap, group OOM termination, 32 tasks and 50 ms fair-scheduler CPU per
+100 ms period. Each protected kernel control gets one write and exact readback,
+with original identity and empty-population checks between operations. Missing
+controllers, cancellation, short writes or uncertain acknowledgments leave
+preparation terminal. There is no retry, repair, shared-ancestor controller
+enablement or unconstrained fallback. `resource_limited()` supplies fresh exact
+readback, without granting launch authority. A drifted limit never prevents the
+separate original-group kill path from attempting cleanup.
+
+These values are a prepared test policy, not measured capacity or a host-wide
+memory guarantee. The three groups total 640 MiB in configured memory maxima;
+bootstrap waiters, the trusted host, database, web services and kernel overhead
+remain outside that sum. The kernel permits temporary memory-max overshoot;
+task accounting includes threads, and CPU bandwidth applies to fair scheduling.
+The native launcher must enforce that scheduling class before allocation. A
+complete host still needs fresh resource checks during the attempt and the
+external time bounds. See the authoritative
+[cgroup-v2 resource semantics](https://docs.kernel.org/admin-guide/cgroup-v2.html).
+
 `stop()` consumes the original kill attempt before writing `1` to the pinned
 group's `cgroup.kill`. A kernel write alone never confirms cleanup. The helper
 requires two fresh validated `cgroup.events` observations with `populated 0`,
@@ -73,10 +94,10 @@ is deliberately lost. Fixture-only cleanup independently retires its dummy
 processes and cgroup names. Production cleanup retains its names and evidence.
 
 This does not test a new installed service policy, identity-launcher composition,
-real provider traffic, resource caps, read-only mounts or egress. The complete
+real provider traffic, installed resource policy, read-only mounts or egress. The complete
 host adapter must still integrate the identity launcher, bounded process
 allocation, original incarnation/output capture, reaping, filesystem/network
-policy and resource limits with this cleanup. The systemd-managed versus direct
+policy and resource verification with this cleanup. The systemd-managed versus direct
 cgroup allocation policy requires review before installation; these raw groups
 are not installed systemd units. Durable retained-history/clock recovery and a
 separately approved provider attempt remain outstanding. Existing services and
