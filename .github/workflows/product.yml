@@ -83,6 +83,8 @@ jobs:
         run: sudo -n env GITHUB_ACTIONS=true GITHUB_REPOSITORY=hulagerushikesh/cashlessiq CIQ_PROVIDER_IDENTITY_TEST=1 /usr/bin/python3 -m scripts.test_agent_provider_identity
       - name: Original cgroup cleanup including nested separate-session descendants
         run: sudo -n env PYTHONPATH=apps/api/src GITHUB_ACTIONS=true GITHUB_REPOSITORY=hulagerushikesh/cashlessiq CIQ_SINGLE_CALL_CGROUP_TEST=1 /usr/bin/python3 -m scripts.test_agent_single_call_cgroup
+      - name: Atomic cgroup allocation and fixed permanent-identity launch
+        run: sudo -n env PYTHONPATH=apps/api/src GITHUB_ACTIONS=true GITHUB_REPOSITORY=hulagerushikesh/cashlessiq CIQ_SINGLE_CALL_CGROUP_TEST=1 /usr/bin/python3 -m scripts.test_agent_single_call_launch
   agent-ledger:
     runs-on: ubuntu-latest
     timeout-minutes: 8

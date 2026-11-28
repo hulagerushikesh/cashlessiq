@@ -29,6 +29,8 @@ FIXED = (
     "docs/architecture/agent-single-call-supervision.md",
     "docs/architecture/agent-single-call-identity.md",
     "docs/architecture/agent-single-call-cgroup.md",
+    "docs/architecture/agent-single-call-launch.md",
+    "deploy/agent-controller/native/single-call-launch.c",
     *(f"deploy/agent-controller/systemd/ciq-agent-{role}.service.example"
       for role in ("claim", "custody", "receipt")),
     "deploy/agent-controller/README.md",

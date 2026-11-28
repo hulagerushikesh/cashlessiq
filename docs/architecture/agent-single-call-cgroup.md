@@ -30,7 +30,10 @@ owner consent and installed-source checks independently, and place each child
 inside its reserved group **before** it can execute or fork. It must exclude
 other privileged migrations, namespace replacement and new starts after cleanup
 begins. This helper cannot defend against a competing root administrator or
-restore of an earlier host. No membership/attachment API is provided here.
+restore of an earlier host. No membership/attachment API is provided here. A
+separate [prepared native bootstrap](agent-single-call-launch.md) now provides
+atomic kernel allocation into the retained descriptor for disposable composition
+testing; the complete host adapter and installed policy remain outstanding.
 
 ## Recursive stop and uncertainty
 
