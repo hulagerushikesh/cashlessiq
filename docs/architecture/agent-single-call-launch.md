@@ -291,3 +291,11 @@ no role execution. Normal identity, memory/task/CPU, output and whole-group
 cleanup controls also run with this policy enabled. Provider still needs its
 own reviewed HTTPS destination/resolver policy and end-to-end host admission;
 this custody policy grants no provider/network/spend authority.
+
+Custody policy-lifetime controls additionally attach the exact fixed programs
+through a disposable fixture and require a subsequent launch to reject that
+nonfresh policy rather than replace it. A separate injected root-waiter SIGKILL
+leaves a live role in its original group; that role must still receive EPERM for
+a forbidden connection before independent host group cleanup. This intentionally
+violates normal shutdown order only to test unexpected waiter death. The fixture
+never uses runtime `terminate()` as a substitute for whole-group cleanup.

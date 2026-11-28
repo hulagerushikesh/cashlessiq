@@ -28,10 +28,10 @@ def run(*args):
     return subprocess.run(args, check=True, capture_output=True, timeout=20)
 
 
-def build(destination, extra=()):
+def build(destination, extra=(), *, source=SOURCE):
     run("cc", "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror", "-Wconversion",
         "-fstack-protector-strong", "-D_FORTIFY_SOURCE=2", "-fPIE", "-pie",
-        "-Wl,-z,relro,-z,now", str(SOURCE), *extra, "-o", str(destination))
+        "-Wl,-z,relro,-z,now", str(source), *extra, "-o", str(destination))
 
 
 def spawn(binary, group, role, *, environment=None, fd=None, arguments=None,
@@ -130,6 +130,25 @@ assert not set(os.environ) - {{"LANG", "LC_CTYPE"}}
 assert Path("/proc/self/status").read_text().split("NoNewPrivs:")[1].splitlines()[0].strip()=="1"
 mode = Path("/opt/cashlessiq-agent/expected").read_text().splitlines()[1]
 marker = {READY[role]!r}
+if mode == "network-waiter-loss":
+    import socket
+    assert {uid} == 53002
+    os.write(1, b"POLICY_READY\\n")
+    deadline = time.monotonic() + 3
+    while not Path("/opt/cashlessiq-agent/continue").exists():
+        assert time.monotonic() < deadline
+        time.sleep(0.005)
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        client.connect(("127.0.0.1", 5433))
+    except OSError as error:
+        assert error.errno == errno.EPERM
+    else:
+        os._exit(119)
+    client.close()
+    os.write(1, b"POLICY_RETAINED\\n")
+    time.sleep(12)
+    os._exit(0)
 if mode == "network":
     import socket
     assert {uid} == 53002
@@ -302,6 +321,51 @@ def prepare_layout():
         probe = RUNTIME / ("probe-" + str(uid))
         probe.mkdir(mode=0o700)
         os.chown(probe, uid, uid)
+
+
+def network_lifetime_scenario(module, binary, installer, mode):
+    import selectors
+    group = module.OwnedSingleCallCgroup("custody")
+    path = Path(module.PARENT) / group.name
+    process = None
+    release = RUNTIME / "continue"
+    def line():
+        with selectors.DefaultSelector() as selector:
+            selector.register(process.stdout, selectors.EVENT_READ)
+            assert selector.select(3)
+            return os.read(process.stdout.fileno(), 64)
+    try:
+        group.prepare()
+        (RUNTIME / "expected").write_text(group.name + "\n" + (
+            "network-waiter-loss" if mode == "waiter-death" else "marker") + "\n")
+        if mode == "existing-policy":
+            result = subprocess.run((str(installer), str(group._group)), cwd="/", env=ENV,
+                                    stdin=subprocess.DEVNULL, capture_output=True,
+                                    pass_fds=(group._group,), timeout=3)
+            assert result.returncode == 0 and result.stdout == result.stderr == b""
+        process = spawn(binary, group, "custody")
+        if mode == "existing-policy":
+            raw, errors = process.communicate(timeout=3)
+            assert process.returncode == 125 and not raw and errors == ERROR
+        else:
+            assert line() == b"POLICY_READY\n"
+            # Fault injection only: simulate unexpected root waiter SIGKILL while
+            # the role is still alive. Runtime terminate() requires group stop first.
+            signal.pidfd_send_signal(process._waiter_fd, signal.SIGKILL)
+            assert process.wait(timeout=3) == -signal.SIGKILL
+            assert not group.quiescent()
+            release.write_text("public fixture release")
+            assert line() == b"POLICY_RETAINED\n"
+            assert not group.quiescent() and group.stop()
+        assert group.quiescent()
+    finally:
+        try:
+            if group._created:
+                emergency_cleanup(path, process)
+        finally:
+            group.close()
+            if release.exists():
+                release.unlink()
 
 
 def custody_network_scenario(module, binary):
@@ -702,6 +766,20 @@ def main():
         prepare_layout()
         binary = RUNTIME / "launch"
         build(binary)
+        policy_source = RUNTIME / "policy-fixture.c"
+        policy_source.write_text("#define main prepared_main\n" + SOURCE.read_text() + '''
+#undef main
+int main(int argc, char **argv) {
+    if (argc != 2) return 119;
+    custody_network(descriptor(argv[1]), "custody");
+    return 0;
+}
+''')
+        policy_installer = RUNTIME / "policy-fixture"
+        build(policy_installer, source=policy_source)
+        for mode in ("existing-policy", "waiter-death"):
+            network_lifetime_scenario(module, binary, policy_installer, mode)
+            print("PASS: original custody kernel policy " + mode + " control and cleanup")
         custody_network_scenario(module, binary)
         print("PASS: custody kernel policy permits TCP loopback SQL; denies inbound/UDP/IPv6")
         for role in ("receipt", "provider", "custody"):
@@ -752,7 +830,8 @@ long __wrap_syscall(long number, ...) {
         bpf_source = mount_wrapper.read_text().replace(
             "if (number == SYS_mount_setattr) { errno = ENOSYS; return -1; }",
             "if (number == SYS_bpf) { errno = EPERM; return -1; }",
-        ).replace("    if (number != SYS_close_range) _exit(119);", '''    if (number == SYS_mount_setattr) {
+        ).replace("    if (number != SYS_close_range) _exit(119);", '''
+    if (number == SYS_mount_setattr) {
         int fd = va_arg(args, int);
         const char *path = va_arg(args, const char *);
         unsigned int flags = va_arg(args, unsigned int);
