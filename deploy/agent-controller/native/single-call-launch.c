@@ -9,6 +9,7 @@
 #include <limits.h>
 #include <linux/magic.h>
 #include <linux/sched.h>
+#include <poll.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdint.h>
@@ -18,6 +19,9 @@
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
+#include <sys/socket.h>
+#include <sys/timerfd.h>
+#include <time.h>
 #include <sys/syscall.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -66,20 +70,101 @@ static int resource_policy(int group, const char *role) {
         && kernel_text(group, "cpu.max", "50000 100000\n");
 }
 
+
+static int descriptor(const char *raw) {
+    if (!raw[0] || strlen(raw) > 4) deny();
+    for (const char *p = raw; *p; ++p) if (*p < '0' || *p > '9') deny();
+    long value = strtol(raw, NULL, 10);
+    if (value < 3 || value > 1023) deny();
+    return (int)value;
+}
+
+static int gate_valid(int gate) {
+    int domain = 0, type = 0;
+    struct ucred peer;
+    socklen_t size = sizeof(domain);
+    if (getsockopt(gate, SOL_SOCKET, SO_DOMAIN, &domain, &size) || domain != AF_UNIX)
+        return 0;
+    size = sizeof(type);
+    if (getsockopt(gate, SOL_SOCKET, SO_TYPE, &type, &size) || type != SOCK_SEQPACKET)
+        return 0;
+    size = sizeof(peer);
+    return !getsockopt(gate, SOL_SOCKET, SO_PEERCRED, &peer, &size)
+        && size == sizeof(peer) && peer.pid == getppid() && peer.uid == 0 && peer.gid == 0;
+}
+
+/* Transfer the ORIGINAL waiter's kernel handle before the only role allocation.
+ * The host retains its socket before spawning us and never sends START until
+ * receipt/validation of this handle. No start ACK is required to retain it.
+ */
+static void handoff(int gate, int timer) {
+    static char ready[] = "single_call_waiter_ready\n";
+    static const char start[] = "single_call_start\n";
+    int own = (int)syscall(SYS_pidfd_open, getpid(), 0U);
+    if (own < 0) deny();
+    union { struct cmsghdr align; char bytes[CMSG_SPACE(sizeof(int))]; } control = {0};
+    struct iovec data = {.iov_base = ready, .iov_len = sizeof(ready) - 1};
+    struct msghdr message = {.msg_iov = &data, .msg_iovlen = 1,
+        .msg_control = control.bytes, .msg_controllen = sizeof(control.bytes)};
+    struct cmsghdr *header = CMSG_FIRSTHDR(&message);
+    header->cmsg_level = SOL_SOCKET;
+    header->cmsg_type = SCM_RIGHTS;
+    header->cmsg_len = CMSG_LEN(sizeof(int));
+    memcpy(CMSG_DATA(header), &own, sizeof(own));
+    ssize_t sent = sendmsg(gate, &message, MSG_DONTWAIT | MSG_NOSIGNAL);
+    (void)close(own);
+    if (sent != (ssize_t)(sizeof(ready) - 1)) deny();
+    struct pollfd descriptors[] = {{.fd = gate, .events = POLLIN},
+                                  {.fd = timer, .events = POLLIN}};
+    /* EINTR, disconnect, unexpected packet/ancillary data and timeout all deny.
+     * recvmsg without a control buffer discards/closes any supplied descriptors;
+     * MSG_CTRUNC still makes the command invalid.
+     */
+    if (poll(descriptors, 2, 3000) != 1 || descriptors[0].revents != POLLIN
+        || descriptors[1].revents) deny();
+    char packet[sizeof(start)];
+    struct iovec command = {.iov_base = packet, .iov_len = sizeof(packet)};
+    struct msghdr received = {.msg_iov = &command, .msg_iovlen = 1};
+    ssize_t count = recvmsg(gate, &received, MSG_DONTWAIT | MSG_CMSG_CLOEXEC);
+    if ((received.msg_flags & ~MSG_CMSG_CLOEXEC) || count != (ssize_t)(sizeof(start) - 1)
+        || memcmp(packet, start, sizeof(start) - 1)) deny();
+}
+
+static int retire(int group) {
+    int kill = openat(group, "cgroup.kill", O_WRONLY | O_CLOEXEC | O_NOFOLLOW);
+    if (kill < 0) return 0;
+    struct stat info;
+    struct statfs fs;
+    int valid = !fstat(kill, &info) && S_ISREG(info.st_mode) && info.st_uid == 0
+        && !(info.st_mode & 0022) && !fstatfs(kill, &fs) && fs.f_type == CGROUP2_SUPER_MAGIC;
+    ssize_t written = valid ? write(kill, "1\n", 2) : -1;
+    (void)close(kill);
+    if (written != 2) return 0;
+    /* Fixed observation ceiling; caller still owns independent original cleanup.
+     * Never remove the group or retry an uncertain kill write.
+     */
+    for (int attempt = 0; attempt < 100; ++attempt) {
+        if (kernel_text(group, "cgroup.events", "populated 0\nfrozen 0\n")) return 1;
+        struct timespec pause = {.tv_sec = 0, .tv_nsec = 10000000};
+        if (nanosleep(&pause, NULL)) return 0;
+    }
+    return 0;
+}
+
 int main(int argc, char **argv, char **envp) {
+    struct timespec origin;
+    if (clock_gettime(CLOCK_MONOTONIC, &origin)) deny();
     uid_t real_uid, effective_uid, saved_uid;
     gid_t real_gid, effective_gid, saved_gid;
     struct stat input, null, output, diagnostic;
     struct rlimit core = {0, 0};
     struct sched_param normal = {.sched_priority = 0};
-    if (argc != 3 || (strcmp(argv[1], "receipt") && strcmp(argv[1], "provider")
+    if (argc != 4 || (strcmp(argv[1], "receipt") && strcmp(argv[1], "provider")
                      && strcmp(argv[1], "custody"))) deny();
-    /* Only a descriptor already owned by the host, never a path or PID. */
-    if (!argv[2][0] || strlen(argv[2]) > 4) deny();
-    for (const char *p = argv[2]; *p; ++p) if (*p < '0' || *p > '9') deny();
-    long selected = strtol(argv[2], NULL, 10);
-    if (selected < 3 || selected > 1023) deny();
-    int group = (int)selected;
+    /* Only inherited original handles, never a path, PID or command selector. */
+    int group = descriptor(argv[2]);
+    int gate = descriptor(argv[3]);
+    if (gate == group || !gate_valid(gate)) deny();
     for (char **p = envp; *p; ++p) {
         if (strcmp(*p, "LANG=C.UTF-8") && strcmp(*p, "LC_CTYPE=C.UTF-8")) deny();
     }
@@ -100,9 +185,11 @@ int main(int argc, char **argv, char **envp) {
     /* Normalize only the retained kernel handle, then close every other extra
      * descriptor. close_range/clone3 failure is terminal: no fork/move fallback.
      */
-    if ((group != 3 && dup3(group, 3, O_CLOEXEC) < 0)
-        || fcntl(3, F_SETFD, FD_CLOEXEC) < 0
-        || syscall(SYS_close_range, 4U, UINT_MAX, 0U) != 0) deny();
+    int saved_group = fcntl(group, F_DUPFD_CLOEXEC, 5);
+    int saved_gate = fcntl(gate, F_DUPFD_CLOEXEC, 5);
+    if (saved_group < 0 || saved_gate < 0 || dup3(saved_group, 3, O_CLOEXEC) < 0
+        || dup3(saved_gate, 4, O_CLOEXEC) < 0
+        || syscall(SYS_close_range, 5U, UINT_MAX, 0U) != 0) deny();
     for (int fd = 0; fd < 3; ++fd) if (fcntl(fd, F_SETFD, 0) < 0) deny();
     /* Reset inherited signal dispositions/mask before allocating a child. */
     struct sigaction action = {.sa_handler = SIG_DFL};
@@ -112,6 +199,16 @@ int main(int argc, char **argv, char **envp) {
             && errno != EINVAL) deny();
     }
     if (sigprocmask(SIG_SETMASK, &action.sa_mask, NULL)) deny();
+    int timer = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
+    struct itimerspec expiry = {.it_value = origin};
+    expiry.it_value.tv_sec += 3;
+    if (timer < 0 || timerfd_settime(timer, TFD_TIMER_ABSTIME, &expiry, NULL)) deny();
+    handoff(4, timer);
+    expiry.it_value = origin;
+    expiry.it_value.tv_sec += 30;
+    if (timerfd_settime(timer, TFD_TIMER_ABSTIME, &expiry, NULL)
+        || !kernel_text(3, "cgroup.events", "populated 0\nfrozen 0\n")
+        || !resource_policy(3, argv[1])) deny();
     int pidfd = -1;
     pid_t parent = getpid();
     struct clone_args args = {
@@ -127,7 +224,7 @@ int main(int argc, char **argv, char **envp) {
          * Linux clears it at identity loss; whole-group cleanup remains required.
          */
         if (prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) || getppid() != parent
-            || setsid() < 0 || close(3)) deny();
+            || setsid() < 0 || close(3) || close(4) || close(timer)) deny();
         char *const command[] = {PYTHON, "-I", "-B", "-m",
                                 "ciq_api.agent_single_call_identity", argv[1], NULL};
         char *const environment[] = {"LANG=C.UTF-8", NULL};
@@ -138,14 +235,26 @@ int main(int argc, char **argv, char **envp) {
      * host must retain/reap it separately, including after uncertain start ACK.
      * No PID is exported or accepted for signaling; waitid uses the original fd.
      */
-    if (pidfd < 0) deny();
+    if (pidfd < 0) { (void)retire(3); deny(); }
+    struct pollfd watched[] = {{.fd = pidfd, .events = POLLIN},
+                               {.fd = 4, .events = POLLIN},
+                               {.fd = timer, .events = POLLIN}};
+    int observed = poll(watched, 3, 30000);
+    int completed = observed > 0 && watched[0].revents == POLLIN
+        && !watched[1].revents && !watched[2].revents;
+    /* Disconnect, unsolicited packet, clock deadline and even normal main exit
+     * retire ALL descendants before the root waiter can report success.
+     */
+    int clean = retire(3);
+    struct pollfd exited = {.fd = pidfd, .events = POLLIN};
+    if (poll(&exited, 1, 1000) != 1 || exited.revents != POLLIN) deny();
     siginfo_t result = {0};
-    int waited;
-    do { waited = waitid(P_PIDFD, (id_t)pidfd, &result, WEXITED); }
-    while (waited < 0 && errno == EINTR);
+    int waited = waitid(P_PIDFD, (id_t)pidfd, &result, WEXITED | WNOHANG);
     (void)close(pidfd);
+    (void)close(timer);
+    (void)close(4);
     (void)close(3);
-    if (waited || result.si_pid != child) deny();
+    if (!completed || !clean || waited || result.si_pid != child) deny();
     if (result.si_code == CLD_EXITED) return result.si_status;
     if (result.si_code == CLD_KILLED || result.si_code == CLD_DUMPED)
         return 128 + result.si_status;

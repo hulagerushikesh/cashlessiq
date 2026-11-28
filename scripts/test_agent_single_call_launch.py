@@ -3,6 +3,8 @@
 import os
 import shutil
 import signal
+import socket
+import struct
 import subprocess
 import sys
 from pathlib import Path
@@ -27,16 +29,52 @@ def build(destination, extra=()):
         "-Wl,-z,relro,-z,now", str(SOURCE), *extra, "-o", str(destination))
 
 
-def spawn(binary, group, role, *, environment=None, fd=None, arguments=None, writers=None):
+def spawn(binary, group, role, *, environment=None, fd=None, arguments=None,
+          writers=None, gate_action="start"):
     selected = group._group if fd is None else fd
-    return subprocess.Popen(
-        (str(binary), *(arguments if arguments is not None else (role, str(selected)))),
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE if writers is None else writers[0],
-        stderr=subprocess.PIPE if writers is None else writers[1],
-        cwd="/", env=ENV if environment is None else environment,
-        pass_fds=(selected,), start_new_session=True,
-    )
+    host, child = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+    host.settimeout(3)
+    process = None
+    try:
+        process = subprocess.Popen(
+            (str(binary), *(arguments if arguments is not None else
+                            (role, str(selected), str(child.fileno())))),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE if writers is None else writers[0],
+            stderr=subprocess.PIPE if writers is None else writers[1],
+            cwd="/", env=ENV if environment is None else environment,
+            pass_fds=(selected, child.fileno()), start_new_session=True,
+        )
+        child.close()
+        process._launch_gate = host
+        process._waiter_fd = None
+        raw, ancillary, flags, _ = host.recvmsg(128, socket.CMSG_SPACE(4),
+                                               socket.MSG_CMSG_CLOEXEC)
+        if raw:  # Earlier argument/policy refusals exit without a handoff.
+            assert raw == b"single_call_waiter_ready\n" and not flags & ~socket.MSG_CMSG_CLOEXEC
+            assert (len(ancillary) == 1
+                    and ancillary[0][:2] == (socket.SOL_SOCKET, socket.SCM_RIGHTS))
+            assert len(ancillary[0][2]) == 4
+            process._waiter_fd = struct.unpack("i", ancillary[0][2])[0]
+            assert os.waitid(os.P_PIDFD, process._waiter_fd,
+                             os.WEXITED | os.WNOHANG | os.WNOWAIT) is None
+            if gate_action == "start":
+                assert host.send(b"single_call_start\n") == 18
+            elif gate_action == "bad":
+                host.send(b"unreviewed_start\n")
+            elif gate_action == "disconnect":
+                host.close()
+            else:
+                assert gate_action == "hold"
+        return process
+    except BaseException:
+        host.close()
+        if process is not None:
+            process.wait(timeout=4)
+        raise
+    finally:
+        child.close()
+
 
 
 def prepare_runtime():
@@ -259,10 +297,9 @@ def capture_scenario(module, binary, role, mode):
                     break
                 raise AssertionError("Failed capture was reusable") from None
             assert snapshot.stdout in (b"", READY[role]) and snapshot.stderr == b""
-            if mode == "inherited" and process.poll() is not None:
-                assert process.returncode == 0 and not snapshot.drained
-                assert not group.quiescent() and group.stop()
-                mode = "retired"  # Child exit alone never implies pipe EOF.
+            if mode == "inherited" and (snapshot.drained or process.poll() is not None):
+                assert process.wait(timeout=3) == 0 and group.quiescent()
+                mode = "retired"  # Native waiter kills descendants before reporting exit.
             if snapshot.drained:
                 assert mode in ("marker", "retired") and snapshot.stdout == READY[role]
                 assert process.wait(timeout=3) == 0 and group.quiescent() and group.stop()
@@ -320,6 +357,33 @@ def resource_scenario(module, binary, role, mode):
             group.close()
 
 
+def gate_scenario(module, binary, mode):
+    group = module.OwnedSingleCallCgroup("custody")
+    path = Path(module.PARENT) / group.name
+    process = None
+    try:
+        group.prepare()
+        (RUNTIME / "expected").write_text(group.name + "\ntree\n")
+        process = spawn(binary, group, "custody", gate_action=(
+            mode if mode in ("bad", "disconnect", "hold") else "start"))
+        if mode == "lost-ack":
+            ready(process)
+            # No start-return acknowledgment is consulted: the original handle
+            # and endpoint were retained before START. EOF retires the tree.
+            process._launch_gate.close()
+        output, errors = process.communicate(timeout=5)
+        assert process.returncode == 125 and errors == ERROR
+        if mode in ("bad", "disconnect", "hold"):
+            assert output == b""  # No role process before exact start authority.
+        assert group.quiescent()
+    finally:
+        try:
+            if group._created:
+                emergency_cleanup(path, process)
+        finally:
+            group.close()
+
+
 def main():
     guard()  # Same explicit disposable-root opt-in; no Mac/local path.
     prepare_controllers()
@@ -341,6 +405,34 @@ def main():
         prepare_runtime()
         binary = RUNTIME / "launch"
         build(binary)
+        for mode in ("bad", "disconnect", "hold", "lost-ack"):
+            gate_scenario(module, binary, mode)
+            print("PASS: native pre-allocation gate " + mode + " and original cleanup")
+        timer_wrapper = RUNTIME / "timer-wrapper.c"
+        timer_wrapper.write_text('''
+#define _GNU_SOURCE
+#include <sys/timerfd.h>
+#include <time.h>
+int __real_timerfd_settime(int, int, const struct itimerspec *, struct itimerspec *);
+int __wrap_timerfd_settime(int fd, int flags, const struct itimerspec *value,
+                          struct itimerspec *old) {
+    static int calls = 0;
+    struct itimerspec shortened = *value;
+    if (++calls == 2) {
+        if (clock_gettime(CLOCK_MONOTONIC, &shortened.it_value)) return -1;
+        shortened.it_value.tv_nsec += 150000000;
+        if (shortened.it_value.tv_nsec >= 1000000000) {
+            shortened.it_value.tv_nsec -= 1000000000;
+            shortened.it_value.tv_sec++;
+        }
+    }
+    return __real_timerfd_settime(fd, flags, &shortened, old);
+}
+''')
+        timed = RUNTIME / "launch-timed"
+        build(timed, (str(timer_wrapper), "-Wl,--wrap=timerfd_settime"))
+        gate_scenario(module, timed, "deadline")
+        print("PASS: native kernel deadline retires original descendants and root waiter")
         for role in ("receipt", "provider", "custody"):
             scenario(module, binary, role, "tree")
             print("PASS: atomic " + role + " placement, permanent identity and descendant cleanup")
@@ -388,9 +480,15 @@ long __wrap_syscall(long number, ...) {
         errno = FAILURE;
         return -1;
     }
-    if (number != SYS_close_range) _exit(119);
     va_list args;
     va_start(args, number);
+    if (number == SYS_pidfd_open) {
+        pid_t pid = va_arg(args, pid_t);
+        unsigned int options = va_arg(args, unsigned int);
+        va_end(args);
+        return __real_syscall(number, pid, options);
+    }
+    if (number != SYS_close_range) _exit(119);
     unsigned int first = va_arg(args, unsigned int);
     unsigned int last = va_arg(args, unsigned int);
     unsigned int flags = va_arg(args, unsigned int);

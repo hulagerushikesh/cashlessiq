@@ -11,9 +11,10 @@ The future trusted host must first retain an `OwnedSingleCallCgroup`, reserve it
 fresh namespace, and retain ownership of the bootstrap process and its private
 output pipes **before** any process allocation can become uncertain. Under its
 exclusive lease, the host passes the original cgroup directory descriptor, a
-fixed role (`receipt`, `provider`, `custody`) and a clean environment to an
-immutable root-owned bootstrap. The numeric argument is only this inherited
-descriptor; it is not a PID, path, existing-name lookup or externally supplied
+fixed role (`receipt`, `provider`, `custody`), an original private Unix
+`SOCK_SEQPACKET` gate descriptor and a clean environment to an
+immutable root-owned bootstrap. The numeric arguments are only these inherited
+descriptors; it is not a PID, path, existing-name lookup or externally supplied
 launch selector. The C helper cannot establish freshness, consent or ownership
 by inspecting a descriptor alone; the trusted host supplies those guarantees.
 
@@ -32,13 +33,22 @@ and hard realtime-priority and locked-memory allowances to zero. The identity
 launcher subsequently clears capabilities. This prevents inherited realtime
 scheduling from bypassing the fair-scheduler CPU bandwidth limit. Failure is
 terminal; these limits also apply to the small root waiter, whose memory/CPU
-remain outside the application cgroup. It closes every extra descriptor except the original group,
+remain outside the application cgroup. It closes every extra descriptor except the original group and private gate,
 disables core dumps, normalizes signal state and uses a fixed working directory.
 It never reads a private plan, database password, provider token or application
 module. A clean environment must be supplied **at exec**; checking `envp` after
 dynamic loading cannot protect against a caller supplying loader variables.
 
-The only allocation syscall is `clone3(CLONE_INTO_CGROUP | CLONE_PIDFD)`. The
+Before role allocation the bootstrap sends its own original pidfd over the
+inherited gate. The root direct parent must retain and validate that handle
+before sending the exact `single_call_start` packet. Missing/changed commands,
+ancillary data, disconnect and a three-second kernel-clock deadline deny role
+allocation. No command selects another role, executable or attempt. The host
+must own the gate before creating the bootstrap; an uncertain creation outcome
+never authorizes START. No role child exists during this handoff. This is a
+single-use internal launch protocol, not admission or provider consent.
+
+The only role allocation syscall is `clone3(CLONE_INTO_CGROUP | CLONE_PIDFD)`. The
 [Linux manual](https://man7.org/linux/man-pages/man2/clone.2.html) describes how
 the kernel creates the child directly in the descriptor-selected cgroup. There
 is no fork-then-migrate window, shared virtual memory, Python callback after
@@ -67,16 +77,27 @@ stderr. Child/runner diagnostics are not sanitized by this helper. The prepared
 validates those streams; joining it to original launch/waiter ownership remains
 the future host's responsibility.
 
-The future host must externally bound bootstrap allocation and observation,
-stop the **whole original application cgroup**, collect all directly owned
-bootstrap waiters and retain uncertain state. The helper has no timeout,
-automatic group kill or retry, and its pidfd wait is not evidence that all
-descendants exited. Early parent-death SIGKILL protects only the privileged
-child bootstrap interval: Linux clears that setting on the later identity
-transition. It must never substitute for group cleanup. Lost start acknowledgment,
-waiter death, failed exec, remaining population or uncertain child reaping must
-not grant a second launch or reset history. `OwnedSingleCallCgroup.stop()` and
-its retained evidence remain separate from collecting the root waiter.
+The native waiter now polls the original child pidfd, private controller gate
+and a kernel monotonic timer. The attempt timer is anchored before validation,
+expires at 30 seconds and cannot be extended by a controller packet. Controller
+disconnect, unsolicited data, timer expiration or poll interruption fail closed.
+On **every** normal observation outcome, including a successful main-child exit,
+it writes the original group's `cgroup.kill` once and observes empty/unfrozen
+population before reporting success. This retires inherited-pipe descendants as
+well as the main process. It never retries an uncertain kill write or removes
+the namespace. It then boundedly waits/reaps its original direct child using the
+kernel-created pidfd. Failure returns 125 and the fixed diagnostic.
+
+The host still owns independent cleanup and must externally bound bootstrap
+creation, filesystem operations and observation. A timer polled in userspace
+cannot preempt a blocked syscall or dynamic loader. It must stop the **whole
+original application cgroup**, collect the original root waiter, and retain
+uncertain state even after native failure. Early parent-death SIGKILL protects
+only the privileged child bootstrap interval: Linux clears it on identity loss.
+Root-waiter SIGKILL cannot execute native cleanup; that path still requires the
+host's original group ownership. Lost start acknowledgment, waiter death,
+failed exec or uncertain reaping never grants another launch or resets history.
+`OwnedSingleCallCgroup.stop()` remains separate from collecting the root waiter.
 
 ## Disposable evidence and remaining work
 
@@ -87,7 +108,11 @@ initialization checks group membership and absence of inherited extra handles
 before role execution; the actual launcher then performs permanent identity
 loss. Each role forks a separate-session descendant, followed by recursive group
 termination, original-child pidfd status and waiter collection. Normal exit and
-signal exit have separate controls. Invalid arguments/environment, ordinary
+signal exit have separate controls. Additional controls require no role output
+before a valid start, denial on malformed/absent/disconnected start, recursive
+retirement after controller loss, and deadline cleanup. The deadline control
+uses a test-only linker wrapper to shorten the real timer; no capacity or timing
+selector is compiled into product source. Invalid arguments/environment, ordinary
 directories and removed groups are rejected. Test-only linked syscall wrappers
 force ENOSYS, EPERM, EINVAL and EBUSY and require exactly one failed clone, with
 no alternate launch. Changed resource-control values are separately rejected;

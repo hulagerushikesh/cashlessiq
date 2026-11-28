@@ -102,6 +102,13 @@ def emergency_cleanup(path, process):
         (path / "cgroup.kill").write_text("1\n")
     if process is not None:
         process.wait(timeout=3)
+        gate = getattr(process, "_launch_gate", None)
+        if gate is not None:
+            gate.close()
+        waiter = getattr(process, "_waiter_fd", None)
+        if waiter is not None:
+            os.close(waiter)
+            process._waiter_fd = None
         for stream in (process.stdout, process.stderr):
             if stream is not None:
                 stream.close()
