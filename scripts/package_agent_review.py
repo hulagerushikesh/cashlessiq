@@ -30,6 +30,7 @@ FIXED = (
     "docs/architecture/agent-single-call-identity.md",
     "docs/architecture/agent-single-call-cgroup.md",
     "docs/architecture/agent-single-call-launch.md",
+    "docs/architecture/agent-single-call-output.md",
     "deploy/agent-controller/native/single-call-launch.c",
     *(f"deploy/agent-controller/systemd/ciq-agent-{role}.service.example"
       for role in ("claim", "custody", "receipt")),

@@ -6,7 +6,7 @@ import signal
 import subprocess
 import sys
 from pathlib import Path
-from time import monotonic
+from time import monotonic, sleep
 
 from scripts.test_agent_single_call_cgroup import emergency_cleanup, guard
 
@@ -27,11 +27,13 @@ def build(destination, extra=()):
         "-Wl,-z,relro,-z,now", str(SOURCE), *extra, "-o", str(destination))
 
 
-def spawn(binary, group, role, *, environment=None, fd=None, arguments=None):
+def spawn(binary, group, role, *, environment=None, fd=None, arguments=None, writers=None):
     selected = group._group if fd is None else fd
     return subprocess.Popen(
         (str(binary), *(arguments if arguments is not None else (role, str(selected)))),
-        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE if writers is None else writers[0],
+        stderr=subprocess.PIPE if writers is None else writers[1],
         cwd="/", env=ENV if environment is None else environment,
         pass_fds=(selected,), start_new_session=True,
     )
@@ -67,6 +69,8 @@ except BaseException:
         (53003, "agent_single_call_receipt_runner"),
         (53004, "agent_single_call_provider_runner"),
     ):
+        from ciq_api.agent_single_call_supervisor import READY
+        role = {53002: "custody", 53003: "receipt", 53004: "provider"}[uid]
         (package / (module + ".py")).write_text(f'''
 import os, signal, time
 from pathlib import Path
@@ -75,6 +79,26 @@ assert os.getgroups() == []
 assert not set(os.environ) - {{"LANG", "LC_CTYPE"}}
 assert Path("/proc/self/status").read_text().split("NoNewPrivs:")[1].splitlines()[0].strip()=="1"
 mode = Path("/opt/cashlessiq-agent/expected").read_text().splitlines()[1]
+marker = {READY[role]!r}
+if mode == "marker":
+    for byte in marker:
+        os.write(1, bytes([byte]))
+        time.sleep(0.002)
+    os._exit(0)
+if mode == "flood":
+    os.write(1, b"X" * 1048576)
+    os._exit(0)
+if mode == "diagnostic":
+    os.write(1, marker)
+    os.write(2, b"PRIVATE dummy diagnostic")
+    os._exit(0)
+if mode == "inherited":
+    if os.fork() == 0:
+        os.setsid()
+        time.sleep(12)
+        os._exit(0)
+    os.write(1, marker)
+    os._exit(0)
 if mode == "exit":
     os._exit(0)
 if mode == "signal":
@@ -166,6 +190,59 @@ def denied(module, binary, *, arguments=None, environment=None, ordinary=False, 
             group.close()
 
 
+def capture_scenario(module, binary, role, mode):
+    from ciq_api.agent_single_call_output import ERROR, OwnedSingleCallOutput
+    from ciq_api.agent_single_call_supervisor import READY
+    group = module.OwnedSingleCallCgroup(role)
+    output = OwnedSingleCallOutput(role)
+    path = Path(module.PARENT) / group.name
+    process = None
+    try:
+        group.prepare()
+        output.prepare()
+        (RUNTIME / "expected").write_text(group.name + "\n" + mode + "\n")
+        writers = output.take_writers()
+        try:
+            # Fixture only. Popen is not proof of production ownership before a
+            # lost start ACK; this scenario verifies the actual output boundary.
+            process = spawn(binary, group, role, writers=writers)
+        finally:
+            output.release_writers()
+        deadline = monotonic() + 3
+        while True:
+            assert monotonic() < deadline
+            try:
+                snapshot = output.observe()
+            except ValueError as error:
+                assert mode in ("flood", "diagnostic") and str(error) == ERROR
+                assert group.stop()
+                process.wait(timeout=3)
+                try:
+                    output.observe()
+                except ValueError as repeated:
+                    assert str(repeated) == ERROR
+                    break
+                raise AssertionError("Failed capture was reusable") from None
+            assert snapshot.stdout in (b"", READY[role]) and snapshot.stderr == b""
+            if mode == "inherited" and process.poll() is not None:
+                assert process.returncode == 0 and not snapshot.drained
+                assert not group.quiescent() and group.stop()
+                mode = "retired"  # Child exit alone never implies pipe EOF.
+            if snapshot.drained:
+                assert mode in ("marker", "retired") and snapshot.stdout == READY[role]
+                assert process.wait(timeout=3) == 0 and group.quiescent() and group.stop()
+                break
+            sleep(0.005)
+        assert group.quiescent()
+    finally:
+        try:
+            if group._created:
+                emergency_cleanup(path, process)
+        finally:
+            output.close()
+            group.close()
+
+
 def main():
     guard()  # Same explicit disposable-root opt-in; no Mac/local path.
     from ciq_api import agent_single_call_cgroup as module
@@ -192,6 +269,12 @@ def main():
         for mode in ("exit", "signal"):
             scenario(module, binary, "custody", mode)
             print("PASS: original pidfd " + mode + " status and reaping")
+        for role in ("receipt", "provider", "custody"):
+            capture_scenario(module, binary, role, "marker")
+            print("PASS: bounded split-marker capture and EOF for " + role)
+        for mode in ("flood", "diagnostic", "inherited"):
+            capture_scenario(module, binary, "custody", mode)
+            print("PASS: bounded capture " + mode + " control and whole-group retirement")
         for args in ((), ("root", "3"), ("custody", "../3"), ("custody", "2"),
                      ("custody", "99999"), ("custody", "3", "extra")):
             denied(module, binary, arguments=args)

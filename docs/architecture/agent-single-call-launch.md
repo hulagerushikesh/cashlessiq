@@ -50,8 +50,10 @@ and waits for its original child using the kernel-created pidfd. It forwards no
 untrusted diagnostic or PID metadata and emits no stdout itself. Normal child
 exit status is preserved; signal termination becomes `128 + signal`. Fixed
 bootstrap failures return 125 and only `single_call_launch_unavailable` on
-stderr. Child/runner diagnostics must still be bounded and validated by the
-future host; their output is not sanitized by this helper.
+stderr. Child/runner diagnostics are not sanitized by this helper. The prepared
+[private-pipe capture component](agent-single-call-output.md) now bounds and
+validates those streams; joining it to original launch/waiter ownership remains
+the future host's responsibility.
 
 The future host must externally bound bootstrap allocation and observation,
 stop the **whole original application cgroup**, collect all directly owned
@@ -81,7 +83,7 @@ Every fixture process, cgroup name and copied runtime is retired after testing.
 
 This is allocation/identity/cleanup composition, not a credentialed provider
 attempt or an installed containment policy. The complete host adapter, one-shot
-launch ownership before allocation, bounded output capture, resource limits,
+launch ownership before allocation, joining bounded output capture, resource limits,
 read-only mounts, role-specific egress, immutable installation verification,
 fresh consent/lease/plans and retained-history recovery remain required. Native
 build/install provenance is also outstanding; the review archive includes C

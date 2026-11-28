@@ -88,8 +88,9 @@ def emergency_cleanup(path, process):
         (path / "cgroup.kill").write_text("1\n")
     if process is not None:
         process.wait(timeout=3)
-        process.stdout.close()
-        process.stderr.close()
+        for stream in (process.stdout, process.stderr):
+            if stream is not None:
+                stream.close()
     if path.exists():
         end = monotonic() + 3
         while b"populated 0\n" not in (path / "cgroup.events").read_bytes():
