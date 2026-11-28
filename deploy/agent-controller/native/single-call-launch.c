@@ -9,6 +9,7 @@
 #include <limits.h>
 #include <linux/magic.h>
 #include <linux/sched.h>
+#include <sched.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -53,11 +54,24 @@ static int kernel_text(int group, const char *name, const char *expected) {
         && memcmp(buffer, expected, (size_t)length) == 0;
 }
 
+static int resource_policy(int group, const char *role) {
+    /* Independent readback of the fixed Python reservation policy. Never
+     * repair/adopt a mismatched group, enable controllers or accept selectors.
+     */
+    const char *memory = strcmp(role, "receipt") == 0 ? "134217728\n" : "268435456\n";
+    return kernel_text(group, "memory.max", memory)
+        && kernel_text(group, "memory.swap.max", "0\n")
+        && kernel_text(group, "memory.oom.group", "1\n")
+        && kernel_text(group, "pids.max", "32\n")
+        && kernel_text(group, "cpu.max", "50000 100000\n");
+}
+
 int main(int argc, char **argv, char **envp) {
     uid_t real_uid, effective_uid, saved_uid;
     gid_t real_gid, effective_gid, saved_gid;
     struct stat input, null, output, diagnostic;
     struct rlimit core = {0, 0};
+    struct sched_param normal = {.sched_priority = 0};
     if (argc != 3 || (strcmp(argv[1], "receipt") && strcmp(argv[1], "provider")
                      && strcmp(argv[1], "custody"))) deny();
     /* Only a descriptor already owned by the host, never a path or PID. */
@@ -78,7 +92,10 @@ int main(int argc, char **argv, char **envp) {
         || (output.st_dev == diagnostic.st_dev && output.st_ino == diagnostic.st_ino)
         || !protected_group(group) || !kernel_text(group, "cgroup.type", "domain\n")
         || !kernel_text(group, "cgroup.events", "populated 0\nfrozen 0\n")
-        || setrlimit(RLIMIT_CORE, &core) || chdir("/")) deny();
+        || !resource_policy(group, argv[1])
+        || setrlimit(RLIMIT_CORE, &core) || setrlimit(RLIMIT_RTPRIO, &core)
+        || setrlimit(RLIMIT_MEMLOCK, &core)
+        || sched_setscheduler(0, SCHED_OTHER, &normal) || chdir("/")) deny();
     umask(0077);
     /* Normalize only the retained kernel handle, then close every other extra
      * descriptor. close_range/clone3 failure is terminal: no fork/move fallback.

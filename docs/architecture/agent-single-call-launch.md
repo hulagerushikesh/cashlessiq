@@ -20,7 +20,19 @@ by inspecting a descriptor alone; the trusted host supplies those guarantees.
 The bootstrap requires real/effective/saved root UID and GID, null stdin,
 separate output pipes, a protected root-owned cgroup-v2 domain directory, and
 empty/unfrozen kernel population evidence. Unknown population fields or formats
-also deny startup. It closes every extra descriptor except the original group,
+also deny startup. It independently reads the exact fixed role resource policy:
+receipt memory 128 MiB, provider/custody 256 MiB, zero swap, group OOM handling,
+32 tasks and 50 ms CPU bandwidth per 100 ms period. Missing or changed controls,
+including stricter but unreviewed values, deny allocation without rewriting them.
+These checks do not prove ownership or exclude a competing root; exclusive host
+ownership is still a prerequisite.
+
+Before clone, the bootstrap selects `SCHED_OTHER` and permanently sets the soft
+and hard realtime-priority and locked-memory allowances to zero. The identity
+launcher subsequently clears capabilities. This prevents inherited realtime
+scheduling from bypassing the fair-scheduler CPU bandwidth limit. Failure is
+terminal; these limits also apply to the small root waiter, whose memory/CPU
+remain outside the application cgroup. It closes every extra descriptor except the original group,
 disables core dumps, normalizes signal state and uses a fixed working directory.
 It never reads a private plan, database password, provider token or application
 module. A clean environment must be supplied **at exec**; checking `envp` after
@@ -78,12 +90,14 @@ termination, original-child pidfd status and waiter collection. Normal exit and
 signal exit have separate controls. Invalid arguments/environment, ordinary
 directories and removed groups are rejected. Test-only linked syscall wrappers
 force ENOSYS, EPERM, EINVAL and EBUSY and require exactly one failed clone, with
-no alternate launch. No test selector is compiled into production source.
+no alternate launch. Changed resource-control values are separately rejected;
+dummy role entries check normal scheduling and zero realtime/locked-memory
+allowances. No test selector is compiled into production source.
 Every fixture process, cgroup name and copied runtime is retired after testing.
 
 This is allocation/identity/cleanup composition, not a credentialed provider
 attempt or an installed containment policy. The complete host adapter, one-shot
-launch ownership before allocation, joining bounded output capture, resource limits,
+launch ownership before allocation, joining bounded output capture, installed resource policy,
 read-only mounts, role-specific egress, immutable installation verification,
 fresh consent/lease/plans and retained-history recovery remain required. Native
 build/install provenance is also outstanding; the review archive includes C

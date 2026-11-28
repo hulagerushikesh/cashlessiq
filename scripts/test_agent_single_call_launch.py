@@ -72,10 +72,13 @@ except BaseException:
         from ciq_api.agent_single_call_supervisor import READY
         role = {53002: "custody", 53003: "receipt", 53004: "provider"}[uid]
         (package / (module + ".py")).write_text(f'''
-import os, signal, time
+import os, resource, signal, time
 from pathlib import Path
 assert os.getresuid() == ({uid},)*3 and os.getresgid() == ({uid},)*3
 assert os.getgroups() == []
+assert os.sched_getscheduler(0) == os.SCHED_OTHER
+assert resource.getrlimit(resource.RLIMIT_RTPRIO) == (0, 0)
+assert resource.getrlimit(resource.RLIMIT_MEMLOCK) == (0, 0)
 assert not set(os.environ) - {{"LANG", "LC_CTYPE"}}
 assert Path("/proc/self/status").read_text().split("NoNewPrivs:")[1].splitlines()[0].strip()=="1"
 mode = Path("/opt/cashlessiq-agent/expected").read_text().splitlines()[1]
@@ -162,13 +165,17 @@ def scenario(module, binary, role, mode):
 
 
 def denied(module, binary, *, arguments=None, environment=None, ordinary=False, removed=False,
-           clone_failure=False):
+           clone_failure=False, changed_limit=None):
     group = module.OwnedSingleCallCgroup("custody")
     path = Path(module.PARENT) / group.name
     process = None
     fd = None
     try:
         group.prepare()
+        if changed_limit is not None:
+            name, raw = changed_limit
+            (path / name).write_bytes(raw)
+            assert not group.resource_limited()
         if removed:
             path.rmdir()
         if ordinary:
@@ -282,6 +289,11 @@ def main():
         denied(module, binary, ordinary=True)
         denied(module, binary, removed=True)
         print("PASS: invalid selectors, environment, ordinary and removed cgroups denied")
+        for changed in (("memory.max", b"max\n"), ("memory.swap.max", b"4096\n"),
+                        ("memory.oom.group", b"0\n"), ("pids.max", b"max\n"),
+                        ("cpu.max", b"max 100000\n"), ("memory.max", b"134217728\n")):
+            denied(module, binary, changed_limit=changed)
+            print("PASS: native allocation denied changed " + changed[0])
         # Force each clone3 failure in a separately linked test-only wrapper.
         # Production source has no test switch, alternate launcher or fallback.
         for code in ("ENOSYS", "EPERM", "EINVAL", "EBUSY"):
