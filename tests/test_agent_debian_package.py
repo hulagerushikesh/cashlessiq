@@ -88,3 +88,60 @@ def test_private_paths_and_unit_entries_including_dangling_links_deny_receipt(
 
 def test_no_agent_state_passes_without_identity_or_service_creation(inactive):
     runner.verify_inactive()
+
+
+@pytest.mark.parametrize("fault", [None, "compiler", "elf-class", "elf-type", "arch",
+                                   "diagnostic", "exit", "stdout"])
+def test_native_target_rehearsal_uses_committed_source_and_refuses_bad_output(
+    monkeypatch, tmp_path, fault,
+):
+    import struct
+    from types import SimpleNamespace
+    revision = "a" * 40
+    committed = b"/* selected public commit, never the checkout */\n"
+    def files(selected):
+        assert selected == revision
+        return {"deploy/agent-controller/native/single-call-launch.c": committed}
+    monkeypatch.setattr(runner.packages.release.review, "committed_files", files)
+    calls = []
+    def execute(command, **kwargs):
+        calls.append(command)
+        assert kwargs["capture_output"] and kwargs["timeout"] in (3, 20)
+        if len(calls) == 1:
+            assert command[0] == "/usr/bin/gcc-12"
+            assert "-Werror" in command and "-fPIE" in command and "-pie" in command
+            assert "-Wl,-z,relro,-z,now" in command
+            assert Path(command[-3]).read_bytes() == committed
+            payload = bytearray(64)
+            payload[:7] = b"\x7fELF\x02\x01\x01"
+            if fault == "elf-class":
+                payload[4] = 1
+            struct.pack_into("<HH", payload, 16, 2 if fault == "elf-type" else 3,
+                             183 if fault == "arch" else 62)
+            binary = Path(command[-1])
+            binary.write_bytes(payload)
+            binary.chmod(0o755)
+            return SimpleNamespace(returncode=1 if fault == "compiler" else 0)
+        assert len(command) == 1 and command[0] == str(tmp_path / "native/launch")
+        assert kwargs["env"] == {"LANG": "C.UTF-8"}
+        return SimpleNamespace(returncode=0 if fault == "exit" else 125,
+                               stdout=b"unexpected" if fault == "stdout" else b"",
+                               stderr=b"unexpected" if fault == "diagnostic" else
+                               b"single_call_launch_unavailable\n")
+    monkeypatch.setattr(runner.subprocess, "run", execute)
+    if fault:
+        with pytest.raises(ValueError, match=runner.ERROR):
+            runner.native_rehearsal(tmp_path, revision)
+    else:
+        runner.native_rehearsal(tmp_path, revision)
+        assert len(calls) == 2
+    assert (tmp_path / "native/launch.c").read_bytes() == committed
+
+
+def test_native_rehearsal_refuses_existing_directory_before_compile(monkeypatch, tmp_path):
+    (tmp_path / "native").mkdir()
+    monkeypatch.setattr(runner.packages.release.review, "committed_files", lambda _: {
+        "deploy/agent-controller/native/single-call-launch.c": b"public"})
+    monkeypatch.setattr(runner.subprocess, "run", lambda *a, **kw: pytest.fail("compiled"))
+    with pytest.raises(FileExistsError):
+        runner.native_rehearsal(tmp_path, "a" * 40)

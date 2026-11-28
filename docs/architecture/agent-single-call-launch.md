@@ -100,7 +100,7 @@ attempt or an installed containment policy. The complete host adapter, one-shot
 launch ownership before allocation, joining bounded output capture, installed resource policy,
 read-only mounts, role-specific egress, immutable installation verification,
 fresh consent/lease/plans and retained-history recovery remain required. Native
-build/install provenance is also outstanding; the review archive includes C
+release/install provenance is also outstanding; the review archive includes C
 source, not a trusted binary. Existing service examples are unchanged and must
 not be redirected to this bootstrap without completing that review. No paid
 services or deployed application behavior are changed.
@@ -124,3 +124,23 @@ bootstrap, identity transition, caps, output controls and recursive cleanup run
 in that disposable environment with dummy public inputs. This is not a deployed
 host capacity benchmark or proof of provider timing under these limits; measured
 credentialed acceptance still requires the owner's separate spend approval.
+
+## Target Debian build acceptance
+
+The inactive Debian 12/glibc 2.36 rehearsal additionally compiles the exact native
+source bytes read from the selected Git commit with Debian GCC 12 and the same
+warning/error and linker/stack hardening flags used by Linux launch CI. It
+checks the ELF64 little-endian x86-64 PIE header and executes only the missing-
+argument refusal, which runs before any allocation or private runtime inspection.
+The CI receipt records the full revision and source/binary SHA-256s. This catches
+target compiler/header/linker/loader incompatibility without creating an agent
+process, cgroup, credential or service. The fresh build directory and binary are
+removed with the disposable fixture base; no executable is installed or exported.
+
+This is target compatibility evidence, not a reproducible or signed native
+release. Compiler packages come from the disposable Debian build prerequisites;
+the complete compiler/linker/sysroot supply chain is not pinned or attested by
+this receipt. The eventual installed binary still needs independently reviewed
+build provenance and verification together with its immutable runtime and host
+policy. Ubuntu cgroup/identity/resource acceptance remains separate from Debian
+loader compatibility; the latter container does not exercise systemd or cgroups.

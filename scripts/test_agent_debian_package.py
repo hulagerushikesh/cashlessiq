@@ -1,8 +1,11 @@
 """Disposable Debian 12 CI: offline runtime and fresh host setup, never activation."""
 
+import hashlib
 import os
 import platform
 import shutil
+import struct
+import subprocess
 import sys
 from pathlib import Path
 from uuid import uuid4
@@ -51,6 +54,41 @@ def verify_inactive():
     require(not any(path.exists() or path.is_symlink() for path in paths))
 
 
+def native_rehearsal(base, revision):
+    """Guarded caller's fresh Debian CI base only; never install or allocate."""
+    source_name = "deploy/agent-controller/native/single-call-launch.c"
+    raw = packages.release.review.committed_files(revision)[source_name]
+    directory = base / "native"
+    directory.mkdir(mode=0o700)  # Never reuse or adopt an incoming build directory.
+    source, binary = directory / "launch.c", directory / "launch"
+    with source.open("xb") as stream:
+        stream.write(raw)
+    result = subprocess.run(
+        ["/usr/bin/gcc-12", "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror",
+         "-Wconversion", "-fstack-protector-strong", "-D_FORTIFY_SOURCE=2",
+         "-fPIE", "-pie", "-Wl,-z,relro,-z,now", str(source), "-o", str(binary)],
+        cwd=directory, env={"PATH": "/usr/bin:/bin", "LANG": "C"},
+        capture_output=True, timeout=20,
+    )
+    require(result.returncode == 0)
+    payload = binary.read_bytes()
+    require(64 <= len(payload) <= 1_000_000 and payload[:7] == b"\x7fELF\x02\x01\x01"
+            and struct.unpack_from("<HH", payload, 16) == (3, 62))  # PIE, x86-64.
+    require(not binary.is_symlink() and binary.stat().st_mode & 0o7022 == 0)
+    # No arguments reaches the bootstrap's first deny, BEFORE clone, runtime,
+    # cgroup, credential or identity inspection. This tests the target loader.
+    refused = subprocess.run([str(binary)], cwd="/", env={"LANG": "C.UTF-8"},
+                             capture_output=True, timeout=3)
+    require(refused.returncode == 125 and refused.stdout == b""
+            and refused.stderr == b"single_call_launch_unavailable\n")
+    print(f"PASS: Debian 12 native bootstrap; revision {revision}; "
+          f"source SHA-256 {hashlib.sha256(raw).hexdigest()}; "
+          f"ELF SHA-256 {hashlib.sha256(payload).hexdigest()}")
+    print("PASS: target native loader refuses missing arguments before any allocation")
+    # The binary stays in this disposable base and is removed with it. A build
+    # receipt is not an independently trusted release or installation authority.
+
+
 def main():
     try:
         guard()  # Before downloads, builds, interpreter installation or writes.
@@ -58,6 +96,7 @@ def main():
         base.mkdir(mode=0o755)
         packages.INSTALL.mkdir(mode=0o755)
         release_directory, revision, digest = packages.install(base)
+        native_rehearsal(base, revision)
         verify_inactive()
         print("PASS: Debian 12/glibc 2.36 artifacts installed without agent identities or units")
         # Export only the already verified public wheel release, never the
