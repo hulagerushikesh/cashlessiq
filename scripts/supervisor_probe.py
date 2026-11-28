@@ -36,6 +36,16 @@ def expire(operation):
 
 
 def command(*arguments):
+    if arguments and arguments[0] == "child":
+        if len(arguments) != 2 or arguments[1] not in {"normal", "stubborn"}:
+            raise ValueError("Unknown dummy child mode")
+        # Eight service stand-ins must not each import this controller/harness.
+        # Keep the same readiness/signal behavior within the existing 128 MiB cap.
+        code = "import signal\n"
+        if arguments[1] == "stubborn":
+            code += "signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+        code += "print('ready', flush=True)\nwhile True: signal.pause()\n"
+        return [sys.executable, "-I", "-B", "-c", code]
     return [
         sys.executable,
         "-I",

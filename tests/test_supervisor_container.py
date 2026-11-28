@@ -2,7 +2,11 @@
 
 import ast
 import json
+import os
+import select
+import signal
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -139,3 +143,35 @@ def test_probe_failure_never_serializes_exception_message_or_arbitrary_class_nam
     assert report["cause"] == "assertion" and report["line"] > 0
     assert "PRIVATE" not in json.dumps(report)
     assert runner.reports(json.dumps(report)) == [report]
+
+
+@pytest.mark.parametrize("mode", ("normal", "stubborn"))
+@pytest.mark.skipif(os.name != "posix", reason="POSIX dummy signal contract")
+def test_minimal_dummy_preserves_readiness_and_signal_contract_without_controller_imports(mode):
+    source = ast.parse(runner.SOURCES["supervisor_probe.py"].read_text())
+    function = next(n for n in source.body
+                    if isinstance(n, ast.FunctionDef) and n.name == "command")
+    namespace = {"sys": sys}
+    exec(compile(ast.Module(body=[function], type_ignores=[]), "fixture", "exec"), namespace)
+    command = namespace["command"]("child", mode)
+    assert command[:4] == [sys.executable, "-I", "-B", "-c"]
+    assert not any(word in command[-1] for word in ("runpy", "offline_supervisor", "Harness"))
+    child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, env={}, start_new_session=True)
+    try:
+        assert select.select([child.stdout], [], [], 2)[0]
+        assert child.stdout.readline() == b"ready\n"
+        child.terminate()
+        if mode == "stubborn":
+            with pytest.raises(subprocess.TimeoutExpired):
+                child.wait(timeout=0.05)
+            child.kill()
+        expected = signal.SIGKILL if mode == "stubborn" else signal.SIGTERM
+        assert child.wait(timeout=2) == -expected
+        assert child.stderr.read() == b""
+    finally:
+        if child.poll() is None:
+            child.kill()
+            child.wait(timeout=2)
+        child.stdout.close()
+        child.stderr.close()
