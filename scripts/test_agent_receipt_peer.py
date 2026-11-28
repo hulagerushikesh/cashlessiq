@@ -29,11 +29,12 @@ def summary(output):
     decoded = re.sub(r"\x1b\[[0-9;]*[mK]", "", output.decode(errors="replace"))
     for line in decoded.splitlines():
         match = re.fullmatch(
-            r"(\d+) passed(?:, \d+ warnings?)? in [0-9.]+s(?: \([0-9:]+\))?", line.strip(),
+            r"(?:=+ )?(\d+) passed(?:, \d+ warnings?)? in [0-9.]+s"
+            r"(?: \([0-9:]+\))?(?: =+)?", line.strip(),
         )
         if match:
             passed = int(match[1])
-            print(line.strip())
+            print(line.strip().strip("= "))
         elif progress := re.fullmatch(
             r"apps/api/tests/(test_agent_[a-z_]+\.py)::[a-zA-Z0-9_\[\]-]+ "
             r"(?:PASSED|FAILED|ERROR)(?:\s+\[\s*\d+%\])?", line.strip(),
