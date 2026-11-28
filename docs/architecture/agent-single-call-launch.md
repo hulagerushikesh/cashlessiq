@@ -299,3 +299,22 @@ leaves a live role in its original group; that role must still receive EPERM for
 a forbidden connection before independent host group cleanup. This intentionally
 violates normal shutdown order only to test unexpected waiter death. The fixture
 never uses runtime `terminate()` as a substitute for whole-group cleanup.
+
+## Prepared provider transport without runtime DNS
+
+`PinnedSinglePostHTTPS` is a separate inactive transport variant for the next
+provider egress policy. Trusted construction supplies exactly one canonical public
+IPv4 address alongside the already reviewed Snowflake hostname and body digest.
+It opens one IPv4 TCP socket directly to that address on 443, with no DNS lookup,
+address iteration or fallback. TLS certificate/hostname verification, SNI and the
+HTTP Host header retain the original reviewed hostname. Wrong certificates fail
+before the authorization header/body is sent. The existing bounded one-POST,
+response validation, consumed-attempt and no-redirect/retry behavior is shared.
+
+The class does not resolve or authorize an IP, prove a hostname-to-address mapping,
+install a kernel allowlist or update the provider plan. The future trusted host
+must bind a freshly reviewed address to the exact full pin and matching kernel
+policy. No deployed/manual runner currently selects this variant. Loopback-only
+TLS controls exercise valid, wrong-host and untrusted certificates with DNS made
+an explicit test failure; public-address redirection exists only in the fixture.
+Nonpublic, multicast, IPv6, noncanonical and multiple-address inputs are rejected.

@@ -7,8 +7,10 @@ process before live use. Socket timeouts do not bound DNS or slow HTTP headers.
 """
 
 import hashlib
+import ipaddress
 import math
 import re
+import socket
 import ssl
 import threading
 import time
@@ -89,6 +91,9 @@ class SinglePostHTTPS:
         self._used = False
         self._lock = threading.Lock()
 
+    def _connection(self, *, context, timeout):
+        return HTTPSConnection(self._host, port=443, timeout=timeout, context=context)
+
     def exchange(self, body: bytes, *, timeout: float) -> bytes:
         """Return bounded raw JSON bytes; clinical/provider validation is separate.
 
@@ -120,9 +125,7 @@ class SinglePostHTTPS:
             # worker must also supply a clean environment and reviewed CA store.
             context = _tls_context()
             _require(context.check_hostname and context.verify_mode == ssl.CERT_REQUIRED)
-            with closing(HTTPSConnection(
-                self._host, port=443, timeout=remaining(), context=context,
-            )) as connection:
+            with closing(self._connection(context=context, timeout=remaining())) as connection:
                 connection.set_debuglevel(0)
                 connection.connect()
                 connection.sock.settimeout(remaining())
@@ -154,3 +157,50 @@ class SinglePostHTTPS:
             # Never propagate HTTP messages, token, clinical bytes, URLs, server
             # error bodies or library diagnostics. No network attempt is retried.
             raise ValueError(ERROR) from None
+
+
+class _PinnedConnection(HTTPSConnection):
+    """One TCP socket to a pre-reviewed IP; TLS/HTTP still use the exact hostname."""
+
+    def __init__(self, hostname, address, *, timeout, context):
+        super().__init__(hostname, port=443, timeout=timeout, context=context)
+        self._address = address
+
+    def connect(self):
+        # Do not use create_connection/getaddrinfo: they can resolve or try several
+        # addresses. No tunnel/proxy, fallback IP, redirect or resolver is allowed.
+        _require(self._tunnel_host is None and self.source_address is None)
+        raw = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+        try:
+            raw.settimeout(self.timeout)
+            raw.connect((self._address, 443))
+            self.sock = self._context.wrap_socket(raw, server_hostname=self.host)
+        except BaseException:
+            raw.close()
+            raise
+
+
+class PinnedSinglePostHTTPS(SinglePostHTTPS):
+    """Prepared DNS-free variant, not endpoint admission or installed egress policy.
+
+    A trusted host must independently bind the one canonical public IPv4 address
+    to the reviewed hostname/full pin and matching kernel network policy before
+    construction. This class never resolves, discovers, persists or refreshes it.
+    No deployed route or current manual runner selects this variant yet.
+    """
+
+    __slots__ = ("_address_ipv4",)
+
+    def __init__(self, *, address_ipv4: str, hostname: str, token: str, request_sha256: str):
+        try:
+            _require(type(address_ipv4) is str)
+            address = ipaddress.IPv4Address(address_ipv4)
+            _require(str(address) == address_ipv4 and address.is_global
+                     and not address.is_multicast)
+            super().__init__(hostname=hostname, token=token, request_sha256=request_sha256)
+            self._address_ipv4 = address_ipv4
+        except Exception:
+            raise ValueError(ERROR) from None
+
+    def _connection(self, *, context, timeout):
+        return _PinnedConnection(self._host, self._address_ipv4, timeout=timeout, context=context)

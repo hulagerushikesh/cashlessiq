@@ -330,7 +330,10 @@ def test_concurrent_calls_share_one_local_latch_but_not_durable_authority(wire_h
 
 
 @pytest.mark.parametrize("fault", (None, "hostname", "untrusted"))
-def test_real_loopback_tls_checks_certificate_before_sending_token(fault, tmp_path, monkeypatch):
+@pytest.mark.parametrize("pinned", (False, True))
+def test_real_loopback_tls_checks_certificate_before_sending_token(
+    fault, pinned, tmp_path, monkeypatch,
+):
     # All keys/certificates are ephemeral test fixtures. TCP is forced to one
     # loopback listener while real HTTPSConnection retains the configured SNI
     # hostname and Python/OpenSSL performs actual certificate verification.
@@ -407,10 +410,24 @@ def test_real_loopback_tls_checks_certificate_before_sending_token(fault, tmp_pa
                 self._create_connection = connect_loopback
 
         monkeypatch.setattr(transport, "HTTPSConnection", LoopbackHTTPS)
+        if pinned:
+            original_socket = socket.socket
+            destination = listener.getsockname()
+
+            class DirectedSocket(original_socket):
+                def connect(self, address):
+                    assert address == ("1.1.1.1", 443)
+                    return super().connect(destination)  # Test-only loopback redirection.
+
+            monkeypatch.setattr(socket, "socket", DirectedSocket)
+            monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: pytest.fail("DNS forbidden"))
         worker = threading.Thread(target=serve)
         worker.start()
         try:
-            instance = single()
+            instance = (transport.PinnedSinglePostHTTPS(
+                address_ipv4="1.1.1.1", hostname=HOST, token=TOKEN,
+                request_sha256=hashlib.sha256(REQUEST).hexdigest(),
+            ) if pinned else single())
             if fault is None:
                 assert instance.exchange(REQUEST, timeout=1.5) == REPLY
             else:
@@ -433,3 +450,32 @@ def test_default_tls_context_does_not_enable_environment_key_logging(tmp_path, m
     assert context.check_hostname and context.verify_mode == ssl.CERT_REQUIRED
     assert context.minimum_version >= ssl.TLSVersion.TLSv1_2
     assert context.keylog_filename is None and not keylog.exists()
+
+
+@pytest.mark.parametrize("address", (
+    None, b"1.1.1.1", ["1.1.1.1"], "1.1.1.1:443", "https://1.1.1.1", "1.1.1.1 ",
+    "01.1.1.1", "::1", "::ffff:1.1.1.1", "127.0.0.1", "10.0.0.1", "169.254.169.254",
+    "192.0.2.1", "0.0.0.0", "224.0.0.1", "255.255.255.255", "PRIVATE hostname",
+))
+def test_pinned_transport_rejects_nonpublic_noncanonical_or_multiple_addresses(address):
+    with pytest.raises(ValueError, match="^" + transport.ERROR + "$"):
+        transport.PinnedSinglePostHTTPS(address_ipv4=address, hostname=HOST, token=TOKEN,
+                                      request_sha256=hashlib.sha256(REQUEST).hexdigest())
+
+
+def test_pinned_connect_failure_closes_one_socket_without_dns_fallback_or_retry(monkeypatch):
+    from unittest.mock import Mock
+    raw = Mock()
+    raw.connect.side_effect = OSError("PRIVATE dummy connection failure")
+    factory = Mock(return_value=raw)
+    monkeypatch.setattr(socket, "socket", factory)
+    monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: pytest.fail("DNS forbidden"))
+    instance = transport.PinnedSinglePostHTTPS(
+        address_ipv4="1.1.1.1", hostname=HOST, token=TOKEN,
+        request_sha256=hashlib.sha256(REQUEST).hexdigest(),
+    )
+    denied(instance)
+    denied(instance)
+    factory.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+    raw.connect.assert_called_once_with(("1.1.1.1", 443))
+    raw.close.assert_called_once()
