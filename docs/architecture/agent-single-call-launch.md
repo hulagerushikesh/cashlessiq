@@ -318,3 +318,13 @@ policy. No deployed/manual runner currently selects this variant. Loopback-only
 TLS controls exercise valid, wrong-host and untrusted certificates with DNS made
 an explicit test failure; public-address redirection exists only in the fixture.
 Nonpublic, multicast, IPv6, noncanonical and multiple-address inputs are rejected.
+
+The isolated `BoundedHTTPSProcess` can now carry the explicitly selected address
+in its private stdin control message and construct `PinnedSinglePostHTTPS` in the
+child. The IP is absent from argv/environment/logs. A present invalid/null pin is
+a terminal control error; it cannot silently select DNS. Existing unpinned
+controls remain unchanged for their separate inactive acceptance path. Actual
+manual provider-plan admission must still require the pinned variant together
+with its matching kernel policy; this optional internal field grants no consent.
+A real isolated dummy worker verifies the private control roundtrip and one-use
+behavior without any provider or network call.

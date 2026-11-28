@@ -259,3 +259,43 @@ def test_worker_rejects_inherited_ca_override_without_output():
         env={"LANG": "C.UTF-8", "SSL_CERT_FILE": "PRIVATE-ca-file"}, timeout=3,
     )
     assert result.returncode == 1 and result.stdout == b"" and result.stderr == b""
+
+
+@pytest.mark.parametrize("address", ("1.1.1.1", "8.8.8.8"))
+def test_reviewed_ip_stays_in_private_pipe_and_selects_dns_free_worker(child_harness, address):
+    child_harness["code"] = f"""
+import os
+from ciq_api.agent_https_worker import main
+from ciq_api.agent_https_transport import PinnedSinglePostHTTPS
+def exchange(self, body, *, timeout):
+    assert self._address_ipv4 == {address!r}
+    assert self._host == {HOST!r} and self._token == {TOKEN!r}
+    assert body == {BODY!r} and timeout == 10
+    return {REPLY!r}
+PinnedSinglePostHTTPS.exchange = exchange
+os._exit(main())
+"""
+    instance = configured(address_ipv4=address)
+    assert address not in repr(instance) and TOKEN not in repr(instance)
+    assert instance.exchange(timeout=3) == REPLY
+    with pytest.raises(ValueError, match=process.ERROR):
+        instance.exchange(timeout=3)
+    assert len(child_harness["children"]) == 1
+    assert address not in repr(child_harness["commands"])
+
+
+@pytest.mark.parametrize("address", (None, "127.0.0.1", "::1", "1.1.1.1:443", ["1.1.1.1"]))
+def test_explicit_invalid_wire_address_never_falls_back_to_dns(address):
+    with pytest.raises(ValueError, match="^" + process.ERROR + "$"):
+        process.decode_control(control(address_ipv4=address))
+
+
+def test_pinned_wire_roundtrip_preserves_exact_address_without_resolving(monkeypatch):
+    import socket
+    monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: pytest.fail("no DNS"))
+    instance = configured(address_ipv4="1.1.1.1")
+    transport, body = process.decode_control(instance._control)
+    assert type(transport) is process.PinnedSinglePostHTTPS and body == BODY
+    assert transport._address_ipv4 == "1.1.1.1"
+    legacy, _ = process.decode_control(control())
+    assert type(legacy) is process.SinglePostHTTPS

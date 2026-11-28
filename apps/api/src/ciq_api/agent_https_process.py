@@ -21,6 +21,7 @@ from ciq_api.agent_https_transport import (
     MAX_REQUEST_BYTES,
     MAX_RESPONSE_BYTES,
     MAX_SOCKET_SECONDS,
+    PinnedSinglePostHTTPS,
     SinglePostHTTPS,
 )
 
@@ -46,17 +47,19 @@ class BoundedHTTPSProcess:
     __slots__ = ("_control", "_lock", "_python", "_used")
 
     def __init__(self, *, python: str, hostname: str, token: str,
-                 request_sha256: str, body: bytes):
+                 request_sha256: str, body: bytes, address_ipv4: str | None = None):
         try:
             _require(type(python) is str and os.path.isabs(python) and "\0" not in python)
             _require(type(body) is bytes and 0 < len(body) <= MAX_REQUEST_BYTES)
             _require(hashlib.sha256(body).hexdigest() == request_sha256)
             # Reuse the network primitive's strict configuration validation,
             # without calling exchange or performing any network/credential IO.
-            SinglePostHTTPS(hostname=hostname, token=token, request_sha256=request_sha256)
+            selected = {} if address_ipv4 is None else {"address_ipv4": address_ipv4}
+            factory = SinglePostHTTPS if address_ipv4 is None else PinnedSinglePostHTTPS
+            factory(hostname=hostname, token=token, request_sha256=request_sha256, **selected)
             self._control = json.dumps({
                 "hostname": hostname, "token": token, "request_sha256": request_sha256,
-                "body": base64.b64encode(body).decode("ascii"),
+                "body": base64.b64encode(body).decode("ascii"), **selected,
             }, separators=(",", ":")).encode("ascii")
             _require(len(self._control) <= MAX_CONTROL_BYTES)
             self._python = python
@@ -159,16 +162,16 @@ def decode_control(raw: bytes):
             return value
 
         value = json.loads(raw.decode("utf-8"), object_pairs_hook=unique)
-        _require(type(value) is dict
-                 and set(value) == {"hostname", "token", "request_sha256", "body"})
+        fields = {"hostname", "token", "request_sha256", "body"}
+        _require(type(value) is dict and set(value) in (fields, fields | {"address_ipv4"}))
         _require(type(value["body"]) is str)
         body = base64.b64decode(value["body"], validate=True)
         _require(0 < len(body) <= MAX_REQUEST_BYTES)
         _require(hashlib.sha256(body).hexdigest() == value["request_sha256"])
-        transport = SinglePostHTTPS(
-            hostname=value["hostname"], token=value["token"],
-            request_sha256=value["request_sha256"],
-        )
+        selected = {"address_ipv4": value["address_ipv4"]} if "address_ipv4" in value else {}
+        factory = PinnedSinglePostHTTPS if selected else SinglePostHTTPS
+        transport = factory(hostname=value["hostname"], token=value["token"],
+                            request_sha256=value["request_sha256"], **selected)
         return transport, body
     except Exception:
         raise ValueError(ERROR) from None
