@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from time import monotonic, sleep
 
-from scripts.test_agent_single_call_cgroup import emergency_cleanup, guard
+from scripts.test_agent_single_call_cgroup import emergency_cleanup, guard, prepare_controllers
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = Path("/opt/cashlessiq-agent")
@@ -72,7 +72,7 @@ except BaseException:
         from ciq_api.agent_single_call_supervisor import READY
         role = {53002: "custody", 53003: "receipt", 53004: "provider"}[uid]
         (package / (module + ".py")).write_text(f'''
-import os, resource, signal, time
+import errno, os, resource, signal, time
 from pathlib import Path
 assert os.getresuid() == ({uid},)*3 and os.getresgid() == ({uid},)*3
 assert os.getgroups() == []
@@ -83,6 +83,34 @@ assert not set(os.environ) - {{"LANG", "LC_CTYPE"}}
 assert Path("/proc/self/status").read_text().split("NoNewPrivs:")[1].splitlines()[0].strip()=="1"
 mode = Path("/opt/cashlessiq-agent/expected").read_text().splitlines()[1]
 marker = {READY[role]!r}
+if mode == "memory":
+    retained = []
+    for _ in range(96):  # At most 384 MiB even if the reviewed cap is broken.
+        block = bytearray(4 * 1024 * 1024)
+        for offset in range(0, len(block), 4096):
+            block[offset] = 1  # Actually fault writable pages, not lazy mappings.
+        retained.append(block)
+    os._exit(119)  # A missing OOM limit must fail, never become a passing control.
+if mode == "tasks":
+    for _ in range(40):  # Bounded even if pids.max enforcement is broken.
+        try:
+            pid = os.fork()
+        except OSError as error:
+            assert error.errno == errno.EAGAIN
+            os.write(1, b"TASK_LIMIT\\n")
+            time.sleep(12)
+            os._exit(0)
+        if pid == 0:
+            os.setsid()
+            time.sleep(12)
+            os._exit(0)
+    os._exit(119)
+if mode == "cpu":
+    end = time.monotonic() + 2
+    while time.monotonic() < end:
+        pass
+    os.write(1, b"CPU_LIMIT\\n")
+    os._exit(0)
 if mode == "marker":
     for byte in marker:
         os.write(1, bytes([byte]))
@@ -250,8 +278,51 @@ def capture_scenario(module, binary, role, mode):
             group.close()
 
 
+def resource_scenario(module, binary, role, mode):
+    group = module.OwnedSingleCallCgroup(role)
+    path = Path(module.PARENT) / group.name
+    process = None
+    def counters(name):
+        return {key: int(value) for key, value in
+                (line.split() for line in (path / name).read_text().splitlines())}
+    try:
+        group.prepare()
+        assert group.resource_limited()
+        (RUNTIME / "expected").write_text(group.name + "\n" + mode + "\n")
+        before = counters("cpu.stat" if mode == "cpu" else "memory.events")
+        process = spawn(binary, group, role)
+        if mode == "tasks":
+            import selectors
+            with selectors.DefaultSelector() as selector:
+                selector.register(process.stdout, selectors.EVENT_READ)
+                assert selector.select(3)
+                assert os.read(process.stdout.fileno(), 64) == b"TASK_LIMIT\n"
+            assert int((path / "pids.current").read_text()) == 32
+            assert counters("pids.events")["max"] >= 1
+            assert group.stop() and process.wait(timeout=3) == 128 + signal.SIGKILL
+            assert not process.stderr.read()
+        else:
+            output, errors = process.communicate(timeout=6)
+            assert not errors
+            if mode == "memory":
+                assert process.returncode == 128 + signal.SIGKILL and output == b""
+                assert counters("memory.events")["oom_kill"] > before["oom_kill"]
+            else:
+                assert process.returncode == 0 and output == b"CPU_LIMIT\n"
+                assert counters("cpu.stat")["nr_throttled"] > before["nr_throttled"]
+            assert group.quiescent() and group.stop()
+        assert group.resource_limited() and group.quiescent()
+    finally:
+        try:
+            if group._created:
+                emergency_cleanup(path, process)
+        finally:
+            group.close()
+
+
 def main():
     guard()  # Same explicit disposable-root opt-in; no Mac/local path.
+    prepare_controllers()
     from ciq_api import agent_single_call_cgroup as module
     for uid in (53003, 53004):
         import grp
@@ -282,6 +353,12 @@ def main():
         for mode in ("flood", "diagnostic", "inherited"):
             capture_scenario(module, binary, "custody", mode)
             print("PASS: bounded capture " + mode + " control and whole-group retirement")
+        for role in ("receipt", "provider", "custody"):
+            resource_scenario(module, binary, role, "memory")
+            print("PASS: native " + role + " kernel memory OOM boundary and cleanup")
+        for mode in ("tasks", "cpu"):
+            resource_scenario(module, binary, "custody", mode)
+            print("PASS: native kernel " + mode + " enforcement and cleanup")
         for args in ((), ("root", "3"), ("custody", "../3"), ("custody", "2"),
                      ("custody", "99999"), ("custody", "3", "extra")):
             denied(module, binary, arguments=args)

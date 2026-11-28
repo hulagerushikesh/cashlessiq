@@ -104,3 +104,23 @@ build/install provenance is also outstanding; the review archive includes C
 source, not a trusted binary. Existing service examples are unchanged and must
 not be redirected to this bootstrap without completing that review. No paid
 services or deployed application behavior are changed.
+
+## Disposable resource enforcement acceptance
+
+The same atomic-launch fixture now tests the caps with actual unprivileged dummy
+roles. Sequential allocations touch writable pages until each role's own kernel
+OOM boundary terminates it; the test requires an incremented `oom_kill` counter,
+original waiter status and empty population. A bounded fork control fills all
+32 task slots, requires `EAGAIN` and a kernel pids-limit event, and then retires
+all separate-session descendants. A two-second CPU control requires an increased
+kernel throttle counter, rather than an unreliable throughput benchmark. Every
+control has bounded work and independent fixture cleanup even if a cap is broken.
+Zero swap and group OOM settings are verified by readback and native rejection
+controls; CI does not claim a swap-pressure or multi-process OOM experiment.
+
+Only explicit disposable Linux CI enables the required controllers on its
+throwaway runner ancestors. Product preparation never does so. The exact native
+bootstrap, identity transition, caps, output controls and recursive cleanup run
+in that disposable environment with dummy public inputs. This is not a deployed
+host capacity benchmark or proof of provider timing under these limits; measured
+credentialed acceptance still requires the owner's separate spend approval.

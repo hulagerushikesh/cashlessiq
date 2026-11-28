@@ -65,6 +65,20 @@ os._exit(0)
     return process
 
 
+def prepare_controllers():
+    # Disposable runner setup only, after the explicit guard. Production never
+    # changes a shared ancestor's controller policy as a launch fallback.
+    guard()
+    for path in (Path("/sys/fs/cgroup"), Path("/sys/fs/cgroup/system.slice")):
+        required = {"cpu", "memory", "pids"}
+        assert required <= set((path / "cgroup.controllers").read_text().split())
+        missing = required - set((path / "cgroup.subtree_control").read_text().split())
+        if missing:
+            (path / "cgroup.subtree_control").write_text(
+                " ".join("+" + name for name in sorted(missing)) + "\n")
+        assert required <= set((path / "cgroup.subtree_control").read_text().split())
+
+
 def ready(process):
     received = b""
     with selectors.DefaultSelector() as selector:
@@ -152,6 +166,7 @@ def scenario(module, role, mode):
 
 def main():
     guard()
+    prepare_controllers()
     from ciq_api import agent_single_call_cgroup as module
     signal.signal(signal.SIGTERM, lambda *_: sys.exit("Interrupted cgroup acceptance"))
     for role in ("receipt", "provider", "custody"):
