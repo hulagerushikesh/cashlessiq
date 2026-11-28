@@ -1,11 +1,51 @@
 # Product delivery — owner dashboard
 
-Updated 26 November 2026. This page summarizes the current product plan; the
+Updated 28 November 2026. This page summarizes the current product plan; the
 [progress index](progress.md) and phase checklists retain detailed evidence.
 Hackathon submission is finished and is not counted as product delivery.
 
 For a short view of completed capabilities, remaining engineering and the next
 deployment milestone, read the [25 November engineering overview](engineering-overview-2026-11-25.md).
+
+### Prepared single-call containment and provider transport — 28 November
+
+The private workflow MVP remains built and previously tested. This batch advances
+the **inactive agent integration**; it adds no deployed screen or live provider
+call and does not update the existing GCP image.
+
+- Native role allocation now waits for a private controller gate and transfer of
+  the original bootstrap pidfd. The fixed deadline, controller-loss retirement,
+  whole-group descendant cleanup and one-shot controller handle survive uncertain
+  start acknowledgment without permitting a second launch.
+- Each role receives a read-only private mount view. Only receipt's socket/history
+  leaves and provider's socket leaf are writable; custody has no writable leaf.
+  Receipt's separate network namespace preserves pathname IPC and SQLite while
+  denying host/IP connectivity.
+- Custody's kernel cgroup policy allows only IPv4 TCP to `127.0.0.1:5432` and
+  denies UDP/DNS/IPv6. A permanent syscall filter denies inbound listener calls.
+  Policy remains attached after unexpected waiter death; stale policy is refused.
+- A separate provider transport can use one reviewed public IPv4 address without
+  runtime DNS, while preserving the original TLS hostname/SNI and HTTP Host.
+  Its IP pin can travel through the isolated worker's private stdin control.
+  Invalid pinned controls never fall back to DNS. No current runner selects it.
+
+The changes are separated into commits `c4acb8e`, `0dbfc07`, `8d8e6d4`, `d335348`,
+`1a6ba85`, `7f93699`, `039e82e` and `db4e408`. All 370 focused offline checks,
+99 source/release/interpreter/Debian checks and repository Ruff pass. Actual
+[Linux kernel containment acceptance](https://github.com/hulagerushikesh/cashlessiq/actions/runs/46166967338/job/141046544165)
+passes the gate, limits, mounts, receipt namespace, custody policy/lifetime and
+cleanup controls. Final broader CI remains separately tracked by the workflow;
+focused acceptance must not be reported as complete live integration.
+
+The [launch review](../architecture/agent-single-call-launch.md) records the exact
+boundary and evidence. Remaining engineering includes provider destination policy
+and its binding to the full private plan; the complete trusted host with current
+consent/exclusive lease/immutable installation checks; external bounds around
+bootstrap creation and blocked host calls; and retained-history rollback/off-host
+recovery acceptance. Fresh governed-source/provider identity, usage and timing
+acceptance still follow. The legacy unit installer must not activate this path.
+Docker stays off; paid deployment/provider testing still needs a separately
+reviewed build, exact attempt and spend/window approval. No larger VM is assumed.
 
 ### Inactive host identities and units — 26 November
 
